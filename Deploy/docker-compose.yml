@@ -1,0 +1,33 @@
+services:
+  db:
+    image: postgres
+    restart: always
+    # set shared memory limit when using docker-compose
+    shm_size: 128mb
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_USER: 'postgres'
+      POSTGRES_PASSWORD: '**your-postgres-pass-here**'
+      POSTGRES_DB: 'b2b-opportunities'
+    volumes:
+      - ./db:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 5s
+  app:
+    build:
+      context: ..
+      dockerfile: Deploy/Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      POSTGRES_HOST: db
+      DB_USERNAME: 'postgres'
+      DB_PASSWORD: '**your-postgres-pass-here**'
