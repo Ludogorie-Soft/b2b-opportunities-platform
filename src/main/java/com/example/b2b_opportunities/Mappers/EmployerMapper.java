@@ -15,13 +15,10 @@ public class EmployerMapper {
 
     public static Employer toDto(EmployerRequestDto employerRequestDto) {
 
-        // Setting up the role without checking in the DB
-        RoleType roleEmployer = RoleType.ROLE_EMPLOYER;
+//         Setting up the role without checking in the DB
+//        RoleType roleEmployer = RoleType.ROLE_EMPLOYER;
 
-        Role role = Role.builder()
-                .id(roleEmployer.getId())
-                .name(roleEmployer.name())
-                .build();
+        Role role = Role.builder().id(1L).name("ROLE_EMPLOYER").build();
 
         return Employer.builder()
                 .username(employerRequestDto.getUsername())
@@ -30,7 +27,7 @@ public class EmployerMapper {
                 .companyName(employerRequestDto.getCompanyName())
                 .role(role)
                 .createdAt(LocalDateTime.now())
-                .isEnabled(true)
+                .isEnabled(false)
                 .build();
     }
 

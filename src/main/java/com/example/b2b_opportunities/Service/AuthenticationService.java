@@ -1,15 +1,18 @@
 package com.example.b2b_opportunities.Service;
 
-import com.example.b2b_opportunities.Dtos.Request.EmployerRequestDto;
+import com.example.b2b_opportunities.Entity.ConfirmationToken;
 import com.example.b2b_opportunities.Dtos.LoginDtos.LoginDto;
 import com.example.b2b_opportunities.Dtos.LoginDtos.LoginResponse;
+import com.example.b2b_opportunities.Dtos.Request.EmployerRequestDto;
 import com.example.b2b_opportunities.Dtos.Response.EmployerResponseDto;
 import com.example.b2b_opportunities.Entity.Employer;
-import com.example.b2b_opportunities.MyUserDetails;
 import com.example.b2b_opportunities.Exceptions.*;
 import com.example.b2b_opportunities.Mappers.EmployerMapper;
+import com.example.b2b_opportunities.MyUserDetails;
+import com.example.b2b_opportunities.Repository.ConfirmationTokenRepository;
 import com.example.b2b_opportunities.Repository.EmployerRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -22,6 +25,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class AuthenticationService {
@@ -29,7 +36,11 @@ public class AuthenticationService {
     private final JwtService jwtService;
     private final EmployerRepository employerRepository;
     private final BCryptPasswordEncoder encoder;
+    private final MailService mailService;
 
+    @Value("${token.expiration.time}")
+    private int tokenExpirationTime;
+    private final ConfirmationTokenRepository confirmationTokenRepository;
 
     public ResponseEntity<LoginResponse> login(LoginDto loginDto) {
 
@@ -66,8 +77,8 @@ public class AuthenticationService {
         validateEmployer(employerRequestDto);
 
         Employer employer = EmployerMapper.toDto(employerRequestDto);
-
         employerRepository.save(employer);
+        mailService.sendConfirmationMail(employer);
         return ResponseEntity.status(HttpStatus.CREATED).body(EmployerMapper.toResponse(employer));
     }
 
@@ -95,4 +106,26 @@ public class AuthenticationService {
         return employerRequestDto.getPassword().equals(employerRequestDto.getRepeatedPassword());
     }
 
+    private boolean isTokenExpired(ConfirmationToken token) {
+        LocalDateTime currentDateTime = LocalDateTime.now();
+        Duration duration = Duration.between(token.getCreatedAt(), currentDateTime);
+        return duration.toMinutes() >= tokenExpirationTime;
+    }
+
+    public String confirmEmail(String token) {
+        //TODO - if the token is expired & not used -> generate & send a new one
+
+        Optional<ConfirmationToken> optionalConfirmationToken = confirmationTokenRepository.findByToken(token);
+        if (optionalConfirmationToken.isEmpty()) {
+            return "Invalid token"; //TODO - this will be improved
+        }
+        ConfirmationToken confirmationToken = optionalConfirmationToken.get();
+        if (isTokenExpired(confirmationToken)) {
+            return "Expired token"; //TODO - this will be improved
+        }
+        Employer employer = confirmationToken.getEmployer();
+        employer.setEnabled(true);
+        employerRepository.save(employer);
+        return "Account activated successfully";
+    }
 }
