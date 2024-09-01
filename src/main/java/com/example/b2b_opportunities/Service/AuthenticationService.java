@@ -10,6 +10,7 @@ import com.example.b2b_opportunities.Mappers.UserMapper;
 import com.example.b2b_opportunities.UserDetailsImpl;
 import com.example.b2b_opportunities.Repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -18,17 +19,29 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
+
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class AuthenticationService {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
+    private final BCryptPasswordEncoder encoder;
+    private final MailService mailService;
+
+    @Value("${token.expiration.time}")
+    private int tokenExpirationTime;
+    private final ConfirmationTokenRepository confirmationTokenRepository;
     private final UserRepository userRepository;
 
     public ResponseEntity<LoginResponse> login(LoginDto loginDto) {
+
         UserDetails userDetails;
         userDetails = authenticate(loginDto);
 
@@ -62,8 +75,8 @@ public class AuthenticationService {
         validateUser(userRequestDto);
 
         User user = UserMapper.toDto(userRequestDto);
-
         userRepository.save(user);
+        mailService.sendConfirmationMail(user);
         return ResponseEntity.status(HttpStatus.CREATED).body(UserMapper.toResponse(user));
     }
 
@@ -91,4 +104,26 @@ public class AuthenticationService {
         return userRequestDto.getPassword().equals(userRequestDto.getRepeatedPassword());
     }
 
+    private boolean isTokenExpired(ConfirmationToken token) {
+        LocalDateTime currentDateTime = LocalDateTime.now();
+        Duration duration = Duration.between(token.getCreatedAt(), currentDateTime);
+        return duration.toMinutes() >= tokenExpirationTime;
+    }
+
+    public String confirmEmail(String token) {
+        //TODO - if the token is expired & not used -> generate & send a new one
+
+        Optional<ConfirmationToken> optionalConfirmationToken = confirmationTokenRepository.findByToken(token);
+        if (optionalConfirmationToken.isEmpty()) {
+            return "Invalid token"; //TODO - this will be improved
+        }
+        ConfirmationToken confirmationToken = optionalConfirmationToken.get();
+        if (isTokenExpired(confirmationToken)) {
+            return "Expired token"; //TODO - this will be improved
+        }
+        Employer employer = confirmationToken.getEmployer();
+        employer.setEnabled(true);
+        employerRepository.save(employer);
+        return "Account activated successfully";
+    }
 }
