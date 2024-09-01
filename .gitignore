@@ -28,6 +28,7 @@ replay_pid*
 build/
 !gradlew
 !gradlew.bat
+!gradle/wrapper/gradle-wrapper.jar
 
 # IntelliJ IDEA files
 .idea/
