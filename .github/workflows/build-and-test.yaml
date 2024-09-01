@@ -37,4 +37,4 @@ jobs:
         run: ./gradlew build --no-daemon
 
       - name: Test
-        run: ./gradlew test --info --no-daemon jacocoTestReport
+        run: ./gradlew test --info --no-daemon
