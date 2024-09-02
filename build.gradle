@@ -75,8 +75,8 @@ jacocoTestReport {
 tasks.check.dependsOn jacocoTestCoverageVerification
 sonar {
 	properties {
-		property "sonar.projectKey", "******"
-		property "sonar.organization", "******"
+		property "sonar.projectKey", "Ludogorie-Soft_b2b-opportunities-platform"
+		property "sonar.organization", "ludogorie-soft-1"
 		property "sonar.host.url", "https://sonarcloud.io"
 		property "sonar.coverage.jacoco.xmlReportPaths", "${buildDir}/reports/jacoco/test/jacocoTestReport.xml"
 		property "sonar.exclusions", "**/Dtos/**,**/Entity/**,**/Mappers/**,**/Static/**,**/Exceptions/**,**/Configs/**,**/MyUserDetails.java,**/Repository/**"
