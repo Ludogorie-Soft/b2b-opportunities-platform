@@ -9,8 +9,10 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Builder
-public class EmployerResponseDto {
+public class UserResponseDto {
     private Long id;
+    private String firstName;
+    private String lastName;
     private String username;
     private String email;
     private String companyName;

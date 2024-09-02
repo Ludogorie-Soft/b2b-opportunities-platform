@@ -1,14 +1,14 @@
 package com.example.b2b_opportunities.Service;
 
-import com.example.b2b_opportunities.Dtos.Request.EmployerRequestDto;
 import com.example.b2b_opportunities.Dtos.LoginDtos.LoginDto;
 import com.example.b2b_opportunities.Dtos.LoginDtos.LoginResponse;
-import com.example.b2b_opportunities.Dtos.Response.EmployerResponseDto;
-import com.example.b2b_opportunities.Entity.Employer;
-import com.example.b2b_opportunities.MyUserDetails;
+import com.example.b2b_opportunities.Dtos.Request.UserRequestDto;
+import com.example.b2b_opportunities.Dtos.Response.UserResponseDto;
+import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Exceptions.*;
-import com.example.b2b_opportunities.Mappers.EmployerMapper;
-import com.example.b2b_opportunities.Repository.EmployerRepository;
+import com.example.b2b_opportunities.Mappers.UserMapper;
+import com.example.b2b_opportunities.UserDetailsImpl;
+import com.example.b2b_opportunities.Repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +18,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
 
@@ -27,12 +26,9 @@ import org.springframework.validation.BindingResult;
 public class AuthenticationService {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
-    private final EmployerRepository employerRepository;
-    private final BCryptPasswordEncoder encoder;
-
+    private final UserRepository userRepository;
 
     public ResponseEntity<LoginResponse> login(LoginDto loginDto) {
-
         UserDetails userDetails;
         userDetails = authenticate(loginDto);
 
@@ -49,50 +45,50 @@ public class AuthenticationService {
 
     private UserDetails authenticate(LoginDto loginDto) {
         try {
-            Authentication authentication = new UsernamePasswordAuthenticationToken(loginDto.getUsernameOrEmail(), loginDto.getPassword());
+            Authentication authentication = new UsernamePasswordAuthenticationToken(loginDto.getUsernameOrEmail().toLowerCase(), loginDto.getPassword());
             Authentication authResult = authenticationManager.authenticate(authentication);
-            return (MyUserDetails) authResult.getPrincipal();
+            return (UserDetailsImpl) authResult.getPrincipal();
         } catch (DisabledException e) {
-            throw new DisabledEmployerException("This account is not activated yet."); // TODO: email confirmation not accepted
+            throw new DisabledUserException("This account is not activated yet."); // TODO: email confirmation not accepted
         } catch (AuthenticationException e) {
             throw new AuthenticationFailedException("Authentication failed: Invalid username or password.");
         }
     }
 
-    public ResponseEntity<EmployerResponseDto> register(EmployerRequestDto employerRequestDto, BindingResult bindingResult) {
+    public ResponseEntity<UserResponseDto> register(UserRequestDto userRequestDto, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             throw new ValidationException(bindingResult);
         }
-        validateEmployer(employerRequestDto);
+        validateUser(userRequestDto);
 
-        Employer employer = EmployerMapper.toDto(employerRequestDto);
+        User user = UserMapper.toDto(userRequestDto);
 
-        employerRepository.save(employer);
-        return ResponseEntity.status(HttpStatus.CREATED).body(EmployerMapper.toResponse(employer));
+        userRepository.save(user);
+        return ResponseEntity.status(HttpStatus.CREATED).body(UserMapper.toResponse(user));
     }
 
-    private void validateEmployer(EmployerRequestDto employerRequestDto) {
-        if (isEmailInDB(employerRequestDto.getEmail())) {
+    private void validateUser(UserRequestDto userRequestDto) {
+        if (isEmailInDB(userRequestDto.getEmail())) {
             throw new EmailInUseException("Email already in use. Please use a different email");
         }
-        if (isUsernameInDB(employerRequestDto.getUsername())) {
+        if (isUsernameInDB(userRequestDto.getUsername())) {
             throw new UsernameInUseException("Username already in use. Please use a different username");
         }
-        if (!arePasswordsMatching(employerRequestDto)) {
+        if (!arePasswordsMatching(userRequestDto)) {
             throw new PasswordsNotMatchingException("Passwords don't match");
         }
     }
 
     private boolean isEmailInDB(String email) {
-        return employerRepository.findByEmail(email).isPresent();
+        return userRepository.findByEmail(email).isPresent();
     }
 
     private boolean isUsernameInDB(String username) {
-        return employerRepository.findByUsername(username).isPresent();
+        return userRepository.findByUsername(username).isPresent();
     }
 
-    private boolean arePasswordsMatching(EmployerRequestDto employerRequestDto) {
-        return employerRequestDto.getPassword().equals(employerRequestDto.getRepeatedPassword());
+    private boolean arePasswordsMatching(UserRequestDto userRequestDto) {
+        return userRequestDto.getPassword().equals(userRequestDto.getRepeatedPassword());
     }
 
 }

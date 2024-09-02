@@ -4,8 +4,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 @ResponseStatus(HttpStatus.UNAUTHORIZED)
-public class DisabledEmployerException extends RuntimeException{
-    public DisabledEmployerException(String message) {
+public class DisabledUserException extends RuntimeException{
+    public DisabledUserException(String message) {
         super(message);
     }
 }

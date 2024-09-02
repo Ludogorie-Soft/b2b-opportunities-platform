@@ -2,8 +2,8 @@ package com.example.b2b_opportunities.Controller;
 
 import com.example.b2b_opportunities.Dtos.LoginDtos.LoginDto;
 import com.example.b2b_opportunities.Dtos.LoginDtos.LoginResponse;
-import com.example.b2b_opportunities.Dtos.Request.EmployerRequestDto;
-import com.example.b2b_opportunities.Dtos.Response.EmployerResponseDto;
+import com.example.b2b_opportunities.Dtos.Request.UserRequestDto;
+import com.example.b2b_opportunities.Dtos.Response.UserResponseDto;
 import com.example.b2b_opportunities.Service.AuthenticationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -20,8 +20,8 @@ public class AuthController {
 
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<EmployerResponseDto> register(@RequestBody @Valid EmployerRequestDto employerRequestDto, BindingResult bindingResult) {
-        return authenticationService.register(employerRequestDto, bindingResult);
+    public ResponseEntity<UserResponseDto> register(@RequestBody @Valid UserRequestDto userRequestDto, BindingResult bindingResult) {
+        return authenticationService.register(userRequestDto, bindingResult);
     }
 
     @PostMapping("/login")
