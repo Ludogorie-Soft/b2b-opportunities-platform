@@ -35,8 +35,8 @@ public class AuthenticationService {
     private final BCryptPasswordEncoder encoder;
     private final MailService mailService;
 
-    @Value("${token.expiration.time}")
-    private int tokenExpirationTime;
+    @Value("${registration.token.expiration.time}")
+    private int tokenExpirationDays;
     private final ConfirmationTokenRepository confirmationTokenRepository;
     private final UserRepository userRepository;
 
@@ -107,11 +107,11 @@ public class AuthenticationService {
     private boolean isTokenExpired(ConfirmationToken token) {
         LocalDateTime currentDateTime = LocalDateTime.now();
         Duration duration = Duration.between(token.getCreatedAt(), currentDateTime);
-        return duration.toMinutes() >= tokenExpirationTime;
+        return duration.toDays() > tokenExpirationDays;
     }
 
     public String confirmEmail(String token) {
-        //TODO - if the token is expired & not used -> generate & send a new one
+        //TODO - if the token is expired AND/OR not used -> generate & send a new one
 
         Optional<ConfirmationToken> optionalConfirmationToken = confirmationTokenRepository.findByToken(token);
         if (optionalConfirmationToken.isEmpty()) {
