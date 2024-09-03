@@ -37,3 +37,4 @@ out/
 
 # DB
 Deploy/db/
+.env
