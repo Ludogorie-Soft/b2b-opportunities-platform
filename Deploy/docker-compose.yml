@@ -23,7 +23,7 @@ services:
       context: ..
       dockerfile: Deploy/Dockerfile
     ports:
-      - "8080:8080"
+      - "8082:8082"
     depends_on:
       db:
         condition: service_healthy
@@ -31,3 +31,4 @@ services:
       POSTGRES_HOST: db
       DB_USERNAME: 'postgres'
       DB_PASSWORD: '**your-postgres-pass-here**'
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
