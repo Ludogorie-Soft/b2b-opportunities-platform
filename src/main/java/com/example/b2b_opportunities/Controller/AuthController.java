@@ -35,6 +35,11 @@ public class AuthController {
         return authenticationService.resendConfirmationMail(email);
     }
 
+    @GetMapping("/register/confirm")
+    public String confirmEmail(@RequestParam("token") String token){
+        return authenticationService.confirmEmail(token);
+    }
+
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@RequestBody LoginDto loginDto) {
         return authenticationService.login(loginDto);
