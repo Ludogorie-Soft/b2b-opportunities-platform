@@ -32,7 +32,7 @@ public class UserMapper {
                 .companyName(userRequestDto.getCompanyName())
                 .role(role)
                 .createdAt(LocalDateTime.now())
-                .isEnabled(true)
+                .isEnabled(false)
                 .build();
     }
 

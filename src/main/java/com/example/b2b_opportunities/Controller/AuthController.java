@@ -25,8 +25,14 @@ public class AuthController {
     }
 
     @GetMapping("/register/confirm")
-    public String confirmEmail(@RequestParam("token") String token){
+    public String confirmEmail(@RequestParam("token") String token) {
         return authenticationService.confirmEmail(token);
+    }
+
+    @GetMapping("/register/resend-confirmation")
+    @ResponseStatus(HttpStatus.OK)
+    public String resendRegistrationMail(@RequestParam String email) {
+        return authenticationService.resendConfirmationMail(email);
     }
 
     @PostMapping("/login")

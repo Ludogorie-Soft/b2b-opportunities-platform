@@ -4,11 +4,14 @@ import com.example.b2b_opportunities.Dtos.LoginDtos.LoginDto;
 import com.example.b2b_opportunities.Dtos.LoginDtos.LoginResponse;
 import com.example.b2b_opportunities.Dtos.Request.UserRequestDto;
 import com.example.b2b_opportunities.Dtos.Response.UserResponseDto;
+import com.example.b2b_opportunities.Entity.ConfirmationToken;
 import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Exceptions.*;
 import com.example.b2b_opportunities.Mappers.UserMapper;
-import com.example.b2b_opportunities.UserDetailsImpl;
+import com.example.b2b_opportunities.Repository.ConfirmationTokenRepository;
 import com.example.b2b_opportunities.Repository.UserRepository;
+import com.example.b2b_opportunities.UserDetailsImpl;
+import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -23,6 +26,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
 
+import java.io.UnsupportedEncodingException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -32,7 +36,6 @@ import java.util.Optional;
 public class AuthenticationService {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
-    private final BCryptPasswordEncoder encoder;
     private final MailService mailService;
 
     @Value("${registration.token.expiration.time}")
@@ -111,19 +114,36 @@ public class AuthenticationService {
     }
 
     public String confirmEmail(String token) {
-        //TODO - if the token is expired AND/OR not used -> generate & send a new one
-
         Optional<ConfirmationToken> optionalConfirmationToken = confirmationTokenRepository.findByToken(token);
         if (optionalConfirmationToken.isEmpty()) {
             return "Invalid token"; //TODO - this will be improved
         }
         ConfirmationToken confirmationToken = optionalConfirmationToken.get();
         if (isTokenExpired(confirmationToken)) {
-            return "Expired token"; //TODO - this will be improved
+            return "Expired token"; //TODO - this will be improved -> resend?
         }
-        Employer employer = confirmationToken.getEmployer();
-        employer.setEnabled(true);
-        employerRepository.save(employer);
+        User user = confirmationToken.getUser();
+        if (user.isEnabled()) {
+            return "Account already activated";
+        }
+        user.setEnabled(true);
+        userRepository.save(user);
         return "Account activated successfully";
     }
+
+    public String resendConfirmationMail(String email) {
+        User user = userRepository.findByEmail(email).orElseThrow(()
+                -> new UserNotFoundException("User not found with email: " + email));
+        if(user.isEnabled()){
+            return "Account already activated";
+        }
+        Optional<ConfirmationToken> optionalToken = confirmationTokenRepository.findByUser(user);
+        if (optionalToken.isPresent()) {
+            ConfirmationToken confirmationToken = optionalToken.get();
+            confirmationTokenRepository.deleteById(confirmationToken.getId());
+        }
+        mailService.sendConfirmationMail(user);
+        return "A new token was sent to your e-mail!";
+    }
+
 }

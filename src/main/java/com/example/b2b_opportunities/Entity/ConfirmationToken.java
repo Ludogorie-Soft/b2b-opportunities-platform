@@ -1,6 +1,5 @@
 package com.example.b2b_opportunities.Entity;
 
-import com.example.b2b_opportunities.Entity.Employer;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -12,6 +11,7 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 @AllArgsConstructor
 @Entity
+@Table(name = "confirmation_token")
 public class ConfirmationToken {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,13 +27,13 @@ public class ConfirmationToken {
     @ManyToOne
     @JoinColumn(
             nullable = false,
-            name = "employer_id"
+            name = "user_id"
     )
-    private Employer employer;
+    private User user;
 
-    public ConfirmationToken(String token, LocalDateTime createdAt, Employer employer) {
+    public ConfirmationToken(String token, LocalDateTime createdAt, User user) {
         this.token = token;
         this.createdAt = createdAt;
-        this.employer = employer;
+        this.user = user;
     }
 }
