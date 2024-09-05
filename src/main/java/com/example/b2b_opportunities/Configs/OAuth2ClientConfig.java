@@ -27,8 +27,8 @@ public class OAuth2ClientConfig {
 
     private ClientRegistration googleClientRegistration() {
         return ClientRegistration.withRegistrationId("google")
-                .clientId("GOOGLE-ID-HERE")
-                .clientSecret("GOOGLE-SECRET-HERE")
+                .clientId("-")
+                .clientSecret("-")
                 .scope("profile", "email")
                 .authorizationUri("https://accounts.google.com/o/oauth2/auth")
                 .tokenUri("https://oauth2.googleapis.com/token")
