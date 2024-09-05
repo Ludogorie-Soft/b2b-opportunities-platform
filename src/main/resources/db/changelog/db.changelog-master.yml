@@ -8,3 +8,6 @@ databaseChangeLog:
   - include:
       file: 03-create-registration-tokens-table.sql
       relativeToChangelogFile: true
+  - include:
+      file: 04-change-users-table-add-provider-and-provider-id.sql
+      relativeToChangelogFile: true

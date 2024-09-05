@@ -51,4 +51,6 @@ public class User {
     private LocalDateTime createdAt;
 
     private boolean isEnabled;
+    private String provider;
+    private String providerId;
 }

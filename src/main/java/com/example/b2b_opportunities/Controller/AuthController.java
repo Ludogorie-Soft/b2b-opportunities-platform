@@ -4,11 +4,13 @@ import com.example.b2b_opportunities.Dtos.LoginDtos.LoginDto;
 import com.example.b2b_opportunities.Dtos.LoginDtos.LoginResponse;
 import com.example.b2b_opportunities.Dtos.Request.UserRequestDto;
 import com.example.b2b_opportunities.Dtos.Response.UserResponseDto;
+import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Service.AuthenticationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
@@ -38,5 +40,10 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@RequestBody LoginDto loginDto) {
         return authenticationService.login(loginDto);
+    }
+
+    @GetMapping("/oauth2/success")
+    public ResponseEntity<LoginResponse> oauth2LoginSuccess(OAuth2AuthenticationToken authentication) {
+        return authenticationService.processOAuthPostLogin(authentication);
     }
 }

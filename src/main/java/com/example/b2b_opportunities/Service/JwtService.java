@@ -96,4 +96,8 @@ public class JwtService {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
+    public boolean isJwtToken(String token) {
+        return token != null && token.split("\\.").length == 3;
+    }
+
 }

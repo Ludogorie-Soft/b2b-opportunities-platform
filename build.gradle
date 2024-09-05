@@ -35,6 +35,8 @@ dependencies {
 	runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-jackson', version: '0.12.6'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation group: 'org.springdoc', name: 'springdoc-openapi-starter-webmvc-ui', version: '2.5.0'
+	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+	implementation group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jsr310', version: '2.17.2'
 }
 
 tasks.named('test') {

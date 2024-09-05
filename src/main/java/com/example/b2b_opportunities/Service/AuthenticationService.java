@@ -5,11 +5,13 @@ import com.example.b2b_opportunities.Dtos.LoginDtos.LoginResponse;
 import com.example.b2b_opportunities.Dtos.Request.UserRequestDto;
 import com.example.b2b_opportunities.Dtos.Response.UserResponseDto;
 import com.example.b2b_opportunities.Entity.ConfirmationToken;
+import com.example.b2b_opportunities.Entity.Role;
 import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Exceptions.*;
 import com.example.b2b_opportunities.Mappers.UserMapper;
 import com.example.b2b_opportunities.Repository.ConfirmationTokenRepository;
 import com.example.b2b_opportunities.Repository.UserRepository;
+import com.example.b2b_opportunities.Static.RoleType;
 import com.example.b2b_opportunities.UserDetailsImpl;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
@@ -23,12 +25,14 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
 
 import java.io.UnsupportedEncodingException;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -134,7 +138,7 @@ public class AuthenticationService {
     public String resendConfirmationMail(String email) {
         User user = userRepository.findByEmail(email).orElseThrow(()
                 -> new UserNotFoundException("User not found with email: " + email));
-        if(user.isEnabled()){
+        if (user.isEnabled()) {
             return "Account already activated";
         }
         Optional<ConfirmationToken> optionalToken = confirmationTokenRepository.findByUser(user);
@@ -146,4 +150,45 @@ public class AuthenticationService {
         return "A new token was sent to your e-mail!";
     }
 
+    public ResponseEntity<LoginResponse> processOAuthPostLogin(OAuth2AuthenticationToken authentication) {
+        Map<String, Object> attributes = authentication.getPrincipal().getAttributes();
+        String email = (String) attributes.get("email");
+        String firstName = (String) attributes.get("given_name");
+        String lastName = (String) attributes.get("family_name");
+        String providerId = (String) attributes.get("sub");
+
+        User user;
+        Optional<User> existingUser = userRepository.findByEmail(email);
+        if (existingUser.isEmpty()) {
+            RoleType roleUser = RoleType.ROLE_USER;
+            Role role = Role.builder().id(roleUser.getId()).name(roleUser.name()).build();
+            user = User.builder()
+                    .username(email)
+                    .firstName(firstName)
+                    .lastName(lastName)
+                    .email(email)
+                    .provider("google")
+                    .providerId(providerId)
+                    .createdAt(LocalDateTime.now())
+                    .isEnabled(true)
+                    .role(role)
+                    .build();
+            user = userRepository.save(user);
+        } else {
+            user = existingUser.get();
+            user.setFirstName(firstName);
+            user.setLastName(lastName);
+            user = userRepository.save(user); // Update names if they are changed in Google Account
+        }
+        UserDetails userDetails = new UserDetailsImpl(user);
+        String token = jwtService.generateToken(userDetails);
+
+        long expiresIn = jwtService.getExpirationTime();
+
+        LoginResponse loginResponse = LoginResponse.builder()
+                .token(token)
+                .expiresIn(expiresIn)
+                .build();
+        return ResponseEntity.ok(loginResponse);
+    }
 }
