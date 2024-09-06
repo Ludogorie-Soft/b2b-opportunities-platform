@@ -1,6 +1,6 @@
-package com.example.b2b_opportunities.Configs;
+package com.example.b2b_opportunities.Config;
 
-import com.example.b2b_opportunities.Exceptions.ValidationException;
+import com.example.b2b_opportunities.Exception.ValidationException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;

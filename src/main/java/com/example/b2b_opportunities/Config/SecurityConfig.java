@@ -1,4 +1,4 @@
-package com.example.b2b_opportunities.Configs;
+package com.example.b2b_opportunities.Config;
 
 import com.example.b2b_opportunities.JwtAuthenticationFilter;
 import com.example.b2b_opportunities.UserDetailsServiceImpl;

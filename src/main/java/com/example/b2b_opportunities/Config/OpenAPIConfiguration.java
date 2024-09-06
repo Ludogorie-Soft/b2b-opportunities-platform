@@ -1,4 +1,4 @@
-package com.example.b2b_opportunities.Configs;
+package com.example.b2b_opportunities.Config;
 
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;

@@ -1,15 +1,19 @@
 package com.example.b2b_opportunities.Service;
 
-import com.example.b2b_opportunities.Dtos.LoginDtos.LoginDto;
-import com.example.b2b_opportunities.Dtos.LoginDtos.LoginResponse;
-import com.example.b2b_opportunities.Dtos.Request.UserRequestDto;
-import com.example.b2b_opportunities.Dtos.Response.UserResponseDto;
+import com.example.b2b_opportunities.Dto.LoginDtos.LoginDto;
+import com.example.b2b_opportunities.Dto.LoginDtos.LoginResponse;
+import com.example.b2b_opportunities.Dto.Request.UserRequestDto;
+import com.example.b2b_opportunities.Dto.Response.UserResponseDto;
+import com.example.b2b_opportunities.Entity.ConfirmationToken;
 import com.example.b2b_opportunities.Entity.User;
-import com.example.b2b_opportunities.Exceptions.*;
-import com.example.b2b_opportunities.Mappers.UserMapper;
-import com.example.b2b_opportunities.UserDetailsImpl;
+import com.example.b2b_opportunities.Exception.*;
+import com.example.b2b_opportunities.Mapper.UserMapper;
+import com.example.b2b_opportunities.Repository.ConfirmationTokenRepository;
 import com.example.b2b_opportunities.Repository.UserRepository;
+import com.example.b2b_opportunities.UserDetailsImpl;
+import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -18,17 +22,29 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
+
+import java.io.UnsupportedEncodingException;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class AuthenticationService {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
+    private final MailService mailService;
+
+    @Value("${registration.token.expiration.time}")
+    private int tokenExpirationDays;
+    private final ConfirmationTokenRepository confirmationTokenRepository;
     private final UserRepository userRepository;
 
     public ResponseEntity<LoginResponse> login(LoginDto loginDto) {
+
         UserDetails userDetails;
         userDetails = authenticate(loginDto);
 
@@ -62,8 +78,8 @@ public class AuthenticationService {
         validateUser(userRequestDto);
 
         User user = UserMapper.toDto(userRequestDto);
-
         userRepository.save(user);
+        mailService.sendConfirmationMail(user);
         return ResponseEntity.status(HttpStatus.CREATED).body(UserMapper.toResponse(user));
     }
 
@@ -89,6 +105,45 @@ public class AuthenticationService {
 
     private boolean arePasswordsMatching(UserRequestDto userRequestDto) {
         return userRequestDto.getPassword().equals(userRequestDto.getRepeatedPassword());
+    }
+
+    private boolean isTokenExpired(ConfirmationToken token) {
+        LocalDateTime currentDateTime = LocalDateTime.now();
+        Duration duration = Duration.between(token.getCreatedAt(), currentDateTime);
+        return duration.toDays() > tokenExpirationDays;
+    }
+
+    public String confirmEmail(String token) {
+        Optional<ConfirmationToken> optionalConfirmationToken = confirmationTokenRepository.findByToken(token);
+        if (optionalConfirmationToken.isEmpty()) {
+            return "Invalid token"; //TODO - this will be improved
+        }
+        ConfirmationToken confirmationToken = optionalConfirmationToken.get();
+        if (isTokenExpired(confirmationToken)) {
+            return "Expired token"; //TODO - this will be improved -> resend?
+        }
+        User user = confirmationToken.getUser();
+        if (user.isEnabled()) {
+            return "Account already activated";
+        }
+        user.setEnabled(true);
+        userRepository.save(user);
+        return "Account activated successfully";
+    }
+
+    public String resendConfirmationMail(String email) {
+        User user = userRepository.findByEmail(email).orElseThrow(()
+                -> new UserNotFoundException("User not found with email: " + email));
+        if (user.isEnabled()) {
+            return "Account already activated";
+        }
+        Optional<ConfirmationToken> optionalToken = confirmationTokenRepository.findByUser(user);
+        if (optionalToken.isPresent()) {
+            ConfirmationToken confirmationToken = optionalToken.get();
+            confirmationTokenRepository.deleteById(confirmationToken.getId());
+        }
+        mailService.sendConfirmationMail(user);
+        return "A new token was sent to your e-mail!";
     }
 
 }

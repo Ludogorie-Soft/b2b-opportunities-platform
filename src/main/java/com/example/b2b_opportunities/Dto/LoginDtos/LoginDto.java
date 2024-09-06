@@ -1,4 +1,4 @@
-package com.example.b2b_opportunities.Dtos.LoginDtos;
+package com.example.b2b_opportunities.Dto.LoginDtos;
 
 import lombok.Getter;
 import lombok.Setter;

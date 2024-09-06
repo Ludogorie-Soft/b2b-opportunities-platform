@@ -1,4 +1,4 @@
-package com.example.b2b_opportunities.Dtos.Request;
+package com.example.b2b_opportunities.Dto.Request;
 
 import jakarta.persistence.Column;
 import jakarta.validation.constraints.Email;

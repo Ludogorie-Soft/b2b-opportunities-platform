@@ -1,4 +1,4 @@
-package com.example.b2b_opportunities.Dtos.Response;
+package com.example.b2b_opportunities.Dto.Response;
 
 import lombok.Builder;
 import lombok.Getter;
