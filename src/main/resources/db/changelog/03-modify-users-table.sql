@@ -1,0 +1,8 @@
+ALTER TABLE users
+ADD COLUMN provider VARCHAR(100);
+
+ALTER TABLE users
+ADD CONSTRAINT unique_username UNIQUE (username);
+
+ALTER TABLE users
+ALTER COLUMN password DROP NOT NULL;

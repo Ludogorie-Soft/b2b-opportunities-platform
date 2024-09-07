@@ -22,7 +22,6 @@ public class User {
     @Column(name = "id", nullable = false)
     private Long id;
 
-    @NotEmpty(message = "Username cannot be empty")
     private String username;
 
     @NotNull
@@ -38,7 +37,6 @@ public class User {
     @Email(message = "Invalid email format.")
     private String email;
 
-    @NotEmpty(message = "Password cannot be empty")
     private String password;
 
     private String companyName;
@@ -51,4 +49,6 @@ public class User {
     private LocalDateTime createdAt;
 
     private boolean isEnabled;
+
+    private String provider;
 }

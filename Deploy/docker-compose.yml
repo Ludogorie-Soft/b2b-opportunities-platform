@@ -7,9 +7,9 @@ services:
     ports:
       - '5432:5432'
     environment:
-      POSTGRES_USER: 'postgres'
-      POSTGRES_PASSWORD: '**your-postgres-pass-here**'
-      POSTGRES_DB: 'b2b-opportunities'
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_TABLE_NAME}
     volumes:
       - ./db:/var/lib/postgresql/data
     healthcheck:
@@ -29,6 +29,11 @@ services:
         condition: service_healthy
     environment:
       POSTGRES_HOST: db
-      DB_USERNAME: 'postgres'
-      DB_PASSWORD: '**your-postgres-pass-here**'
+      DB_TABLE_NAME: ${DB_TABLE_NAME}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
       JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD}
+      SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
