@@ -11,8 +11,8 @@ services:
       POSTGRES_PASSWORD: '**your-postgres-pass-here**'
       POSTGRES_DB: 'b2b-opportunities'
     volumes:
+      - ./db:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
-#      - ./db:/var/lib/postgresql/data
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U postgres" ]
       interval: 10s
