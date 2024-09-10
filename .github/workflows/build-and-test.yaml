@@ -9,21 +9,6 @@ jobs:
   build:
     name: Build and test
     runs-on: ubuntu-latest
-
-    services:
-      db:
-        image: postgres
-        ports:
-          - 5432:5432
-        env:
-          POSTGRES_USER: "'postgres'"
-          POSTGRES_PASSWORD: "'**your-postgres-pass-here**'"
-          POSTGRES_DB: 'b2b_opportunities_test'
-        options: >-
-          --health-cmd="pg_isready -U postgres"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -63,6 +48,22 @@ jobs:
             source .env
             echo "DB_USERNAME is $DB_USERNAME"
             echo "DB_USERNAME is $DB_PASSWORD"
+
+      - name: Initialize postgres container
+        services:
+          db:
+            image: postgres
+            ports:
+              - 5432:5432
+            env:
+              POSTGRES_USER: ${{DB_USERNAME}}
+              POSTGRES_PASSWORD: ${{DB_PASSWORD}}
+              POSTGRES_DB: 'b2b_opportunities_test'
+            options: >-
+              --health-cmd="pg_isready -U postgres"
+              --health-interval=10s
+              --health-timeout=5s
+              --health-retries=5
 
       - name: Build
         run: source .env && ./gradlew test --info --no-daemon
