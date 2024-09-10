@@ -56,7 +56,7 @@ jobs:
       - name: Pull environment variables from Infisical
         env:
           INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
-        run: infisical pull --environment=development --output=.env
+        run: infisical env pull --environment=development --output=.env
 
       - name: Build
         run: source .env && ./gradlew build --no-daemon
