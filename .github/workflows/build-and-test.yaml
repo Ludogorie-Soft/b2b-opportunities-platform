@@ -58,6 +58,7 @@ jobs:
           INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
         run: infisical export --env=development > .env
 
+
       - name: Build
         run: source .env && ./gradlew build --no-daemon
 
