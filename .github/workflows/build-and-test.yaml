@@ -62,10 +62,10 @@ jobs:
         run: |
             source .env
             echo "DB_USERNAME is $DB_USERNAME"
-            echo "DB_USERNAME is $DB_PASSWORD"
+            echo "DB_PASSWORD is $DB_PASSWORD"
 
       - name: Build
-        run: source .env && ./gradlew test --info --no-daemon
+        run: ./gradlew test --info --no-daemon
 
       - name: Test
-        run: source .env && ./gradlew test --info --no-daemon
+        run: ./gradlew test --info --no-daemon
