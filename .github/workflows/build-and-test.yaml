@@ -16,8 +16,8 @@ jobs:
         ports:
           - 5432:5432
         env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: '**your-postgres-pass-here**'
+          POSTGRES_USER: "'postgres'"
+          POSTGRES_PASSWORD: "'**your-postgres-pass-here**'"
           POSTGRES_DB: 'b2b_opportunities_test'
         options: >-
           --health-cmd="pg_isready -U postgres"
