@@ -16,9 +16,9 @@ jobs:
         ports:
           - 5432:5432
         env:
-          POSTGRES_USER: 'postgres'
-          POSTGRES_PASSWORD: '**your-postgres-pass-here**'
-          POSTGRES_DB: 'b2b_opportunities_test'
+          POSTGRES_USER: "postgres"
+          POSTGRES_PASSWORD: "**your-postgres-pass-here**"
+          POSTGRES_DB: "b2b_opportunities_test"
         options: >-
           --health-cmd="pg_isready -U postgres"
           --health-interval=10s
@@ -62,6 +62,12 @@ jobs:
         run: |
             source .env
             echo "DB_USERNAME is $DB_USERNAME"
+            echo "DB_USERNAME is $DB_PASSWORD"
+
+      - name: Display environment variables
+        run: |
+          echo "DB_USERNAME=${{DB_USERNAME }}"
+          echo "DB_PASSWORD=${{DB_PASSWORD }}"
 
       - name: Build
         run: source .env && ./gradlew test --info --no-daemon

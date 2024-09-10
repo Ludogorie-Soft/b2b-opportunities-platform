@@ -18,7 +18,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-public class AuthControllerTest {
+class AuthControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -29,7 +29,7 @@ public class AuthControllerTest {
     private UserRequestDto userRequestDto;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         userRequestDto = new UserRequestDto();
         userRequestDto.setUsername("testuser");
         userRequestDto.setFirstName("Test");
@@ -41,7 +41,7 @@ public class AuthControllerTest {
     }
 
     @Test
-    public void registerUserWithValidInput() throws Exception {
+    void registerUserWithValidInput() throws Exception {
 
         ResultActions resultActions = mockMvc.perform(post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
