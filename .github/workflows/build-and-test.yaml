@@ -56,7 +56,7 @@ jobs:
       - name: Export environment variables from Infisical
         env:
           INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
-        run: infisical export --env=production > .env
+        run: infisical export --quota \ --env=production > .env
 
       - name: Debug environment variables is load
         run: |
