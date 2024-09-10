@@ -4,6 +4,7 @@ import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Exception.ServerErrorException;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -19,18 +20,19 @@ public class MailService {
     @Value("${spring.mail.username}")
     private String fromMail;
 
-    private String generateConfirmationLink(User user) {
+    private String generateConfirmationLink(User user, HttpServletRequest request) {
+        String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath();
         String token = confirmationTokenService.generateConfirmationCode(user);
-        return "<a href=http://localhost:8082/api/auth/register/confirm?token=" + token + ">Confirm Email</a>";
+        return "<a href=" + baseUrl + "/api/auth/register/confirm?token=" + token + ">Confirm Email</a>";
     }
 
-    public void sendConfirmationMail(User user) {
+    public void sendConfirmationMail(User user, HttpServletRequest request) {
         String emailContent = "<html>" +
                 "<body>" +
                 "<h2>Dear " + user.getFirstName() + ",</h2>"
                 + "<br/> We're excited to have you get started. " +
                 "Please click on below link to confirm your account."
-                + "<br/> " + generateConfirmationLink(user) +
+                + "<br/> " + generateConfirmationLink(user, request) +
                 "<br/> Regards,<br/>" +
                 "B2B Opportunities Team" +
                 "</body>" +

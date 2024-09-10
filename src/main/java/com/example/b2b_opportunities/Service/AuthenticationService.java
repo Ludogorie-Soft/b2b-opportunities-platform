@@ -11,7 +11,7 @@ import com.example.b2b_opportunities.Mapper.UserMapper;
 import com.example.b2b_opportunities.Repository.ConfirmationTokenRepository;
 import com.example.b2b_opportunities.Repository.UserRepository;
 import com.example.b2b_opportunities.UserDetailsImpl;
-import jakarta.mail.MessagingException;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -22,11 +22,9 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
 
-import java.io.UnsupportedEncodingException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -71,7 +69,7 @@ public class AuthenticationService {
         }
     }
 
-    public ResponseEntity<UserResponseDto> register(UserRequestDto userRequestDto, BindingResult bindingResult) {
+    public ResponseEntity<UserResponseDto> register(UserRequestDto userRequestDto, BindingResult bindingResult, HttpServletRequest request) {
         if (bindingResult.hasErrors()) {
             throw new ValidationException(bindingResult);
         }
@@ -79,7 +77,7 @@ public class AuthenticationService {
 
         User user = UserMapper.toDto(userRequestDto);
         userRepository.save(user);
-        mailService.sendConfirmationMail(user);
+        mailService.sendConfirmationMail(user, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(UserMapper.toResponse(user));
     }
 
@@ -131,7 +129,7 @@ public class AuthenticationService {
         return "Account activated successfully";
     }
 
-    public String resendConfirmationMail(String email) {
+    public String resendConfirmationMail(String email, HttpServletRequest request) {
         User user = userRepository.findByEmail(email).orElseThrow(()
                 -> new UserNotFoundException("User not found with email: " + email));
         if (user.isEnabled()) {
@@ -142,8 +140,7 @@ public class AuthenticationService {
             ConfirmationToken confirmationToken = optionalToken.get();
             confirmationTokenRepository.deleteById(confirmationToken.getId());
         }
-        mailService.sendConfirmationMail(user);
+        mailService.sendConfirmationMail(user, request);
         return "A new token was sent to your e-mail!";
     }
-
 }
