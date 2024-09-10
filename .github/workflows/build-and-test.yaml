@@ -48,8 +48,18 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x ./gradlew
 
+      - name: Install Infisical CLI
+        run: |
+          curl -1sLf 'https://dl.cloudsmith.io/public/infisical/infisical-cli/setup.deb.sh' | sudo -E bash
+          sudo apt update && sudo apt install -y infisical
+
+      - name: Pull environment variables from Infisical
+        env:
+          INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
+        run: infisical pull --environment=development --output=.env
+
       - name: Build
-        run: ./gradlew build --no-daemon
+        run: source .env && ./gradlew build --no-daemon
 
       - name: Test
-        run: ./gradlew test --info --no-daemon
+        run: source .env && ./gradlew test --info --no-daemon
