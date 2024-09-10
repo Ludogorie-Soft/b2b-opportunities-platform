@@ -58,8 +58,11 @@ jobs:
           INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
         run: infisical export --env=production > .env
 
-      - name: Source environment variables
-        run: source .env
+      - name: Source and print environment variables
+        run: |
+            source .env
+            echo "DB_TABLE_NAME is $DB_TABLE_NAME"
+            echo "DB_USERNAME is $DB_USERNAME"
 
       - name: Build
         run: source .env && ./gradlew build --no-daemon
