@@ -61,13 +61,10 @@ jobs:
       - name: Debug environment variables is load
         run: |
             source .env
-            echo "DB_TABLE_NAME is $DB_TABLE_NAME"
             echo "DB_USERNAME is $DB_USERNAME"
 
       - name: Build
-        run: source .env 
-           ./gradlew build --no-daemon
+        run: source .env && ./gradlew test --info --no-daemon
 
       - name: Test
-        run: source .env
-            ./gradlew test --info --no-daemon
+        run: source .env && ./gradlew test --info --no-daemon
