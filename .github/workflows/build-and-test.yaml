@@ -7,7 +7,7 @@ on:
       - '!main'
 
 jobs:
-  setup-secrets:
+  secret-generator:
     runs-on: ubuntu-latest
     outputs:
       db_username: ${{ steps.export-secrets.outputs.db_username }}
@@ -26,12 +26,12 @@ jobs:
           INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
         run: |
           infisical export --env=production | sed "s/'//g" > .env
-          eval "db_username=$(grep DB_USERNAME .env | cut -d '=' -f2)"
-          eval "db_password=$(grep DB_PASSWORD .env | cut -d '=' -f2)"
-          eval "test_db_table_name=$(grep TEST_DB_TABLE_NAME .env | cut -d '=' -f2)"
+          echo "db_username=$(grep DB_USERNAME .env | cut -d '=' -f2)" >> $GITHUB_OUTPUT
+          echo "db_password=$(grep DB_PASSWORD .env | cut -d '=' -f2)" >> $GITHUB_OUTPUT
+          echo "test_db_table_name=$(grep TEST_DB_TABLE_NAME .env | cut -d '=' -f2)" >> $GITHUB_OUTPUT
 
   build-and-test:
-    needs: setup-secrets
+    needs: secret-generator
     runs-on: ubuntu-latest
 
     services:
@@ -40,9 +40,9 @@ jobs:
         ports:
           - 5432:5432
         env:
-          POSTGRES_USER: ${{ needs.setup-secrets.outputs.db_username }}
-          POSTGRES_PASSWORD: ${{ needs.setup-secrets.outputs.db_password }}
-          POSTGRES_DB: ${{ needs.setup-secrets.outputs.test_db_table_name }}
+          POSTGRES_USER: ${{ needs.secret-generator.outputs.db_username }}
+          POSTGRES_PASSWORD: ${{ needs.secret-generator.outputs.db_password }}
+          POSTGRES_DB: ${{ needs.secret-generator.outputs.test_db_table_name }}
         options: >-
           --health-cmd="pg_isready -U postgres"
           --health-interval=10s
