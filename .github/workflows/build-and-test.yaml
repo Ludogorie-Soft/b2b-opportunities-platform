@@ -5,6 +5,7 @@ on:
     branches:
       - '**'
       - '!main'
+
 jobs:
   build:
     name: Build and test
@@ -24,11 +25,30 @@ jobs:
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+          fetch-depth: 0  # Shallow clones should be disabled for better analysis
+
+      - name: Install Infisical CLI
+        run: |
+          curl -1sLf 'https://dl.cloudsmith.io/public/infisical/infisical-cli/setup.deb.sh' | sudo -E bash
+          sudo apt update && sudo apt install -y infisical
+
+      - name: Export environment variables from Infisical
+        env:
+          INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
+        run: |
+          infisical export --env=production | sed "s/'//g" > .env
+          export $(cat .env | xargs)
+
+      - name: Set environment variables
+        run: |
+          echo "DB_USERNAME=$(grep DB_USERNAME .env | cut -d '=' -f2)" >> $GITHUB_ENV
+          echo "DB_PASSWORD=$(grep DB_PASSWORD .env | cut -d '=' -f2)" >> $GITHUB_ENV
+          echo "TEST_DB_TABLE_NAME=$(grep TEST_DB_TABLE_NAME .env | cut -d '=' -f2)" >> $GITHUB_ENV
 
       - name: Set up JDK 21
         uses: actions/setup-java@v3
@@ -48,21 +68,8 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x ./gradlew
 
-      - name: Install Infisical CLI
-        run: |
-          curl -1sLf 'https://dl.cloudsmith.io/public/infisical/infisical-cli/setup.deb.sh' | sudo -E bash
-          sudo apt update && sudo apt install -y infisical
-      
-      - name: Export environment variables from Infisical
-        env:
-          INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
-        run: infisical export --env=production | sed "s/'//g" > .env
-        
-      - name: Load .env file
-        run: source .env
-        
       - name: Build
-        run: ./gradlew test --info --no-daemon
+        run: ./gradlew build --no-daemon
 
       - name: Test
         run: ./gradlew test --info --no-daemon
