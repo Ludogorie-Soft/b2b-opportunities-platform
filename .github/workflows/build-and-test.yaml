@@ -25,7 +25,7 @@ jobs:
         env:
           INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
         run: |
-          infisical export --env=production --output-format=env
+          infisical export --env=production | sed "s/'//g" > .env
           echo "db_username=$(grep DB_USERNAME .env | cut -d '=' -f2)" >> $GITHUB_ENV
           echo "db_password=$(grep DB_PASSWORD .env | cut -d '=' -f2)" >> $GITHUB_ENV
           echo "test_db_table_name=$(grep TEST_DB_TABLE_NAME .env | cut -d '=' -f2)" >> $GITHUB_ENV
