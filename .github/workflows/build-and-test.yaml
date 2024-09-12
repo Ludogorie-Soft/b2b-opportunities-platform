@@ -85,7 +85,10 @@ jobs:
 
       - name: Load environment variables (globally)
         run: source .env
-        
+
+      - name: Check .env contents
+        run: cat .env
+      
       - name: Print environment variables
         run: |
           echo "JWT_SECRET_KEY: $JWT_SECRET_KEY"
