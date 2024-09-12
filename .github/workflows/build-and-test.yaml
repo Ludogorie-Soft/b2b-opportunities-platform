@@ -86,11 +86,6 @@ jobs:
       - name: Load environment variables (globally)
         run: cat .env >> $GITHUB_ENV
 
-      - name: Print environment variables
-        run: |
-          echo "JWT_SECRET_KEY: $JWT_SECRET_KEY"
-          echo "Other env vars: $POSTGRES_USER, $POSTGRES_PASSWORD, $POSTGRES_DB"
-      
       - name: Build
         run: ./gradlew build --no-daemon
 
