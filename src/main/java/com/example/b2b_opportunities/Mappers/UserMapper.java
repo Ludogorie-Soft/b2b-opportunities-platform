@@ -9,11 +9,13 @@ import com.example.b2b_opportunities.Static.RoleType;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Component
 public class UserMapper {
 
-    public static User toDto(UserRequestDto userRequestDto) {
+    public static User toEntity(UserRequestDto userRequestDto) {
 
         // Setting up the role without checking in the DB
         RoleType roleUser = RoleType.ROLE_USER;
@@ -36,7 +38,7 @@ public class UserMapper {
                 .build();
     }
 
-    public static UserResponseDto toResponse(User user) {
+    public static UserResponseDto toResponseDto(User user) {
         return UserResponseDto.builder()
                 .id(user.getId())
                 .firstName(user.getFirstName())
@@ -47,5 +49,13 @@ public class UserMapper {
                 .createdAt(user.getCreatedAt())
                 .isEnabled(user.isEnabled())
                 .build();
+    }
+
+    public static List<UserResponseDto> toResponseDtoList(List<User> users) {
+        List<UserResponseDto> userResponseDtoList = new ArrayList<>();
+        for (User user : users) {
+            userResponseDtoList.add(toResponseDto(user));
+        }
+        return userResponseDtoList;
     }
 }
