@@ -25,7 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 
 @SpringBootTest
-@AutoConfigureMockMvc
+@AutoConfigureMockMvc(addFilters = false)
 @Transactional  // Roll back changes made by tests, ensuring each test starts with a clean state.
 public class AuthControllerTest extends BaseTest {
 
