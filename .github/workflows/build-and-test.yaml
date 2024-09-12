@@ -76,6 +76,8 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Build
+        env:
+          JWT_SECRET_KEY: ${{ needs.secret-generator.outputs.jwt_secret_key }}
         run: ./gradlew build --no-daemon
 
       - name: Test
