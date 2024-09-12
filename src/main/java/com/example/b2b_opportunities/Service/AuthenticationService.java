@@ -6,7 +6,14 @@ import com.example.b2b_opportunities.Dtos.Request.UserRequestDto;
 import com.example.b2b_opportunities.Dtos.Response.UserResponseDto;
 import com.example.b2b_opportunities.Entity.Role;
 import com.example.b2b_opportunities.Entity.User;
-import com.example.b2b_opportunities.Exceptions.*;
+import com.example.b2b_opportunities.Exceptions.AuthenticationFailedException;
+import com.example.b2b_opportunities.Exceptions.DisabledUserException;
+import com.example.b2b_opportunities.Exceptions.EmailInUseException;
+import com.example.b2b_opportunities.Exceptions.PasswordsNotMatchingException;
+import com.example.b2b_opportunities.Exceptions.ServerErrorException;
+import com.example.b2b_opportunities.Exceptions.UserNotFoundException;
+import com.example.b2b_opportunities.Exceptions.UsernameInUseException;
+import com.example.b2b_opportunities.Exceptions.ValidationException;
 import com.example.b2b_opportunities.Mappers.UserMapper;
 import com.example.b2b_opportunities.Repository.UserRepository;
 import com.example.b2b_opportunities.Static.RoleType;
@@ -102,12 +109,14 @@ public class AuthenticationService {
     public LoginResponse oAuthLogin(Principal user) {
         if (user instanceof OAuth2AuthenticationToken authToken) {
             OAuth2User oauth2User = authToken.getPrincipal();
+
+            String provider = authToken.getAuthorizedClientRegistrationId(); // google
             Map<String, Object> attributes = oauth2User.getAttributes();
 
             String email = (String) attributes.get("email");
 
             if (!isEmailInDB(email)) {
-                createUserFromOAuth(attributes);
+                createUserFromOAuth(attributes, provider);
             }
 
             return generateLoginResponse(email);
@@ -115,7 +124,7 @@ public class AuthenticationService {
         throw new ServerErrorException("Authentication failed: The provided authentication is not an OAuth2 token.");
     }
 
-    private void createUserFromOAuth(Map<String, Object> attributes) {
+    private void createUserFromOAuth(Map<String, Object> attributes, String provider) {
         RoleType roleUser = RoleType.ROLE_USER;
         Role role = Role.builder()
                 .id(roleUser.getId())
@@ -128,7 +137,7 @@ public class AuthenticationService {
                 .firstName((String) attributes.get("given_name"))
                 .lastName((String) attributes.get("family_name"))
                 .email(email)
-                .provider("google")
+                .provider(provider)
                 .createdAt(LocalDateTime.now())
                 .isEnabled(true)
                 .role(role)

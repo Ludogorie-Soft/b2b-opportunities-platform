@@ -4,14 +4,17 @@ import com.example.b2b_opportunities.Service.JwtService;
 import io.jsonwebtoken.Claims;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import static org.junit.jupiter.api.Assertions.*;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class JwtServiceTest {
 
