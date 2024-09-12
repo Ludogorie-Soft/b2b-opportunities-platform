@@ -29,8 +29,6 @@ jobs:
           echo "db_username=$(grep DB_USERNAME .env | cut -d '=' -f2)" >> $GITHUB_OUTPUT
           echo "db_password=$(grep DB_PASSWORD .env | cut -d '=' -f2)" >> $GITHUB_OUTPUT
           echo "test_db_table_name=$(grep TEST_DB_TABLE_NAME .env | cut -d '=' -f2)" >> $GITHUB_OUTPUT
-          # echo "jwt_secret_key=$(grep JWT_SECRET_KEY .env | cut -d '=' -f2)" >> $GITHUB_OUTPUT
-
 
   build-and-test:
     needs: secret-generator
@@ -91,11 +89,7 @@ jobs:
           echo "Other env vars: $POSTGRES_USER, $POSTGRES_PASSWORD, $POSTGRES_DB"
       
       - name: Build
-        # env:
-        #   JWT_SECRET_KEY: ${{ needs.secret-generator.outputs.jwt_secret_key }}
-        run: ./gradlew build --no-daemon
+        run: source .env && ./gradlew build --no-daemon
 
       - name: Test
-        # env:
-        #   JWT_SECRET_KEY: ${{ needs.secret-generator.outputs.jwt_secret_key }}
-        run: ./gradlew test --info --no-daemon
+        run: source .env && ./gradlew test --info --no-daemon
