@@ -12,6 +12,7 @@ services:
       POSTGRES_DB: 'b2b-opportunities'
     volumes:
       - ./db:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U postgres" ]
       interval: 10s

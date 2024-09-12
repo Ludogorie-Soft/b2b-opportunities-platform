@@ -5,10 +5,15 @@ import com.example.b2b_opportunities.Dtos.LoginDtos.LoginResponse;
 import com.example.b2b_opportunities.Dtos.Request.UserRequestDto;
 import com.example.b2b_opportunities.Dtos.Response.UserResponseDto;
 import com.example.b2b_opportunities.Entity.User;
-import com.example.b2b_opportunities.Exceptions.*;
+import com.example.b2b_opportunities.Exceptions.AuthenticationFailedException;
+import com.example.b2b_opportunities.Exceptions.DisabledUserException;
+import com.example.b2b_opportunities.Exceptions.EmailInUseException;
+import com.example.b2b_opportunities.Exceptions.PasswordsNotMatchingException;
+import com.example.b2b_opportunities.Exceptions.UsernameInUseException;
+import com.example.b2b_opportunities.Exceptions.ValidationException;
 import com.example.b2b_opportunities.Mappers.UserMapper;
-import com.example.b2b_opportunities.UserDetailsImpl;
 import com.example.b2b_opportunities.Repository.UserRepository;
+import com.example.b2b_opportunities.UserDetailsImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +25,8 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -42,6 +49,22 @@ public class AuthenticationService {
         return ResponseEntity.ok(loginResponse);
     }
 
+    public ResponseEntity<UserResponseDto> register(UserRequestDto userRequestDto, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            throw new ValidationException(bindingResult);
+        }
+        validateUser(userRequestDto);
+
+        User user = UserMapper.toEntity(userRequestDto);
+
+        userRepository.save(user);
+        return ResponseEntity.status(HttpStatus.CREATED).body(UserMapper.toResponseDto(user));
+    }
+
+    public List<UserResponseDto> getAllUsers() {
+        List<User> users = userRepository.findAll();
+        return UserMapper.toResponseDtoList(users);
+    }
 
     private UserDetails authenticate(LoginDto loginDto) {
         try {
@@ -55,23 +78,11 @@ public class AuthenticationService {
         }
     }
 
-    public ResponseEntity<UserResponseDto> register(UserRequestDto userRequestDto, BindingResult bindingResult) {
-        if (bindingResult.hasErrors()) {
-            throw new ValidationException(bindingResult);
-        }
-        validateUser(userRequestDto);
-
-        User user = UserMapper.toDto(userRequestDto);
-
-        userRepository.save(user);
-        return ResponseEntity.status(HttpStatus.CREATED).body(UserMapper.toResponse(user));
-    }
-
     private void validateUser(UserRequestDto userRequestDto) {
-        if (isEmailInDB(userRequestDto.getEmail())) {
+        if (isEmailInDB(userRequestDto.getEmail().toLowerCase())) {
             throw new EmailInUseException("Email already in use. Please use a different email");
         }
-        if (isUsernameInDB(userRequestDto.getUsername())) {
+        if (isUsernameInDB(userRequestDto.getUsername().toLowerCase())) {
             throw new UsernameInUseException("Username already in use. Please use a different username");
         }
         if (!arePasswordsMatching(userRequestDto)) {
@@ -83,7 +94,7 @@ public class AuthenticationService {
         return userRepository.findByEmail(email).isPresent();
     }
 
-    private boolean isUsernameInDB(String username) {
+    public boolean isUsernameInDB(String username) {
         return userRepository.findByUsername(username).isPresent();
     }
 
