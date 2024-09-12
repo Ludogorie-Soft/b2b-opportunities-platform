@@ -10,10 +10,17 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.security.Principal;
 
 @RestController
-@RequestMapping("/api/auth/")
+@RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthController {
     private final AuthenticationService authenticationService;
@@ -27,5 +34,17 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@RequestBody LoginDto loginDto) {
         return authenticationService.login(loginDto);
+    }
+
+    @GetMapping("/oauth2/success")
+    @ResponseStatus(HttpStatus.OK)
+    public LoginResponse oAuthLogin(Principal user) {
+        return authenticationService.oAuthLogin(user);
+    }
+
+    // Just for testing - returns the user details from Google after oAuth
+    @GetMapping("/user")
+    public Principal getUserDetails(Principal user) {
+        return user;
     }
 }

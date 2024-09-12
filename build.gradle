@@ -39,6 +39,7 @@ dependencies {
     implementation group: 'org.springdoc', name: 'springdoc-openapi-starter-webmvc-ui', version: '2.5.0'
     testImplementation 'org.testcontainers:postgresql:1.20.1'
     testImplementation 'org.testcontainers:junit-jupiter:1.20.1'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
 }
 
 tasks.named('test') {
