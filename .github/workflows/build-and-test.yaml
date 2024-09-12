@@ -84,11 +84,8 @@ jobs:
         run: infisical export --env=production | sed "s/'//g" > .env
 
       - name: Load environment variables (globally)
-        run: source .env
+        run: cat .env >> $GITHUB_ENV
 
-      - name: Check .env contents
-        run: cat .env
-      
       - name: Print environment variables
         run: |
           echo "JWT_SECRET_KEY: $JWT_SECRET_KEY"
