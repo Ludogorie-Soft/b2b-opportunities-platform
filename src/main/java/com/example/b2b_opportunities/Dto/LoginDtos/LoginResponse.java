@@ -1,6 +1,8 @@
 package com.example.b2b_opportunities.Dto.LoginDtos;
 
-import lombok.*;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
 
 @Builder
 @Getter

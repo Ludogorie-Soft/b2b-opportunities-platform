@@ -3,8 +3,8 @@ package com.example.b2b_opportunities.Mapper;
 import com.example.b2b_opportunities.Config.SecurityConfig;
 import com.example.b2b_opportunities.Dto.Request.UserRequestDto;
 import com.example.b2b_opportunities.Dto.Response.UserResponseDto;
-import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Entity.Role;
+import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Static.RoleType;
 import org.springframework.stereotype.Component;
 
