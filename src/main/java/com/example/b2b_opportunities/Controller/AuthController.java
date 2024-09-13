@@ -5,6 +5,7 @@ import com.example.b2b_opportunities.Dtos.LoginDtos.LoginResponse;
 import com.example.b2b_opportunities.Dtos.Request.UserRequestDto;
 import com.example.b2b_opportunities.Dtos.Response.UserResponseDto;
 import com.example.b2b_opportunities.Service.AuthenticationService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.security.Principal;
 
@@ -27,8 +29,19 @@ public class AuthController {
 
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<UserResponseDto> register(@RequestBody @Valid UserRequestDto userRequestDto, BindingResult bindingResult) {
-        return authenticationService.register(userRequestDto, bindingResult);
+    public ResponseEntity<UserResponseDto> register(@RequestBody @Valid UserRequestDto userRequestDto, BindingResult bindingResult, HttpServletRequest request) {
+        return authenticationService.register(userRequestDto, bindingResult, request);
+    }
+
+    @GetMapping("/register/confirm")
+    public String confirmEmail(@RequestParam("token") String token) {
+        return authenticationService.confirmEmail(token);
+    }
+
+    @GetMapping("/register/resend-confirmation")
+    @ResponseStatus(HttpStatus.OK)
+    public String resendRegistrationMail(@RequestParam String email, HttpServletRequest request) {
+        return authenticationService.resendConfirmationMail(email, request);
     }
 
     @PostMapping("/login")

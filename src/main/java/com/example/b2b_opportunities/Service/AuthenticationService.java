@@ -4,8 +4,8 @@ import com.example.b2b_opportunities.Dtos.LoginDtos.LoginDto;
 import com.example.b2b_opportunities.Dtos.LoginDtos.LoginResponse;
 import com.example.b2b_opportunities.Dtos.Request.UserRequestDto;
 import com.example.b2b_opportunities.Dtos.Response.UserResponseDto;
-import com.example.b2b_opportunities.Entity.Role;
 import com.example.b2b_opportunities.Entity.User;
+import com.example.b2b_opportunities.Entity.Role;
 import com.example.b2b_opportunities.Exceptions.AuthenticationFailedException;
 import com.example.b2b_opportunities.Exceptions.DisabledUserException;
 import com.example.b2b_opportunities.Exceptions.EmailInUseException;
@@ -15,11 +15,12 @@ import com.example.b2b_opportunities.Exceptions.UserNotFoundException;
 import com.example.b2b_opportunities.Exceptions.UsernameInUseException;
 import com.example.b2b_opportunities.Exceptions.ValidationException;
 import com.example.b2b_opportunities.Mappers.UserMapper;
-import com.example.b2b_opportunities.Repository.UserRepository;
-import com.example.b2b_opportunities.Static.RoleType;
 import com.example.b2b_opportunities.UserDetailsImpl;
-
+import com.example.b2b_opportunities.Repository.UserRepository;
+import jakarta.servlet.http.HttpServletRequest;
+import com.example.b2b_opportunities.Static.RoleType;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -33,7 +34,9 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
 
-
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.Optional;
 import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -44,6 +47,11 @@ import java.util.List;
 public class AuthenticationService {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
+    private final MailService mailService;
+
+    @Value("${registration.token.expiration.time}")
+    private int tokenExpirationDays;
+    private final ConfirmationTokenRepository confirmationTokenRepository;
     private final UserRepository userRepository;
 
     public ResponseEntity<LoginResponse> login(LoginDto loginDto) {
@@ -60,22 +68,6 @@ public class AuthenticationService {
         return ResponseEntity.ok(loginResponse);
     }
 
-    public ResponseEntity<UserResponseDto> register(UserRequestDto userRequestDto, BindingResult bindingResult) {
-        if (bindingResult.hasErrors()) {
-            throw new ValidationException(bindingResult);
-        }
-        validateUser(userRequestDto);
-
-        User user = UserMapper.toEntity(userRequestDto);
-
-        userRepository.save(user);
-        return ResponseEntity.status(HttpStatus.CREATED).body(UserMapper.toResponseDto(user));
-    }
-
-    public List<UserResponseDto> getAllUsers() {
-        List<User> users = userRepository.findAll();
-        return UserMapper.toResponseDtoList(users);
-    }
 
     private UserDetails authenticate(LoginDto loginDto) {
         try {
@@ -87,6 +79,23 @@ public class AuthenticationService {
         } catch (AuthenticationException e) {
             throw new AuthenticationFailedException("Authentication failed: Invalid username or password.");
         }
+    }
+
+    public ResponseEntity<UserResponseDto> register(UserRequestDto userRequestDto, BindingResult bindingResult, HttpServletRequest request) {
+        if (bindingResult.hasErrors()) {
+            throw new ValidationException(bindingResult);
+        }
+        validateUser(userRequestDto);
+
+        User user = UserMapper.toEntity(userRequestDto);
+        userRepository.save(user);
+        mailService.sendConfirmationMail(user, request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(UserMapper.toResponse(user));
+    }
+
+    public List<UserResponseDto> getAllUsers() {
+        List<User> users = userRepository.findAll();
+        return UserMapper.toResponseDtoList(users);
     }
 
     private void validateUser(UserRequestDto userRequestDto) {
@@ -161,5 +170,43 @@ public class AuthenticationService {
                 .token(jwtService.generateToken(userDetails))
                 .expiresIn(jwtService.getExpirationTime())
                 .build();
+    }
+    private boolean isTokenExpired(ConfirmationToken token) {
+        LocalDateTime currentDateTime = LocalDateTime.now();
+        Duration duration = Duration.between(token.getCreatedAt(), currentDateTime);
+        return duration.toDays() > tokenExpirationDays;
+    }
+
+    public String confirmEmail(String token) {
+        Optional<ConfirmationToken> optionalConfirmationToken = confirmationTokenRepository.findByToken(token);
+        if (optionalConfirmationToken.isEmpty()) {
+            return "Invalid token"; //TODO - this will be improved
+        }
+        ConfirmationToken confirmationToken = optionalConfirmationToken.get();
+        if (isTokenExpired(confirmationToken)) {
+            return "Expired token"; //TODO - this will be improved -> resend?
+        }
+        User user = confirmationToken.getUser();
+        if (user.isEnabled()) {
+            return "Account already activated";
+        }
+        user.setEnabled(true);
+        userRepository.save(user);
+        return "Account activated successfully";
+    }
+
+    public String resendConfirmationMail(String email, HttpServletRequest request) {
+        User user = userRepository.findByEmail(email).orElseThrow(()
+                -> new UserNotFoundException("User not found with email: " + email));
+        if (user.isEnabled()) {
+            return "Account already activated";
+        }
+        Optional<ConfirmationToken> optionalToken = confirmationTokenRepository.findByUser(user);
+        if (optionalToken.isPresent()) {
+            ConfirmationToken confirmationToken = optionalToken.get();
+            confirmationTokenRepository.deleteById(confirmationToken.getId());
+        }
+        mailService.sendConfirmationMail(user, request);
+        return "A new token was sent to your e-mail!";
     }
 }
