@@ -1,17 +1,27 @@
 package com.example.b2b_opportunities;
 
-import com.example.b2b_opportunities.Dtos.LoginDtos.LoginDto;
-import com.example.b2b_opportunities.Dtos.Request.UserRequestDto;
-import com.example.b2b_opportunities.Dtos.Response.UserResponseDto;
+import com.example.b2b_opportunities.Dto.LoginDtos.LoginDto;
+import com.example.b2b_opportunities.Dto.Request.UserRequestDto;
+import com.example.b2b_opportunities.Dto.Response.UserResponseDto;
+import com.example.b2b_opportunities.Entity.User;
+import com.example.b2b_opportunities.Repository.UserRepository;
 import com.example.b2b_opportunities.Service.AuthenticationService;
+import com.example.b2b_opportunities.Service.MailService;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.transaction.Transactional;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import java.util.List;
 
@@ -19,6 +29,8 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -29,11 +41,19 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Transactional  // Roll back changes made by tests, ensuring each test starts with a clean state.
 public class AuthControllerTest extends BaseTest {
 
+    @MockBean
+    private MailService mailService;
     @Autowired
     private MockMvc mockMvc;
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private PlatformTransactionManager transactionManager;
 
     @Autowired
     private AuthenticationService authenticationService;
@@ -47,6 +67,11 @@ public class AuthControllerTest extends BaseTest {
             "password123",
             "password123"
     );
+
+    @BeforeEach
+    void setUp(){
+        doNothing().when(mailService).sendConfirmationMail(any(), any());
+    }
 
     @Test
     void shouldRegisterUserAndSaveToDatabase() throws Exception {
@@ -150,13 +175,25 @@ public class AuthControllerTest extends BaseTest {
     }
 
     @Test
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)  // Disable transaction for this method
     void shouldLoginAndReturnToken() throws Exception {
-
+        TransactionStatus transaction = transactionManager.getTransaction(new DefaultTransactionDefinition());
         String userRequestJson = objectMapper.writeValueAsString(userRequestDto);
 
         mockMvc.perform(post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(userRequestJson));
+
+        transactionManager.commit(transaction);
+
+        Thread.sleep(1000);
+
+        User user = userRepository.findByEmail(userRequestDto.getEmail().toLowerCase())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        user.setEnabled(true);
+        userRepository.save(user);
+
+        userRepository.flush();
 
         LoginDto loginDto = new LoginDto(userRequestDto.getEmail(), userRequestDto.getPassword());
 
@@ -168,5 +205,8 @@ public class AuthControllerTest extends BaseTest {
                         .content(loginDtoJson))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.expiresIn", is(3600000)));
+
+        userRepository.delete(user);
     }
+
 }

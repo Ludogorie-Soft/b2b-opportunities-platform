@@ -1,24 +1,26 @@
 package com.example.b2b_opportunities.Service;
 
-import com.example.b2b_opportunities.Dtos.LoginDtos.LoginDto;
-import com.example.b2b_opportunities.Dtos.LoginDtos.LoginResponse;
-import com.example.b2b_opportunities.Dtos.Request.UserRequestDto;
-import com.example.b2b_opportunities.Dtos.Response.UserResponseDto;
-import com.example.b2b_opportunities.Entity.User;
+import com.example.b2b_opportunities.Dto.LoginDtos.LoginDto;
+import com.example.b2b_opportunities.Dto.LoginDtos.LoginResponse;
+import com.example.b2b_opportunities.Dto.Request.UserRequestDto;
+import com.example.b2b_opportunities.Dto.Response.UserResponseDto;
+import com.example.b2b_opportunities.Entity.ConfirmationToken;
 import com.example.b2b_opportunities.Entity.Role;
-import com.example.b2b_opportunities.Exceptions.AuthenticationFailedException;
-import com.example.b2b_opportunities.Exceptions.DisabledUserException;
-import com.example.b2b_opportunities.Exceptions.EmailInUseException;
-import com.example.b2b_opportunities.Exceptions.PasswordsNotMatchingException;
-import com.example.b2b_opportunities.Exceptions.ServerErrorException;
-import com.example.b2b_opportunities.Exceptions.UserNotFoundException;
-import com.example.b2b_opportunities.Exceptions.UsernameInUseException;
-import com.example.b2b_opportunities.Exceptions.ValidationException;
-import com.example.b2b_opportunities.Mappers.UserMapper;
-import com.example.b2b_opportunities.UserDetailsImpl;
+import com.example.b2b_opportunities.Entity.User;
+import com.example.b2b_opportunities.Exception.AuthenticationFailedException;
+import com.example.b2b_opportunities.Exception.DisabledUserException;
+import com.example.b2b_opportunities.Exception.EmailInUseException;
+import com.example.b2b_opportunities.Exception.PasswordsNotMatchingException;
+import com.example.b2b_opportunities.Exception.ServerErrorException;
+import com.example.b2b_opportunities.Exception.UserNotFoundException;
+import com.example.b2b_opportunities.Exception.UsernameInUseException;
+import com.example.b2b_opportunities.Exception.ValidationException;
+import com.example.b2b_opportunities.Mapper.UserMapper;
+import com.example.b2b_opportunities.Repository.ConfirmationTokenRepository;
 import com.example.b2b_opportunities.Repository.UserRepository;
-import jakarta.servlet.http.HttpServletRequest;
 import com.example.b2b_opportunities.Static.RoleType;
+import com.example.b2b_opportunities.UserDetailsImpl;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -34,13 +36,12 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
 
+import java.security.Principal;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Optional;
-import java.security.Principal;
-import java.time.LocalDateTime;
-import java.util.Map;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -90,7 +91,7 @@ public class AuthenticationService {
         User user = UserMapper.toEntity(userRequestDto);
         userRepository.save(user);
         mailService.sendConfirmationMail(user, request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(UserMapper.toResponse(user));
+        return ResponseEntity.status(HttpStatus.CREATED).body(UserMapper.toResponseDto(user));
     }
 
     public List<UserResponseDto> getAllUsers() {

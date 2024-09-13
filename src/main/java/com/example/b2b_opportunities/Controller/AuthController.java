@@ -1,9 +1,9 @@
 package com.example.b2b_opportunities.Controller;
 
-import com.example.b2b_opportunities.Dtos.LoginDtos.LoginDto;
-import com.example.b2b_opportunities.Dtos.LoginDtos.LoginResponse;
-import com.example.b2b_opportunities.Dtos.Request.UserRequestDto;
-import com.example.b2b_opportunities.Dtos.Response.UserResponseDto;
+import com.example.b2b_opportunities.Dto.LoginDtos.LoginDto;
+import com.example.b2b_opportunities.Dto.LoginDtos.LoginResponse;
+import com.example.b2b_opportunities.Dto.Request.UserRequestDto;
+import com.example.b2b_opportunities.Dto.Response.UserResponseDto;
 import com.example.b2b_opportunities.Service.AuthenticationService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;

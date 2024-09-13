@@ -1,4 +1,4 @@
-package com.example.b2b_opportunities.Configs;
+package com.example.b2b_opportunities.Config;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
