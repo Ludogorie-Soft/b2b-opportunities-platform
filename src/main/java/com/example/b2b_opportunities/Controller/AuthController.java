@@ -4,9 +4,11 @@ import com.example.b2b_opportunities.Dto.LoginDtos.LoginDto;
 import com.example.b2b_opportunities.Dto.LoginDtos.LoginResponse;
 import com.example.b2b_opportunities.Dto.Request.UserRequestDto;
 import com.example.b2b_opportunities.Dto.Response.UserResponseDto;
+import com.example.b2b_opportunities.Entity.Post;
 import com.example.b2b_opportunities.Service.AuthenticationService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import jakarta.websocket.server.PathParam;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,11 +17,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import java.security.Principal;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -59,5 +62,22 @@ public class AuthController {
     @GetMapping("/user")
     public Principal getUserDetails(Principal user) {
         return user;
+    }
+
+    @PostMapping("/approve/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public UserResponseDto approveUser(@PathParam("id") Long id) {
+        return authenticationService.approve(id);
+    }
+
+    @GetMapping("/get-non-approved")
+    public List<UserResponseDto> getAllNonApprovedUsers() {
+        return authenticationService.getAllNonApprovedUsers();
+    }
+
+    // Temp - just a proof of concept
+    @GetMapping("/get-user-posts/{id}")
+    public List<Post> getUserPosts(@PathParam("id") Long id) {
+        return authenticationService.getUserPosts(id);
     }
 }

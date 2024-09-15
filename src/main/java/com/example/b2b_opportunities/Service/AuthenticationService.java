@@ -5,6 +5,7 @@ import com.example.b2b_opportunities.Dto.LoginDtos.LoginResponse;
 import com.example.b2b_opportunities.Dto.Request.UserRequestDto;
 import com.example.b2b_opportunities.Dto.Response.UserResponseDto;
 import com.example.b2b_opportunities.Entity.ConfirmationToken;
+import com.example.b2b_opportunities.Entity.Post;
 import com.example.b2b_opportunities.Entity.Role;
 import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Exception.AuthenticationFailedException;
@@ -69,19 +70,6 @@ public class AuthenticationService {
         return ResponseEntity.ok(loginResponse);
     }
 
-
-    private UserDetails authenticate(LoginDto loginDto) {
-        try {
-            Authentication authentication = new UsernamePasswordAuthenticationToken(loginDto.getUsernameOrEmail().toLowerCase(), loginDto.getPassword());
-            Authentication authResult = authenticationManager.authenticate(authentication);
-            return (UserDetailsImpl) authResult.getPrincipal();
-        } catch (DisabledException e) {
-            throw new DisabledUserException("This account is not activated yet."); // TODO: email confirmation not accepted
-        } catch (AuthenticationException e) {
-            throw new AuthenticationFailedException("Authentication failed: Invalid username or password.");
-        }
-    }
-
     public ResponseEntity<UserResponseDto> register(UserRequestDto userRequestDto, BindingResult bindingResult, HttpServletRequest request) {
         if (bindingResult.hasErrors()) {
             throw new ValidationException(bindingResult);
@@ -97,85 +85,6 @@ public class AuthenticationService {
     public List<UserResponseDto> getAllUsers() {
         List<User> users = userRepository.findAll();
         return UserMapper.toResponseDtoList(users);
-    }
-
-    private void validateUser(UserRequestDto userRequestDto) {
-        if (isEmailInDB(userRequestDto.getEmail().toLowerCase())) {
-            throw new EmailInUseException("Email already in use. Please use a different email");
-        }
-        if (isUsernameInDB(userRequestDto.getUsername().toLowerCase())) {
-            throw new UsernameInUseException("Username already in use. Please use a different username");
-        }
-        if (!arePasswordsMatching(userRequestDto)) {
-            throw new PasswordsNotMatchingException("Passwords don't match");
-        }
-    }
-
-    private boolean isEmailInDB(String email) {
-        return userRepository.findByEmail(email).isPresent();
-    }
-
-    public boolean isUsernameInDB(String username) {
-        return userRepository.findByUsername(username).isPresent();
-    }
-
-    private boolean arePasswordsMatching(UserRequestDto userRequestDto) {
-        return userRequestDto.getPassword().equals(userRequestDto.getRepeatedPassword());
-    }
-
-    public LoginResponse oAuthLogin(Principal user) {
-        if (user instanceof OAuth2AuthenticationToken authToken) {
-            OAuth2User oauth2User = authToken.getPrincipal();
-
-            String provider = authToken.getAuthorizedClientRegistrationId(); // google
-            Map<String, Object> attributes = oauth2User.getAttributes();
-
-            String email = (String) attributes.get("email");
-
-            if (!isEmailInDB(email)) {
-                createUserFromOAuth(attributes, provider);
-            }
-
-            return generateLoginResponse(email);
-        }
-        throw new ServerErrorException("Authentication failed: The provided authentication is not an OAuth2 token.");
-    }
-
-    private void createUserFromOAuth(Map<String, Object> attributes, String provider) {
-        RoleType roleUser = RoleType.ROLE_USER;
-        Role role = Role.builder()
-                .id(roleUser.getId())
-                .name(roleUser.name())
-                .build();
-
-        String email = (String) attributes.get("email");
-        User user = User.builder()
-                .username(email)
-                .firstName((String) attributes.get("given_name"))
-                .lastName((String) attributes.get("family_name"))
-                .email(email)
-                .provider(provider)
-                .createdAt(LocalDateTime.now())
-                .isEnabled(true)
-                .role(role)
-                .build();
-
-        userRepository.save(user);
-    }
-
-    private LoginResponse generateLoginResponse(String email) {
-        User user = userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
-        UserDetailsImpl userDetails = new UserDetailsImpl(user);
-
-        return LoginResponse.builder()
-                .token(jwtService.generateToken(userDetails))
-                .expiresIn(jwtService.getExpirationTime())
-                .build();
-    }
-    private boolean isTokenExpired(ConfirmationToken token) {
-        LocalDateTime currentDateTime = LocalDateTime.now();
-        Duration duration = Duration.between(token.getCreatedAt(), currentDateTime);
-        return duration.toDays() > tokenExpirationDays;
     }
 
     public String confirmEmail(String token) {
@@ -209,5 +118,116 @@ public class AuthenticationService {
         }
         mailService.sendConfirmationMail(user, request);
         return "A new token was sent to your e-mail!";
+    }
+
+    public LoginResponse oAuthLogin(Principal user) {
+        if (user instanceof OAuth2AuthenticationToken authToken) {
+            OAuth2User oauth2User = authToken.getPrincipal();
+
+            String provider = authToken.getAuthorizedClientRegistrationId(); // google
+            Map<String, Object> attributes = oauth2User.getAttributes();
+
+            String email = (String) attributes.get("email");
+
+            if (!isEmailInDB(email)) {
+                createUserFromOAuth(attributes, provider);
+            }
+
+            return generateLoginResponse(email);
+        }
+        throw new ServerErrorException("Authentication failed: The provided authentication is not an OAuth2 token.");
+    }
+
+    public boolean isUsernameInDB(String username) {
+        return userRepository.findByUsername(username).isPresent();
+    }
+
+    public UserResponseDto approve(Long id) {
+        User user = userRepository.findById(id).orElseThrow(() -> new UserNotFoundException("User with id " + id + " not found"));
+        if (user.isApproved()) {
+            return UserMapper.toResponseDto(user);
+        }
+        user.setApproved(true);
+        return UserMapper.toResponseDto(userRepository.save(user));
+    }
+
+    public List<UserResponseDto> getAllNonApprovedUsers() {
+        List<User> users = userRepository.findUsersWithUnapprovedStatusAndPosts();
+        return UserMapper.toResponseDtoList(users);
+    }
+
+    public List<Post> getUserPosts(Long id) {
+        User user = userRepository.findById(id).orElseThrow(() -> new UserNotFoundException("User with id " + id + " not found"));
+        return user.getPosts();
+    }
+
+    private UserDetails authenticate(LoginDto loginDto) {
+        try {
+            Authentication authentication = new UsernamePasswordAuthenticationToken(loginDto.getUsernameOrEmail().toLowerCase(), loginDto.getPassword());
+            Authentication authResult = authenticationManager.authenticate(authentication);
+            return (UserDetailsImpl) authResult.getPrincipal();
+        } catch (DisabledException e) {
+            throw new DisabledUserException("This account is not activated yet."); // TODO: email confirmation not accepted
+        } catch (AuthenticationException e) {
+            throw new AuthenticationFailedException("Authentication failed: Invalid username or password.");
+        }
+    }
+
+    private void validateUser(UserRequestDto userRequestDto) {
+        if (isEmailInDB(userRequestDto.getEmail().toLowerCase())) {
+            throw new EmailInUseException("Email already in use. Please use a different email");
+        }
+        if (isUsernameInDB(userRequestDto.getUsername().toLowerCase())) {
+            throw new UsernameInUseException("Username already in use. Please use a different username");
+        }
+        if (!arePasswordsMatching(userRequestDto)) {
+            throw new PasswordsNotMatchingException("Passwords don't match");
+        }
+    }
+
+    private boolean isEmailInDB(String email) {
+        return userRepository.findByEmail(email).isPresent();
+    }
+
+    private boolean arePasswordsMatching(UserRequestDto userRequestDto) {
+        return userRequestDto.getPassword().equals(userRequestDto.getRepeatedPassword());
+    }
+
+    private void createUserFromOAuth(Map<String, Object> attributes, String provider) {
+        RoleType roleUser = RoleType.ROLE_USER;
+        Role role = Role.builder()
+                .id(roleUser.getId())
+                .name(roleUser.name())
+                .build();
+
+        String email = (String) attributes.get("email");
+        User user = User.builder()
+                .username(email)
+                .firstName((String) attributes.get("given_name"))
+                .lastName((String) attributes.get("family_name"))
+                .email(email)
+                .provider(provider)
+                .createdAt(LocalDateTime.now())
+                .isEnabled(true)
+                .role(role)
+                .build();
+
+        userRepository.save(user);
+    }
+
+    private LoginResponse generateLoginResponse(String email) {
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
+        UserDetailsImpl userDetails = new UserDetailsImpl(user);
+
+        return LoginResponse.builder()
+                .token(jwtService.generateToken(userDetails))
+                .expiresIn(jwtService.getExpirationTime())
+                .build();
+    }
+
+    private boolean isTokenExpired(ConfirmationToken token) {
+        LocalDateTime currentDateTime = LocalDateTime.now();
+        Duration duration = Duration.between(token.getCreatedAt(), currentDateTime);
+        return duration.toDays() > tokenExpirationDays;
     }
 }

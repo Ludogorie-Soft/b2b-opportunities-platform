@@ -11,3 +11,9 @@ databaseChangeLog:
   - include:
       file: 04-create-registration-tokens-table.sql
       relativeToChangelogFile: true
+  - include:
+      file: 05-modify-users-table.sql
+      relativeToChangelogFile: true
+  - include:
+      file: 06-create-posts-table.sql
+      relativeToChangelogFile: true

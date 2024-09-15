@@ -18,4 +18,5 @@ public class UserResponseDto {
     private String companyName;
     private LocalDateTime createdAt;
     private boolean isEnabled;
+    private boolean isApproved;
 }
