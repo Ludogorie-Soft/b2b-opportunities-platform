@@ -6,6 +6,7 @@ import com.example.b2b_opportunities.Dto.Response.UserResponseDto;
 import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Repository.UserRepository;
 import com.example.b2b_opportunities.Service.AuthenticationService;
+import com.example.b2b_opportunities.Service.ConfirmationTokenService;
 import com.example.b2b_opportunities.Service.MailService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,7 +35,8 @@ import static org.mockito.Mockito.doNothing;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 
 @SpringBootTest
 @AutoConfigureMockMvc(addFilters = false)
@@ -58,6 +60,9 @@ public class AuthControllerTest extends BaseTest {
     @Autowired
     private AuthenticationService authenticationService;
 
+    @Autowired
+    private ConfirmationTokenService confirmationTokenService;
+
     private final UserRequestDto userRequestDto = new UserRequestDto(
             "Test-User",
             "Test",
@@ -69,7 +74,7 @@ public class AuthControllerTest extends BaseTest {
     );
 
     @BeforeEach
-    void setUp(){
+    void setUp() {
         doNothing().when(mailService).sendConfirmationMail(any(), any());
     }
 
@@ -175,7 +180,8 @@ public class AuthControllerTest extends BaseTest {
     }
 
     @Test
-    @Transactional(propagation = Propagation.NOT_SUPPORTED)  // Disable transaction for this method
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+        // Disable transaction for this method
     void shouldLoginAndReturnToken() throws Exception {
         TransactionStatus transaction = transactionManager.getTransaction(new DefaultTransactionDefinition());
         String userRequestJson = objectMapper.writeValueAsString(userRequestDto);
@@ -207,6 +213,47 @@ public class AuthControllerTest extends BaseTest {
                 .andExpect(jsonPath("$.expiresIn", is(3600000)));
 
         userRepository.delete(user);
+    }
+
+    @Test
+    void testResendRegistrationMail() throws Exception {
+        String userRequestJson = objectMapper.writeValueAsString(userRequestDto);
+
+        mockMvc.perform(post("/api/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(userRequestJson));
+
+        User user = userRepository.findByEmail(userRequestDto.getEmail().toLowerCase())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        assertFalse(user.isEnabled());
+
+        mockMvc.perform(get("/api/auth/register/resend-confirmation")
+                        .param("email", user.getEmail()))
+                .andExpect(status().isOk())
+                .andExpect(content().string("A new token was sent to your e-mail!"));
+    }
+
+    @Test
+    void testConfirmEmail() throws Exception {
+        String userRequestJson = objectMapper.writeValueAsString(userRequestDto);
+
+        mockMvc.perform(post("/api/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(userRequestJson));
+
+        User user = userRepository.findByEmail(userRequestDto.getEmail().toLowerCase())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        assertFalse(user.isEnabled());
+        String token = confirmationTokenService.generateConfirmationCode(user);
+
+        mockMvc.perform(get("/api/auth/register/confirm")
+                        .param("token", token))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Account activated successfully"));
+
+        User confirmedUser = userRepository.findByEmail(userRequestDto.getEmail().toLowerCase())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        assertTrue(confirmedUser.isEnabled());
     }
 
 }
