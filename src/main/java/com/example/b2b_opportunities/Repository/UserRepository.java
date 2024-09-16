@@ -11,7 +11,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByUsername(String username);
     Optional<User> findByEmail(String email);
 
-    @Query("SELECT u FROM User u WHERE u.isApproved = false AND size(u.posts) > 0")
-    List<User> findUsersWithUnapprovedStatusAndPosts();
-
+    List<User> findByIsApprovedFalse();
 }

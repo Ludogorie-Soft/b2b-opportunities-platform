@@ -68,5 +68,5 @@ public class User {
     private boolean isApproved;
 
     @OneToMany(mappedBy = "user")
-    private List<Post> posts;
+    private List<Project> projects;
 }

@@ -4,7 +4,7 @@ import com.example.b2b_opportunities.Dto.LoginDtos.LoginDto;
 import com.example.b2b_opportunities.Dto.LoginDtos.LoginResponse;
 import com.example.b2b_opportunities.Dto.Request.UserRequestDto;
 import com.example.b2b_opportunities.Dto.Response.UserResponseDto;
-import com.example.b2b_opportunities.Entity.Post;
+import com.example.b2b_opportunities.Entity.Project;
 import com.example.b2b_opportunities.Service.AuthenticationService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -77,7 +77,7 @@ public class AuthController {
 
     // Temp - just a proof of concept
     @GetMapping("/get-user-posts/{id}")
-    public List<Post> getUserPosts(@PathParam("id") Long id) {
-        return authenticationService.getUserPosts(id);
+    public List<Project> getUserProjects(@PathParam("id") Long id) {
+        return authenticationService.getUserProjects(id);
     }
 }
