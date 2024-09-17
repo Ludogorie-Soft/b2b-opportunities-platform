@@ -16,7 +16,10 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionStatus;
@@ -24,7 +27,10 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -256,4 +262,50 @@ public class AuthControllerTest extends BaseTest {
         assertTrue(confirmedUser.isEnabled());
     }
 
+    @Test
+    void testOAuthLoginCreatesNewUser() throws Exception {
+
+        Map<String, Object> attributes = new HashMap<>();
+        attributes.put("email", "test@test.com");
+        attributes.put("given_name", "Test");
+        attributes.put("family_name", "User");
+
+        OAuth2User mockOAuth2User = new CustomOAuth2User(attributes);
+        OAuth2AuthenticationToken mockOAuth2Token = new OAuth2AuthenticationToken(
+                mockOAuth2User, null, "google");
+
+        mockMvc.perform(get("/api/auth/oauth2/success").principal(mockOAuth2Token))
+                .andExpect(status().isOk());
+
+        User newUser = userRepository.findByEmail("test@test.com")
+                .orElseThrow(() -> new IllegalStateException("User not found"));
+
+        assertEquals("Test", newUser.getFirstName());
+        assertEquals("User", newUser.getLastName());
+        assertTrue(newUser.isEnabled());
+        assertEquals("google", newUser.getProvider());
+    }
+
+    private static class CustomOAuth2User implements OAuth2User {
+        private final Map<String, Object> attributes;
+
+        CustomOAuth2User(Map<String, Object> attributes) {
+            this.attributes = attributes;
+        }
+
+        @Override
+        public Map<String, Object> getAttributes() {
+            return attributes;
+        }
+
+        @Override
+        public Collection<? extends GrantedAuthority> getAuthorities() {
+            return List.of();
+        }
+
+        @Override
+        public String getName() {
+            return (String) attributes.get("email");
+        }
+    }
 }
