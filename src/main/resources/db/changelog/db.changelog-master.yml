@@ -14,6 +14,3 @@ databaseChangeLog:
   - include:
       file: 05-modify-users-table.sql
       relativeToChangelogFile: true
-  - include:
-      file: 06-create-project-table.sql
-      relativeToChangelogFile: true

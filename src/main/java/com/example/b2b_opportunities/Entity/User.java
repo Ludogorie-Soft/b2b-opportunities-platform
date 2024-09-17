@@ -66,7 +66,4 @@ public class User {
     private String provider;
 
     private boolean isApproved;
-
-    @OneToMany(mappedBy = "user")
-    private List<Project> projects;
 }

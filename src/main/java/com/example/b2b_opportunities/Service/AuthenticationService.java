@@ -5,7 +5,6 @@ import com.example.b2b_opportunities.Dto.LoginDtos.LoginResponse;
 import com.example.b2b_opportunities.Dto.Request.UserRequestDto;
 import com.example.b2b_opportunities.Dto.Response.UserResponseDto;
 import com.example.b2b_opportunities.Entity.ConfirmationToken;
-import com.example.b2b_opportunities.Entity.Project;
 import com.example.b2b_opportunities.Entity.Role;
 import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Exception.AuthenticationFailedException;
@@ -142,24 +141,6 @@ public class AuthenticationService {
         return userRepository.findByUsername(username).isPresent();
     }
 
-    public UserResponseDto approve(Long id) {
-        User user = userRepository.findById(id).orElseThrow(() -> new UserNotFoundException("User with id " + id + " not found"));
-        if (user.isApproved()) {
-            return UserMapper.toResponseDto(user);
-        }
-        user.setApproved(true);
-        return UserMapper.toResponseDto(userRepository.save(user));
-    }
-
-    public List<UserResponseDto> getAllNonApprovedUsers() {
-        List<User> users = userRepository.findByIsApprovedFalse();
-        return UserMapper.toResponseDtoList(users);
-    }
-
-    public List<Project> getUserProjects(Long id) {
-        User user = userRepository.findById(id).orElseThrow(() -> new UserNotFoundException("User with id " + id + " not found"));
-        return user.getProjects();
-    }
 
     private UserDetails authenticate(LoginDto loginDto) {
         try {
