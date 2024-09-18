@@ -67,7 +67,6 @@ class AdminServiceTest extends BaseTest {
 
     @Test
     void shouldGetAllNonApprovedUsers() {
-        // Arrange
         User user1 = User.builder()
                 .firstName("User1")
                 .lastName("Test1")
