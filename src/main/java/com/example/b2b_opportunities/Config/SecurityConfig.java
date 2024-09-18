@@ -35,11 +35,11 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(authorize -> authorize
-                                .requestMatchers("/").permitAll()
-//                                .anyRequest().permitAll()
+//                                .requestMatchers("/").permitAll()
+                                .anyRequest().permitAll()
 //                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
 //                        .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
-                                .anyRequest().authenticated()
+//                                .anyRequest().authenticated()
                 )
 //                .oauth2Login(withDefaults())
                 .oauth2Login(oAuthLogin -> oAuthLogin.successHandler(customAuthenticationSuccessHandler()))
