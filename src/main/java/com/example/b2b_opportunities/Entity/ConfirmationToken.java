@@ -38,9 +38,9 @@ public class ConfirmationToken {
     )
     private User user;
 
-    public ConfirmationToken(String token, LocalDateTime createdAt, User user) {
+    public ConfirmationToken(String token, User user) {
         this.token = token;
-        this.createdAt = createdAt;
+        this.createdAt = LocalDateTime.now();
         this.user = user;
     }
 }

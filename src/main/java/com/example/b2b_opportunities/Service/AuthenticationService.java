@@ -10,6 +10,7 @@ import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Exception.AuthenticationFailedException;
 import com.example.b2b_opportunities.Exception.DisabledUserException;
 import com.example.b2b_opportunities.Exception.EmailInUseException;
+import com.example.b2b_opportunities.Exception.InvalidTokenException;
 import com.example.b2b_opportunities.Exception.PasswordsNotMatchingException;
 import com.example.b2b_opportunities.Exception.ServerErrorException;
 import com.example.b2b_opportunities.Exception.UserNotFoundException;
@@ -106,7 +107,7 @@ public class AuthenticationService {
         if (isUsernameInDB(userRequestDto.getUsername().toLowerCase())) {
             throw new UsernameInUseException("Username already in use. Please use a different username");
         }
-        if (!arePasswordsMatching(userRequestDto)) {
+        if (!arePasswordsMatching(userRequestDto.getPassword(), userRequestDto.getRepeatedPassword())) {
             throw new PasswordsNotMatchingException("Passwords don't match");
         }
     }
@@ -119,8 +120,8 @@ public class AuthenticationService {
         return userRepository.findByUsername(username).isPresent();
     }
 
-    private boolean arePasswordsMatching(UserRequestDto userRequestDto) {
-        return userRequestDto.getPassword().equals(userRequestDto.getRepeatedPassword());
+    public boolean arePasswordsMatching(String password, String repeatedPassword) {
+        return password.equals(repeatedPassword);
     }
 
     public LoginResponse oAuthLogin(Principal user) {
@@ -172,21 +173,27 @@ public class AuthenticationService {
                 .expiresIn(jwtService.getExpirationTime())
                 .build();
     }
+
     private boolean isTokenExpired(ConfirmationToken token) {
         LocalDateTime currentDateTime = LocalDateTime.now();
         Duration duration = Duration.between(token.getCreatedAt(), currentDateTime);
         return duration.toDays() > tokenExpirationDays;
     }
 
-    public String confirmEmail(String token) {
+    public ConfirmationToken validateAndReturnToken(String token) {
         Optional<ConfirmationToken> optionalConfirmationToken = confirmationTokenRepository.findByToken(token);
         if (optionalConfirmationToken.isEmpty()) {
-            return "Invalid token"; //TODO - this will be improved
+            throw new InvalidTokenException("Invalid token");
         }
         ConfirmationToken confirmationToken = optionalConfirmationToken.get();
         if (isTokenExpired(confirmationToken)) {
-            return "Expired token"; //TODO - this will be improved -> resend?
+            throw new InvalidTokenException("Expired token");
         }
+        return optionalConfirmationToken.get();
+    }
+
+    public String confirmEmail(String token) {
+        ConfirmationToken confirmationToken = validateAndReturnToken(token);
         User user = confirmationToken.getUser();
         if (user.isEnabled()) {
             return "Account already activated";

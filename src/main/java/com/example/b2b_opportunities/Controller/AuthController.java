@@ -2,9 +2,11 @@ package com.example.b2b_opportunities.Controller;
 
 import com.example.b2b_opportunities.Dto.LoginDtos.LoginDto;
 import com.example.b2b_opportunities.Dto.LoginDtos.LoginResponse;
+import com.example.b2b_opportunities.Dto.Request.ResetPasswordDto;
 import com.example.b2b_opportunities.Dto.Request.UserRequestDto;
 import com.example.b2b_opportunities.Dto.Response.UserResponseDto;
 import com.example.b2b_opportunities.Service.AuthenticationService;
+import com.example.b2b_opportunities.Service.PasswordService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -15,9 +17,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import java.security.Principal;
 
@@ -26,6 +28,7 @@ import java.security.Principal;
 @RequiredArgsConstructor
 public class AuthController {
     private final AuthenticationService authenticationService;
+    private final PasswordService passwordService;
 
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
@@ -60,4 +63,15 @@ public class AuthController {
     public Principal getUserDetails(Principal user) {
         return user;
     }
+
+    @GetMapping("/password-recovery")
+    public String requestPasswordRecovery(@RequestParam String email, HttpServletRequest request) {
+        return passwordService.requestPasswordRecovery(email, request);
+    }
+
+    @PostMapping("/set-new-password")
+    public String changePassword(@RequestBody ResetPasswordDto resetPasswordDto) {
+        return passwordService.setNewPassword(resetPasswordDto);
+    }
+
 }
