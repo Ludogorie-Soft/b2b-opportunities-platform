@@ -38,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-public class AuthServiceTest {
+class AuthServiceTest {
 
     @InjectMocks
     private AuthenticationService authenticationService;
@@ -70,7 +70,7 @@ public class AuthServiceTest {
     }
 
     @Test
-    public void testLoginWithValidInput() {
+    void testLoginWithValidInput() {
 
         LoginDto loginDto = new LoginDto("test@test.com","password");
         User user = new User();
@@ -97,7 +97,7 @@ public class AuthServiceTest {
     }
 
     @Test
-    public void testLoginWithWrongPassword() {
+    void testLoginWithWrongPassword() {
 
         LoginDto loginDto = new LoginDto("test@test.com","wrong-password");
 
@@ -113,7 +113,7 @@ public class AuthServiceTest {
     }
 
     @Test
-    public void testLoginWithDisabledUser() {
+    void testLoginWithDisabledUser() {
 
         LoginDto loginDto = new LoginDto("test@test.com","password");
 
@@ -128,7 +128,7 @@ public class AuthServiceTest {
     }
 
     @Test
-    public void testRegisterWithValidInput() {
+    void testRegisterWithValidInput() {
 
         UserRequestDto userRequestDto = new UserRequestDto("testuser","test","test","null","test@test.com","password","password");
 
@@ -146,7 +146,7 @@ public class AuthServiceTest {
     }
 
     @Test
-    public void testOAuthLoginWithValidUser() {
+    void testOAuthLoginWithValidUser() {
         OAuth2AuthenticationToken authToken = mock(OAuth2AuthenticationToken.class);
         OAuth2User oAuth2User = mock(OAuth2User.class);
         when(authToken.getPrincipal()).thenReturn(oAuth2User);
@@ -164,7 +164,7 @@ public class AuthServiceTest {
     }
 
     @Test
-    public void testRegisterWithInvalidPasswordMismatch() {
+    void testRegisterWithInvalidPasswordMismatch() {
         UserRequestDto userRequestDto = new UserRequestDto("testuser","test","test","null","test@test.com","password","differentpassword");
 
         when(bindingResult.hasErrors()).thenReturn(false);
@@ -177,7 +177,7 @@ public class AuthServiceTest {
     }
 
     @Test
-    public void testRegisterWithDuplicateEmail() {
+    void testRegisterWithDuplicateEmail() {
 
         UserRequestDto userRequestDto = new UserRequestDto("testuser","test","test","null","test@test.com","password","password");
 
@@ -192,7 +192,7 @@ public class AuthServiceTest {
     }
 
     @Test
-    public void testConfirmEmailWithExpiredToken() {
+    void testConfirmEmailWithExpiredToken() {
 
         String token = "test-token";
         ConfirmationToken confirmationToken = mock(ConfirmationToken.class);
@@ -209,7 +209,7 @@ public class AuthServiceTest {
     }
 
     @Test
-    public void testConfirmEmailWithValidToken() {
+    void testConfirmEmailWithValidToken() {
 
         String token = "test-token";
         User user = new User();
@@ -230,7 +230,7 @@ public class AuthServiceTest {
     }
 
     @Test
-    public void testResendConfirmationMailWhenUserIsNotActivated() {
+    void testResendConfirmationMailWhenUserIsNotActivated() {
 
         String email = "test@test.com";
         User user = new User();
@@ -250,7 +250,7 @@ public class AuthServiceTest {
     }
 
     @Test
-    public void testResendConfirmationMailWhenUserAlreadyActivated() {
+    void testResendConfirmationMailWhenUserAlreadyActivated() {
 
         String email = "test@test.com";
         User user = new User();
@@ -267,7 +267,7 @@ public class AuthServiceTest {
     }
 
     @Test
-    public void testResendConfirmationMailWhenUserNotExist() {
+    void testResendConfirmationMailWhenUserNotExist() {
 
         String email = "test@test.com";
 
