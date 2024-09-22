@@ -39,3 +39,6 @@ out/
 # DB
 Deploy/db/
 .env
+
+# Frontend
+Deploy/job-matcher/

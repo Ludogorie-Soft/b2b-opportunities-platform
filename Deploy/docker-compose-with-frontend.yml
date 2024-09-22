@@ -48,6 +48,18 @@ services:
     networks:
       - b2b-network
       
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile-frontend
+    ports:
+      - "8083:5173"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+          - b2b-network
+          
 networks:
   b2b-network:
     driver: bridge
