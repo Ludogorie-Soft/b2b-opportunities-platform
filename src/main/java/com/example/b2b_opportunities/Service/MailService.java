@@ -1,7 +1,9 @@
 package com.example.b2b_opportunities.Service;
 
+import com.example.b2b_opportunities.Entity.ConfirmationToken;
 import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Exception.ServerErrorException;
+import com.example.b2b_opportunities.Repository.ConfirmationTokenRepository;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.servlet.http.HttpServletRequest;
@@ -11,13 +13,15 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 @Service
 @RequiredArgsConstructor
 public class MailService {
 
+    private final ConfirmationTokenRepository confirmationTokenRepository;
     private final ConfirmationTokenService confirmationTokenService;
     private final JavaMailSender mailSender;
-    private final PasswordService passwordService;
     @Value("${spring.mail.username}")
     private String fromMail;
 
@@ -29,8 +33,18 @@ public class MailService {
 
     private String generatePasswordRecoveryLink(User user, HttpServletRequest request) {
         String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath();
-        String token = passwordService.generatePasswordRecoveryToken(user);
+        String token = generatePasswordRecoveryToken(user);
         return "<a href=" + baseUrl + "/api/auth/reset-password?token=" + token + ">Reset password</a>";
+    }
+
+    private String generatePasswordRecoveryToken(User user) {
+        String token = UUID.randomUUID().toString();
+        ConfirmationToken recoveryToken = new ConfirmationToken(
+                token,
+                user
+        );
+        confirmationTokenRepository.save(recoveryToken);
+        return token;
     }
 
     public void sendConfirmationMail(User user, HttpServletRequest request) {
