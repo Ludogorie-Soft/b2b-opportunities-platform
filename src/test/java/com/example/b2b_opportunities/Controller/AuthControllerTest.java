@@ -1,5 +1,6 @@
-package com.example.b2b_opportunities;
+package com.example.b2b_opportunities.Controller;
 
+import com.example.b2b_opportunities.BaseTest;
 import com.example.b2b_opportunities.Dto.LoginDtos.LoginDto;
 import com.example.b2b_opportunities.Dto.Request.UserRequestDto;
 import com.example.b2b_opportunities.Dto.Response.UserResponseDto;

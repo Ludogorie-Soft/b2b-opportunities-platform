@@ -1,4 +1,4 @@
-package com.example.b2b_opportunities;
+package com.example.b2b_opportunities.Service;
 
 import com.example.b2b_opportunities.Dto.LoginDtos.LoginDto;
 import com.example.b2b_opportunities.Dto.LoginDtos.LoginResponse;
@@ -14,9 +14,7 @@ import com.example.b2b_opportunities.Exception.PasswordsNotMatchingException;
 import com.example.b2b_opportunities.Exception.UserNotFoundException;
 import com.example.b2b_opportunities.Repository.ConfirmationTokenRepository;
 import com.example.b2b_opportunities.Repository.UserRepository;
-import com.example.b2b_opportunities.Service.AuthenticationService;
-import com.example.b2b_opportunities.Service.JwtService;
-import com.example.b2b_opportunities.Service.MailService;
+import com.example.b2b_opportunities.UserDetailsImpl;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -52,7 +50,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-class AuthServiceTest {
+class AuthenticationServiceTest {
     @InjectMocks
     private AuthenticationService authenticationService;
 
@@ -296,4 +294,3 @@ class AuthServiceTest {
         verify(mailService, never()).sendConfirmationMail(any(), eq(request));
     }
 }
-

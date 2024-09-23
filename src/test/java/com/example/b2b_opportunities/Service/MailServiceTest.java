@@ -1,8 +1,6 @@
-package com.example.b2b_opportunities;
+package com.example.b2b_opportunities.Service;
 
 import com.example.b2b_opportunities.Entity.User;
-import com.example.b2b_opportunities.Service.ConfirmationTokenService;
-import com.example.b2b_opportunities.Service.MailService;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.servlet.http.HttpServletRequest;
@@ -57,4 +55,3 @@ class MailServiceTest {
         verify(mimeMessage, times(1)).setSubject("Confirm your E-Mail - B2B Opportunities");
     }
 }
-
