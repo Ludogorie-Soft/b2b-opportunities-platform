@@ -203,9 +203,11 @@ class AuthServiceTest {
         when(confirmationToken.getUser())
                 .thenReturn(new User());
 
-        String result = authenticationService.confirmEmail(token);
+        InvalidTokenException exception = assertThrows(InvalidTokenException.class, () -> {
+            authenticationService.confirmEmail(token);
+        });
 
-        assertEquals("Expired token", result);
+        assertEquals("Expired token", exception.getMessage());
     }
 
     @Test
@@ -237,7 +239,7 @@ class AuthServiceTest {
         user.setEmail(email);
         user.setEnabled(false);
 
-        ConfirmationToken confirmationToken = new ConfirmationToken("test-token",LocalDateTime.now(),user);
+        ConfirmationToken confirmationToken = new ConfirmationToken("test-token",user);
 
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
         when(confirmationTokenRepository.findByUser(user)).thenReturn(Optional.of(confirmationToken));
