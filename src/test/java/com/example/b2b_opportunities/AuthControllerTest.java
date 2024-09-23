@@ -43,6 +43,7 @@ public class AuthControllerTest extends BaseTest {
 
     @MockBean
     private MailService mailService;
+
     @Autowired
     private MockMvc mockMvc;
 
