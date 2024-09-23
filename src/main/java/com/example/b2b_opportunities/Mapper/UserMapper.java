@@ -35,6 +35,7 @@ public class UserMapper {
                 .role(role)
                 .createdAt(LocalDateTime.now())
                 .isEnabled(false)
+                .isApproved(false)
                 .build();
     }
 
@@ -48,6 +49,7 @@ public class UserMapper {
                 .companyName(user.getCompanyName())
                 .createdAt(user.getCreatedAt())
                 .isEnabled(user.isEnabled())
+                .isApproved(user.isApproved())
                 .build();
     }
 
