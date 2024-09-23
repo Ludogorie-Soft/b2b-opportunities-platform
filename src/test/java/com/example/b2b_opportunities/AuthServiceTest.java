@@ -6,12 +6,19 @@ import com.example.b2b_opportunities.Dto.Request.UserRequestDto;
 import com.example.b2b_opportunities.Dto.Response.UserResponseDto;
 import com.example.b2b_opportunities.Entity.ConfirmationToken;
 import com.example.b2b_opportunities.Entity.User;
-import com.example.b2b_opportunities.Exception.*;
+import com.example.b2b_opportunities.Exception.AuthenticationFailedException;
+import com.example.b2b_opportunities.Exception.DisabledUserException;
+import com.example.b2b_opportunities.Exception.EmailInUseException;
+import com.example.b2b_opportunities.Exception.InvalidTokenException;
+import com.example.b2b_opportunities.Exception.PasswordsNotMatchingException;
+import com.example.b2b_opportunities.Exception.UserNotFoundException;
 import com.example.b2b_opportunities.Repository.ConfirmationTokenRepository;
 import com.example.b2b_opportunities.Repository.UserRepository;
 import com.example.b2b_opportunities.Service.AuthenticationService;
 import com.example.b2b_opportunities.Service.JwtService;
 import com.example.b2b_opportunities.Service.MailService;
+import jakarta.servlet.http.HttpServletRequest;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -24,22 +31,28 @@ import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.validation.BindingResult;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
-
-import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.validation.BindingResult;
 
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class AuthServiceTest {
-
     @InjectMocks
     private AuthenticationService authenticationService;
 
@@ -64,15 +77,23 @@ class AuthServiceTest {
     @Mock
     private HttpServletRequest request;
 
+    private AutoCloseable closeable;
+
     @BeforeEach
     public void setUp() {
-        MockitoAnnotations.openMocks(this);
+        closeable = MockitoAnnotations.openMocks(this);
+    }
+
+    @AfterEach
+    public void tearDown() throws Exception {
+        if (closeable != null) {
+            closeable.close();
+        }
     }
 
     @Test
     void testLoginWithValidInput() {
-
-        LoginDto loginDto = new LoginDto("test@test.com","password");
+        LoginDto loginDto = new LoginDto("test@test.com", "password");
         User user = new User();
         user.setUsername("testuser");
         user.setEmail("test@test.com");
@@ -98,24 +119,22 @@ class AuthServiceTest {
 
     @Test
     void testLoginWithWrongPassword() {
-
-        LoginDto loginDto = new LoginDto("test@test.com","wrong-password");
+        LoginDto loginDto = new LoginDto("test@test.com", "wrong-password");
 
         when(authenticationManager.authenticate(any(Authentication.class)))
                 .thenThrow(new AuthenticationException("") {
                 });
 
-        AuthenticationFailedException exception = assertThrows(AuthenticationFailedException.class, () -> {
-            authenticationService.login(loginDto);
-        });
+        AuthenticationFailedException exception = assertThrows(
+                AuthenticationFailedException.class, () -> authenticationService.login(loginDto)
+        );
 
         assertEquals("Authentication failed: Invalid username or password.", exception.getMessage());
     }
 
     @Test
     void testLoginWithDisabledUser() {
-
-        LoginDto loginDto = new LoginDto("test@test.com","password");
+        LoginDto loginDto = new LoginDto("test@test.com", "password");
 
         when(authenticationManager.authenticate(any(Authentication.class)))
                 .thenThrow(new DisabledException(""));
@@ -129,8 +148,7 @@ class AuthServiceTest {
 
     @Test
     void testRegisterWithValidInput() {
-
-        UserRequestDto userRequestDto = new UserRequestDto("testuser","test","test","null","test@test.com","password","password");
+        UserRequestDto userRequestDto = new UserRequestDto("testuser", "test", "test", "null", "test@test.com", "password", "password");
 
         when(bindingResult.hasErrors()).thenReturn(false);
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
@@ -165,7 +183,7 @@ class AuthServiceTest {
 
     @Test
     void testRegisterWithInvalidPasswordMismatch() {
-        UserRequestDto userRequestDto = new UserRequestDto("testuser","test","test","null","test@test.com","password","differentpassword");
+        UserRequestDto userRequestDto = new UserRequestDto("testuser", "test", "test", "null", "test@test.com", "password", "differentpassword");
 
         when(bindingResult.hasErrors()).thenReturn(false);
 
@@ -178,8 +196,7 @@ class AuthServiceTest {
 
     @Test
     void testRegisterWithDuplicateEmail() {
-
-        UserRequestDto userRequestDto = new UserRequestDto("testuser","test","test","null","test@test.com","password","password");
+        UserRequestDto userRequestDto = new UserRequestDto("testuser", "test", "test", "null", "test@test.com", "password", "password");
 
         when(bindingResult.hasErrors()).thenReturn(false);
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(new User()));
@@ -193,7 +210,6 @@ class AuthServiceTest {
 
     @Test
     void testConfirmEmailWithExpiredToken() {
-
         String token = "test-token";
         ConfirmationToken confirmationToken = mock(ConfirmationToken.class);
         when(confirmationTokenRepository.findByToken(anyString()))
@@ -212,7 +228,6 @@ class AuthServiceTest {
 
     @Test
     void testConfirmEmailWithValidToken() {
-
         String token = "test-token";
         User user = new User();
         user.setEnabled(false);
@@ -233,13 +248,12 @@ class AuthServiceTest {
 
     @Test
     void testResendConfirmationMailWhenUserIsNotActivated() {
-
         String email = "test@test.com";
         User user = new User();
         user.setEmail(email);
         user.setEnabled(false);
 
-        ConfirmationToken confirmationToken = new ConfirmationToken("test-token",user);
+        ConfirmationToken confirmationToken = new ConfirmationToken("test-token", user);
 
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
         when(confirmationTokenRepository.findByUser(user)).thenReturn(Optional.of(confirmationToken));
@@ -253,7 +267,6 @@ class AuthServiceTest {
 
     @Test
     void testResendConfirmationMailWhenUserAlreadyActivated() {
-
         String email = "test@test.com";
         User user = new User();
         user.setEmail(email);
@@ -270,7 +283,6 @@ class AuthServiceTest {
 
     @Test
     void testResendConfirmationMailWhenUserNotExist() {
-
         String email = "test@test.com";
 
         when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
@@ -283,6 +295,5 @@ class AuthServiceTest {
         verify(confirmationTokenRepository, never()).findByUser(any());
         verify(mailService, never()).sendConfirmationMail(any(), eq(request));
     }
-
 }
 

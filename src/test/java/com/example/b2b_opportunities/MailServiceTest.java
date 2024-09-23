@@ -3,7 +3,6 @@ package com.example.b2b_opportunities;
 import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Service.ConfirmationTokenService;
 import com.example.b2b_opportunities.Service.MailService;
-
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,10 +15,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 @ExtendWith(MockitoExtension.class)
 class MailServiceTest {
-
     @Mock
     private JavaMailSender mailSender;
 
@@ -39,6 +40,7 @@ class MailServiceTest {
     void setUp() {
         ReflectionTestUtils.setField(mailService, "fromMail", "sender@test.com");
     }
+
     @Test
     void testSendConfirmationMail() throws MessagingException {
         User user = new User();
@@ -54,6 +56,5 @@ class MailServiceTest {
         verify(mailSender, times(1)).createMimeMessage();
         verify(mimeMessage, times(1)).setSubject("Confirm your E-Mail - B2B Opportunities");
     }
-
 }
 

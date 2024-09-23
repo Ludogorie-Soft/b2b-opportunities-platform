@@ -38,17 +38,16 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 
 @SpringBootTest
 @AutoConfigureMockMvc(addFilters = false)
 @Transactional  // Roll back changes made by tests, ensuring each test starts with a clean state.
 public class AuthControllerTest extends BaseTest {
-
     @MockBean
     private MailService mailService;
 
@@ -212,7 +211,6 @@ public class AuthControllerTest extends BaseTest {
 
         String loginDtoJson = objectMapper.writeValueAsString(loginDto);
 
-
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(loginDtoJson))
@@ -265,7 +263,6 @@ public class AuthControllerTest extends BaseTest {
 
     @Test
     void testOAuthLoginCreatesNewUser() throws Exception {
-
         Map<String, Object> attributes = new HashMap<>();
         attributes.put("email", "test@test.com");
         attributes.put("given_name", "Test");

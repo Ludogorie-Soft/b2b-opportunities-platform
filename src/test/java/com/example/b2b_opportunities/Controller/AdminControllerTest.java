@@ -91,5 +91,4 @@ public class AdminControllerTest extends BaseTest {
                 .andExpect(jsonPath("$[0].email").value("user1@abv.bg"))
                 .andExpect(jsonPath("$[1].email").value("user3@abv.bg"));
     }
-
 }
