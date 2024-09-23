@@ -5,7 +5,9 @@ import com.example.b2b_opportunities.Dto.Request.ResetPasswordDto;
 import com.example.b2b_opportunities.Entity.ConfirmationToken;
 import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Exception.DisabledUserException;
+import com.example.b2b_opportunities.Exception.OAuthUserPasswordResetException;
 import com.example.b2b_opportunities.Exception.PasswordsNotMatchingException;
+import com.example.b2b_opportunities.Exception.UserNotFoundException;
 import com.example.b2b_opportunities.Repository.ConfirmationTokenRepository;
 import com.example.b2b_opportunities.Repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,7 +23,9 @@ public class PasswordService {
     private final ConfirmationTokenRepository confirmationTokenRepository;
 
     public String requestPasswordRecovery(String email, HttpServletRequest request) {
-        User user = userRepository.findByEmail(email).orElseThrow(() -> new NullPointerException("User not registered"));
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User not registered"));
+        if (user.getProvider() != null)
+            throw new OAuthUserPasswordResetException("User registered using oAuth - " + user.getProvider());
         if (!user.isEnabled()) {
             throw new DisabledUserException("Account not activated");
         }
