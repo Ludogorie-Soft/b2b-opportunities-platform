@@ -1,0 +1,21 @@
+FROM node
+
+WORKDIR /App
+
+COPY job-matcher ./
+
+WORKDIR /App/client
+
+RUN npm install typescript@5.3.3
+
+# Comment out the aws-amplify stuff
+RUN sed -i "s|^import { Amplify } from.*|// import { Amplify } from 'aws-amplify'|" ./src/main.tsx
+RUN sed -i "s|^import amplifyConfig from.*|// import amplifyConfig from './amplifyconfiguration.json'|" ./src/main.tsx
+RUN sed -i "s|^Amplify.configure(amplifyConfig).*|// Amplify.configure(amplifyConfig)|" ./src/main.tsx
+
+# Modify the package.json to work with docker: no browser + expose port
+RUN sed -i 's/"start": "vite"/"start": "vite --host --no-open"/' package.json
+
+EXPOSE 5173
+
+CMD ["npm", "start"]

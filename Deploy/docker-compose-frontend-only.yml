@@ -1,0 +1,13 @@
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile-frontend
+    ports:
+      - "8083:5173"
+    networks:
+      - b2b-network
+
+networks:
+  b2b-network:
+    driver: bridge
