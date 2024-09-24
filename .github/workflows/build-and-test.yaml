@@ -62,8 +62,8 @@ jobs:
       - name: Make dir and copy icons in it
         run: |
             ls $GITHUB_WORKSPACE
-            mkdir -p /home/runner/icons
-            cp -R $GITHUB_WORKSPACE/Deploy/icons/* /home/runner/icons || echo "No icons to copy"
+            sudo mkdir -p /home/runner/icons
+            sudo cp -R $GITHUB_WORKSPACE/Deploy/icons/* /home/runner/icons || echo "No icons to copy"
                     
       - name: Set up JDK 21
         uses: actions/setup-java@v3
