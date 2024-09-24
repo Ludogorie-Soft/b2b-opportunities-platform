@@ -19,7 +19,11 @@ import lombok.Setter;
 public class Skill {
     @Id
     @Column(name = "id", nullable = false)
-    private String id;
+    private Long id;
+
+    @NotNull
+    @Column(unique = true)
+    private String identifier;
 
     @ManyToOne
     @JoinColumn(name = "parent_id")
@@ -30,5 +34,9 @@ public class Skill {
 
     @NotNull
     private Boolean assignable;
-    private String image;
+
+    @Column(columnDefinition = "BLOB", name = "image")
+    private byte[] image;
+
+    private String imageType;
 }
