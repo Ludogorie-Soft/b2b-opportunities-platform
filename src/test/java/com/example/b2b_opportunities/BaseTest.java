@@ -3,10 +3,12 @@ package com.example.b2b_opportunities;
 import org.junit.jupiter.api.BeforeAll;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.nio.file.Paths;
 import java.util.concurrent.TimeUnit;
 
 @SpringBootTest
@@ -14,11 +16,15 @@ import java.util.concurrent.TimeUnit;
 @ActiveProfiles("test")
 public abstract class BaseTest {
 
+    private final static String hostPath = Paths.get("Deploy/icons").toAbsolutePath().toString();
+    private final static String containerPath = "/icons";
+
     @Container
     protected static final PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine")
             .withDatabaseName("b2b-test_db")
             .withUsername("postgres")
-            .withPassword("password");
+            .withPassword("password")
+            .withFileSystemBind(hostPath, containerPath, BindMode.READ_ONLY);
 
     @BeforeAll
     static void beforeAll() throws InterruptedException {
