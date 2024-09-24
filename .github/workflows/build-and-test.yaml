@@ -54,8 +54,11 @@ jobs:
     steps:
       - name: Copy Icons
         run: |
+            ls -lah ~/
+            ls -lah /
+            find / -name "Deploy"
             sudo mkdir -p /icons
-            sudo cp -R ~/Deploy/icons/* /icons/
+            sudo cp -R /Deploy/icons/* /icons/
             
       - name: Checkout code
         uses: actions/checkout@v3
