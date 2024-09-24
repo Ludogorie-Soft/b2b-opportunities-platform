@@ -51,19 +51,19 @@ jobs:
           --health-timeout=5s
           --health-retries=5
         volumes:
-          - /home/runner/work/b2b-opportunities-platform/b2b-opportunities-platform/Deploy/icons:/icons
+          - /home/runner/icons:/icons
 
     steps:      
       - name: Checkout code
         uses: actions/checkout@v3
         with:
-          clean: false
           fetch-depth: 0
 
-      - name: List dirs
+      - name: Make dir and copy icons in it
         run: |
             ls $GITHUB_WORKSPACE
-            sudo find / -name "Deploy"
+            mkdir -p /home/runner/icons
+            cp -R $GITHUB_WORKSPACE/Deploy/icons/* /home/runner/icons || echo "No icons to copy"
                     
       - name: Set up JDK 21
         uses: actions/setup-java@v3
