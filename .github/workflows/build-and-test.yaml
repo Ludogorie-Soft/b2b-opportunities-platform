@@ -50,6 +50,11 @@ jobs:
           --health-retries=5
 
     steps:
+      - name: Copy Icons
+         run:|
+            mkdir -p /icons
+            cp -R Deploy/icons/* /icons/
+
       - name: Checkout code
         uses: actions/checkout@v3
         with:
