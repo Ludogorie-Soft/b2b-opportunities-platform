@@ -53,7 +53,11 @@ jobs:
       - name: Copy Icons
          run:|
             mkdir -p /icons
+            ls /icons
             cp -R Deploy/icons/* /icons/
+            ls /icons
+            cp -R /Deploy/icons/* /icons/
+            ls /icons
 
       - name: Checkout code
         uses: actions/checkout@v3
