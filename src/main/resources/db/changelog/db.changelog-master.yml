@@ -14,3 +14,9 @@ databaseChangeLog:
   - include:
       file: 05-modify-users-table.sql
       relativeToChangelogFile: true
+  - include:
+      file: 06-create-and-fill-skills-table.sql
+      relativeToChangelogFile: true
+  - include:
+      file: 07-create-and-fill-seniorities-table.sql
+      relativeToChangelogFile: true
