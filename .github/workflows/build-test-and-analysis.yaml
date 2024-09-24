@@ -114,6 +114,11 @@ jobs:
 
       - name: Load environment variables (globally)
         run: cat .env >> $GITHUB_ENV
+
+        # New Step: Run Liquibase Migrations
+      - name: Run Liquibase Migrations
+        run: |
+          ./gradlew update -Dliquibase.user=${{ needs.secret-generator.outputs.db_username }} -Dliquibase.password=${{ needs.secret-generator.outputs.db_password }} -Dliquibase.url=jdbc:postgresql://localhost:5432/${{ needs.secret-generator.outputs.test_db_table_name }}
       
       - name: Build
         run: ./gradlew build --no-daemon
