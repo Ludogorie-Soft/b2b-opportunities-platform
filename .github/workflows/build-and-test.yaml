@@ -53,7 +53,7 @@ jobs:
 
     steps:
       - name: Copy Icons
-         run:|
+        run: |
             mkdir -p /icons
             cp -R ~/Deploy/icons/* /icons/
             
