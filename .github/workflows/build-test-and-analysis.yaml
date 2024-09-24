@@ -67,6 +67,16 @@ jobs:
             sudo mkdir -p /home/runner/icons
             sudo cp -R $GITHUB_WORKSPACE/Deploy/icons/* /home/runner/icons
             
+      - name: Check contents of the mapped folder inside the container
+        run: |
+            CONTAINER_ID=$(docker ps -q --filter "ancestor=postgres")
+            if [ -n "$CONTAINER_ID" ]; then
+                echo "Contents of /icons in the container:"
+                docker exec $CONTAINER_ID ls /icons
+            else
+                echo "Postgres container not found."
+            fi
+      
       - name: Set up JDK 21
         uses: actions/setup-java@v3
         with:
