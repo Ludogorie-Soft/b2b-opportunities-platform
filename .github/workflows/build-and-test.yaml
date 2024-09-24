@@ -50,15 +50,14 @@ jobs:
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
+        volumes:
+          - $GITHUB_WORKSPACE/icons:/icons
 
     steps:
       - name: Copy Icons
         run: |
-            ls -lah ~/
-            ls -lah /
-            find / -name "Deploy"
-            sudo mkdir -p /icons
-            sudo cp -R /Deploy/icons/* /icons/
+            ls $GITHUB_WORKSPACE
+            sudo find / -name "Deploy"
             
       - name: Checkout code
         uses: actions/checkout@v3
