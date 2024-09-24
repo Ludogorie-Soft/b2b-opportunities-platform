@@ -8,6 +8,8 @@ on:
     types: [opened, synchronize, reopened]
     branches:
       - '**'
+  workflow_dispatch:  # This enables manual triggering
+  
 jobs:
   secret-generator:
     runs-on: ubuntu-latest
@@ -51,20 +53,20 @@ jobs:
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
+        volumes:
+          - /home/runner/icons:/icons
 
     steps:
-      - name: Copy Icons
-         run:|
-            mkdir -p /icons
-            cp -R ~/Deploy/icons/* /icons/
-            ls /icons
-            ls /
-            
       - name: Checkout code
         uses: actions/checkout@v3
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-
+      
+      - name: Make dir and copy icons in it
+        run: |
+            sudo mkdir -p /home/runner/icons
+            sudo cp -R $GITHUB_WORKSPACE/Deploy/icons/* /home/runner/icons"
+            
       - name: Set up JDK 21
         uses: actions/setup-java@v3
         with:
