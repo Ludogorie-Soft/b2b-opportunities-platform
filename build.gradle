@@ -63,14 +63,15 @@ jacocoTestReport {
     classDirectories.setFrom(
             files(classDirectories.files.collect {
                 fileTree(dir: it, exclude: [
-                        '**/Dtos/*',
+                        '**/Dto/*',
                         '**/Entity/*',
-                        '**/Mappers/*',
+                        '**/Mapper/*',
                         '**/Repository/*',
-                        '**/Exceptions/*',
+                        '**/Exception/*',
                         '**/Static/*',
-                        '**/Configs/*',
-                        '**/MyUserDetails.java'
+                        '**/Config/*',
+                        '**/UserDetailsImpl.java',
+                        '**/JwtAuthenticationFilter.java'
                 ])
             })
     )
@@ -83,6 +84,6 @@ sonar {
         property "sonar.organization", "ludogorie-soft-1"
         property "sonar.host.url", "https://sonarcloud.io"
         property "sonar.coverage.jacoco.xmlReportPaths", "${buildDir}/reports/jacoco/test/jacocoTestReport.xml"
-        property "sonar.exclusions", "**/Dtos/**,**/Entity/**,**/Mappers/**,**/Static/**,**/Exceptions/**,**/Configs/**,**/MyUserDetails.java,**/Repository/**"
+        property "sonar.exclusions", "**/Dto/**,**/Entity/**,**/Mapper/**,**/Static/**,**/Exception/**,**/Config/**,**/UserDetailsImpl.java,**/JwtAuthenticationFilter.java,**/Repository/**"
     }
 }
