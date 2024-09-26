@@ -1,6 +1,5 @@
 package com.example.b2b_opportunities.Service;
 
-import com.example.b2b_opportunities.BaseTest;
 import com.example.b2b_opportunities.Dto.Request.ResetPasswordDto;
 import com.example.b2b_opportunities.Entity.ConfirmationToken;
 import com.example.b2b_opportunities.Entity.User;
@@ -14,40 +13,35 @@ import com.example.b2b_opportunities.Repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.when;
 
-@SpringBootTest
-@Transactional
-public class PasswordServiceTest extends BaseTest {
-
-    private final ConfirmationTokenRepository confirmationTokenRepository;
-
-    private final HttpServletRequest request;
-
-    private final UserRepository userRepository;
-
-    private final PasswordService passwordService;
-
+class PasswordServiceTest {
+    @Mock
+    private MailService mailService;
+    @Mock
+    private UserRepository userRepository;
+    @Mock
+    private ConfirmationTokenRepository confirmationTokenRepository;
+    @Mock
+    private HttpServletRequest request;
+    @InjectMocks
+    private PasswordService passwordService;
+    @Mock
+    private AuthenticationService authenticationService;
     private User user;
-    private ConfirmationToken token;
-
-    @Autowired
-    public PasswordServiceTest(HttpServletRequest request, UserRepository userRepository, PasswordService passwordService, ConfirmationTokenRepository confirmationTokenRepository) {
-        this.request = request;
-        this.userRepository = userRepository;
-        this.passwordService = passwordService;
-        this.confirmationTokenRepository = confirmationTokenRepository;
-    }
 
     @BeforeEach
     void setUp() {
@@ -57,36 +51,37 @@ public class PasswordServiceTest extends BaseTest {
                 .lastName("test")
                 .email("test@abv.bg")
                 .username("test")
+                .isApproved(true)
+                .isEnabled(true)
+                .provider(null)
                 .build();
     }
 
     @Test
     void testRequestPasswordRecovery_Success() {
-        user.setApproved(true);
-        user.setEnabled(true);
-        user.setProvider(null);
-
-        user = userRepository.save(user);
+        when(userRepository.findByEmail("test@abv.bg")).thenReturn(Optional.of(user));
+        doNothing().when(mailService).sendPasswordRecoveryMail(any(User.class), any(HttpServletRequest.class));
 
         String result = passwordService.requestPasswordRecovery("test@abv.bg", request);
-        assertEquals(result, "Password recovery e-mail was sent successfully");
+
+        assertEquals("Password recovery e-mail was sent successfully", result);
         assertNotNull(result);
     }
 
     @Test
     void testRequestPasswordRecovery_NotRegisteredUser() {
+        when(userRepository.findByEmail("nonexistent@abv.bg")).thenReturn(Optional.empty());
+
         UserNotFoundException exception = assertThrows(UserNotFoundException.class, () ->
                 passwordService.requestPasswordRecovery("nonexistent@abv.bg", request));
+
         assertEquals("User not registered", exception.getMessage());
     }
 
     @Test
     void testRequestPasswordRecovery_OauthUser() {
-        user.setApproved(true);
-        user.setEnabled(true);
-        user.setProvider("test");
-
-        user = userRepository.save(user);
+        when(userRepository.findByEmail("test@abv.bg")).thenReturn(Optional.of(user));
+        user.setProvider("testProvider");
 
         OAuthUserPasswordResetException exception = assertThrows(OAuthUserPasswordResetException.class, () ->
                 passwordService.requestPasswordRecovery("test@abv.bg", request));
@@ -95,11 +90,10 @@ public class PasswordServiceTest extends BaseTest {
     }
 
     @Test
-    void testRequestPasswordRecovery_disabledUser() {
-        user.setApproved(true);
+    void testRequestPasswordRecovery_disabledUser(){
+        when(userRepository.findByEmail("test@abv.bg")).thenReturn(Optional.of(user));
         user.setProvider(null);
-
-        user = userRepository.save(user);
+        user.setEnabled(false);
 
         DisabledUserException exception = assertThrows(DisabledUserException.class, () ->
                 passwordService.requestPasswordRecovery("test@abv.bg", request));
@@ -109,14 +103,17 @@ public class PasswordServiceTest extends BaseTest {
 
     @Test
     void testSetNewPassword_Success() {
-        user = userRepository.save(user);
+        user.setPassword("oldPassword");
+        when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
 
-        token = new ConfirmationToken();
-        token.setCreatedAt(LocalDateTime.now());
-        token.setUser(user);
-        token.setToken("validToken");
+        ConfirmationToken confirmationToken = new ConfirmationToken();
+        confirmationToken.setCreatedAt(LocalDateTime.now());
+        confirmationToken.setUser(user);
+        confirmationToken.setToken("validToken");
 
-        confirmationTokenRepository.save(token);
+        when(authenticationService.validateAndReturnToken("validToken")).thenReturn(confirmationToken);
+
+        when(authenticationService.arePasswordsMatching("newPassword", "newPassword")).thenReturn(true);
 
         ResetPasswordDto resetPasswordDto = new ResetPasswordDto("validToken", "newPassword", "newPassword");
 
@@ -128,57 +125,72 @@ public class PasswordServiceTest extends BaseTest {
 
     @Test
     void testSetNewPassword_WithExpiredToken() {
-        user = userRepository.save(user);
+        user.setPassword("oldPassword");
+        when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
 
-        token = new ConfirmationToken();
-        token.setCreatedAt(LocalDateTime.now().minusDays(4));
-        token.setUser(user);
-        token.setToken("expiredToken");
+        ConfirmationToken confirmationToken = new ConfirmationToken();
+        confirmationToken.setCreatedAt(LocalDateTime.now().minusDays(10)); //set expired token
+        confirmationToken.setUser(user);
+        confirmationToken.setToken("expiredToken");
 
-        confirmationTokenRepository.save(token);
+        when(confirmationTokenRepository.findByToken("expiredToken")).thenReturn(Optional.of(confirmationToken));
+
+        when(authenticationService.validateAndReturnToken("expiredToken")).thenThrow(new InvalidTokenException("Expired token"));
+
+        when(authenticationService.arePasswordsMatching("newPassword", "newPassword")).thenReturn(true);
 
         ResetPasswordDto resetPasswordDto = new ResetPasswordDto("expiredToken", "newPassword", "newPassword");
 
         InvalidTokenException exception = assertThrows(InvalidTokenException.class, () -> passwordService.setNewPassword(resetPasswordDto));
 
         assertEquals("Expired token", exception.getMessage());
+        assertEquals("oldPassword", user.getPassword());
     }
 
     @Test
     void testSetNewPassword_WithInvalidToken() {
-        user = userRepository.save(user);
+        user.setPassword("oldPassword");
+        when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
 
-        token = new ConfirmationToken();
-        token.setCreatedAt(LocalDateTime.now());
-        token.setUser(user);
-        token.setToken("token");
+        ConfirmationToken confirmationToken = new ConfirmationToken();
+        confirmationToken.setCreatedAt(LocalDateTime.now()); //set expired token
+        confirmationToken.setUser(user);
+        confirmationToken.setToken("validToken");
 
-        confirmationTokenRepository.save(token);
+        when(confirmationTokenRepository.findByToken("invalidToken")).thenReturn(Optional.empty());
 
-        ResetPasswordDto resetPasswordDto = new ResetPasswordDto("invalid-token", "newPassword", "newPassword");
+        when(authenticationService.validateAndReturnToken("invalidToken")).thenThrow(new InvalidTokenException("Invalid token"));
+
+        when(authenticationService.arePasswordsMatching("newPassword", "newPassword")).thenReturn(true);
+
+        ResetPasswordDto resetPasswordDto = new ResetPasswordDto("invalidToken", "newPassword", "newPassword");
 
         InvalidTokenException exception = assertThrows(InvalidTokenException.class, () -> passwordService.setNewPassword(resetPasswordDto));
 
         assertEquals("Invalid token", exception.getMessage());
+        assertEquals("oldPassword", user.getPassword());
     }
 
     @Test
     void testSetNewPassword_WithNotMatchingPasswords() {
-        user = userRepository.save(user);
+        user.setPassword("oldPassword");
+        when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
 
-        token = new ConfirmationToken();
-        token.setCreatedAt(LocalDateTime.now());
-        token.setUser(user);
-        token.setToken("token");
+        ConfirmationToken confirmationToken = new ConfirmationToken();
+        confirmationToken.setCreatedAt(LocalDateTime.now());
+        confirmationToken.setUser(user);
+        confirmationToken.setToken("validToken");
 
-        confirmationTokenRepository.save(token);
+        when(authenticationService.validateAndReturnToken("validToken")).thenReturn(confirmationToken);
 
-        ResetPasswordDto resetPasswordDto = new ResetPasswordDto("token", "newPassword", "anotherPassword");
+        when(authenticationService.arePasswordsMatching("newPassword", "anotherPassword")).thenReturn(false);
+
+        ResetPasswordDto resetPasswordDto = new ResetPasswordDto("validToken", "newPassword", "anotherPassword");
 
         PasswordsNotMatchingException exception = assertThrows(PasswordsNotMatchingException.class, () -> passwordService.setNewPassword(resetPasswordDto));
 
         assertEquals("Passwords do not match", exception.getMessage());
+        assertEquals("oldPassword", user.getPassword());
     }
-
 
 }
