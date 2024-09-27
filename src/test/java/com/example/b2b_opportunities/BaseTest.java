@@ -1,15 +1,16 @@
 package com.example.b2b_opportunities;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.DockerImageName;
 
 import java.nio.file.Paths;
-import java.util.concurrent.TimeUnit;
 
 @SpringBootTest
 @Testcontainers
@@ -20,21 +21,14 @@ public abstract class BaseTest {
     private final static String containerPath = "/icons";
 
     @Container
-    protected static final PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine")
-            .withDatabaseName("b2b-test_db")
-            .withUsername("postgres")
-            .withPassword("password")
+    protected static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>(DockerImageName.parse("postgres:16-alpine"))
+            .withExposedPorts(5432) // waits for the port to be available
             .withFileSystemBind(hostPath, containerPath, BindMode.READ_ONLY);
 
-    @BeforeAll
-    static void beforeAll() throws InterruptedException {
-        postgres.start();
-        // Wait for the database to be available
-        TestUtils.waitForDatabase(postgres.getJdbcUrl(), postgres.getUsername(), postgres.getPassword(), 1, TimeUnit.MINUTES);
-
-        System.setProperty("DB_URL", postgres.getJdbcUrl());
-        System.setProperty("spring.datasource.url", postgres.getJdbcUrl());
-        System.setProperty("spring.datasource.username", postgres.getUsername());
-        System.setProperty("spring.datasource.password", postgres.getPassword());
+    @DynamicPropertySource
+    public static void overridePropertiesFile(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", postgres::getJdbcUrl);
+        registry.add("spring.datasource.username", postgres::getUsername);
+        registry.add("spring.datasource.password", postgres::getPassword);
     }
 }
