@@ -8,7 +8,6 @@ import lombok.Setter;
 @Setter
 public class SkillResponseDto {
     private Long id;
-    private String identifier;
     private String name;
     private String imageType;
     private String imageBase64;

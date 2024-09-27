@@ -18,9 +18,6 @@ public class Seniority {
     private Long id;
 
     @NotNull
-    private String identifier;
-
-    @NotNull
     private String label;
 
     @NotNull

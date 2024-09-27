@@ -19,7 +19,6 @@ import java.util.List;
 @RequiredArgsConstructor
 @RequestMapping("/skills")
 public class SkillController {
-
     private final SkillRepository skillRepository;
 
     @GetMapping()
@@ -29,19 +28,11 @@ public class SkillController {
         return SkillMapper.skillResponseDtoList(skills);
     }
 
-    @GetMapping("/id/{id}")
+    @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     public SkillResponseDto getSkillById(@PathVariable(name = "id") Long id) {
         Skill skill = skillRepository.findById(id)
                 .orElseThrow(() -> new SkillNotFoundException("Skill with id '" + id + "' not found"));
-        return SkillMapper.toResponseDto(skill);
-    }
-
-    @GetMapping("/{identifier}")
-    @ResponseStatus(HttpStatus.OK)
-    public SkillResponseDto getSkillByIdentifier(@PathVariable(name = "identifier") String identifier) {
-        Skill skill = skillRepository.findByIdentifier(identifier)
-                .orElseThrow(() -> new SkillNotFoundException("Skill with identifier '" + identifier + "' not found"));
         return SkillMapper.toResponseDto(skill);
     }
 }

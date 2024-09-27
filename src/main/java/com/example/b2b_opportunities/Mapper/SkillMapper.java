@@ -14,7 +14,6 @@ public class SkillMapper {
         SkillResponseDto skillResponseDTO = new SkillResponseDto();
 
         skillResponseDTO.setId(skill.getId());
-        skillResponseDTO.setIdentifier(skill.getIdentifier());
         skillResponseDTO.setName(skill.getName());
         skillResponseDTO.setAssignable(skill.getAssignable());
         skillResponseDTO.setParent(skill.getParent());

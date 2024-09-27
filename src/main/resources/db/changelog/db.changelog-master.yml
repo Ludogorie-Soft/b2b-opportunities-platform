@@ -20,3 +20,6 @@ databaseChangeLog:
   - include:
       file: 07-create-and-fill-seniorities-table.sql
       relativeToChangelogFile: true
+  - include:
+      file: 08-remove-identifier-from-seniorities-and-skills.sql
+      relativeToChangelogFile: true

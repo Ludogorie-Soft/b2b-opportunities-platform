@@ -21,10 +21,6 @@ public class Skill {
     @Column(name = "id", nullable = false)
     private Long id;
 
-    @NotNull
-    @Column(unique = true)
-    private String identifier;
-
     @ManyToOne
     @JoinColumn(name = "parent_id")
     private Skill parent;

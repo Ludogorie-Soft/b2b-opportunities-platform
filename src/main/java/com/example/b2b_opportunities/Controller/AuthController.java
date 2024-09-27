@@ -73,5 +73,4 @@ public class AuthController {
     public String changePassword(@RequestBody ResetPasswordDto resetPasswordDto) {
         return passwordService.setNewPassword(resetPasswordDto);
     }
-    // TODO: check
 }
