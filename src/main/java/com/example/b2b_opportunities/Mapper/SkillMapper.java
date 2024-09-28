@@ -16,7 +16,13 @@ public class SkillMapper {
         skillResponseDTO.setId(skill.getId());
         skillResponseDTO.setName(skill.getName());
         skillResponseDTO.setAssignable(skill.getAssignable());
-        skillResponseDTO.setParent(skill.getParent());
+        skillResponseDTO.setParent(null);
+
+        // Set the parent to DTO
+        if (skill.getParent() != null) {
+            skillResponseDTO.setParent(toResponseDto(skill.getParent()));
+        }
+
         skillResponseDTO.setImageType(skill.getImageType());
         skillResponseDTO.setImageBase64(null);
 
