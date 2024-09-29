@@ -31,6 +31,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      minio:
+        condition: service_healthy
     environment:
       POSTGRES_HOST: db
       DB_TABLE_NAME: ${DB_TABLE_NAME}
@@ -41,6 +43,10 @@ services:
       SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      STORAGE_HOST: minio
+      STORAGE_USER: ${STORAGE_USER}
+      STORAGE_PASSWORD: ${STORAGE_PASSWORD}
+      STORAGE_BUCKET_NAME: ${STORAGE_BUCKET_NAME}
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8082/actuator/health" ]
       interval: 10s
@@ -48,7 +54,44 @@ services:
       retries: 10
     networks:
       - b2b-network
-      
+
+  minio:
+    image: 'bitnami/minio:latest'
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    volumes:
+      - ./storage:/bitnami/minio/data
+    environment:
+      MINIO_ROOT_USER: ${STORAGE_USER}
+      MINIO_ROOT_PASSWORD: ${STORAGE_PASSWORD}
+      MINIO_DEFAULT_BUCKETS: ${STORAGE_BUCKET_NAME}
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    networks:
+      - b2b-network
+
+  mc:
+    image: bitnami/minio-client:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      MINIO_SERVER_HOST: minio
+      MINIO_SERVER_ACCESS_KEY: ${STORAGE_USER}
+      MINIO_SERVER_SECRET_KEY: ${STORAGE_PASSWORD}
+    entrypoint: >
+      /bin/sh -c "
+      sleep 10; 
+      mc alias set myminio http://$${MINIO_SERVER_HOST}:9000 $${MINIO_SERVER_ACCESS_KEY} $${MINIO_SERVER_SECRET_KEY};
+      mc anonymous set download myminio/company-assets;
+      "
+    networks:
+      - b2b-network
+
 networks:
   b2b-network:
     driver: bridge
