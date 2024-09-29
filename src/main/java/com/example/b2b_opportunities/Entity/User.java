@@ -52,7 +52,9 @@ public class User {
 
     private String password;
 
-    private String companyName;
+    @ManyToOne
+    @JoinColumn(name = "company_id")
+    private Company company;
 
     @ManyToOne
     @JoinColumn(name = "role_id")

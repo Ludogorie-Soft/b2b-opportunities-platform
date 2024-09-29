@@ -5,7 +5,6 @@ CREATE TABLE users (
     last_name VARCHAR(40) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
-    company_name VARCHAR(255),
     role_id BIGINT,
     created_at TIMESTAMP,
     is_enabled BOOLEAN NOT NULL,
