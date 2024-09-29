@@ -1,10 +1,13 @@
 package com.example.b2b_opportunities.Controller;
 
 import com.example.b2b_opportunities.Exception.ServerErrorException;
+import com.example.b2b_opportunities.Exception.common.NotFoundException;
 import io.minio.MinioClient;
-import io.minio.ObjectWriteResponse;
+import io.minio.StatObjectArgs;
 import io.minio.UploadObjectArgs;
+import io.minio.errors.ErrorResponseException;
 import io.minio.errors.MinioException;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -14,11 +17,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
@@ -33,53 +35,85 @@ public class ImageController {
     @Value("${storage.url}")
     private String storageUrl;
 
-    @PostMapping("/upload-image")
-    @ResponseStatus(HttpStatus.CREATED)
-    public String uploadImage(@RequestParam("fileName") String filepath,
-                              @RequestParam("company_id") Long companyId) {
-        return upload(filepath, companyId, "image");
+    @PostConstruct
+    private void init() {
+        // Change storageUrl if it's set to http://minio:9000 - to make it work while testing in docker.
+        if (storageUrl.toLowerCase().contains("minio")) {
+            storageUrl = "http://localhost:9000";
+        }
     }
 
-    @PostMapping("/upload-banner")
+    @PostMapping(value = "/upload-image", consumes = "multipart/form-data")
     @ResponseStatus(HttpStatus.CREATED)
-    public String uploadBanner(@RequestParam("fileName") String filepath,
+    public String uploadImage(@RequestParam("file") MultipartFile file,
+                              @RequestParam("company_id") Long companyId) {
+        return upload(file, companyId, "image");
+    }
+
+    @PostMapping(value = "/upload-banner", consumes = "multipart/form-data")
+    @ResponseStatus(HttpStatus.CREATED)
+    public String uploadBanner(@RequestParam("file") MultipartFile file,
                                @RequestParam("company_id") Long companyId) {
-        return upload(filepath, companyId, "banner");
+        return upload(file, companyId, "banner");
     }
 
     @GetMapping("/get-image/{company_id}")
     public String getImage(@PathVariable("company_id") Long id) {
-        return storageUrl + "/" + bucketName + "/" + id + "/image";
+        return returnUrlIfPictureExists(id, "image");
     }
 
     @GetMapping("/get-banner/{company_id}")
     public String getBanner(@PathVariable("company_id") Long id) {
-        return storageUrl + "/" + bucketName + "/" + id + "/banner";
+        return returnUrlIfPictureExists(id, "banner");
     }
 
-    private String upload(String filepath, Long companyId, String imageName) {
-        filepath = filepath.replace("\"", "");
+    private String upload(MultipartFile file, Long companyId, String imageName) {
         try {
-            Path path = Paths.get(filepath);
+            File tempFile = File.createTempFile("upload-", file.getOriginalFilename());
+            file.transferTo(tempFile);
 
             UploadObjectArgs uArgs = UploadObjectArgs.builder()
                     .bucket(bucketName)
-                    .object(companyId + "/" + imageName)  // "image.png"
-                    .filename(filepath)  // C:\Users\User\Pictures\picture.png
-                    .contentType(getContentType(path))  // image/png
+                    .object(companyId + "/" + imageName)
+                    .filename(tempFile.getAbsolutePath())
+                    .contentType(file.getContentType())
                     .build();
-            ObjectWriteResponse response = minioClient.uploadObject(uArgs);
+
+            minioClient.uploadObject(uArgs);
+
+            tempFile.delete();
+
             return storageUrl + "/" + bucketName + "/" + companyId + "/" + imageName;
         } catch (MinioException | IOException | InvalidKeyException | NoSuchAlgorithmException e) {
             throw new ServerErrorException("Error occurred while uploading file: " + e.getMessage());
         }
     }
 
-    private String getContentType(Path path) throws IOException {
-        String contentType = Files.probeContentType(path);
-        if (contentType == null || contentType.isEmpty()) {
-            contentType = "application/octet-stream"; // Default to binary if not found
+    private String returnUrlIfPictureExists(Long companyId, String imageName) {
+        String objectName = companyId + "/" + imageName;
+
+        try {
+            minioClient.statObject(StatObjectArgs.builder()
+                    .bucket(bucketName)
+                    .object(objectName)
+                    .build());
+
+            return storageUrl + "/" + bucketName + "/" + objectName;
+        } catch (ErrorResponseException e) {
+            if (e.errorResponse().code().equals("NoSuchKey")) {
+                throw new NotFoundException(capitalize(imageName) + " not found for company ID: " + companyId);
+            } else {
+                throw new ServerErrorException("Error occurred while checking " + imageName + " existence: " + e.getMessage());
+            }
+        } catch (Exception e) {
+            throw new ServerErrorException(e.getMessage());
         }
-        return contentType;
+    }
+
+    private String capitalize(String imageName) {
+        if (imageName == null || imageName.isEmpty()) {
+            return imageName;
+        }
+        return Character.toUpperCase(imageName.charAt(0)) + imageName.substring(1);
     }
 }
