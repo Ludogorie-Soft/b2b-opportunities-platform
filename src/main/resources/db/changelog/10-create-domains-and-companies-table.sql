@@ -16,7 +16,7 @@ CREATE TABLE companies (
     image VARCHAR(255) NOT NULL,
     email_verification BOOLEAN,
     domain_id BIGINT,
-    linkedIn VARCHAR(255),
+    linked_in VARCHAR(255),
     banner VARCHAR(255),
     description TEXT,
     CONSTRAINT fk_domain FOREIGN KEY (domain_id) REFERENCES domains(id) ON DELETE SET NULL
