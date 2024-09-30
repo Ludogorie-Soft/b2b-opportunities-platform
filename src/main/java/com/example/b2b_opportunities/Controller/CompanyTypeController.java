@@ -25,13 +25,13 @@ public class CompanyTypeController {
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public List<CompanyType> getCompanyTypes(){
+    public List<CompanyType> getCompanyTypes() {
         return companyTypeRepository.findAll();
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public CompanyType addCompanyType(@RequestParam String name){
+    public CompanyType addCompanyType(@RequestParam String name) {
         checkIfAlreadyExists(name);
         return companyTypeRepository.save(CompanyType.builder().name(name).build());
     }
@@ -52,14 +52,12 @@ public class CompanyTypeController {
         companyTypeRepository.delete(companyType);
     }
 
-    private void checkIfAlreadyExists(String name){
-        if(companyTypeRepository.findByName(name).isPresent())
+    private void checkIfAlreadyExists(String name) {
+        if (companyTypeRepository.findByName(name).isPresent())
             throw new AlreadyExistsException("Company type already exists");
     }
 
-    private CompanyType findByName(String name){
+    private CompanyType findByName(String name) {
         return companyTypeRepository.findByName(name).orElseThrow(() -> new AlreadyExistsException("Company type with name " + name + " not found"));
     }
-
-
 }

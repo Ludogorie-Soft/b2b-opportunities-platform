@@ -8,6 +8,11 @@ INSERT INTO domains (name) VALUES
 ('Fintech'),
 ('Automotive');
 
+CREATE TABLE company_types (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL
+);
+
 CREATE TABLE companies (
     id BIGSERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
@@ -19,25 +24,16 @@ CREATE TABLE companies (
     linked_in VARCHAR(255),
     banner VARCHAR(255),
     description TEXT,
-    CONSTRAINT fk_domain FOREIGN KEY (domain_id) REFERENCES domains(id) ON DELETE SET NULL
+    company_type_id BIGINT,
+    CONSTRAINT fk_domain FOREIGN KEY (domain_id) REFERENCES domains(id) ON DELETE SET NULL,
+    CONSTRAINT fk_company_type FOREIGN KEY (company_type_id) REFERENCES company_types(id) ON DELETE SET NULL
 );
 
 ALTER TABLE users
 ADD COLUMN company_id BIGINT,
 ADD CONSTRAINT fk_company_user FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE SET NULL;
 
-CREATE TABLE company_types (
-    id BIGSERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL
-);
 
-CREATE TABLE company_company_type (
-    company_id BIGINT NOT NULL,
-    company_types_id BIGINT NOT NULL,
-    PRIMARY KEY (company_id, company_types_id),
-    CONSTRAINT fk_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
-    CONSTRAINT fk_company_types FOREIGN KEY (company_types_id) REFERENCES company_types(id) ON DELETE CASCADE
-);
 
 CREATE TABLE company_skills (
     company_id BIGINT NOT NULL,
