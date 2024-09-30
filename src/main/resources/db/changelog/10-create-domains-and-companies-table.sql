@@ -16,10 +16,10 @@ CREATE TABLE company_types (
 CREATE TABLE companies (
     id BIGSERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    email VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
     website VARCHAR(255) NOT NULL,
     image VARCHAR(255) NOT NULL,
-    email_verification BOOLEAN,
+    email_verification VARCHAR(255),
     domain_id BIGINT,
     linked_in VARCHAR(255),
     banner VARCHAR(255),
@@ -41,4 +41,12 @@ CREATE TABLE company_skills (
     PRIMARY KEY (company_id, skill_id),
     CONSTRAINT fk_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
     CONSTRAINT fk_skill FOREIGN KEY (skill_id) REFERENCES skills(id) ON DELETE CASCADE
+);
+
+CREATE TABLE company_users (
+    company_id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL,
+    PRIMARY KEY (company_id, user_id),
+    CONSTRAINT fk_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
+    CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );

@@ -1,17 +1,18 @@
 package com.example.b2b_opportunities.Service;
 
 import com.example.b2b_opportunities.Dto.Request.CompanyRequestDto;
-import com.example.b2b_opportunities.Dto.Response.CompanyResponseDto;
 import com.example.b2b_opportunities.Entity.Company;
 import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Exception.AuthenticationFailedException;
 import com.example.b2b_opportunities.Exception.NotFoundException;
 import com.example.b2b_opportunities.Mapper.CompanyMapper;
 import com.example.b2b_opportunities.Repository.CompanyRepository;
+import com.example.b2b_opportunities.Repository.UserRepository;
 import com.example.b2b_opportunities.Static.EmailVerification;
 import com.example.b2b_opportunities.UserDetailsImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -22,14 +23,17 @@ import java.util.List;
 public class CompanyService {
 
     private final CompanyRepository companyRepository;
+    private final CompanyMapper companyMapper;
+    private final UserRepository userRepository;
 
-    public CompanyResponseDto createCompany(Authentication authentication,
-                                            CompanyRequestDto companyRequestDto,
-                                            MultipartFile image,
-                                            MultipartFile banner) {
+    public String createCompany(Authentication authentication,
+                                CompanyRequestDto companyRequestDto,
+                                MultipartFile image,
+                                MultipartFile banner) {
         if (authentication == null) throw new AuthenticationFailedException("User not authenticated");
         if (image.isEmpty()) throw new NotFoundException("Image not uploaded"); //this will be improved
-        Company company = companyRepository.save(CompanyMapper.toCompany(companyRequestDto));
+        Company company = companyMapper.toCompany(companyRequestDto);
+        company = companyRepository.save(company);
         company.setImage("testImage");
         company.setBanner("testBanner");
         if (!areEmailsAreTheSame(authentication, company.getEmail())) {
@@ -39,7 +43,8 @@ public class CompanyService {
         }
         company.setUsers(List.of(getCurrentUser(authentication)));
         companyRepository.save(company);
-        return CompanyMapper.toCompanyResponseDto(company);
+
+        return "Company created successfully";
     }
 
     private boolean areEmailsAreTheSame(Authentication authentication, String companyEmail) {
@@ -48,7 +53,7 @@ public class CompanyService {
     }
 
     private User getCurrentUser(Authentication authentication) {
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getAuthorities();
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         return userDetails.getUser();
     }
 }

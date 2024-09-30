@@ -3,8 +3,13 @@ package com.example.b2b_opportunities.Mapper;
 import com.example.b2b_opportunities.Dto.Request.CompanyRequestDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyResponseDto;
 import com.example.b2b_opportunities.Entity.Company;
+import com.example.b2b_opportunities.Entity.CompanyType;
+import com.example.b2b_opportunities.Entity.Domain;
 import com.example.b2b_opportunities.Entity.Skill;
 import com.example.b2b_opportunities.Entity.User;
+import com.example.b2b_opportunities.Exception.NotFoundException;
+import com.example.b2b_opportunities.Repository.CompanyTypeRepository;
+import com.example.b2b_opportunities.Repository.DomainRepository;
 import com.example.b2b_opportunities.Repository.SkillRepository;
 import org.springframework.stereotype.Component;
 
@@ -16,38 +21,51 @@ import java.util.Set;
 @Component
 public class CompanyMapper {
 
-    private static SkillRepository skillRepository;
+    private final SkillRepository skillRepository;
+    private final CompanyTypeRepository companyTypeRepository;
+    private final DomainRepository domainRepository;
 
-    public static Company toCompany(CompanyRequestDto companyRequestDto) {
+    public CompanyMapper(SkillRepository skillRepository, CompanyTypeRepository companyTypeRepository, DomainRepository domainRepository) {
+        this.skillRepository = skillRepository;
+        this.companyTypeRepository = companyTypeRepository;
+        this.domainRepository = domainRepository;
+    }
+
+    public Company toCompany(CompanyRequestDto companyRequestDto) {
+        Set<Skill> skills = skillRepository.findAllByIdIn(companyRequestDto.getSkills());
+        CompanyType companyType = companyTypeRepository.findById(companyRequestDto.getCompanyTypeId()).orElseThrow(() -> new NotFoundException("Company type not found"));
+        Domain domain = domainRepository.findById(companyRequestDto.getDomainId()).orElseThrow(() -> new NotFoundException("Domain not found"));
+
         return Company.builder()
                 .name(companyRequestDto.getName())
                 .email(companyRequestDto.getEmail())
-                .companyType(companyRequestDto.getCompanyType())
+                .companyType(companyType)
                 .website(companyRequestDto.getWebsite())
 //                .emailVerification(companyRequestDto.getEmailVerification()) -> will be set in the service
-                .domain(companyRequestDto.getDomain())
+                .domain(domain)
                 .linkedIn(companyRequestDto.getLinkedIn())
 //                .users(companyRequestDto.getUsers()) -> initially it will set the current logged-in user
                 .description(companyRequestDto.getDescription())
-                .skills(toSkillList(companyRequestDto.getSkills()))
+                .skills(skills)
+                .image("no-image")
                 .build();
     }
 
     public static CompanyResponseDto toCompanyResponseDto(Company company) {
+        List<Long> skillIDs = toSkillIdList(company.getSkills());
         return CompanyResponseDto.builder()
                 .id(company.getId())
                 .name(company.getName())
                 .email(company.getEmail())
                 .companyType(company.getCompanyType().toString())
-                .website(company.getWebsite())
-                .image(company.getImage())
-                .emailVerification(company.getEmailVerification().toString())
                 .domain(company.getDomain().toString())
+                .emailVerification(company.getEmailVerification().toString())
+                .website(company.getWebsite())
                 .linkedIn(company.getLinkedIn())
+                .image(company.getImage())
                 .banner(company.getBanner())
                 .description(company.getDescription())
-                .skills(toSkillIdList(company.getSkills()))
-                .users(getUserIds(company.getUsers()))
+                .skills(skillIDs)
                 .build();
     }
 
@@ -59,20 +77,20 @@ public class CompanyMapper {
         return idList;
     }
 
-    private static Set<Skill> toSkillList(Set<Long> skillSet) {
-        Set<Skill> skillList = new HashSet<>();
-        for (Long skillId : skillSet) {
-            skillList.add(skillRepository.findById(skillId).orElseThrow());
-        }
-        return skillList;
-    }
-
     private static List<Long> toSkillIdList(Set<Skill> skillSet) {
         List<Long> skillIdList = new ArrayList<>();
-        for(Skill s:skillSet){
+        for (Skill s : skillSet) {
             skillIdList.add(s.getId());
         }
         return skillIdList;
+    }
+
+    private Set<Skill> toSkillSet(List<Long> skillIdsList) {
+        Set<Skill> skillSet = new HashSet<>();
+        for (Long skillId : skillIdsList) {
+            skillSet.add(skillRepository.findById(skillId).orElseThrow());
+        }
+        return skillSet;
     }
 
 }

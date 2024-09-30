@@ -74,7 +74,7 @@
 
         @ManyToMany
         @JoinTable(
-                name = "companies_skills",
+                name = "company_skills",
                 joinColumns = @JoinColumn(name = "company_id"),
                 inverseJoinColumns = @JoinColumn(name = "skill_id")
         )
