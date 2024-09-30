@@ -16,6 +16,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -34,14 +35,21 @@ public class CompanyService {
         if (image.isEmpty()) throw new NotFoundException("Image not uploaded"); //this will be improved
         Company company = companyMapper.toCompany(companyRequestDto);
         company = companyRepository.save(company);
+
         company.setImage("testImage");
         company.setBanner("testBanner");
+
         if (!areEmailsAreTheSame(authentication, company.getEmail())) {
             company.setEmailVerification(EmailVerification.PENDING);
         } else {
             company.setEmailVerification(EmailVerification.ACCEPTED);
         }
-        company.setUsers(List.of(getCurrentUser(authentication)));
+
+        User user = getCurrentUser(authentication);
+        user.setCompany(company);
+        company.getUsers().add(user);
+
+        userRepository.save(user);
         companyRepository.save(company);
 
         return "Company created successfully";

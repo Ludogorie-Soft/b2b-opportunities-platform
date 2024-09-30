@@ -48,6 +48,7 @@ public class CompanyMapper {
                 .description(companyRequestDto.getDescription())
                 .skills(skills)
                 .image("no-image")
+                .users(new ArrayList<>())
                 .build();
     }
 

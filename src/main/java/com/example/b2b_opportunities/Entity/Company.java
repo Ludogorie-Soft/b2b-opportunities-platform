@@ -22,6 +22,7 @@
     import lombok.Setter;
     import org.hibernate.validator.constraints.URL;
 
+    import java.util.ArrayList;
     import java.util.List;
     import java.util.Set;
 
