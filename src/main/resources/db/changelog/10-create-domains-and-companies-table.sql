@@ -26,17 +26,17 @@ ALTER TABLE users
 ADD COLUMN company_id BIGINT,
 ADD CONSTRAINT fk_company_user FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE SET NULL;
 
-CREATE TABLE company_type (
+CREATE TABLE company_types (
     id BIGSERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE company_company_type (
     company_id BIGINT NOT NULL,
-    company_type_id BIGINT NOT NULL,
-    PRIMARY KEY (company_id, company_type_id),
+    company_types_id BIGINT NOT NULL,
+    PRIMARY KEY (company_id, company_types_id),
     CONSTRAINT fk_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
-    CONSTRAINT fk_company_type FOREIGN KEY (company_type_id) REFERENCES company_type(id) ON DELETE CASCADE
+    CONSTRAINT fk_company_types FOREIGN KEY (company_types_id) REFERENCES company_types(id) ON DELETE CASCADE
 );
 
 CREATE TABLE company_skills (
