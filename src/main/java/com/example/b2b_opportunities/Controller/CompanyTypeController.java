@@ -1,10 +1,8 @@
 package com.example.b2b_opportunities.Controller;
 
 import com.example.b2b_opportunities.Entity.CompanyType;
-import com.example.b2b_opportunities.Entity.Domain;
 import com.example.b2b_opportunities.Exception.AlreadyExistsException;
 import com.example.b2b_opportunities.Repository.CompanyTypeRepository;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
