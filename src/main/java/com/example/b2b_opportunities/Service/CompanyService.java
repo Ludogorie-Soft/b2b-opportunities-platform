@@ -3,6 +3,7 @@ package com.example.b2b_opportunities.Service;
 import com.example.b2b_opportunities.Dto.Request.CompanyRequestDto;
 import com.example.b2b_opportunities.Entity.Company;
 import com.example.b2b_opportunities.Entity.User;
+import com.example.b2b_opportunities.Exception.AlreadyExistsException;
 import com.example.b2b_opportunities.Exception.AuthenticationFailedException;
 import com.example.b2b_opportunities.Exception.NotFoundException;
 import com.example.b2b_opportunities.Mapper.CompanyMapper;
@@ -33,6 +34,7 @@ public class CompanyService {
                                 MultipartFile banner) {
         if (authentication == null) throw new AuthenticationFailedException("User not authenticated");
         if (image.isEmpty()) throw new NotFoundException("Image not uploaded"); //this will be improved
+        validateCompanyRequest(companyRequestDto);
         Company company = companyMapper.toCompany(companyRequestDto);
         company = companyRepository.save(company);
 
@@ -40,7 +42,7 @@ public class CompanyService {
         company.setBanner("testBanner");
 
         if (!areEmailsAreTheSame(authentication, company.getEmail())) {
-            company.setEmailVerification(EmailVerification.PENDING);
+            company.setEmailVerification(EmailVerification.PENDING); //This should send a confirmation mail
         } else {
             company.setEmailVerification(EmailVerification.ACCEPTED);
         }
@@ -63,5 +65,14 @@ public class CompanyService {
     private User getCurrentUser(Authentication authentication) {
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         return userDetails.getUser();
+    }
+
+    private void validateCompanyRequest(CompanyRequestDto companyRequestDto) {
+        if (companyRepository.findByEmail(companyRequestDto.getEmail()).isPresent())
+            throw new AlreadyExistsException("Email already registered");
+        if (companyRepository.findByWebsite(companyRequestDto.getWebsite()).isPresent())
+            throw new AlreadyExistsException("Website already registered");
+        if (companyRepository.findByLinkedIn(companyRequestDto.getLinkedIn()).isPresent())
+            throw new AlreadyExistsException("LinkedIn already registered");
     }
 }

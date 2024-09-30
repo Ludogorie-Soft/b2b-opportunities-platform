@@ -64,6 +64,7 @@
         @JoinColumn(name = "domain_id")
         private Domain domain;
 
+        @Column(name = "linked_in")
         private String linkedIn;
 
         private String banner;
