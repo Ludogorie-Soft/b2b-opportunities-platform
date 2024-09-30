@@ -1,7 +1,6 @@
 package com.example.b2b_opportunities.Service;
 
 import com.example.b2b_opportunities.Dto.LoginDtos.LoginDto;
-import com.example.b2b_opportunities.Dto.LoginDtos.LoginResponse;
 import com.example.b2b_opportunities.Dto.Request.UserRequestDto;
 import com.example.b2b_opportunities.Dto.Response.UserResponseDto;
 import com.example.b2b_opportunities.Entity.ConfirmationToken;
@@ -21,7 +20,9 @@ import com.example.b2b_opportunities.Repository.ConfirmationTokenRepository;
 import com.example.b2b_opportunities.Repository.UserRepository;
 import com.example.b2b_opportunities.Static.RoleType;
 import com.example.b2b_opportunities.UserDetailsImpl;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -56,18 +57,30 @@ public class AuthenticationService {
     private final ConfirmationTokenRepository confirmationTokenRepository;
     private final UserRepository userRepository;
 
-    public ResponseEntity<LoginResponse> login(LoginDto loginDto) {
+    public String login(LoginDto loginDto, HttpServletRequest request, HttpServletResponse response) {
         UserDetails userDetails;
         userDetails = authenticate(loginDto);
 
         String jwtToken = jwtService.generateToken(userDetails);
 
-        LoginResponse loginResponse = LoginResponse.builder()
-                .token(jwtToken)
-                .expiresIn(jwtService.getExpirationTime())
-                .build();
+        setJwtCookie(request, response, jwtToken);
 
-        return ResponseEntity.ok(loginResponse);
+        return "Login successful";
+    }
+
+
+    public void setJwtCookie(HttpServletRequest request, HttpServletResponse response, String jwtToken) {
+        String domain = request.getServerName();
+        Cookie cookie = new Cookie("jwt", jwtToken);
+
+        cookie.setHttpOnly(true);
+        cookie.setSecure(true);
+        cookie.setPath("/");
+        cookie.setMaxAge(3600);
+
+        cookie.setDomain(domain);
+
+        response.addCookie(cookie);
     }
 
     public ResponseEntity<UserResponseDto> register(UserRequestDto userRequestDto, BindingResult bindingResult, HttpServletRequest request) {
@@ -102,7 +115,7 @@ public class AuthenticationService {
         return "A new token was sent to your e-mail!";
     }
 
-    public LoginResponse oAuthLogin(Principal user) {
+    public String oAuthLogin(Principal user, HttpServletRequest request, HttpServletResponse response) {
         if (user instanceof OAuth2AuthenticationToken authToken) {
             OAuth2User oauth2User = authToken.getPrincipal();
 
@@ -115,7 +128,7 @@ public class AuthenticationService {
                 createUserFromOAuth(attributes, provider);
             }
 
-            return generateLoginResponse(email);
+            return generateLoginResponse(request, response, email);
         }
         throw new ServerErrorException("Authentication failed: The provided authentication is not an OAuth2 token.");
     }
@@ -201,14 +214,15 @@ public class AuthenticationService {
         userRepository.save(user);
     }
 
-    private LoginResponse generateLoginResponse(String email) {
+    private String generateLoginResponse(HttpServletRequest request, HttpServletResponse response, String email) {
         User user = userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
         UserDetailsImpl userDetails = new UserDetailsImpl(user);
 
-        return LoginResponse.builder()
-                .token(jwtService.generateToken(userDetails))
-                .expiresIn(jwtService.getExpirationTime())
-                .build();
+        String jwtToken = jwtService.generateToken(userDetails);
+
+        setJwtCookie(request, response, jwtToken);
+
+        return "Login successful";
     }
 
     private boolean isTokenExpired(ConfirmationToken token) {

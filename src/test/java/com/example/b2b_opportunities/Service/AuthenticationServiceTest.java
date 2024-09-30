@@ -16,6 +16,7 @@ import com.example.b2b_opportunities.Repository.ConfirmationTokenRepository;
 import com.example.b2b_opportunities.Repository.UserRepository;
 import com.example.b2b_opportunities.UserDetailsImpl;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -75,6 +76,9 @@ class AuthenticationServiceTest {
     @Mock
     private HttpServletRequest request;
 
+    @Mock
+    private HttpServletResponse response;
+
     private AutoCloseable closeable;
 
     @BeforeEach
@@ -107,12 +111,10 @@ class AuthenticationServiceTest {
         when(jwtService.getExpirationTime())
                 .thenReturn(3600L);
 
-        ResponseEntity<LoginResponse> response = authenticationService.login(loginDto);
+        String result = authenticationService.login(loginDto, request, response);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals("test-jwt-token", response.getBody().getToken());
-        assertEquals(3600L, response.getBody().getExpiresIn());
+        assertNotNull(result);
+        assertEquals("Login successful", result);
     }
 
     @Test
@@ -124,7 +126,7 @@ class AuthenticationServiceTest {
                 });
 
         AuthenticationFailedException exception = assertThrows(
-                AuthenticationFailedException.class, () -> authenticationService.login(loginDto)
+                AuthenticationFailedException.class, () -> authenticationService.login(loginDto, request, response)
         );
 
         assertEquals("Authentication failed: Invalid username or password.", exception.getMessage());
@@ -138,7 +140,7 @@ class AuthenticationServiceTest {
                 .thenThrow(new DisabledException(""));
 
         DisabledUserException exception = assertThrows(DisabledUserException.class, () -> {
-            authenticationService.login(loginDto);
+            authenticationService.login(loginDto, request, response);
         });
 
         assertEquals("This account is not activated yet.", exception.getMessage());
@@ -173,10 +175,9 @@ class AuthenticationServiceTest {
         when(jwtService.generateToken(any(UserDetails.class))).thenReturn("test-jwt-token");
         when(jwtService.getExpirationTime()).thenReturn(3600L);
 
-        LoginResponse response = authenticationService.oAuthLogin(authToken);
+        String result = authenticationService.oAuthLogin(authToken, request, response);
 
-        assertEquals("test-jwt-token", response.getToken());
-        assertEquals(3600L, response.getExpiresIn());
+        assertEquals(result, "Login successful");
     }
 
     @Test

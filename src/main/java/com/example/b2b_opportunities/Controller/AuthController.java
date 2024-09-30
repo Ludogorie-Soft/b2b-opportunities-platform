@@ -1,13 +1,13 @@
 package com.example.b2b_opportunities.Controller;
 
 import com.example.b2b_opportunities.Dto.LoginDtos.LoginDto;
-import com.example.b2b_opportunities.Dto.LoginDtos.LoginResponse;
 import com.example.b2b_opportunities.Dto.Request.ResetPasswordDto;
 import com.example.b2b_opportunities.Dto.Request.UserRequestDto;
 import com.example.b2b_opportunities.Dto.Response.UserResponseDto;
 import com.example.b2b_opportunities.Service.AuthenticationService;
 import com.example.b2b_opportunities.Service.PasswordService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -48,14 +48,14 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@RequestBody LoginDto loginDto) {
-        return authenticationService.login(loginDto);
+    public String login(@RequestBody LoginDto loginDto, HttpServletRequest request, HttpServletResponse response) {
+        return authenticationService.login(loginDto, request, response);
     }
 
     @GetMapping("/oauth2/success")
     @ResponseStatus(HttpStatus.OK)
-    public LoginResponse oAuthLogin(Principal user) {
-        return authenticationService.oAuthLogin(user);
+    public String oAuthLogin(Principal user, HttpServletRequest request, HttpServletResponse response) {
+        return authenticationService.oAuthLogin(user, request, response);
     }
 
     // Just for testing - returns the user details from Google after oAuth
