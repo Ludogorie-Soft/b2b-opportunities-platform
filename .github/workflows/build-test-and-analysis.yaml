@@ -100,7 +100,7 @@ jobs:
       - name: Export environment variables from Infisical
         env:
           INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
-        run: infisical export --env=production | sed "s/'//g" > .env
+        run: infisical export --env=development | sed "s/'//g" > .env
 
       - name: Load environment variables (globally)
         run: cat .env >> $GITHUB_ENV
