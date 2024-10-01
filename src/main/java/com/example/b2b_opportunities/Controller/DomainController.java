@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,22 +32,26 @@ public class DomainController {
         return domainRepository.findAll();
     }
 
+    @GetMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public Domain get(@PathVariable Long id) {
+        return findDomainByIdOrThrow(id);
+    }
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Domain add(@RequestParam String name) {
-        name = name.trim();
-        validateNameNotBlank(name);
+    public Domain add(@RequestParam("name") String name) {
+        name = validateAndTrimName(name);
         validateNameDoesNotExists(name);
         return domainRepository.save(Domain.builder().name(name).build());
     }
 
-    @PutMapping
+    @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public Domain edit(@RequestParam Long id, @RequestParam String newName) {
+    public Domain edit(@PathVariable Long id, @RequestParam("newName") String newName) {
         Domain domain = findDomainByIdOrThrow(id);
 
-        newName = newName.trim();
-        validateNameNotBlank(newName);
+        newName = validateAndTrimName(newName);
         if (Objects.equals(domain.getName(), newName)) {
             return domain;
         }
@@ -56,9 +61,9 @@ public class DomainController {
         return domainRepository.save(domain);
     }
 
-    @DeleteMapping
+    @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@RequestParam Long id) {
+    public void delete(@PathVariable Long id) {
         domainRepository.delete(findDomainByIdOrThrow(id));
     }
 
@@ -76,5 +81,11 @@ public class DomainController {
         if (name.isBlank()) {
             throw new InvalidInputException("Domain name cannot be blank");
         }
+    }
+
+    private String validateAndTrimName(String name) {
+        String trimmedName = name.trim();
+        validateNameNotBlank(trimmedName);
+        return trimmedName;
     }
 }
