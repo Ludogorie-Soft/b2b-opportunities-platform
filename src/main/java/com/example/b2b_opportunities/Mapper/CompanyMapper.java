@@ -58,8 +58,8 @@ public class CompanyMapper {
                 .id(company.getId())
                 .name(company.getName())
                 .email(company.getEmail())
-                .companyType(company.getCompanyType().toString())
-                .domain(company.getDomain().toString())
+                .companyType(company.getCompanyType().getName())
+                .domain(company.getDomain().getName())
                 .emailVerification(company.getEmailVerification().toString())
                 .website(company.getWebsite())
                 .linkedIn(company.getLinkedIn())
@@ -69,15 +69,6 @@ public class CompanyMapper {
                 .skills(skillIDs)
                 .build();
     }
-
-    private static List<Long> getUserIds(List<User> usersList) {
-        List<Long> idList = new ArrayList<>();
-        for (User u : usersList) {
-            idList.add(u.getId());
-        }
-        return idList;
-    }
-
     private static List<Long> toSkillIdList(Set<Skill> skillSet) {
         List<Long> skillIdList = new ArrayList<>();
         for (Skill s : skillSet) {
@@ -86,12 +77,12 @@ public class CompanyMapper {
         return skillIdList;
     }
 
-    private Set<Skill> toSkillSet(List<Long> skillIdsList) {
-        Set<Skill> skillSet = new HashSet<>();
-        for (Long skillId : skillIdsList) {
-            skillSet.add(skillRepository.findById(skillId).orElseThrow());
+    public static List<CompanyResponseDto> toCompanyResponseDtoList(List<Company> companyList){
+        List<CompanyResponseDto> responseDtoList = new ArrayList<>();
+        for(Company company: companyList){
+            responseDtoList.add(CompanyMapper.toCompanyResponseDto(company));
         }
-        return skillSet;
+        return responseDtoList;
     }
 
 }

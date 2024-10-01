@@ -1,10 +1,14 @@
 package com.example.b2b_opportunities.Dto.Response;
 
 import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.List;
 
 @Builder
+@Getter
+@Setter
 public class CompanyResponseDto {
     private Long id;
     private String name;

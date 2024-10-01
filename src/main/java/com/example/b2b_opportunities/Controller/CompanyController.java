@@ -2,7 +2,10 @@ package com.example.b2b_opportunities.Controller;
 
 
 import com.example.b2b_opportunities.Dto.Request.CompanyRequestDto;
+import com.example.b2b_opportunities.Dto.Response.CompanyResponseDto;
 import com.example.b2b_opportunities.Entity.Company;
+import com.example.b2b_opportunities.Exception.NotFoundException;
+import com.example.b2b_opportunities.Mapper.CompanyMapper;
 import com.example.b2b_opportunities.Repository.CompanyRepository;
 import com.example.b2b_opportunities.Service.CompanyService;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -29,8 +33,14 @@ public class CompanyController {
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public List<Company> getCompanies() {
-        return companyRepository.findAll();
+    public List<CompanyResponseDto> getCompanies() {
+        return CompanyMapper.toCompanyResponseDtoList(companyRepository.findAll());
+    }
+
+    @GetMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public CompanyResponseDto getCompany(@PathVariable("id") Long id) {
+        return CompanyMapper.toCompanyResponseDto(companyRepository.findById(id).orElseThrow(() -> new NotFoundException("Company with id " + id + " not found")));
     }
 
     @PostMapping(consumes = "multipart/form-data")
