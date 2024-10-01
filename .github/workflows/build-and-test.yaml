@@ -32,6 +32,8 @@ jobs:
           echo "db_password=$(grep DB_PASSWORD .env | cut -d '=' -f2)" >> $GITHUB_OUTPUT
           echo "test_db_table_name=$(grep TEST_DB_TABLE_NAME .env | cut -d '=' -f2)" >> $GITHUB_OUTPUT
 
+      - name: Debug .env file
+        run: cat .env
   build-and-test:
     needs: secret-generator
     runs-on: ubuntu-latest
