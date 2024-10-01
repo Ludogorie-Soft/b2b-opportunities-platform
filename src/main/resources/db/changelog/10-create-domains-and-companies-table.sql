@@ -1,6 +1,6 @@
 CREATE TABLE domains (
     id BIGSERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL
+    name VARCHAR(255) NOT NULL UNIQUE
 );
 
 INSERT INTO domains (name) VALUES

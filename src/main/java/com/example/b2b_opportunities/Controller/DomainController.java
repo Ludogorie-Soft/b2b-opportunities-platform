@@ -47,8 +47,8 @@ public class DomainController {
 
     @DeleteMapping
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteDomain(@RequestParam(required = false) String name) {
-        Domain domain = findByName(name);
+    public void deleteDomain(@RequestParam("id") Long id) {
+        Domain domain = domainRepository.findById(id).orElseThrow(() -> new NotFoundException("Domain not found"));
         domainRepository.delete(domain);
     }
 
