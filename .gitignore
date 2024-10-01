@@ -42,3 +42,6 @@ Deploy/db/
 
 # Frontend
 Deploy/job-matcher/
+
+# Minio
+Deploy/storage/
