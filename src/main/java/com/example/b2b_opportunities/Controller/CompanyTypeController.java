@@ -2,6 +2,7 @@ package com.example.b2b_opportunities.Controller;
 
 import com.example.b2b_opportunities.Entity.CompanyType;
 import com.example.b2b_opportunities.Exception.AlreadyExistsException;
+import com.example.b2b_opportunities.Exception.NotFoundException;
 import com.example.b2b_opportunities.Repository.CompanyTypeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -39,7 +40,7 @@ public class CompanyTypeController {
     @PutMapping
     @ResponseStatus(HttpStatus.OK)
     public CompanyType editCompanyType(@RequestParam String name, @RequestParam String newName) {
-        CompanyType companyType = findByName(name);
+        CompanyType companyType = companyTypeRepository.findByName(name).orElseThrow(() -> new AlreadyExistsException("Company type with name " + name + " not found"));
         checkIfAlreadyExists(newName);
         companyType.setName(newName);
         return companyTypeRepository.save(companyType);
@@ -47,17 +48,13 @@ public class CompanyTypeController {
 
     @DeleteMapping
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteCompanyType(@RequestParam(required = false) String name) {
-        CompanyType companyType = findByName(name);
+    public void deleteCompanyType(@RequestParam("id") Long id) {
+        CompanyType companyType = companyTypeRepository.findById(id).orElseThrow(() -> new NotFoundException("Company type not found"));
         companyTypeRepository.delete(companyType);
     }
 
     private void checkIfAlreadyExists(String name) {
         if (companyTypeRepository.findByName(name).isPresent())
             throw new AlreadyExistsException("Company type already exists");
-    }
-
-    private CompanyType findByName(String name) {
-        return companyTypeRepository.findByName(name).orElseThrow(() -> new AlreadyExistsException("Company type with name " + name + " not found"));
     }
 }

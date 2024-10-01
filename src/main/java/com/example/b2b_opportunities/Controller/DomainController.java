@@ -39,7 +39,7 @@ public class DomainController {
     @PutMapping
     @ResponseStatus(HttpStatus.OK)
     public Domain editDomain(@RequestParam String name, @RequestParam String newName) {
-        Domain domain = findByName(name);
+        Domain domain = domainRepository.findByName(name).orElseThrow(() -> new NotFoundException("Domain with name " + name + " not found"));
         checkIfAlreadyExists(newName);
         domain.setName(newName);
         return domainRepository.save(domain);
@@ -56,9 +56,5 @@ public class DomainController {
         if (domainRepository.findByName(name).isPresent()) {
             throw new AlreadyExistsException("Domain already exists");
         }
-    }
-
-    private Domain findByName(String name) {
-        return domainRepository.findByName(name).orElseThrow(() -> new NotFoundException("Domain with name " + name + " not found"));
     }
 }
