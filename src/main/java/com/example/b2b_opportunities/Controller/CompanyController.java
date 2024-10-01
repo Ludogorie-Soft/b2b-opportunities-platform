@@ -2,8 +2,8 @@ package com.example.b2b_opportunities.Controller;
 
 
 import com.example.b2b_opportunities.Dto.Request.CompanyRequestDto;
+import com.example.b2b_opportunities.Dto.Response.CompaniesAndUsersResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyResponseDto;
-import com.example.b2b_opportunities.Entity.Company;
 import com.example.b2b_opportunities.Exception.NotFoundException;
 import com.example.b2b_opportunities.Mapper.CompanyMapper;
 import com.example.b2b_opportunities.Repository.CompanyRepository;
@@ -51,4 +51,11 @@ public class CompanyController {
                                 @RequestParam(value = "banner", required = false) MultipartFile banner) {
         return companyService.createCompany(authentication, companyRequestDto, image, banner);
     }
+
+    @GetMapping("/with-users")
+    @ResponseStatus(HttpStatus.OK)
+    public List<CompaniesAndUsersResponseDto> getCompaniesAndUsers() {
+        return companyService.getCompaniesAndUsers();
+    }
+
 }

@@ -13,4 +13,6 @@ public interface CompanyRepository extends JpaRepository<Company, Long> {
     Optional<Company> findByWebsite(String website);
     @Query("SELECT c FROM Company c WHERE c.linkedIn = :linkedIn")
     Optional<Company> findByLinkedIn(String linkedIn);
+
+    Optional<Company> findByNameIgnoreCase(String name);
 }

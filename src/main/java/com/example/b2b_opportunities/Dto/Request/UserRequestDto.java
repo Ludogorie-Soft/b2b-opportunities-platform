@@ -24,9 +24,6 @@ public class UserRequestDto {
     @NotEmpty
     @Size(min = 3, max = 40, message = "lastName must be between 3 and 40 characters long")
     private String lastName;
-
-    private String companyName;
-
     @Column(unique = true)
     @NotEmpty(message = "email cannot be empty")
     @Email(message = "Invalid email format.")

@@ -146,7 +146,7 @@ class AuthenticationServiceTest {
 
     @Test
     void testRegisterWithValidInput() {
-        UserRequestDto userRequestDto = new UserRequestDto("testuser", "test", "test", "null", "test@test.com", "password", "password");
+        UserRequestDto userRequestDto = new UserRequestDto("testuser", "test", "test", "test@test.com", "password", "password");
 
         when(bindingResult.hasErrors()).thenReturn(false);
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
@@ -181,7 +181,7 @@ class AuthenticationServiceTest {
 
     @Test
     void testRegisterWithInvalidPasswordMismatch() {
-        UserRequestDto userRequestDto = new UserRequestDto("testuser", "test", "test", "null", "test@test.com", "password", "differentpassword");
+        UserRequestDto userRequestDto = new UserRequestDto("testuser", "test", "test", "test@test.com", "password", "differentpassword");
 
         when(bindingResult.hasErrors()).thenReturn(false);
 
@@ -194,7 +194,7 @@ class AuthenticationServiceTest {
 
     @Test
     void testRegisterWithDuplicateEmail() {
-        UserRequestDto userRequestDto = new UserRequestDto("testuser", "test", "test", "null", "test@test.com", "password", "password");
+        UserRequestDto userRequestDto = new UserRequestDto("testuser", "test", "test",  "test@test.com", "password", "password");
 
         when(bindingResult.hasErrors()).thenReturn(false);
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(new User()));

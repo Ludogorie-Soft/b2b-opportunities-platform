@@ -41,13 +41,10 @@ public class CompanyMapper {
                 .email(companyRequestDto.getEmail())
                 .companyType(companyType)
                 .website(companyRequestDto.getWebsite())
-//                .emailVerification(companyRequestDto.getEmailVerification()) -> will be set in the service
                 .domain(domain)
                 .linkedIn(companyRequestDto.getLinkedIn())
-//                .users(companyRequestDto.getUsers()) -> initially it will set the current logged-in user
                 .description(companyRequestDto.getDescription())
                 .skills(skills)
-                .image("no-image")
                 .users(new ArrayList<>())
                 .build();
     }
@@ -63,8 +60,6 @@ public class CompanyMapper {
                 .emailVerification(company.getEmailVerification().toString())
                 .website(company.getWebsite())
                 .linkedIn(company.getLinkedIn())
-                .image(company.getImage())
-                .banner(company.getBanner())
                 .description(company.getDescription())
                 .skills(skillIDs)
                 .build();
