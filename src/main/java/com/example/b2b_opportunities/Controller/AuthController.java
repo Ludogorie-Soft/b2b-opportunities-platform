@@ -4,6 +4,7 @@ import com.example.b2b_opportunities.Dto.LoginDtos.LoginDto;
 import com.example.b2b_opportunities.Dto.Request.ResetPasswordDto;
 import com.example.b2b_opportunities.Dto.Request.UserRequestDto;
 import com.example.b2b_opportunities.Dto.Response.UserResponseDto;
+import com.example.b2b_opportunities.Exception.AuthenticationFailedException;
 import com.example.b2b_opportunities.Service.AuthenticationService;
 import com.example.b2b_opportunities.Service.PasswordService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -61,6 +62,9 @@ public class AuthController {
     // Just for testing - returns the user details from Google after oAuth
     @GetMapping("/user")
     public Principal getUserDetails(Principal user) {
+        if (user == null) {
+            throw new AuthenticationFailedException("Not authenticated");
+        }
         return user;
     }
 
