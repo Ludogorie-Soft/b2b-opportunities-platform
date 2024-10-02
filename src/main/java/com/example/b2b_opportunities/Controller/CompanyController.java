@@ -7,6 +7,7 @@ import com.example.b2b_opportunities.Exception.NotFoundException;
 import com.example.b2b_opportunities.Mapper.CompanyMapper;
 import com.example.b2b_opportunities.Repository.CompanyRepository;
 import com.example.b2b_opportunities.Service.CompanyService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -46,13 +47,20 @@ public class CompanyController {
     public CompanyResponseDto createCompany(Authentication authentication,
                                             @ModelAttribute CompanyRequestDto companyRequestDto,
                                             @RequestParam("image") MultipartFile image,
-                                            @RequestParam(value = "banner", required = false) MultipartFile banner) {
-        return companyService.createCompany(authentication, companyRequestDto, image, banner);
+                                            @RequestParam(value = "banner", required = false) MultipartFile banner,
+                                            HttpServletRequest request) {
+        return companyService.createCompany(authentication, companyRequestDto, image, banner, request);
     }
 
     @GetMapping("/{id}/with-users")
     @ResponseStatus(HttpStatus.OK)
     public CompaniesAndUsersResponseDto getCompaniesAndUsers(@PathVariable("id") Long companyId) {
         return companyService.getCompaniesAndUsers(companyId);
+    }
+
+    @GetMapping("/confirm-email")
+    @ResponseStatus(HttpStatus.OK)
+    public String confirmCompanyEmail(@RequestParam("token") String token) {
+        return companyService.confirmCompanyEmail(token);
     }
 }

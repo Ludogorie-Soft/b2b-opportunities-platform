@@ -79,4 +79,6 @@
                 inverseJoinColumns = @JoinColumn(name = "skill_id")
         )
         private Set<Skill> skills;
+
+        private String emailConfirmationToken;
     }

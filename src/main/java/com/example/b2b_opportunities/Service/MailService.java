@@ -1,6 +1,6 @@
 package com.example.b2b_opportunities.Service;
 
-import com.example.b2b_opportunities.Entity.ConfirmationToken;
+import com.example.b2b_opportunities.Entity.Company;
 import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Exception.ServerErrorException;
 import com.example.b2b_opportunities.Repository.ConfirmationTokenRepository;
@@ -13,8 +13,6 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
-import java.util.UUID;
-
 @Service
 @RequiredArgsConstructor
 public class MailService {
@@ -26,25 +24,22 @@ public class MailService {
 
     private String generateConfirmationLink(User user, HttpServletRequest request) {
         String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath();
-        String token = confirmationTokenService.generateConfirmationCode(user);
+        String token = confirmationTokenService.generateUserToken(user);
         return "<a href=" + baseUrl + "/api/auth/register/confirm?token=" + token + ">Confirm Email</a>";
     }
 
     private String generatePasswordRecoveryLink(User user, HttpServletRequest request) {
         String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath();
-        String token = generatePasswordRecoveryToken(user);
+        String token = confirmationTokenService.generateUserToken(user);
         return "<a href=" + baseUrl + "/api/auth/reset-password?token=" + token + ">Reset password</a>";
     }
 
-    private String generatePasswordRecoveryToken(User user) {
-        String token = UUID.randomUUID().toString();
-        ConfirmationToken recoveryToken = new ConfirmationToken(
-                token,
-                user
-        );
-        confirmationTokenRepository.save(recoveryToken);
-        return token;
+    private String generateEmailConfirmationLink(Company company, HttpServletRequest request) {
+        String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath();
+        String token = confirmationTokenService.generateCompanyToken(company);
+        return "<a href=" + baseUrl + "/company/confirm-email?token=" + token + ">Confirm your email address</a>";
     }
+
 
     public void sendConfirmationMail(User user, HttpServletRequest request) {
         String emailContent = "<html>" +
@@ -59,14 +54,14 @@ public class MailService {
                 "</html>";
 
         String subject = "Confirm your E-Mail - B2B Opportunities";
-        sendEmail(user, emailContent, subject);
+        sendEmail(user.getEmail(), emailContent, subject);
     }
 
-    private void sendEmail(User user, String content, String subject) {
+    private void sendEmail(String receiver, String content, String subject) {
         try {
             MimeMessage mimeMessage = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true);
-            helper.setTo(user.getEmail());
+            helper.setTo(receiver);
             helper.setFrom(fromMail);
             helper.setSubject(subject);
             helper.setText(content, true);
@@ -88,6 +83,21 @@ public class MailService {
                 "</html>";
 
         String subject = "Reset password - B2B Opportunities";
-        sendEmail(user, emailContent, subject);
+        sendEmail(user.getEmail(), emailContent, subject);
+    }
+
+    public void sendCompanyEmailConfirmation(Company company, HttpServletRequest request) {
+        String emailContent = "<html>" +
+                "<body>" +
+                "<h2>Hello " + company.getName() + ",</h2>"
+                + "<h3><br/> Thank you for registering your company with B2B Opportunities."
+                + "<br/>To complete your registration and confirm your email address, please click the link below: </h3>"
+                + "<h2> <br/> " + generateEmailConfirmationLink(company, request) + "</h2>" +
+                "<h3><br/> Best regards,\n" +
+                "The B2B Opportunities Team,<br/></h3>" +
+                "</body>" +
+                "</html>";
+        String subject = "Company mail confirmation - B2B Opportunities";
+        sendEmail(company.getEmail(), emailContent, subject);
     }
 }

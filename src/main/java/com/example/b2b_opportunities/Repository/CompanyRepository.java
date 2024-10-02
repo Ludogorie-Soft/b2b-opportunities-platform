@@ -15,4 +15,5 @@ public interface CompanyRepository extends JpaRepository<Company, Long> {
     Optional<Company> findByLinkedIn(String linkedIn);
 
     Optional<Company> findByNameIgnoreCase(String name);
+    Optional<Company> findByEmailConfirmationToken(String emailConfirmationToken);
 }
