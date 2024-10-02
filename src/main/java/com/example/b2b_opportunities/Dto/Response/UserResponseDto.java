@@ -15,7 +15,6 @@ public class UserResponseDto {
     private String lastName;
     private String username;
     private String email;
-    private String companyName;
     private LocalDateTime createdAt;
     private boolean isEnabled;
     private boolean isApproved;

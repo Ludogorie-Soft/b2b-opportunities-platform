@@ -74,7 +74,6 @@ public class AuthControllerTest extends BaseTest {
             "Test-User",
             "Test",
             "User",
-            "TestCompany",
             "TestUSER@example.Com",
             "password123",
             "password123"
