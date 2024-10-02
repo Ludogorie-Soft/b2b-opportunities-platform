@@ -248,7 +248,7 @@ public class AuthControllerTest extends BaseTest {
         User user = userRepository.findByEmail(userRequestDto.getEmail().toLowerCase())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
         assertFalse(user.isEnabled());
-        String token = confirmationTokenService.generateConfirmationCode(user);
+        String token = confirmationTokenService.generateUserToken(user);
 
         mockMvc.perform(get("/api/auth/register/confirm")
                         .param("token", token))
