@@ -29,3 +29,6 @@ databaseChangeLog:
   - include:
       file: 10-create-domains-and-companies-table.sql
       relativeToChangelogFile: true
+  - include:
+      file: 11-create-and-fill-project-table.sql
+      relativeToChangelogFile: true
