@@ -1,6 +1,5 @@
 package com.example.b2b_opportunities.Controller;
 
-
 import com.example.b2b_opportunities.Dto.Request.CompanyRequestDto;
 import com.example.b2b_opportunities.Dto.Response.CompaniesAndUsersResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyResponseDto;
@@ -27,7 +26,6 @@ import java.util.List;
 @RequestMapping("/company")
 @RequiredArgsConstructor
 public class CompanyController {
-
     private final CompanyRepository companyRepository;
     private final CompanyService companyService;
 
@@ -45,17 +43,16 @@ public class CompanyController {
 
     @PostMapping(consumes = "multipart/form-data")
     @ResponseStatus(HttpStatus.CREATED)
-    public String createCompany(Authentication authentication,
-                                @ModelAttribute CompanyRequestDto companyRequestDto,
-                                @RequestParam("image") MultipartFile image,
-                                @RequestParam(value = "banner", required = false) MultipartFile banner) {
+    public CompanyResponseDto createCompany(Authentication authentication,
+                                            @ModelAttribute CompanyRequestDto companyRequestDto,
+                                            @RequestParam("image") MultipartFile image,
+                                            @RequestParam(value = "banner", required = false) MultipartFile banner) {
         return companyService.createCompany(authentication, companyRequestDto, image, banner);
     }
 
-    @GetMapping("/with-users")
+    @GetMapping("/{id}/with-users")
     @ResponseStatus(HttpStatus.OK)
-    public List<CompaniesAndUsersResponseDto> getCompaniesAndUsers() {
-        return companyService.getCompaniesAndUsers();
+    public CompaniesAndUsersResponseDto getCompaniesAndUsers(@PathVariable("id") Long companyId) {
+        return companyService.getCompaniesAndUsers(companyId);
     }
-
 }

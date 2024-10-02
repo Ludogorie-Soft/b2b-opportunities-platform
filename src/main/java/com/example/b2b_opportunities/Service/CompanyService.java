@@ -2,6 +2,7 @@ package com.example.b2b_opportunities.Service;
 
 import com.example.b2b_opportunities.Dto.Request.CompanyRequestDto;
 import com.example.b2b_opportunities.Dto.Response.CompaniesAndUsersResponseDto;
+import com.example.b2b_opportunities.Dto.Response.CompanyResponseDto;
 import com.example.b2b_opportunities.Dto.Response.UserResponseDto;
 import com.example.b2b_opportunities.Entity.Company;
 import com.example.b2b_opportunities.Entity.User;
@@ -11,6 +12,9 @@ import com.example.b2b_opportunities.Exception.NotFoundException;
 import com.example.b2b_opportunities.Mapper.CompanyMapper;
 import com.example.b2b_opportunities.Mapper.UserMapper;
 import com.example.b2b_opportunities.Repository.CompanyRepository;
+import com.example.b2b_opportunities.Repository.CompanyTypeRepository;
+import com.example.b2b_opportunities.Repository.DomainRepository;
+import com.example.b2b_opportunities.Repository.SkillRepository;
 import com.example.b2b_opportunities.Repository.UserRepository;
 import com.example.b2b_opportunities.Static.EmailVerification;
 import com.example.b2b_opportunities.UserDetailsImpl;
@@ -19,7 +23,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -27,57 +30,65 @@ import java.util.List;
 public class CompanyService {
 
     private final CompanyRepository companyRepository;
-    private final CompanyMapper companyMapper;
     private final UserRepository userRepository;
+    private final ImageService imageService;
+    private final CompanyTypeRepository companyTypeRepository;
+    private final DomainRepository domainRepository;
+    private final SkillRepository skillRepository;
+    private final PatternService patternService;
 
-    public String createCompany(Authentication authentication,
-                                CompanyRequestDto companyRequestDto,
-                                MultipartFile image,
-                                MultipartFile banner) {
-        if (authentication == null) throw new AuthenticationFailedException("User not authenticated");
-        if (image == null || image.isEmpty()) throw new NotFoundException("Image is missing or empty");
+    public CompanyResponseDto createCompany(Authentication authentication,
+                                            CompanyRequestDto companyRequestDto,
+                                            MultipartFile image,
+                                            MultipartFile banner) {
         companyRequestDto.setName(companyRequestDto.getName().trim().replaceAll("\\s+", " "));
-        validateCompanyRequest(companyRequestDto);
-        Company company = companyMapper.toCompany(companyRequestDto);
+        validateCompanyCreationInput(companyRequestDto, authentication, image);
+        Company company = companyRepository.save(setCompanyFields(companyRequestDto, authentication));
+        addCompanyToUser(authentication, company);
 
-        // iD -> img / banner
-
-        if (getCurrentUser(authentication).getEmail().equals(company.getEmail())) {
-            company.setEmailVerification(EmailVerification.ACCEPTED);
-        } else {
-            company.setEmailVerification(EmailVerification.PENDING); //This should send a confirmation mail
-
+        imageService.upload(image, company.getId(), "image");
+        if (banner != null && !banner.isEmpty()) {
+            imageService.upload(banner, company.getId(), "banner");
         }
-        company = companyRepository.save(company);
+        return generateCompanyResponseDto(company);
+    }
 
+    public CompaniesAndUsersResponseDto getCompaniesAndUsers(Long companyId) {
+        Company company = companyRepository.findById(companyId).orElseThrow(() -> new NotFoundException("Company with ID: " + companyId + " not found"));
+        List<UserResponseDto> users = UserMapper.toResponseDtoList(company.getUsers());
+        CompanyResponseDto responseDto = generateCompanyResponseDto(company);
+
+        CompaniesAndUsersResponseDto response = new CompaniesAndUsersResponseDto();
+        response.setUsers(users);
+        response.setCompany(responseDto);
+
+        return response;
+    }
+
+    private void addCompanyToUser(Authentication authentication, Company company) {
         User user = getCurrentUser(authentication);
         user.setCompany(company);
         userRepository.save(user);
-
-        //save images
-
-        return "Company created successfully";
     }
 
-    public List<CompaniesAndUsersResponseDto> getCompaniesAndUsers() {
-        List<CompaniesAndUsersResponseDto> responseList = new ArrayList<>();
+    private CompanyResponseDto generateCompanyResponseDto(Company company) {
+        CompanyResponseDto companyResponseDto = CompanyMapper.toCompanyResponseDto(company);
+        companyResponseDto.setImage(imageService.returnUrlIfPictureExists(company.getId(), "image"));
+        companyResponseDto.setBanner(imageService.returnUrlIfPictureExists(company.getId(), "banner"));
+        return companyResponseDto;
+    }
 
-        List<Company> companies = companyRepository.findAll();
-        List<User> users = userRepository.findAll();
-
-        for (Company company : companies) {
-            List<UserResponseDto> userList = new ArrayList<>();
-            CompaniesAndUsersResponseDto response = new CompaniesAndUsersResponseDto();
-            for (User user : users) {
-                if (user.getCompany().getId().equals(company.getId())) {
-                    response.setCompany(CompanyMapper.toCompanyResponseDto(company));
-                    userList.add(UserMapper.toResponseDto(user));
-                }
-            }
-            response.setUsers(userList);
-            responseList.add(response);
+    private Company setCompanyFields(CompanyRequestDto companyRequestDto, Authentication authentication) {
+        Company company = CompanyMapper.toCompany(companyRequestDto);
+        company.setCompanyType(companyTypeRepository.findById(companyRequestDto.getCompanyTypeId()).orElseThrow());
+        company.setDomain(domainRepository.findById(companyRequestDto.getDomainId()).orElseThrow());
+        company.setSkills(skillRepository.findAllByIdIn(companyRequestDto.getSkills()));
+        if (getCurrentUser(authentication).getEmail().equals(company.getEmail())) {
+            company.setEmailVerification(EmailVerification.ACCEPTED);
+        } else {
+            company.setEmailVerification(EmailVerification.PENDING);
         }
-        return responseList;
+        return company;
     }
 
     private User getCurrentUser(Authentication authentication) {
@@ -85,7 +96,11 @@ public class CompanyService {
         return userDetails.getUser();
     }
 
-    private void validateCompanyRequest(CompanyRequestDto companyRequestDto) {
+    private void validateCompanyCreationInput(CompanyRequestDto companyRequestDto, Authentication authentication, MultipartFile image) {
+        if (authentication == null) throw new AuthenticationFailedException("User not authenticated");
+        if (image == null || image.isEmpty()) throw new NotFoundException("Image is missing or empty");
+        companyTypeRepository.findById(companyRequestDto.getCompanyTypeId()).orElseThrow(() -> new NotFoundException("Company type not found"));
+        domainRepository.findById(companyRequestDto.getDomainId()).orElseThrow(() -> new NotFoundException("Domain not found"));
         if (companyRepository.findByNameIgnoreCase(companyRequestDto.getName()).isPresent())
             throw new AlreadyExistsException("Name already registered");
         if (companyRepository.findByEmail(companyRequestDto.getEmail()).isPresent())
@@ -94,5 +109,6 @@ public class CompanyService {
             throw new AlreadyExistsException("Website already registered");
         if (companyRepository.findByLinkedIn(companyRequestDto.getLinkedIn()).isPresent())
             throw new AlreadyExistsException("LinkedIn already registered");
+        patternService.getAllSkillsIfSkillIdsExist(companyRequestDto.getSkills());
     }
 }

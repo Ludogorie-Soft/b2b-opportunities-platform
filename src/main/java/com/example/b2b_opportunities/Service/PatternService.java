@@ -55,7 +55,7 @@ public class PatternService {
         return PatternMapper.toDto(patternRepository.save(pattern));
     }
 
-    private List<Skill> getAllSkillsIfSkillIdsExist(List<Long> skillList) {
+    protected List<Skill> getAllSkillsIfSkillIdsExist(List<Long> skillList) {
         if (skillList != null) {
             List<Skill> suggestedSkills = skillRepository.findAllById(skillList);
 

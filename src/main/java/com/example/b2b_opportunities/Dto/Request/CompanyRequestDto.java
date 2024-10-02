@@ -33,6 +33,7 @@ public class CompanyRequestDto {
 
     private Long domainId;
 
+    @URL
     private String linkedIn;
 
     private String description;
