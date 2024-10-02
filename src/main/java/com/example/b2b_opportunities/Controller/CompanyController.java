@@ -63,4 +63,13 @@ public class CompanyController {
     public String confirmCompanyEmail(@RequestParam("token") String token) {
         return companyService.confirmCompanyEmail(token);
     }
+
+    @PostMapping(value = "/edit", consumes = "multipart/form-data")
+    @ResponseStatus(HttpStatus.OK)
+    public CompanyResponseDto editCompany(Authentication authentication,
+                                          @ModelAttribute CompanyRequestDto companyRequestDto,
+                                          @RequestParam(value = "image", required = false) MultipartFile image,
+                                          @RequestParam(value = "banner", required = false) MultipartFile banner) {
+        return companyService.editCompany(authentication, companyRequestDto, image, banner);
+    }
 }

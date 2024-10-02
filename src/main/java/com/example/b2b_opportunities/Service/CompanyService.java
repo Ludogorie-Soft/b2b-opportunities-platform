@@ -9,6 +9,7 @@ import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Exception.AlreadyExistsException;
 import com.example.b2b_opportunities.Exception.AuthenticationFailedException;
 import com.example.b2b_opportunities.Exception.NotFoundException;
+import com.example.b2b_opportunities.Exception.PermissionDeniedException;
 import com.example.b2b_opportunities.Mapper.CompanyMapper;
 import com.example.b2b_opportunities.Mapper.UserMapper;
 import com.example.b2b_opportunities.Repository.CompanyRepository;
@@ -45,8 +46,19 @@ public class CompanyService {
                                             MultipartFile banner,
                                             HttpServletRequest request) {
         companyRequestDto.setName(companyRequestDto.getName().trim().replaceAll("\\s+", " "));
-        validateCompanyCreationInput(companyRequestDto, authentication, image);
-        Company company = companyRepository.save(setCompanyFields(companyRequestDto, authentication, request));
+        if (authentication == null)
+            throw new AuthenticationFailedException("User not authenticated");
+        if (image == null || image.isEmpty())
+            throw new NotFoundException("Image is missing or empty");
+        User currentUser = getCurrentUser(authentication);
+        if (currentUser.getCompany() != null)
+            throw new AlreadyExistsException(currentUser.getUsername() + " is already associated with Company: " + currentUser.getCompany().getName());
+
+        validateCompanyRequestInput(companyRequestDto);
+        Company company = companyRepository.save(setCompanyFields(companyRequestDto));
+
+        handleCompanyEmailVerification(authentication, company, request);
+
         addCompanyToUser(authentication, company);
 
         imageService.upload(image, company.getId(), "image");
@@ -54,6 +66,16 @@ public class CompanyService {
             imageService.upload(banner, company.getId(), "banner");
         }
         return generateCompanyResponseDto(company);
+    }
+
+
+    private void handleCompanyEmailVerification(Authentication authentication, Company company, HttpServletRequest request) {
+        if (getCurrentUser(authentication).getEmail().equals(company.getEmail())) {
+            company.setEmailVerification(EmailVerification.ACCEPTED);
+        } else {
+            company.setEmailVerification(EmailVerification.PENDING);
+            mailService.sendCompanyEmailConfirmation(company, request);
+        }
     }
 
     public CompaniesAndUsersResponseDto getCompaniesAndUsers(Long companyId) {
@@ -76,6 +98,92 @@ public class CompanyService {
         return "Company email verified successfully";
     }
 
+    public CompanyResponseDto editCompany(Authentication authentication,
+                                          CompanyRequestDto companyRequestDto,
+                                          MultipartFile image,
+                                          MultipartFile banner) {
+        User user = getCurrentUser(authentication);
+        Company userCompany = user.getCompany();
+        if (userCompany == null) {
+            throw new NotFoundException("User " + user.getUsername() + " is not associated with any company.");
+        }
+
+        updateCompanyName(userCompany, companyRequestDto);
+        updateCompanyEmail(userCompany, companyRequestDto);
+        updateCompanyWebsiteAndLinkedIn(userCompany, companyRequestDto);
+        updateCompanyImages(userCompany, image, banner);
+        updateOtherCompanyFields(userCompany, companyRequestDto);
+        Company company = companyRepository.save(userCompany);
+
+        return generateCompanyResponseDto(company);
+    }
+
+    private void updateCompanyName(Company userCompany, CompanyRequestDto companyRequestDto) {
+        String newName = companyRequestDto.getName().trim().replaceAll("\\s+", " ");
+        if (!newName.equals(userCompany.getName())) {
+            if (companyRepository.findByNameIgnoreCase(newName).isPresent()) {
+                throw new AlreadyExistsException("Name already registered");
+            }
+            userCompany.setName(newName);
+        }
+    }
+
+    private void updateCompanyEmail(Company userCompany, CompanyRequestDto companyRequestDto) {
+        if (!companyRequestDto.getEmail().equals(userCompany.getEmail())) {
+            if (companyRepository.findByEmail(companyRequestDto.getEmail()).isPresent()) {
+                throw new AlreadyExistsException("Email already registered");
+            }
+            if (userCompany.getEmailVerification().equals(EmailVerification.ACCEPTED)) {
+                throw new PermissionDeniedException("Email cannot be changed because it has already been verified.");
+            }
+            userCompany.setEmail(companyRequestDto.getEmail());
+            userCompany.setEmailVerification(EmailVerification.PENDING);
+        }
+    }
+
+    private void updateCompanyWebsiteAndLinkedIn(Company userCompany, CompanyRequestDto companyRequestDto) {
+        String newWebsite = companyRequestDto.getWebsite();
+        if (!newWebsite.equals(userCompany.getWebsite())) {
+            if (companyRepository.findByWebsite(newWebsite).isPresent()) {
+                throw new AlreadyExistsException("Website already registered");
+            }
+            userCompany.setWebsite(newWebsite);
+        }
+
+        String newLinkedIn = companyRequestDto.getLinkedIn();
+        if (!newLinkedIn.equals(userCompany.getLinkedIn())) {
+            if (companyRepository.findByLinkedIn(newLinkedIn).isPresent()) {
+                throw new AlreadyExistsException("LinkedIn already registered");
+            }
+            userCompany.setLinkedIn(newLinkedIn);
+        }
+    }
+
+    private void updateCompanyImages(Company userCompany, MultipartFile image, MultipartFile banner) {
+        if (image != null && !image.isEmpty()) {
+            imageService.upload(image, userCompany.getId(), "image");
+        }
+
+        if (banner != null && !banner.isEmpty()) {
+            imageService.upload(banner, userCompany.getId(), "banner");
+        }
+    }
+
+    private void updateOtherCompanyFields(Company userCompany, CompanyRequestDto companyRequestDto) {
+        if (!userCompany.getCompanyType().getId().equals(companyRequestDto.getCompanyTypeId())) {
+            userCompany.setCompanyType(companyTypeRepository.findById(companyRequestDto.getCompanyTypeId())
+                    .orElseThrow(() -> new NotFoundException("Company type not found")));
+        }
+        if (!userCompany.getDomain().getId().equals(companyRequestDto.getDomainId())) {
+            userCompany.setDomain(domainRepository.findById(companyRequestDto.getDomainId())
+                    .orElseThrow(() -> new NotFoundException("Domain not found")));
+        }
+        if (!userCompany.getSkills().equals(skillRepository.findAllByIdIn(companyRequestDto.getSkills()))) {
+            patternService.getAllSkillsIfSkillIdsExist(companyRequestDto.getSkills());
+            userCompany.setSkills(skillRepository.findAllByIdIn(companyRequestDto.getSkills()));
+        }
+    }
+
     private void addCompanyToUser(Authentication authentication, Company company) {
         User user = getCurrentUser(authentication);
         user.setCompany(company);
@@ -89,17 +197,11 @@ public class CompanyService {
         return companyResponseDto;
     }
 
-    private Company setCompanyFields(CompanyRequestDto companyRequestDto, Authentication authentication, HttpServletRequest request) {
+    private Company setCompanyFields(CompanyRequestDto companyRequestDto) {
         Company company = CompanyMapper.toCompany(companyRequestDto);
         company.setCompanyType(companyTypeRepository.findById(companyRequestDto.getCompanyTypeId()).orElseThrow());
         company.setDomain(domainRepository.findById(companyRequestDto.getDomainId()).orElseThrow());
         company.setSkills(skillRepository.findAllByIdIn(companyRequestDto.getSkills()));
-        if (getCurrentUser(authentication).getEmail().equals(company.getEmail())) {
-            company.setEmailVerification(EmailVerification.ACCEPTED);
-        } else {
-            company.setEmailVerification(EmailVerification.PENDING);
-            mailService.sendCompanyEmailConfirmation(company, request);
-        }
         return company;
     }
 
@@ -108,9 +210,7 @@ public class CompanyService {
         return userDetails.getUser();
     }
 
-    private void validateCompanyCreationInput(CompanyRequestDto companyRequestDto, Authentication authentication, MultipartFile image) {
-        if (authentication == null) throw new AuthenticationFailedException("User not authenticated");
-        if (image == null || image.isEmpty()) throw new NotFoundException("Image is missing or empty");
+    private void validateCompanyRequestInput(CompanyRequestDto companyRequestDto) {
         companyTypeRepository.findById(companyRequestDto.getCompanyTypeId()).orElseThrow(() -> new NotFoundException("Company type not found"));
         domainRepository.findById(companyRequestDto.getDomainId()).orElseThrow(() -> new NotFoundException("Domain not found"));
         if (companyRepository.findByNameIgnoreCase(companyRequestDto.getName()).isPresent())
