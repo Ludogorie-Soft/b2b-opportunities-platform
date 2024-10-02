@@ -18,6 +18,7 @@ import com.example.b2b_opportunities.Repository.SkillRepository;
 import com.example.b2b_opportunities.Repository.UserRepository;
 import com.example.b2b_opportunities.Static.EmailVerification;
 import com.example.b2b_opportunities.UserDetailsImpl;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
@@ -36,14 +37,16 @@ public class CompanyService {
     private final DomainRepository domainRepository;
     private final SkillRepository skillRepository;
     private final PatternService patternService;
+    private final MailService mailService;
 
     public CompanyResponseDto createCompany(Authentication authentication,
                                             CompanyRequestDto companyRequestDto,
                                             MultipartFile image,
-                                            MultipartFile banner) {
+                                            MultipartFile banner,
+                                            HttpServletRequest request) {
         companyRequestDto.setName(companyRequestDto.getName().trim().replaceAll("\\s+", " "));
         validateCompanyCreationInput(companyRequestDto, authentication, image);
-        Company company = companyRepository.save(setCompanyFields(companyRequestDto, authentication));
+        Company company = companyRepository.save(setCompanyFields(companyRequestDto, authentication, request));
         addCompanyToUser(authentication, company);
 
         imageService.upload(image, company.getId(), "image");
@@ -65,6 +68,14 @@ public class CompanyService {
         return response;
     }
 
+    public String confirmCompanyEmail(String token) {
+        Company company = companyRepository.findByEmailConfirmationToken(token).orElseThrow(() -> new NotFoundException("Invalid or already used token"));
+        company.setEmailVerification(EmailVerification.ACCEPTED);
+        company.setEmailConfirmationToken(null);
+        companyRepository.save(company);
+        return "Company email verified successfully";
+    }
+
     private void addCompanyToUser(Authentication authentication, Company company) {
         User user = getCurrentUser(authentication);
         user.setCompany(company);
@@ -78,7 +89,7 @@ public class CompanyService {
         return companyResponseDto;
     }
 
-    private Company setCompanyFields(CompanyRequestDto companyRequestDto, Authentication authentication) {
+    private Company setCompanyFields(CompanyRequestDto companyRequestDto, Authentication authentication, HttpServletRequest request) {
         Company company = CompanyMapper.toCompany(companyRequestDto);
         company.setCompanyType(companyTypeRepository.findById(companyRequestDto.getCompanyTypeId()).orElseThrow());
         company.setDomain(domainRepository.findById(companyRequestDto.getDomainId()).orElseThrow());
@@ -87,6 +98,7 @@ public class CompanyService {
             company.setEmailVerification(EmailVerification.ACCEPTED);
         } else {
             company.setEmailVerification(EmailVerification.PENDING);
+            mailService.sendCompanyEmailConfirmation(company, request);
         }
         return company;
     }

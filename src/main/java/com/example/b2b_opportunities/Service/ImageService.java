@@ -71,19 +71,12 @@ public class ImageService {
             return storageUrl + "/" + bucketName + "/" + objectName;
         } catch (ErrorResponseException e) {
             if (e.errorResponse().code().equals("NoSuchKey")) {
-                throw new NotFoundException(capitalize(imageName) + " not found for company ID: " + companyId);
+                return null;
             } else {
                 throw new ServerErrorException("Error occurred while checking " + imageName + " existence: " + e.getMessage());
             }
         } catch (Exception e) {
             throw new ServerErrorException(e.getMessage());
         }
-    }
-
-    private String capitalize(String imageName) {
-        if (imageName == null || imageName.isEmpty()) {
-            return imageName;
-        }
-        return Character.toUpperCase(imageName.charAt(0)) + imageName.substring(1);
     }
 }

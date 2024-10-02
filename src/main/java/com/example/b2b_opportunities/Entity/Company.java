@@ -80,6 +80,8 @@ public class Company {
     )
     private Set<Skill> skills;
 
+    private String emailConfirmationToken;
+    
     @OneToMany(mappedBy = "company")
     @JsonBackReference
     private List<Project> projects;

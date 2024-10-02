@@ -45,7 +45,7 @@ class MailServiceTest {
         user.setFirstName("Test");
         user.setEmail("test@test.com");
 
-        when(confirmationTokenService.generateConfirmationCode(user)).thenReturn("generatedToken");
+        when(confirmationTokenService.generateUserToken(user)).thenReturn("generatedToken");
         when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
 
         mailService.sendConfirmationMail(user, request);
