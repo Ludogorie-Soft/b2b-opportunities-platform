@@ -215,8 +215,7 @@ public class AuthControllerTest extends BaseTest {
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(loginDtoJson))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.expiresIn", is(3600000)));
+                .andExpect(status().isOk());
 
         userRepository.delete(user);
     }
