@@ -1,9 +1,5 @@
 package com.example.b2b_opportunities.Dto.Request;
 
-import com.example.b2b_opportunities.Entity.CompanyType;
-import com.example.b2b_opportunities.Entity.Domain;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -39,4 +35,16 @@ public class CompanyRequestDto {
     private String description;
 
     private List<Long> skills;
+
+    public void setName(@NotEmpty String name) {
+        if (name != null) {
+            this.name = name.trim().replaceAll("\\s+", " ");
+        }
+    }
+
+    public void setEmail(@NotEmpty @Email String email) {
+        if (email != null) {
+            this.email = email.toLowerCase().trim();
+        }
+    }
 }

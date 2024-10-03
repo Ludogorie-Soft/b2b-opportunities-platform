@@ -24,7 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 @RestController
-@RequestMapping("/company")
+@RequestMapping("/companies")
 @RequiredArgsConstructor
 public class CompanyController {
     private final CompanyRepository companyRepository;
@@ -39,7 +39,8 @@ public class CompanyController {
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     public CompanyResponseDto getCompany(@PathVariable("id") Long id) {
-        return CompanyMapper.toCompanyResponseDto(companyRepository.findById(id).orElseThrow(() -> new NotFoundException("Company with id " + id + " not found")));
+        return CompanyMapper.toCompanyResponseDto(companyRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Company with ID: " + id + " not found")));
     }
 
     @PostMapping(consumes = "multipart/form-data")
@@ -54,8 +55,8 @@ public class CompanyController {
 
     @GetMapping("/{id}/with-users")
     @ResponseStatus(HttpStatus.OK)
-    public CompaniesAndUsersResponseDto getCompaniesAndUsers(@PathVariable("id") Long companyId) {
-        return companyService.getCompaniesAndUsers(companyId);
+    public CompaniesAndUsersResponseDto getCompanyAndUsers(@PathVariable("id") Long companyId) {
+        return companyService.getCompanyAndUsers(companyId);
     }
 
     @GetMapping("/confirm-email")
@@ -69,7 +70,8 @@ public class CompanyController {
     public CompanyResponseDto editCompany(Authentication authentication,
                                           @ModelAttribute CompanyRequestDto companyRequestDto,
                                           @RequestParam(value = "image", required = false) MultipartFile image,
-                                          @RequestParam(value = "banner", required = false) MultipartFile banner) {
-        return companyService.editCompany(authentication, companyRequestDto, image, banner);
+                                          @RequestParam(value = "banner", required = false) MultipartFile banner,
+                                          HttpServletRequest request) {
+        return companyService.editCompany(authentication, companyRequestDto, image, banner, request);
     }
 }
