@@ -1,5 +1,7 @@
 package com.example.b2b_opportunities.Dto.Response;
 
+import com.example.b2b_opportunities.Entity.CompanyType;
+import com.example.b2b_opportunities.Entity.Domain;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
 import lombok.Getter;
@@ -15,8 +17,8 @@ public class CompanyResponseDto {
     private Long id;
     private String name;
     private String email;
-    private String companyType;
-    private String domain;
+    private CompanyType companyType;
+    private Domain domain;
     private String emailVerification;
     private String website;
     private String linkedIn;
