@@ -147,7 +147,7 @@ public class CompanyService {
         return company;
     }
 
-    private User getCurrentUser(Authentication authentication) {
+    protected User getCurrentUser(Authentication authentication) {
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         return userDetails.getUser();
     }
