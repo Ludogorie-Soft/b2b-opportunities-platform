@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.IOException;
 import java.security.Principal;
 
 @RestController
@@ -55,8 +56,9 @@ public class AuthController {
 
     @GetMapping("/oauth2/success")
     @ResponseStatus(HttpStatus.OK)
-    public String oAuthLogin(Principal user, HttpServletRequest request, HttpServletResponse response) {
-        return authenticationService.oAuthLogin(user, request, response);
+    public void oAuthLogin(Principal user, HttpServletRequest request, HttpServletResponse response) throws IOException {
+        authenticationService.oAuthLogin(user, request, response);
+        response.sendRedirect("/company/profile");
     }
 
     // Just for testing - returns the user details from Google after oAuth

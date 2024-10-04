@@ -115,7 +115,7 @@ public class AuthenticationService {
         return "A new token was sent to your e-mail!";
     }
 
-    public String oAuthLogin(Principal user, HttpServletRequest request, HttpServletResponse response) {
+    public void oAuthLogin(Principal user, HttpServletRequest request, HttpServletResponse response) {
         if (user instanceof OAuth2AuthenticationToken authToken) {
             OAuth2User oauth2User = authToken.getPrincipal();
 
@@ -127,10 +127,8 @@ public class AuthenticationService {
             if (!isEmailInDB(email)) {
                 createUserFromOAuth(attributes, provider);
             }
-
-            return generateLoginResponse(request, response, email);
+            generateLoginResponse(request, response, email);
         }
-        throw new ServerErrorException("Authentication failed: The provided authentication is not an OAuth2 token.");
     }
 
     public boolean isUsernameInDB(String username) {
