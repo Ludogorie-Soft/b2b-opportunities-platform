@@ -16,5 +16,5 @@ public class RateRequestDto {
     @Min(0)
     private Integer max;
     @NotBlank
-    private String currency;  // TODO - create enum or class ?
+    private String currency;  // TODO - create enum or class ? - We can make an ENUM having only BGN/EUR as currencies for the MVP ?
 }
