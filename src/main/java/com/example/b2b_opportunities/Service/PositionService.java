@@ -16,9 +16,11 @@ import com.example.b2b_opportunities.Exception.NotFoundException;
 import com.example.b2b_opportunities.Mapper.ExperienceMapper;
 import com.example.b2b_opportunities.Mapper.PositionMapper;
 import com.example.b2b_opportunities.Mapper.RateMapper;
+import com.example.b2b_opportunities.Repository.ExperienceRepository;
 import com.example.b2b_opportunities.Repository.PositionRepository;
 import com.example.b2b_opportunities.Repository.PositionRoleRepository;
 import com.example.b2b_opportunities.Repository.ProjectRepository;
+import com.example.b2b_opportunities.Repository.RateRepository;
 import com.example.b2b_opportunities.Repository.SeniorityRepository;
 import com.example.b2b_opportunities.Repository.SkillRepository;
 import com.example.b2b_opportunities.Static.WorkMode;
@@ -38,7 +40,8 @@ public class PositionService {
     private final PositionRoleRepository positionRoleRepository;
     private final SkillRepository skillRepository;
     private final PositionRepository positionRepository;
-
+    private final RateRepository rateRepository;
+    private final ExperienceRepository experienceRepository;
     public PositionResponseDto createPosition(PositionRequestDto dto, Authentication authentication) {
         validateUserAndCompany(authentication);
         Position position = PositionMapper.toPosition(dto);
@@ -72,7 +75,7 @@ public class PositionService {
 
     private void setPositionRoleOrThrow(Position position, Long positionRoleId) {
         position.setRole(positionRoleRepository.findById(positionRoleId)
-                .orElseThrow(() -> new NotFoundException("Position with ID: " + positionRoleId + " was not found")));
+                .orElseThrow(() -> new NotFoundException("Role with ID: " + positionRoleId + " was not found")));
     }
 
     private void setSeniorityOrThrow(Position position, Long seniorityId) {
@@ -99,7 +102,7 @@ public class PositionService {
     }
 
     private void setRate(Position position, RateRequestDto rateRequestDto) {
-        position.setRate(RateMapper.toRate(rateRequestDto));
+        position.setRate(rateRepository.save(RateMapper.toRate(rateRequestDto)));
     }
 
     private void setRequiredSkills(Position position, List<RequiredSkillsDto> dto) {
@@ -119,7 +122,8 @@ public class PositionService {
         for (RequiredSkillsDto requiredSkill : dto) {
             Skill skill = skillRepository.findById(requiredSkill.getSkillId())
                     .orElseThrow(() -> new NotFoundException("Skill with ID: " + requiredSkill.getSkillId() + " was not found"));
-            Experience experience = ExperienceMapper.toExperience(requiredSkill.getExperienceRequestDto());
+            Experience experience = experienceRepository.save(ExperienceMapper
+                    .toExperience(requiredSkill.getExperienceRequestDto()));
             RequiredSkill requiredSkillResult = new RequiredSkill();
             requiredSkillResult.setSkill(skill);
             requiredSkillResult.setExperience(experience);

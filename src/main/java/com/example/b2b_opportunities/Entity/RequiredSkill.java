@@ -26,6 +26,10 @@ public class RequiredSkill {
     private Long id;
 
     @ManyToOne
+    @JoinColumn(name = "position_id")
+    private Position position;
+
+    @ManyToOne
     @JoinColumn(name = "skill_id")
     private Skill skill;
 

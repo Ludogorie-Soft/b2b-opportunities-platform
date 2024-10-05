@@ -1,8 +1,7 @@
 package com.example.b2b_opportunities.Entity;
 
-import com.example.b2b_opportunities.Dto.Response.SkillResponseDto;
 import com.example.b2b_opportunities.Static.WorkMode;
-import jakarta.persistence.CollectionTable;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
@@ -12,6 +11,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
@@ -50,9 +50,7 @@ public class Position {
     @JoinColumn(name = "seniority_id")
     private Seniority seniority;
 
-    @ElementCollection(targetClass = WorkMode.class)
     @Enumerated(EnumType.STRING)
-    @CollectionTable(name = "position_work_modes", joinColumns = @JoinColumn(name = "position_id"))
     @Column(name = "work_mode")
     private List<WorkMode> workMode;
 
@@ -60,10 +58,15 @@ public class Position {
     @JoinColumn(name = "rate_id")
     private Rate rate;
 
-    @OneToMany
+    @OneToMany(mappedBy = "position", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<RequiredSkill> requiredSkills;
 
     @OneToMany
+    @JoinTable(
+            name = "positions_optional_skills",
+            joinColumns = @JoinColumn(name = "position_id"),
+            inverseJoinColumns = @JoinColumn(name = "optional_skills_id")
+    )
     private List<Skill> optionalSkills;
 
     private Integer minYearsExperience;
@@ -75,6 +78,7 @@ public class Position {
     private int hoursPerWeek;
 
     @ElementCollection
+    @Column(name = "responsibilities")
     private List<String> responsibilities;
 
     private String hiringProcess;
