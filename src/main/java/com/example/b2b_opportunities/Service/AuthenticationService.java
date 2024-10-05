@@ -41,6 +41,7 @@ import org.springframework.validation.BindingResult;
 import java.security.Principal;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -227,5 +228,18 @@ public class AuthenticationService {
         LocalDateTime currentDateTime = LocalDateTime.now();
         Duration duration = Duration.between(token.getCreatedAt(), currentDateTime);
         return duration.toDays() > tokenExpirationDays;
+    }
+
+    public void logout(HttpServletRequest request, HttpServletResponse response) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            Arrays.stream(cookies).forEach(cookie -> {
+                cookie.setValue(null);
+                cookie.setMaxAge(0);
+                cookie.setPath("/");
+                cookie.setHttpOnly(true);
+                response.addCookie(cookie);
+            });
+        }
     }
 }

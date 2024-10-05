@@ -50,6 +50,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
+    @ResponseStatus(HttpStatus.OK)
     public String login(@RequestBody LoginDto loginDto, HttpServletRequest request, HttpServletResponse response) {
         return authenticationService.login(loginDto, request, response);
     }
@@ -76,7 +77,14 @@ public class AuthController {
     }
 
     @PostMapping("/set-new-password")
+    @ResponseStatus(HttpStatus.OK)
     public String changePassword(@RequestBody ResetPasswordDto resetPasswordDto) {
         return passwordService.setNewPassword(resetPasswordDto);
+    }
+
+    @PostMapping("/logout")
+    @ResponseStatus(HttpStatus.OK)
+    public void logout(HttpServletRequest request, HttpServletResponse response){
+        authenticationService.logout(request, response);
     }
 }
