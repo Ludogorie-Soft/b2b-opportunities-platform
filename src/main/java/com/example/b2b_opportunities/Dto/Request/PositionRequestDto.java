@@ -12,14 +12,14 @@ import java.util.List;
 @Getter
 @Setter
 public class PositionRequestDto {
-
     @NotNull
     private Long projectId;
 
     @NotNull
     private Long roleId;
 
-    private boolean isActive;
+    @NotNull
+    private Boolean isActive;
 
     @NotNull
     private Long seniorityId;

@@ -32,7 +32,7 @@ public class SkillController {
     @ResponseStatus(HttpStatus.OK)
     public SkillResponseDto getSkillById(@PathVariable(name = "id") Long id) {
         Skill skill = skillRepository.findById(id)
-                .orElseThrow(() -> new SkillNotFoundException("Skill with id '" + id + "' not found"));
+                .orElseThrow(() -> new SkillNotFoundException("Skill with ID: " + id + " not found"));
         return SkillMapper.toResponseDto(skill);
     }
 }

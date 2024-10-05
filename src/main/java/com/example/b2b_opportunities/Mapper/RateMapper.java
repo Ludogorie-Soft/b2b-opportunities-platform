@@ -7,7 +7,6 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class RateMapper {
-
     public static Rate toRate(RateRequestDto requestDto){
         return Rate.builder()
                 .min(requestDto.getMin())

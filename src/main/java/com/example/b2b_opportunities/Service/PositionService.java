@@ -72,12 +72,12 @@ public class PositionService {
 
     private void setPositionRoleOrThrow(Position position, Long positionRoleId) {
         position.setRole(positionRoleRepository.findById(positionRoleId)
-                .orElseThrow(() -> new NotFoundException("Position with ID :" + positionRoleId + " was not found")));
+                .orElseThrow(() -> new NotFoundException("Position with ID: " + positionRoleId + " was not found")));
     }
 
     private void setSeniorityOrThrow(Position position, Long seniorityId) {
         position.setSeniority(seniorityRepository.findById(seniorityId)
-                .orElseThrow(() -> new NotFoundException("Seniority with ID :" + seniorityId + " was not found")));
+                .orElseThrow(() -> new NotFoundException("Seniority with ID: " + seniorityId + " was not found")));
     }
 
     private void setWorkModeOrThrow(Position position, List<Long> workModeIdsList) {
@@ -103,25 +103,22 @@ public class PositionService {
     }
 
     private void setRequiredSkills(Position position, List<RequiredSkillsDto> dto) {
-        validateDtoListIsNotEmpty(dto);
+        if (dto == null || dto.isEmpty()) throw new NotFoundException("RequiredSkillsDto is null or empty");
         position.setRequiredSkills(getRequiredSkillsList(dto));
     }
 
-    private void validateDtoListIsNotEmpty(List<?> dto){
-        if(dto.isEmpty()) throw new NotFoundException("Required skills list is empty");
-    }
-
     private void setOptionalSkills(Position position, List<Long> skills) {
-        validateDtoListIsNotEmpty(skills);
-        List<Skill> optionalSkills = skillRepository.findAllById(skills);
-        position.setOptionalSkills(optionalSkills);
+        if (skills == null || skills.isEmpty()) {
+            return;
+        }
+        position.setOptionalSkills(skillRepository.findAllById(skills));
     }
 
     private List<RequiredSkill> getRequiredSkillsList(List<RequiredSkillsDto> dto) {
         List<RequiredSkill> requiredSkillList = new ArrayList<>();
         for (RequiredSkillsDto requiredSkill : dto) {
             Skill skill = skillRepository.findById(requiredSkill.getSkillId())
-                    .orElseThrow(() -> new NotFoundException("Skill with ID :" + requiredSkill.getSkillId() + " was not found"));
+                    .orElseThrow(() -> new NotFoundException("Skill with ID: " + requiredSkill.getSkillId() + " was not found"));
             Experience experience = ExperienceMapper.toExperience(requiredSkill.getExperienceRequestDto());
             RequiredSkill requiredSkillResult = new RequiredSkill();
             requiredSkillResult.setSkill(skill);

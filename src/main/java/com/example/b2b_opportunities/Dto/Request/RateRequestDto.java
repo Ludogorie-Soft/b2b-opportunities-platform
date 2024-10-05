@@ -16,5 +16,5 @@ public class RateRequestDto {
     @Min(0)
     private Integer max;
     @NotBlank
-    private String currency;
+    private String currency;  // TODO - create enum or class ?
 }

@@ -44,7 +44,7 @@ public class Position {
     @JoinColumn(name = "role_id")
     private PositionRole role;
 
-    private boolean isActive;
+    private Boolean isActive;
 
     @ManyToOne
     @JoinColumn(name = "seniority_id")
