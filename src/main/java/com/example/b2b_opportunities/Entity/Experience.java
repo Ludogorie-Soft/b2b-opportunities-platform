@@ -28,8 +28,8 @@ public class Experience {
     private Long id;
 
     @Min(0)
-    private int months;
+    private Integer months;
 
     @Min(0)
-    private int years;
+    private Integer years;
 }

@@ -39,8 +39,8 @@ CREATE TABLE positions_optional_skills (
 
 CREATE TABLE experience (
     id BIGSERIAL PRIMARY KEY,
-    months INTEGER NOT NULL,
-    years INTEGER NOT NULL
+    months INTEGER,
+    years INTEGER
 );
 
 

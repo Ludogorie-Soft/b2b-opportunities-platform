@@ -12,6 +12,7 @@ import com.example.b2b_opportunities.Entity.RequiredSkill;
 import com.example.b2b_opportunities.Entity.Skill;
 import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Exception.AuthenticationFailedException;
+import com.example.b2b_opportunities.Exception.InvalidInputException;
 import com.example.b2b_opportunities.Exception.NotFoundException;
 import com.example.b2b_opportunities.Mapper.ExperienceMapper;
 import com.example.b2b_opportunities.Mapper.PositionMapper;
@@ -102,6 +103,7 @@ public class PositionService {
     }
 
     private void setRate(Position position, RateRequestDto rateRequestDto) {
+        if(rateRequestDto.getMin()>rateRequestDto.getMax()) throw new InvalidInputException("Min rate cannot exceed max rate");
         position.setRate(rateRepository.save(RateMapper.toRate(rateRequestDto)));
     }
 
@@ -122,11 +124,13 @@ public class PositionService {
         for (RequiredSkillsDto requiredSkill : dto) {
             Skill skill = skillRepository.findById(requiredSkill.getSkillId())
                     .orElseThrow(() -> new NotFoundException("Skill with ID: " + requiredSkill.getSkillId() + " was not found"));
-            Experience experience = experienceRepository.save(ExperienceMapper
-                    .toExperience(requiredSkill.getExperienceRequestDto()));
             RequiredSkill requiredSkillResult = new RequiredSkill();
             requiredSkillResult.setSkill(skill);
-            requiredSkillResult.setExperience(experience);
+            if (requiredSkill.getExperienceRequestDto() != null) {
+                Experience experience = experienceRepository.save(ExperienceMapper
+                        .toExperience(requiredSkill.getExperienceRequestDto()));
+                requiredSkillResult.setExperience(experience);
+            }
             requiredSkillList.add(requiredSkillResult);
         }
         return requiredSkillList;
