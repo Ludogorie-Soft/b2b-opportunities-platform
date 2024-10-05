@@ -85,13 +85,12 @@ public class CompanyService {
         return response;
     }
 
-    public String confirmCompanyEmail(String token) {
+    public void confirmCompanyEmail(String token) {
         Company company = companyRepository.findByEmailConfirmationToken(token)
                 .orElseThrow(() -> new NotFoundException("Invalid or already used token"));
         company.setEmailVerification(EmailVerification.ACCEPTED);
         company.setEmailConfirmationToken(null);
         companyRepository.save(company);
-        return "Company email verified successfully";
     }
 
     public CompanyResponseDto editCompany(Authentication authentication,

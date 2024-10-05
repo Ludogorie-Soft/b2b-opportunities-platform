@@ -58,15 +58,13 @@ public class AuthenticationService {
     private final ConfirmationTokenRepository confirmationTokenRepository;
     private final UserRepository userRepository;
 
-    public String login(LoginDto loginDto, HttpServletRequest request, HttpServletResponse response) {
+    public void login(LoginDto loginDto, HttpServletRequest request, HttpServletResponse response) {
         UserDetails userDetails;
         userDetails = authenticate(loginDto);
 
         String jwtToken = jwtService.generateToken(userDetails);
 
         setJwtCookie(request, response, jwtToken);
-
-        return "Login successful";
     }
 
 

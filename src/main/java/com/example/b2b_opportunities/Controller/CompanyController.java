@@ -8,7 +8,9 @@ import com.example.b2b_opportunities.Mapper.CompanyMapper;
 import com.example.b2b_opportunities.Repository.CompanyRepository;
 import com.example.b2b_opportunities.Service.CompanyService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,6 +23,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -29,6 +32,9 @@ import java.util.List;
 public class CompanyController {
     private final CompanyRepository companyRepository;
     private final CompanyService companyService;
+
+    @Value("${frontend.address}")
+    private String frontEndAddress;
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
@@ -61,8 +67,9 @@ public class CompanyController {
 
     @GetMapping("/confirm-email")
     @ResponseStatus(HttpStatus.OK)
-    public String confirmCompanyEmail(@RequestParam("token") String token) {
-        return companyService.confirmCompanyEmail(token);
+    public void confirmCompanyEmail(@RequestParam("token") String token, HttpServletResponse response) throws IOException {
+        companyService.confirmCompanyEmail(token);
+        response.sendRedirect(frontEndAddress + "/company/profile");
     }
 
     @PostMapping(value = "/edit", consumes = "multipart/form-data")

@@ -47,6 +47,7 @@ services:
       STORAGE_USER: ${STORAGE_USER}
       STORAGE_PASSWORD: ${STORAGE_PASSWORD}
       STORAGE_BUCKET_NAME: ${STORAGE_BUCKET_NAME}
+      FRONTEND_HOST: http://localhost:8083 # This is a string that is used to redirect users to the frontend.
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8082/actuator/health" ]
       interval: 10s
