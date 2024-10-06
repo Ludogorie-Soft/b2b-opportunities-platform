@@ -43,7 +43,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrlPattern;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -215,7 +215,8 @@ public class AuthControllerTest extends BaseTest {
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(loginDtoJson))
-                .andExpect(status().isOk());
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrlPattern("**/company/profile"));
 
         userRepository.delete(user);
     }
@@ -274,7 +275,7 @@ public class AuthControllerTest extends BaseTest {
 
         mockMvc.perform(get("/api/auth/oauth2/success").principal(mockOAuth2Token))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/company/profile"));
+                .andExpect(redirectedUrlPattern("**/company/profile"));
 
         User newUser = userRepository.findByEmail("test@test.com")
                 .orElseThrow(() -> new IllegalStateException("User not found"));

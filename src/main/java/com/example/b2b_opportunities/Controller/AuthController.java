@@ -54,14 +54,12 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    @ResponseStatus(HttpStatus.OK)
     public void login(@RequestBody LoginDto loginDto, HttpServletRequest request, HttpServletResponse response) throws IOException {
         authenticationService.login(loginDto, request, response);
         response.sendRedirect(frontEndAddress + "/company/profile");
     }
 
     @GetMapping("/oauth2/success")
-    @ResponseStatus(HttpStatus.OK)
     public void oAuthLogin(Principal user, HttpServletRequest request, HttpServletResponse response) throws IOException {
         authenticationService.oAuthLogin(user, request, response);
         response.sendRedirect(frontEndAddress + "/company/profile");
@@ -89,7 +87,7 @@ public class AuthController {
 
     @PostMapping("/logout")
     @ResponseStatus(HttpStatus.OK)
-    public void logout(HttpServletRequest request, HttpServletResponse response){
+    public void logout(HttpServletRequest request, HttpServletResponse response) {
         authenticationService.logout(request, response);
     }
 }
