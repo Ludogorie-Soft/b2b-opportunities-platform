@@ -41,6 +41,7 @@ import org.springframework.validation.BindingResult;
 import java.security.Principal;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -115,7 +116,7 @@ public class AuthenticationService {
         return "A new token was sent to your e-mail!";
     }
 
-    public String oAuthLogin(Principal user, HttpServletRequest request, HttpServletResponse response) {
+    public void oAuthLogin(Principal user, HttpServletRequest request, HttpServletResponse response) {
         if (user instanceof OAuth2AuthenticationToken authToken) {
             OAuth2User oauth2User = authToken.getPrincipal();
 
@@ -127,10 +128,8 @@ public class AuthenticationService {
             if (!isEmailInDB(email)) {
                 createUserFromOAuth(attributes, provider);
             }
-
-            return generateLoginResponse(request, response, email);
+            generateLoginResponse(request, response, email);
         }
-        throw new ServerErrorException("Authentication failed: The provided authentication is not an OAuth2 token.");
     }
 
     public boolean isUsernameInDB(String username) {
@@ -229,5 +228,18 @@ public class AuthenticationService {
         LocalDateTime currentDateTime = LocalDateTime.now();
         Duration duration = Duration.between(token.getCreatedAt(), currentDateTime);
         return duration.toDays() > tokenExpirationDays;
+    }
+
+    public void logout(HttpServletRequest request, HttpServletResponse response) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            Arrays.stream(cookies).forEach(cookie -> {
+                cookie.setValue(null);
+                cookie.setMaxAge(0);
+                cookie.setPath("/");
+                cookie.setHttpOnly(true);
+                response.addCookie(cookie);
+            });
+        }
     }
 }

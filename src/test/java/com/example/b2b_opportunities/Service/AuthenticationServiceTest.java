@@ -15,6 +15,7 @@ import com.example.b2b_opportunities.Exception.UserNotFoundException;
 import com.example.b2b_opportunities.Repository.ConfirmationTokenRepository;
 import com.example.b2b_opportunities.Repository.UserRepository;
 import com.example.b2b_opportunities.UserDetailsImpl;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.AfterEach;
@@ -164,20 +165,27 @@ class AuthenticationServiceTest {
     }
 
     @Test
-    void testOAuthLoginWithValidUser() {
+    void testOAuthLoginWithValidUser(){
         OAuth2AuthenticationToken authToken = mock(OAuth2AuthenticationToken.class);
         OAuth2User oAuth2User = mock(OAuth2User.class);
         when(authToken.getPrincipal()).thenReturn(oAuth2User);
         when(authToken.getAuthorizedClientRegistrationId()).thenReturn("google");
         when(oAuth2User.getAttributes()).thenReturn(Map.of("email", "test@test.com"));
 
-        when(userRepository.findByEmail("test@test.com")).thenReturn(Optional.of(new User()));
+        User existingUser = new User();
+        existingUser.setFirstName("Test");
+        existingUser.setLastName("User");
+        existingUser.setEnabled(true);
+        existingUser.setProvider("google");
+
+        when(userRepository.findByEmail("test@test.com")).thenReturn(Optional.of(existingUser));
         when(jwtService.generateToken(any(UserDetails.class))).thenReturn("test-jwt-token");
         when(jwtService.getExpirationTime()).thenReturn(3600L);
 
-        String result = authenticationService.oAuthLogin(authToken, request, response);
+        authenticationService.oAuthLogin(authToken, request, response);
 
-        assertEquals(result, "Login successful");
+        verify(jwtService).generateToken(any(UserDetails.class));
+        verify(response).addCookie(any(Cookie.class));
     }
 
     @Test

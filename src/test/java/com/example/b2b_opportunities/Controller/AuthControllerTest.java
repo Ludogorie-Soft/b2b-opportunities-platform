@@ -43,6 +43,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -272,7 +273,8 @@ public class AuthControllerTest extends BaseTest {
                 mockOAuth2User, null, "google");
 
         mockMvc.perform(get("/api/auth/oauth2/success").principal(mockOAuth2Token))
-                .andExpect(status().isOk());
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/company/profile"));
 
         User newUser = userRepository.findByEmail("test@test.com")
                 .orElseThrow(() -> new IllegalStateException("User not found"));

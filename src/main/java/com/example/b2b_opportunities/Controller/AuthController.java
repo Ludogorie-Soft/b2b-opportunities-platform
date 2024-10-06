@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.IOException;
 import java.security.Principal;
 
 @RestController
@@ -49,14 +50,16 @@ public class AuthController {
     }
 
     @PostMapping("/login")
+    @ResponseStatus(HttpStatus.OK)
     public String login(@RequestBody LoginDto loginDto, HttpServletRequest request, HttpServletResponse response) {
         return authenticationService.login(loginDto, request, response);
     }
 
     @GetMapping("/oauth2/success")
     @ResponseStatus(HttpStatus.OK)
-    public String oAuthLogin(Principal user, HttpServletRequest request, HttpServletResponse response) {
-        return authenticationService.oAuthLogin(user, request, response);
+    public void oAuthLogin(Principal user, HttpServletRequest request, HttpServletResponse response) throws IOException {
+        authenticationService.oAuthLogin(user, request, response);
+        response.sendRedirect("/company/profile");
     }
 
     // Just for testing - returns the user details from Google after oAuth
@@ -74,7 +77,14 @@ public class AuthController {
     }
 
     @PostMapping("/set-new-password")
+    @ResponseStatus(HttpStatus.OK)
     public String changePassword(@RequestBody ResetPasswordDto resetPasswordDto) {
         return passwordService.setNewPassword(resetPasswordDto);
+    }
+
+    @PostMapping("/logout")
+    @ResponseStatus(HttpStatus.OK)
+    public void logout(HttpServletRequest request, HttpServletResponse response){
+        authenticationService.logout(request, response);
     }
 }
