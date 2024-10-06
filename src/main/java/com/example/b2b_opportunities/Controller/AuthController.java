@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -32,6 +33,9 @@ public class AuthController {
     private final AuthenticationService authenticationService;
     private final PasswordService passwordService;
 
+    @Value("${frontend.address}")
+    private String frontEndAddress;
+
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<UserResponseDto> register(@RequestBody @Valid UserRequestDto userRequestDto, BindingResult bindingResult, HttpServletRequest request) {
@@ -50,16 +54,15 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    @ResponseStatus(HttpStatus.OK)
-    public String login(@RequestBody LoginDto loginDto, HttpServletRequest request, HttpServletResponse response) {
-        return authenticationService.login(loginDto, request, response);
+    public void login(@RequestBody LoginDto loginDto, HttpServletRequest request, HttpServletResponse response) throws IOException {
+        authenticationService.login(loginDto, request, response);
+        response.sendRedirect(frontEndAddress + "/company/profile");
     }
 
     @GetMapping("/oauth2/success")
-    @ResponseStatus(HttpStatus.OK)
     public void oAuthLogin(Principal user, HttpServletRequest request, HttpServletResponse response) throws IOException {
         authenticationService.oAuthLogin(user, request, response);
-        response.sendRedirect("/company/profile");
+        response.sendRedirect(frontEndAddress + "/company/profile");
     }
 
     // Just for testing - returns the user details from Google after oAuth
@@ -84,7 +87,7 @@ public class AuthController {
 
     @PostMapping("/logout")
     @ResponseStatus(HttpStatus.OK)
-    public void logout(HttpServletRequest request, HttpServletResponse response){
+    public void logout(HttpServletRequest request, HttpServletResponse response) {
         authenticationService.logout(request, response);
     }
 }
