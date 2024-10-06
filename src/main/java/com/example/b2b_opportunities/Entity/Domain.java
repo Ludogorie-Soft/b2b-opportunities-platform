@@ -6,7 +6,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -26,6 +26,10 @@ public class Domain {
     @Column(name = "id", nullable = false)
     private Long id;
 
-    @NotNull
+    @NotEmpty
     private String name;
+
+    public void setName(@NotEmpty String name) {
+        this.name = name.strip();
+    }
 }

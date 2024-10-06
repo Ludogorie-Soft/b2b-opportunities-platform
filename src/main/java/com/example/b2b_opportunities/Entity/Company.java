@@ -86,4 +86,12 @@ public class Company {
     @OneToMany(mappedBy = "company")
     @JsonBackReference
     private List<Project> projects;
+
+    public void setName(@NotEmpty String name) {
+        this.name = name.strip();
+    }
+
+    public void setEmail(@NotEmpty @Email String email) {
+        this.email = email.strip().toLowerCase();
+    }
 }

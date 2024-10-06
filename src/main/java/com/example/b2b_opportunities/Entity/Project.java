@@ -10,6 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -34,11 +35,17 @@ public class Project {
     private Company company;
 
     private LocalDateTime datePosted;
+
+    @NotEmpty
     private String name;
 
     private LocalDate startDate;
     private LocalDate endDate; // YYYY-MM-DD
     private Integer duration; // months
 
-    private String Description;
+    private String description;
+
+    public void setName(@NotEmpty String name) {
+        this.name = name.strip();
+    }
 }

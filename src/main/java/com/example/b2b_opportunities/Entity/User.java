@@ -7,7 +7,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
@@ -20,7 +19,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Entity
 @Getter
@@ -50,6 +48,7 @@ public class User {
     @Email(message = "Invalid email format.")
     private String email;
 
+    // TODO: password complexity? Required symbols?
     private String password;
 
     @ManyToOne
@@ -68,4 +67,9 @@ public class User {
     private String provider;
 
     private boolean isApproved;
+
+    public void setUsername(String username) {
+        // TODO: Length requirement if not null?
+        this.username = username.strip();
+    }
 }

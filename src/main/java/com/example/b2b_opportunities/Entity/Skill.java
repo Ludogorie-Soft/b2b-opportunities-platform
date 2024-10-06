@@ -7,6 +7,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
@@ -26,7 +27,7 @@ public class Skill {
     @JoinColumn(name = "parent_id")
     private Skill parent;
 
-    @NotNull
+    @NotEmpty
     private String name;
 
     @NotNull
@@ -39,4 +40,8 @@ public class Skill {
 
     @ManyToMany(mappedBy = "suggestedSkills")
     private List<Pattern> patterns;
+
+    public void setName(@NotEmpty String name) {
+        this.name = name.strip();
+    }
 }

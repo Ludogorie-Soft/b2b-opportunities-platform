@@ -6,6 +6,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -24,8 +25,15 @@ public class CompanyType {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     private Long id;
+
+    @NotEmpty
     private String name;
 
 //    @ManyToMany(mappedBy = "companyTypeList")
 //    private List<Company> companies = new ArrayList<>();
+
+
+    public void setName(@NotEmpty String name) {
+        this.name = name.strip();
+    }
 }

@@ -10,6 +10,7 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -30,6 +31,7 @@ public class Pattern {
     @Column(name = "id", nullable = false)
     private Long id;
 
+    @NotEmpty
     private String name;
 
     @ManyToMany
@@ -38,10 +40,14 @@ public class Pattern {
             joinColumns = @JoinColumn(name = "pattern_id"),
             inverseJoinColumns = @JoinColumn(name = "skill_id")
     )
-    @NotNull
+    @NotNull  // TODO - initialize it with new ArrayList<>(); and remove this?
     private List<Skill> suggestedSkills;
 
     @ManyToOne
     @JoinColumn(name = "parent_id")
     private Pattern parent;
+
+    public void setName(@NotEmpty String name) {
+        this.name = name.strip();
+    }
 }

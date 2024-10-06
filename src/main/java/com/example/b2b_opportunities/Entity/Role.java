@@ -28,4 +28,8 @@ public class Role {
     @NotBlank
     @Size(min = 1, max = 40)
     private String name;
+
+    public void setName(@NotBlank @Size(min = 1, max = 40) String name) {
+        this.name = name.strip();
+    }
 }

@@ -37,14 +37,10 @@ public class CompanyRequestDto {
     private List<Long> skills;
 
     public void setName(@NotEmpty String name) {
-        if (name != null) {
             this.name = name.trim().replaceAll("\\s+", " ");
-        }
     }
 
     public void setEmail(@NotEmpty @Email String email) {
-        if (email != null) {
             this.email = email.toLowerCase().trim();
-        }
     }
 }
