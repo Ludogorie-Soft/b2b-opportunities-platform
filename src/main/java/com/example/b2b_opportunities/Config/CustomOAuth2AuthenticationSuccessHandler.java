@@ -12,6 +12,6 @@ public class CustomOAuth2AuthenticationSuccessHandler implements AuthenticationS
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
                                         Authentication authentication) throws IOException {
-        response.sendRedirect("/company/profile");
+        response.sendRedirect("/api/auth/oauth2/success");
     }
 }

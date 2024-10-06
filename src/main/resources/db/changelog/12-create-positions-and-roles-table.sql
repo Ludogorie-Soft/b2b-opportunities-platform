@@ -27,8 +27,13 @@ CREATE TABLE positions (
     location_id BIGINT REFERENCES locations(id) ON DELETE SET NULL,
     hours_per_week INTEGER CHECK (hours_per_week >= 0 AND hours_per_week <= 168),
     hiring_process VARCHAR(255),
-    description TEXT,
-    work_mode VARCHAR(50) NOT NULL
+    description TEXT
+);
+
+CREATE TABLE position_work_modes (
+    position_id BIGINT REFERENCES positions(id) ON DELETE CASCADE,
+    work_mode VARCHAR(50) NOT NULL,
+    PRIMARY KEY (position_id, work_mode)
 );
 
 CREATE TABLE positions_optional_skills (
@@ -56,5 +61,3 @@ CREATE TABLE position_responsibilities (
     responsibilities TEXT,
     PRIMARY KEY (position_id, responsibilities)
 );
-
-

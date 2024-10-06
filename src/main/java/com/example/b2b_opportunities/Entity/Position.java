@@ -2,6 +2,7 @@ package com.example.b2b_opportunities.Entity;
 
 import com.example.b2b_opportunities.Static.WorkMode;
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
@@ -20,8 +21,10 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Getter
@@ -50,9 +53,11 @@ public class Position {
     @JoinColumn(name = "seniority_id")
     private Seniority seniority;
 
+    @ElementCollection(targetClass = WorkMode.class)
+    @CollectionTable(name = "position_work_modes", joinColumns = @JoinColumn(name = "position_id"))
     @Enumerated(EnumType.STRING)
     @Column(name = "work_mode")
-    private List<WorkMode> workMode;
+    private Set<WorkMode> workMode;
 
     @ManyToOne
     @JoinColumn(name = "rate_id")

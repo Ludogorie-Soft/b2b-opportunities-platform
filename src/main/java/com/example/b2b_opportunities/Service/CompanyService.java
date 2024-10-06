@@ -12,6 +12,7 @@ import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Exception.AlreadyExistsException;
 import com.example.b2b_opportunities.Exception.AuthenticationFailedException;
 import com.example.b2b_opportunities.Exception.NotFoundException;
+import com.example.b2b_opportunities.Exception.UserNotFoundException;
 import com.example.b2b_opportunities.Mapper.CompanyMapper;
 import com.example.b2b_opportunities.Mapper.UserMapper;
 import com.example.b2b_opportunities.Repository.CompanyRepository;
@@ -23,6 +24,8 @@ import com.example.b2b_opportunities.UserDetailsImpl;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -148,6 +151,11 @@ public class CompanyService {
     }
 
     protected User getCurrentUser(Authentication authentication) {
+        if (authentication instanceof OAuth2AuthenticationToken) {
+            OAuth2User oauthUser = ((OAuth2AuthenticationToken) authentication).getPrincipal();
+            String email = (String) oauthUser.getAttributes().get("email");
+            return userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User with " + email + " not found"));
+        }
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         return userDetails.getUser();
     }

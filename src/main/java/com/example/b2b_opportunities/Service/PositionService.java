@@ -24,13 +24,16 @@ import com.example.b2b_opportunities.Repository.ProjectRepository;
 import com.example.b2b_opportunities.Repository.RateRepository;
 import com.example.b2b_opportunities.Repository.SeniorityRepository;
 import com.example.b2b_opportunities.Repository.SkillRepository;
+import com.example.b2b_opportunities.Repository.UserRepository;
 import com.example.b2b_opportunities.Static.WorkMode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -43,19 +46,24 @@ public class PositionService {
     private final PositionRepository positionRepository;
     private final RateRepository rateRepository;
     private final ExperienceRepository experienceRepository;
+    private final UserRepository userRepository;
     public PositionResponseDto createPosition(PositionRequestDto dto, Authentication authentication) {
         validateUserAndCompany(authentication);
         Position position = PositionMapper.toPosition(dto);
 
         setProjectOrThrow(position, dto.getProjectId());
+        setPositionFields(position, dto);
+
+        return PositionMapper.toResponseDto(positionRepository.save(position));
+    }
+
+    private void setPositionFields(Position position, PositionRequestDto dto){
         setPositionRoleOrThrow(position, dto.getRoleId());
         setSeniorityOrThrow(position, dto.getSeniorityId());
         setWorkModeOrThrow(position, dto.getWorkModeIds());
         setRate(position, dto.getRate());
         setRequiredSkills(position, dto.getRequiredSkillsList());
         setOptionalSkills(position, dto.getOptionalSkillsList());
-
-        return PositionMapper.toResponseDto(positionRepository.save(position));
     }
 
     private void validateUserAndCompany(Authentication authentication) {
@@ -85,7 +93,7 @@ public class PositionService {
     }
 
     private void setWorkModeOrThrow(Position position, List<Long> workModeIdsList) {
-        List<WorkMode> workModes = new ArrayList<>();
+        Set<WorkMode> workModes = new HashSet<>();
         for (Long workModeId : workModeIdsList) {
             boolean found = false;
             for (WorkMode value : WorkMode.values()) {

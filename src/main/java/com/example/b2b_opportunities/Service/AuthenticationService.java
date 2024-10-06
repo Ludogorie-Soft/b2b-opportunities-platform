@@ -11,7 +11,6 @@ import com.example.b2b_opportunities.Exception.DisabledUserException;
 import com.example.b2b_opportunities.Exception.EmailInUseException;
 import com.example.b2b_opportunities.Exception.InvalidTokenException;
 import com.example.b2b_opportunities.Exception.PasswordsNotMatchingException;
-import com.example.b2b_opportunities.Exception.ServerErrorException;
 import com.example.b2b_opportunities.Exception.UserNotFoundException;
 import com.example.b2b_opportunities.Exception.UsernameInUseException;
 import com.example.b2b_opportunities.Exception.ValidationException;
@@ -115,7 +114,7 @@ public class AuthenticationService {
         return "A new token was sent to your e-mail!";
     }
 
-    public String oAuthLogin(Principal user, HttpServletRequest request, HttpServletResponse response) {
+    public void oAuthLogin(Principal user, HttpServletRequest request, HttpServletResponse response) {
         if (user instanceof OAuth2AuthenticationToken authToken) {
             OAuth2User oauth2User = authToken.getPrincipal();
 
@@ -127,10 +126,8 @@ public class AuthenticationService {
             if (!isEmailInDB(email)) {
                 createUserFromOAuth(attributes, provider);
             }
-
-            return generateLoginResponse(request, response, email);
+            generateLoginResponse(request, response, email);
         }
-        throw new ServerErrorException("Authentication failed: The provided authentication is not an OAuth2 token.");
     }
 
     public boolean isUsernameInDB(String username) {
@@ -214,15 +211,13 @@ public class AuthenticationService {
         userRepository.save(user);
     }
 
-    private String generateLoginResponse(HttpServletRequest request, HttpServletResponse response, String email) {
+    private void generateLoginResponse(HttpServletRequest request, HttpServletResponse response, String email) {
         User user = userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
         UserDetailsImpl userDetails = new UserDetailsImpl(user);
 
         String jwtToken = jwtService.generateToken(userDetails);
 
         setJwtCookie(request, response, jwtToken);
-
-        return "Login successful";
     }
 
     private boolean isTokenExpired(ConfirmationToken token) {
