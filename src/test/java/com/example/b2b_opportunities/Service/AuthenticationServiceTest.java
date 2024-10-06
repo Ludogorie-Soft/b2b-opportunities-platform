@@ -175,9 +175,9 @@ class AuthenticationServiceTest {
         when(jwtService.generateToken(any(UserDetails.class))).thenReturn("test-jwt-token");
         when(jwtService.getExpirationTime()).thenReturn(3600L);
 
-        String result = authenticationService.oAuthLogin(authToken, request, response);
+        authenticationService.oAuthLogin(authToken, request, response);
 
-        assertEquals(result, "Login successful");
+        verify(userRepository, times(2)).findByEmail("test@test.com");
     }
 
     @Test

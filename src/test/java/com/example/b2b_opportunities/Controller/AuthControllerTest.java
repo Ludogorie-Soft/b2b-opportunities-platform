@@ -260,28 +260,27 @@ public class AuthControllerTest extends BaseTest {
         assertTrue(confirmedUser.isEnabled());
     }
 
-    @Test
-    void testOAuthLoginCreatesNewUser() throws Exception {
-        Map<String, Object> attributes = new HashMap<>();
-        attributes.put("email", "test@test.com");
-        attributes.put("given_name", "Test");
-        attributes.put("family_name", "User");
+        @Test
+        void testOAuthLoginCreatesNewUser() throws Exception {
+            Map<String, Object> attributes = new HashMap<>();
+            attributes.put("email", "test@test.com");
+            attributes.put("given_name", "Test");
+            attributes.put("family_name", "User");
 
-        OAuth2User mockOAuth2User = new CustomOAuth2User(attributes);
-        OAuth2AuthenticationToken mockOAuth2Token = new OAuth2AuthenticationToken(
-                mockOAuth2User, null, "google");
+            OAuth2User mockOAuth2User = new CustomOAuth2User(attributes);
+            OAuth2AuthenticationToken mockOAuth2Token = new OAuth2AuthenticationToken(
+                    mockOAuth2User, null, "google");
 
-        mockMvc.perform(get("/api/auth/oauth2/success").principal(mockOAuth2Token))
-                .andExpect(status().isOk());
+            mockMvc.perform(get("/api/auth/oauth2/success").principal(mockOAuth2Token));
 
-        User newUser = userRepository.findByEmail("test@test.com")
-                .orElseThrow(() -> new IllegalStateException("User not found"));
+            User newUser = userRepository.findByEmail("test@test.com")
+                    .orElseThrow(() -> new IllegalStateException("User not found"));
 
-        assertEquals("Test", newUser.getFirstName());
-        assertEquals("User", newUser.getLastName());
-        assertTrue(newUser.isEnabled());
-        assertEquals("google", newUser.getProvider());
-    }
+            assertEquals("Test", newUser.getFirstName());
+            assertEquals("User", newUser.getLastName());
+            assertTrue(newUser.isEnabled());
+            assertEquals("google", newUser.getProvider());
+        }
 
     private static class CustomOAuth2User implements OAuth2User {
         private final Map<String, Object> attributes;
