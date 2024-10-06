@@ -1,7 +1,6 @@
 package com.example.b2b_opportunities.Service;
 
 import com.example.b2b_opportunities.Dto.LoginDtos.LoginDto;
-import com.example.b2b_opportunities.Dto.LoginDtos.LoginResponse;
 import com.example.b2b_opportunities.Dto.Request.UserRequestDto;
 import com.example.b2b_opportunities.Dto.Response.UserResponseDto;
 import com.example.b2b_opportunities.Entity.ConfirmationToken;
@@ -12,6 +11,7 @@ import com.example.b2b_opportunities.Exception.EmailInUseException;
 import com.example.b2b_opportunities.Exception.InvalidTokenException;
 import com.example.b2b_opportunities.Exception.PasswordsNotMatchingException;
 import com.example.b2b_opportunities.Exception.UserNotFoundException;
+import com.example.b2b_opportunities.Mapper.UserMapper;
 import com.example.b2b_opportunities.Repository.ConfirmationTokenRepository;
 import com.example.b2b_opportunities.Repository.UserRepository;
 import com.example.b2b_opportunities.UserDetailsImpl;
@@ -36,17 +36,19 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.validation.BindingResult;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -112,10 +114,12 @@ class AuthenticationServiceTest {
         when(jwtService.getExpirationTime())
                 .thenReturn(3600L);
 
-        String result = authenticationService.login(loginDto, request, response);
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
 
-        assertNotNull(result);
-        assertEquals("Login successful", result);
+        authenticationService.login(loginDto, request, response);
+
+        verify(response).addCookie(any(Cookie.class));
     }
 
     @Test
@@ -165,7 +169,7 @@ class AuthenticationServiceTest {
     }
 
     @Test
-    void testOAuthLoginWithValidUser(){
+    void testOAuthLoginWithValidUser() {
         OAuth2AuthenticationToken authToken = mock(OAuth2AuthenticationToken.class);
         OAuth2User oAuth2User = mock(OAuth2User.class);
         when(authToken.getPrincipal()).thenReturn(oAuth2User);
@@ -203,7 +207,7 @@ class AuthenticationServiceTest {
 
     @Test
     void testRegisterWithDuplicateEmail() {
-        UserRequestDto userRequestDto = new UserRequestDto("testuser", "test", "test",  "test@test.com", "password", "password");
+        UserRequestDto userRequestDto = new UserRequestDto("testuser", "test", "test", "test@test.com", "password", "password");
 
         when(bindingResult.hasErrors()).thenReturn(false);
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(new User()));
@@ -301,5 +305,37 @@ class AuthenticationServiceTest {
         assertEquals("User not found with email: " + email, exception.getMessage());
         verify(confirmationTokenRepository, never()).findByUser(any());
         verify(mailService, never()).sendConfirmationMail(any(), eq(request));
+    }
+
+    @Test
+    void testGetAllUsers() {
+        User user1 = new User();
+        user1.setId(1L);
+        user1.setUsername("user1");
+
+        User user2 = new User();
+        user2.setId(2L);
+        user2.setUsername("user2");
+
+        List<User> users = Arrays.asList(user1, user2);
+        List<UserResponseDto> expectedResponse = Arrays.asList(
+                UserMapper.toResponseDto(user1),
+                UserMapper.toResponseDto(user2)
+        );
+
+        when(userRepository.findAll()).thenReturn(users);
+
+        try (var mockedUserMapper = mockStatic(UserMapper.class)) {
+            mockedUserMapper.when(() -> UserMapper.toResponseDtoList(users)).thenReturn(expectedResponse);
+
+            List<UserResponseDto> actualResponse = authenticationService.getAllUsers();
+
+            verify(userRepository, times(1)).findAll();
+
+            mockedUserMapper.verify(() -> UserMapper.toResponseDtoList(users), times(1));
+
+            assertEquals(expectedResponse, actualResponse);
+            assertEquals(2, actualResponse.size());
+        }
     }
 }
