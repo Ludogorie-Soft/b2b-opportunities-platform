@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -51,6 +52,8 @@ public class PositionService {
 
     public PositionResponseDto createPosition(PositionRequestDto dto, Authentication authentication) {
         validateUserAndCompany(authentication);
+        validateProjectAndUserAreRelated(dto.getProjectId(), authentication);
+
         Position position = PositionMapper.toPosition(dto);
 
         setProjectOrThrow(position, dto.getProjectId());
@@ -59,23 +62,61 @@ public class PositionService {
         return PositionMapper.toResponseDto(positionRepository.save(position));
     }
 
+    public PositionResponseDto editPosition(Long id, PositionRequestDto dto, Authentication authentication) {
+        validateUserAndCompany(authentication);
+        Position position = positionRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Position with ID: " + id + " not found"));
+
+        validateProjectAndUserAreRelated(position.getProject().getId(), authentication);
+
+        position.setIsActive(dto.getIsActive());
+        position.setMinYearsExperience(dto.getMinYearsExperience());
+        position.setHoursPerWeek(dto.getHoursPerWeek());
+        position.setResponsibilities(dto.getResponsibilities());
+        position.setHiringProcess(dto.getHiringProcess());
+        position.setDescription(dto.getDescription());
+
+        setPositionFields(position, dto);
+        return PositionMapper.toResponseDto(positionRepository.save(position));
+    }
+
     private void setPositionFields(Position position, PositionRequestDto dto) {
         setPositionRoleOrThrow(position, dto.getRoleId());
         setSeniorityOrThrow(position, dto.getSeniorityId());
         setWorkModeOrThrow(position, dto.getWorkModeIds());
         setRate(position, dto.getRate());
-        setRequiredSkills(position, dto.getRequiredSkillsList());
+        setRequiredSkillsForPosition(position, dto.getRequiredSkillsList());
         setOptionalSkills(position, dto.getOptionalSkillsList());
     }
 
     private void validateUserAndCompany(Authentication authentication) {
+        User currentUser = getUserOrThrow(authentication);
+        getUserCompanyOrThrow(currentUser);
+    }
+
+    private User getUserOrThrow(Authentication authentication) {
         if (authentication == null) {
             throw new AuthenticationFailedException("User not authenticated");
         }
-        User currentUser = adminService.getCurrentUser(authentication);
-        Company company = currentUser.getCompany();
+        return adminService.getCurrentUser(authentication);
+    }
+
+    private Company getUserCompanyOrThrow(User user) {
+        Company company = user.getCompany();
         if (company == null) {
-            throw new NotFoundException("No company is associated with user " + currentUser.getUsername());
+            throw new NotFoundException("No company is associated with user " + user.getUsername());
+        }
+        return company;
+    }
+
+    private void validateProjectAndUserAreRelated(Long projectId, Authentication authentication) {
+        User user = getUserOrThrow(authentication);
+        Company company = getUserCompanyOrThrow(user);
+        Set<Long> projectIds = company.getProjects().stream()
+                .map(Project::getId)
+                .collect(Collectors.toSet());
+        if (!projectIds.contains(projectId)) {
+            throw new NotFoundException("Project ID: " + projectId + " is not associated with company ID: " + company.getId() + " and user: " + user.getUsername());
         }
     }
 
@@ -95,7 +136,7 @@ public class PositionService {
     }
 
     private void setWorkModeOrThrow(Position position, @NotNull List<Long> workModeIds) {
-        Set<WorkMode> workModes = new HashSet<WorkMode>(getWorkModesOrThrow(workModeIds));
+        Set<WorkMode> workModes = new HashSet<>(getWorkModesOrThrow(workModeIds));
         position.setWorkModes(workModes);
     }
 
@@ -114,13 +155,16 @@ public class PositionService {
     }
 
     private void setRate(Position position, RateRequestDto rateRequestDto) {
-        if (rateRequestDto.getMin() > rateRequestDto.getMax())
+        if (rateRequestDto.getMin() > rateRequestDto.getMax()) {
             throw new InvalidInputException("Min rate cannot exceed max rate");
+        }
         position.setRate(rateRepository.save(RateMapper.toRate(rateRequestDto)));
     }
 
-    private void setRequiredSkills(Position position, List<RequiredSkillsDto> dto) {
-        if (dto == null || dto.isEmpty()) throw new NotFoundException("RequiredSkillsDto is null or empty");
+    private void setRequiredSkillsForPosition(Position position, List<RequiredSkillsDto> dto) {
+        if (dto == null || dto.isEmpty()) {
+            throw new NotFoundException("RequiredSkillsDto is null or empty");
+        }
         position.setRequiredSkills(getRequiredSkillsList(dto));
     }
 

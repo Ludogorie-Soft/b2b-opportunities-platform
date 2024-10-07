@@ -61,7 +61,7 @@ public class Position {
     @JoinColumn(name = "rate_id")
     private Rate rate;
 
-    @OneToMany(mappedBy = "position", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "position", cascade = CascadeType.ALL)
     private List<RequiredSkill> requiredSkills;
 
     @OneToMany
