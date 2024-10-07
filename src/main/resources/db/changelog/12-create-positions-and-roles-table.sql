@@ -30,12 +30,6 @@ CREATE TABLE positions (
     description TEXT
 );
 
-CREATE TABLE position_work_modes (
-    position_id BIGINT REFERENCES positions(id) ON DELETE CASCADE,
-    work_mode VARCHAR(50) NOT NULL,
-    PRIMARY KEY (position_id, work_mode)
-);
-
 CREATE TABLE positions_optional_skills (
     position_id BIGINT REFERENCES positions(id),
     optional_skills_id BIGINT REFERENCES skills(id),
@@ -61,3 +55,19 @@ CREATE TABLE position_responsibilities (
     responsibilities TEXT,
     PRIMARY KEY (position_id, responsibilities)
 );
+
+CREATE TABLE work_modes (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE position_work_modes (
+    position_id BIGINT REFERENCES positions(id) ON DELETE CASCADE,
+    work_mode_id BIGINT REFERENCES work_modes(id),
+    PRIMARY KEY (position_id, work_mode_id)
+);
+
+INSERT INTO work_modes (name) VALUES
+('OFFICE'),
+('HYBRID'),
+('REMOTE');

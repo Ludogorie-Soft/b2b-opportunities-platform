@@ -11,6 +11,7 @@ import com.example.b2b_opportunities.Entity.Project;
 import com.example.b2b_opportunities.Entity.RequiredSkill;
 import com.example.b2b_opportunities.Entity.Skill;
 import com.example.b2b_opportunities.Entity.User;
+import com.example.b2b_opportunities.Entity.WorkMode;
 import com.example.b2b_opportunities.Exception.AuthenticationFailedException;
 import com.example.b2b_opportunities.Exception.InvalidInputException;
 import com.example.b2b_opportunities.Exception.NotFoundException;
@@ -24,8 +25,8 @@ import com.example.b2b_opportunities.Repository.ProjectRepository;
 import com.example.b2b_opportunities.Repository.RateRepository;
 import com.example.b2b_opportunities.Repository.SeniorityRepository;
 import com.example.b2b_opportunities.Repository.SkillRepository;
-import com.example.b2b_opportunities.Repository.UserRepository;
-import com.example.b2b_opportunities.Static.WorkMode;
+import com.example.b2b_opportunities.Repository.WorkModeRepository;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
@@ -46,7 +47,8 @@ public class PositionService {
     private final PositionRepository positionRepository;
     private final RateRepository rateRepository;
     private final ExperienceRepository experienceRepository;
-    private final UserRepository userRepository;
+    private final WorkModeRepository workModeRepository;
+
     public PositionResponseDto createPosition(PositionRequestDto dto, Authentication authentication) {
         validateUserAndCompany(authentication);
         Position position = PositionMapper.toPosition(dto);
@@ -57,7 +59,7 @@ public class PositionService {
         return PositionMapper.toResponseDto(positionRepository.save(position));
     }
 
-    private void setPositionFields(Position position, PositionRequestDto dto){
+    private void setPositionFields(Position position, PositionRequestDto dto) {
         setPositionRoleOrThrow(position, dto.getRoleId());
         setSeniorityOrThrow(position, dto.getSeniorityId());
         setWorkModeOrThrow(position, dto.getWorkModeIds());
@@ -92,26 +94,28 @@ public class PositionService {
                 .orElseThrow(() -> new NotFoundException("Seniority with ID: " + seniorityId + " was not found")));
     }
 
-    private void setWorkModeOrThrow(Position position, List<Long> workModeIdsList) {
-        Set<WorkMode> workModes = new HashSet<>();
-        for (Long workModeId : workModeIdsList) {
-            boolean found = false;
-            for (WorkMode value : WorkMode.values()) {
-                if (value.getId() == workModeId) {
-                    workModes.add(value);
-                    found = true;
-                    break;
-                }
+    private void setWorkModeOrThrow(Position position, @NotNull List<Long> workModeIds) {
+        Set<WorkMode> workModes = new HashSet<WorkMode>(getWorkModesOrThrow(workModeIds));
+        position.setWorkModes(workModes);
+    }
+
+    private List<WorkMode> getWorkModesOrThrow(List<Long> workModeIdsList) {
+        if (workModeIdsList != null) {
+            List<WorkMode> workModes = workModeRepository.findAllById(workModeIdsList);
+
+            if (workModes.size() != workModeIdsList.size()) {
+                List<Long> foundWorkModeIds = workModes.stream().map(WorkMode::getId).toList();
+                List<Long> missingIds = workModeIdsList.stream().filter(id -> !foundWorkModeIds.contains(id)).toList();
+                throw new NotFoundException("WorkMode with ID(s): " + missingIds + " not found");
             }
-            if (!found) {
-                throw new NotFoundException("Invalid WorkMode ID: " + workModeId);
-            }
+            return workModes;
         }
-        position.setWorkMode(workModes);
+        return new ArrayList<>();
     }
 
     private void setRate(Position position, RateRequestDto rateRequestDto) {
-        if(rateRequestDto.getMin()>rateRequestDto.getMax()) throw new InvalidInputException("Min rate cannot exceed max rate");
+        if (rateRequestDto.getMin() > rateRequestDto.getMax())
+            throw new InvalidInputException("Min rate cannot exceed max rate");
         position.setRate(rateRepository.save(RateMapper.toRate(rateRequestDto)));
     }
 

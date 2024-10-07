@@ -4,6 +4,7 @@ import com.example.b2b_opportunities.Dto.Request.PositionRequestDto;
 import com.example.b2b_opportunities.Dto.Response.PositionResponseDto;
 import com.example.b2b_opportunities.Entity.Position;
 import com.example.b2b_opportunities.Entity.Skill;
+import com.example.b2b_opportunities.Entity.WorkMode;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -23,7 +24,7 @@ public class PositionMapper {
     }
 
     public static PositionResponseDto toResponseDto(Position position) {
-        List<String> workModeList = position.getWorkMode().stream().map(Enum::name).toList();
+        List<String> workModeList = new ArrayList<>(position.getWorkModes().stream().map(WorkMode::getName).toList());
         List<Long> optionalSkillIds = new ArrayList<>();
         if (position.getOptionalSkills() != null) {
             optionalSkillIds = position.getOptionalSkills().stream().map(Skill::getId).toList();
