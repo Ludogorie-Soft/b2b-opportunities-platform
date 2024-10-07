@@ -41,7 +41,7 @@ public class PositionRoleController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public PositionRole add(@RequestParam("name") String name) {
-        name = StringUtils.validateAndTrimName(name, "Role");
+        name = StringUtils.stripCapitalizeAndValidateNotEmpty(name, "Role");
         validateNameDoesNotExist(name);
         return positionRoleRepository.save(PositionRole.builder().name(name).build());
     }
@@ -51,7 +51,7 @@ public class PositionRoleController {
     public PositionRole edit(@PathVariable("id") Long id, @RequestParam("newName") String newName) {
         PositionRole positionRole = findPositionRoleByIdOrThrow(id);
 
-        newName = StringUtils.validateAndTrimName(newName, "Role");
+        newName = StringUtils.stripCapitalizeAndValidateNotEmpty(newName, "Role");
         if (Objects.equals(positionRole.getName(), newName)) {
             return positionRole;
         }

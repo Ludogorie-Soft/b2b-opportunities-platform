@@ -18,5 +18,10 @@ public class Location {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     private Long id;
+
     private String name;
+
+    public void setName(String name) {
+        this.name = name.strip();
+    }
 }

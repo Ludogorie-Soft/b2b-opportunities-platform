@@ -41,7 +41,7 @@ public class DomainController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Domain add(@RequestParam("name") String name) {
-        name = StringUtils.validateAndTrimName(name, "Domain");
+        name = StringUtils.stripCapitalizeAndValidateNotEmpty(name, "Domain");
         validateNameDoesNotExist(name);
         return domainRepository.save(Domain.builder().name(name).build());
     }
@@ -51,7 +51,7 @@ public class DomainController {
     public Domain edit(@PathVariable Long id, @RequestParam("newName") String newName) {
         Domain domain = findDomainByIdOrThrow(id);
 
-        newName = StringUtils.validateAndTrimName(newName, "Domain");
+        newName = StringUtils.stripCapitalizeAndValidateNotEmpty(newName, "Domain");
         if (Objects.equals(domain.getName(), newName)) {
             return domain;
         }

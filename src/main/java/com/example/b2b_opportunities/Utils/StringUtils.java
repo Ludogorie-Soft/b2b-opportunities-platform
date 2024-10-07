@@ -1,15 +1,36 @@
 package com.example.b2b_opportunities.Utils;
 
+import com.example.b2b_opportunities.Exception.InvalidInputException;
+
 public class StringUtils {
-    public static String validateAndTrimName(String name, String context) {
-        String trimmedName = name.trim();
-        validateNameNotBlank(trimmedName, context);
-        return trimmedName;
+    public static String stripCapitalizeAndValidateNotEmpty(String name, String context) {
+        validateNameNotBlank(name, context);
+        return capitalizeWords(name.strip());
     }
 
     private static void validateNameNotBlank(String name, String context) {
-        if (name == null || name.isEmpty()) {
-            throw new IllegalArgumentException(context + " cannot be blank");
+        if (name == null || name.isBlank()) {
+            throw new InvalidInputException(context.strip() + " cannot be null or blank");
         }
+    }
+
+    private static String capitalize(String input) {
+        return input.substring(0, 1).toUpperCase() + input.substring(1).toLowerCase();
+    }
+
+    private static String capitalizeWords(String input) {
+        String[] words = input.split("\\s+"); // Split by one or more spaces
+        StringBuilder capitalizedWords = new StringBuilder();
+
+        for (String word : words) {
+            if (!word.isEmpty()) {
+                capitalizedWords.append(
+                                word.substring(0, 1).toUpperCase())
+                        .append(word.substring(1).toLowerCase())
+                        .append(" ");
+            }
+        }
+
+        return capitalizedWords.toString().strip();
     }
 }
