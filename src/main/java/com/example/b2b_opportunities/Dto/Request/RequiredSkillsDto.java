@@ -1,5 +1,6 @@
 package com.example.b2b_opportunities.Dto.Request;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
@@ -9,5 +10,6 @@ import lombok.Setter;
 public class RequiredSkillsDto {
     @NotNull
     private Long skillId;
+    @Valid
     private ExperienceRequestDto experienceRequestDto;
 }

@@ -1,5 +1,6 @@
 package com.example.b2b_opportunities.Dto.Request;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -28,9 +29,11 @@ public class PositionRequestDto {
     private List<Long> workModeIds;
 
     @NotNull
+    @Valid
     private RateRequestDto rate;
 
     @NotNull
+    @Valid
     private List<RequiredSkillsDto> requiredSkillsList;
 
     private List<Long> optionalSkillsList;
