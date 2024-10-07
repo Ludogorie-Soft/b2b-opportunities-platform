@@ -37,12 +37,12 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class CompanyService {
     private final CompanyRepository companyRepository;
-    private final UserRepository userRepository;
     private final ImageService imageService;
     private final CompanyTypeRepository companyTypeRepository;
     private final DomainRepository domainRepository;
     private final PatternService patternService;
     private final MailService mailService;
+    private final AdminService adminService;
 
     public CompanyResponseDto createCompany(Authentication authentication,
                                             CompanyRequestDto companyRequestDto,
@@ -57,7 +57,7 @@ public class CompanyService {
             throw new NotFoundException("Image is missing or empty");
         }
 
-        User currentUser = getCurrentUser(authentication);
+        User currentUser = adminService.getCurrentUser(authentication);
         if (currentUser.getCompany() != null) {
             throw new AlreadyExistsException(currentUser.getUsername() + " is already associated with Company: " + currentUser.getCompany().getName());
         }
@@ -67,7 +67,7 @@ public class CompanyService {
 
         setCompanyEmailVerificationStatusAndSendEmail(company, currentUser, companyRequestDto, request);
 
-        addCompanyToUser(authentication, company);
+//        addCompanyToUser(authentication, company);
 
         imageService.upload(image, company.getId(), "image");
         if (banner != null && !banner.isEmpty()) {
@@ -102,7 +102,7 @@ public class CompanyService {
                                           MultipartFile image,
                                           MultipartFile banner,
                                           HttpServletRequest request) {
-        User currentUser = getCurrentUser(authentication);
+        User currentUser = adminService.getCurrentUser(authentication);
         Company userCompany = getUserCompanyOrThrow(currentUser);
 
         updateCompanyName(userCompany, companyRequestDto);
@@ -148,16 +148,6 @@ public class CompanyService {
         company.setDomain(getDomainOrThrow(dto));
         company.setSkills(getSkillsOrThrow(dto));
         return company;
-    }
-
-    protected User getCurrentUser(Authentication authentication) {
-        if (authentication instanceof OAuth2AuthenticationToken) {
-            OAuth2User oauthUser = ((OAuth2AuthenticationToken) authentication).getPrincipal();
-            String email = (String) oauthUser.getAttributes().get("email");
-            return userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User with " + email + " not found"));
-        }
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-        return userDetails.getUser();
     }
 
     private CompanyType getCompanyTypeOrThrow(CompanyRequestDto dto) {
@@ -248,12 +238,6 @@ public class CompanyService {
         if (!companySkills.equals(dto.getSkills())) {
             company.setSkills(getSkillsOrThrow(dto));
         }
-    }
-
-    private void addCompanyToUser(Authentication authentication, Company company) {
-        User user = getCurrentUser(authentication);
-        user.setCompany(company);
-        userRepository.save(user);
     }
 
     private void validateCompanyRequestInput(CompanyRequestDto companyRequestDto) {

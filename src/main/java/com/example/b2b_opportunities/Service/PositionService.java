@@ -39,7 +39,6 @@ import java.util.Set;
 @Service
 @RequiredArgsConstructor
 public class PositionService {
-    private final CompanyService companyService;
     private final ProjectRepository projectRepository;
     private final SeniorityRepository seniorityRepository;
     private final PositionRoleRepository positionRoleRepository;
@@ -48,6 +47,7 @@ public class PositionService {
     private final RateRepository rateRepository;
     private final ExperienceRepository experienceRepository;
     private final WorkModeRepository workModeRepository;
+    private final AdminService adminService;
 
     public PositionResponseDto createPosition(PositionRequestDto dto, Authentication authentication) {
         validateUserAndCompany(authentication);
@@ -72,7 +72,7 @@ public class PositionService {
         if (authentication == null) {
             throw new AuthenticationFailedException("User not authenticated");
         }
-        User currentUser = companyService.getCurrentUser(authentication);
+        User currentUser = adminService.getCurrentUser(authentication);
         Company company = currentUser.getCompany();
         if (company == null) {
             throw new NotFoundException("No company is associated with user " + currentUser.getUsername());

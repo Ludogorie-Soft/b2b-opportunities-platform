@@ -5,7 +5,11 @@ import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Exception.UserNotFoundException;
 import com.example.b2b_opportunities.Mapper.UserMapper;
 import com.example.b2b_opportunities.Repository.UserRepository;
+import com.example.b2b_opportunities.UserDetailsImpl;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -27,5 +31,15 @@ public class AdminService {
     public List<UserResponseDto> getAllNonApprovedUsers() {
         List<User> users = userRepository.findByIsApprovedFalse();
         return UserMapper.toResponseDtoList(users);
+    }
+
+    public User getCurrentUser(Authentication authentication) {
+        if (authentication instanceof OAuth2AuthenticationToken) {
+            OAuth2User oauthUser = ((OAuth2AuthenticationToken) authentication).getPrincipal();
+            String email = (String) oauthUser.getAttributes().get("email");
+            return userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User with email: " + email + " not found"));
+        }
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        return userDetails.getUser();
     }
 }
