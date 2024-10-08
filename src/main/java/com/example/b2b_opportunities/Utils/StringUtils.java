@@ -23,12 +23,9 @@ public class StringUtils {
         StringBuilder capitalizedWords = new StringBuilder();
 
         for (String word : words) {
-            if (!word.isEmpty()) {
-                capitalizedWords.append(
-                                word.substring(0, 1).toUpperCase())
-                        .append(word.substring(1).toLowerCase())
-                        .append(" ");
-            }
+            capitalizedWords
+                    .append(capitalize(word))
+                    .append(" ");
         }
 
         return capitalizedWords.toString().strip();
