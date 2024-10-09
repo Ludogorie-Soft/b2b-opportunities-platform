@@ -13,7 +13,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -30,7 +31,6 @@ class LocationServiceTest {
 
     @Test
     void shouldReturnLocationWhenExists() {
-        // Arrange
         Long id = 1L;
         String locationName = "ploVdiv";
         Location location = new Location();
@@ -38,10 +38,8 @@ class LocationServiceTest {
         location.setName(locationName);
         when(locationRepository.findById(id)).thenReturn(Optional.of(location));
 
-        // Act
         Location result = locationService.get(id);
 
-        // Assert
         assertEquals(locationName, result.getName());
         assertEquals(id, result.getId());
         verify(locationRepository, times(1)).findById(id);
