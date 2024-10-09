@@ -15,7 +15,8 @@ CREATE TABLE company_types (
 
 INSERT INTO company_types (name) VALUES
 ('Product and service'),
-('Product');
+('Product'),
+('Service');
 
 CREATE TABLE companies (
     id BIGSERIAL PRIMARY KEY,
