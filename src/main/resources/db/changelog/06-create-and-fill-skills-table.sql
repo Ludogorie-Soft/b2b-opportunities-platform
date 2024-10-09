@@ -162,3 +162,5 @@ INSERT INTO skills (id, identifier, name, parent_id, assignable, image, image_ty
 (145, 'T61', 'Bash', 19, true, pg_read_binary_file('/icons/Bash.svg'), 'svg'),
 (146, 'T64', 'Apache', 22, true, pg_read_binary_file('/icons/Apache.svg'), 'svg'),
 (147, 'T98', 'Swagger', 22, true, pg_read_binary_file('/icons/Swagger.svg'), 'svg');
+
+SELECT setval('skills_id_seq', (SELECT COALESCE(MAX(id), 0) + 1 FROM skills));
