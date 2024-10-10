@@ -12,6 +12,7 @@ import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Exception.AlreadyExistsException;
 import com.example.b2b_opportunities.Exception.AuthenticationFailedException;
 import com.example.b2b_opportunities.Exception.NotFoundException;
+import com.example.b2b_opportunities.Exception.UserNotFoundException;
 import com.example.b2b_opportunities.Mapper.CompanyMapper;
 import com.example.b2b_opportunities.Mapper.UserMapper;
 import com.example.b2b_opportunities.Repository.CompanyRepository;
@@ -23,6 +24,8 @@ import com.example.b2b_opportunities.UserDetailsImpl;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -34,12 +37,12 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class CompanyService {
     private final CompanyRepository companyRepository;
-    private final UserRepository userRepository;
     private final ImageService imageService;
     private final CompanyTypeRepository companyTypeRepository;
     private final DomainRepository domainRepository;
     private final PatternService patternService;
     private final MailService mailService;
+    private final AdminService adminService;
 
     public CompanyResponseDto createCompany(Authentication authentication,
                                             CompanyRequestDto companyRequestDto,
@@ -54,7 +57,7 @@ public class CompanyService {
             throw new NotFoundException("Image is missing or empty");
         }
 
-        User currentUser = getCurrentUser(authentication);
+        User currentUser = adminService.getCurrentUser(authentication);
         if (currentUser.getCompany() != null) {
             throw new AlreadyExistsException(currentUser.getUsername() + " is already associated with Company: " + currentUser.getCompany().getName());
         }
@@ -64,7 +67,7 @@ public class CompanyService {
 
         setCompanyEmailVerificationStatusAndSendEmail(company, currentUser, companyRequestDto, request);
 
-        addCompanyToUser(authentication, company);
+//        addCompanyToUser(authentication, company);
 
         imageService.upload(image, company.getId(), "image");
         if (banner != null && !banner.isEmpty()) {
@@ -98,7 +101,7 @@ public class CompanyService {
                                           MultipartFile image,
                                           MultipartFile banner,
                                           HttpServletRequest request) {
-        User currentUser = getCurrentUser(authentication);
+        User currentUser = adminService.getCurrentUser(authentication);
         Company userCompany = getUserCompanyOrThrow(currentUser);
 
         updateCompanyName(userCompany, companyRequestDto);
@@ -144,11 +147,6 @@ public class CompanyService {
         company.setDomain(getDomainOrThrow(dto));
         company.setSkills(getSkillsOrThrow(dto));
         return company;
-    }
-
-    private User getCurrentUser(Authentication authentication) {
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-        return userDetails.getUser();
     }
 
     private CompanyType getCompanyTypeOrThrow(CompanyRequestDto dto) {
@@ -239,12 +237,6 @@ public class CompanyService {
         if (!companySkills.equals(dto.getSkills())) {
             company.setSkills(getSkillsOrThrow(dto));
         }
-    }
-
-    private void addCompanyToUser(Authentication authentication, Company company) {
-        User user = getCurrentUser(authentication);
-        user.setCompany(company);
-        userRepository.save(user);
     }
 
     private void validateCompanyRequestInput(CompanyRequestDto companyRequestDto) {

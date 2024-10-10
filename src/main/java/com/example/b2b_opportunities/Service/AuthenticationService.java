@@ -11,7 +11,6 @@ import com.example.b2b_opportunities.Exception.DisabledUserException;
 import com.example.b2b_opportunities.Exception.EmailInUseException;
 import com.example.b2b_opportunities.Exception.InvalidTokenException;
 import com.example.b2b_opportunities.Exception.PasswordsNotMatchingException;
-import com.example.b2b_opportunities.Exception.ServerErrorException;
 import com.example.b2b_opportunities.Exception.UserNotFoundException;
 import com.example.b2b_opportunities.Exception.UsernameInUseException;
 import com.example.b2b_opportunities.Exception.ValidationException;
@@ -211,15 +210,13 @@ public class AuthenticationService {
         userRepository.save(user);
     }
 
-    private String generateLoginResponse(HttpServletRequest request, HttpServletResponse response, String email) {
+    private void generateLoginResponse(HttpServletRequest request, HttpServletResponse response, String email) {
         User user = userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
         UserDetailsImpl userDetails = new UserDetailsImpl(user);
 
         String jwtToken = jwtService.generateToken(userDetails);
 
         setJwtCookie(request, response, jwtToken);
-
-        return "Login successful";
     }
 
     private boolean isTokenExpired(ConfirmationToken token) {

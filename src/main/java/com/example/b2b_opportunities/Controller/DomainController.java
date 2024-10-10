@@ -2,9 +2,9 @@ package com.example.b2b_opportunities.Controller;
 
 import com.example.b2b_opportunities.Entity.Domain;
 import com.example.b2b_opportunities.Exception.AlreadyExistsException;
-import com.example.b2b_opportunities.Exception.InvalidInputException;
 import com.example.b2b_opportunities.Exception.NotFoundException;
 import com.example.b2b_opportunities.Repository.DomainRepository;
+import com.example.b2b_opportunities.Utils.StringUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -41,8 +41,8 @@ public class DomainController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Domain add(@RequestParam("name") String name) {
-        name = validateAndTrimName(name);
-        validateNameDoesNotExists(name);
+        name = StringUtils.stripCapitalizeAndValidateNotEmpty(name, "Domain");
+        validateNameDoesNotExist(name);
         return domainRepository.save(Domain.builder().name(name).build());
     }
 
@@ -51,11 +51,11 @@ public class DomainController {
     public Domain edit(@PathVariable Long id, @RequestParam("newName") String newName) {
         Domain domain = findDomainByIdOrThrow(id);
 
-        newName = validateAndTrimName(newName);
+        newName = StringUtils.stripCapitalizeAndValidateNotEmpty(newName, "Domain");
         if (Objects.equals(domain.getName(), newName)) {
             return domain;
         }
-        validateNameDoesNotExists(newName);
+        validateNameDoesNotExist(newName);
 
         domain.setName(newName);
         return domainRepository.save(domain);
@@ -67,7 +67,7 @@ public class DomainController {
         domainRepository.delete(findDomainByIdOrThrow(id));
     }
 
-    private void validateNameDoesNotExists(String name) {
+    private void validateNameDoesNotExist(String name) {
         if (domainRepository.findByName(name).isPresent()) {
             throw new AlreadyExistsException("Domain with name: '" + name + "' already exists");
         }
@@ -75,17 +75,5 @@ public class DomainController {
 
     private Domain findDomainByIdOrThrow(Long id) {
         return domainRepository.findById(id).orElseThrow(() -> new NotFoundException("Domain with ID: " + id + " not found"));
-    }
-
-    private void validateNameNotBlank(String name) {
-        if (name.isBlank()) {
-            throw new InvalidInputException("Domain name cannot be blank");
-        }
-    }
-
-    private String validateAndTrimName(String name) {
-        String trimmedName = name.trim();
-        validateNameNotBlank(trimmedName);
-        return trimmedName;
     }
 }

@@ -9,6 +9,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.Getter;
@@ -17,6 +18,7 @@ import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Getter
@@ -43,6 +45,10 @@ public class Project {
     private LocalDate endDate; // YYYY-MM-DD
     private Integer duration; // months
 
+    private String Description;
+
+    @OneToMany(mappedBy = "project", fetch = FetchType.LAZY)
+    private List<Position> positions;
     private String description;
 
     public void setName(@NotEmpty String name) {

@@ -16,7 +16,7 @@ import java.nio.file.Paths;
 @Testcontainers
 @ActiveProfiles("test")
 public abstract class BaseTest {
-
+    // This can be used for classes that don't require @Transactional
     private final static String hostPath = Paths.get("Deploy/icons").toAbsolutePath().toString();
     private final static String containerPath = "/icons";
 

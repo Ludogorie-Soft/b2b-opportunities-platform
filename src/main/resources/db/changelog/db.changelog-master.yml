@@ -32,3 +32,6 @@ databaseChangeLog:
   - include:
       file: 11-create-and-fill-project-table.sql
       relativeToChangelogFile: true
+  - include:
+      file: 12-create-positions-and-roles-table.sql
+      relativeToChangelogFile: true
