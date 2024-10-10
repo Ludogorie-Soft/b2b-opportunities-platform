@@ -45,8 +45,6 @@ public class Project {
     private LocalDate endDate; // YYYY-MM-DD
     private Integer duration; // months
 
-    private String Description;
-
     @OneToMany(mappedBy = "project", fetch = FetchType.LAZY)
     private List<Position> positions;
     private String description;
