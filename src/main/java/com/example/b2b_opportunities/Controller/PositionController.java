@@ -34,6 +34,7 @@ public class PositionController {
     public PositionResponseDto createPosition(@RequestBody @Valid PositionRequestDto dto, Authentication authentication){
         return positionService.createPosition(dto, authentication);
     }
+
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public List<PositionResponseDto> getPositions(){

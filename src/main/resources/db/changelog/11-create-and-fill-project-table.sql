@@ -22,3 +22,5 @@ INSERT INTO projects (id, company_id, date_posted, name, start_date, end_date, d
     'We are seeking a talented web developer to create a modern, user-friendly website that accurately represents our brand and effectively communicates our services to our target audience. The successful candidate will be responsible for designing, developing, and launching a new website that meets our specific needs and goals.'),
 (4, 4, '2024-02-01 00:00:00', 'System Engineering Department', NULL, NULL, NULL,
     'To establish a robust and efficient System Engineering Department capable of delivering high-quality system solutions that meet the evolving needs of the organization. This department will play a crucial role in ensuring the successful design, development, implementation, and maintenance of complex systems.');
+
+SELECT setval('projects_id_seq', (SELECT MAX(id) FROM projects));
