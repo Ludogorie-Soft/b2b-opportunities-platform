@@ -6,6 +6,7 @@ import com.example.b2b_opportunities.Exception.AlreadyExistsException;
 import com.example.b2b_opportunities.Exception.InvalidInputException;
 import com.example.b2b_opportunities.Exception.NotFoundException;
 import com.example.b2b_opportunities.Repository.CompanyTypeRepository;
+import com.example.b2b_opportunities.Utils.StringUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -42,7 +43,7 @@ public class CompanyTypeController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public CompanyType addCompanyType(@RequestParam("name") String name) {
-        name = validateAndTrimName(name);
+        name = StringUtils.stripCapitalizeAndValidateNotEmpty(name, "Company Type");
         validateNameDoesNotExists(name);
         return companyTypeRepository.save(CompanyType.builder().name(name).build());
     }
@@ -52,7 +53,7 @@ public class CompanyTypeController {
     public CompanyType editCompanyType(@PathVariable Long id, @RequestParam("newName") String newName) {
         CompanyType companyType = findCompanyTypeByIdOrThrow(id);
 
-        newName = validateAndTrimName(newName);
+        newName = StringUtils.stripCapitalizeAndValidateNotEmpty(newName, "Company Type");
         if (Objects.equals(companyType.getName(), newName)) {
             return companyType;
         }
@@ -70,22 +71,10 @@ public class CompanyTypeController {
 
     private void validateNameDoesNotExists(String name) {
         if (companyTypeRepository.findByName(name).isPresent())
-            throw new AlreadyExistsException("Company type with name: '" + name + "'  already exists");
+            throw new AlreadyExistsException("Company type with name: '" + name + "' already exists");
     }
 
     private CompanyType findCompanyTypeByIdOrThrow(Long id) {
         return companyTypeRepository.findById(id).orElseThrow(() -> new NotFoundException("Company type with ID: " + id + " not found"));
-    }
-
-    private void validateNameNotBlank(String name) {
-        if (name.isBlank()) {
-            throw new InvalidInputException("Company type name cannot be blank");
-        }
-    }
-
-    private String validateAndTrimName(String name) {
-        String trimmedName = name.trim();
-        validateNameNotBlank(trimmedName);
-        return trimmedName;
     }
 }
