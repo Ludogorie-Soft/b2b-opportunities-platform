@@ -90,18 +90,9 @@ public class CompanyService {
         return generateCompanyResponseDto(company);
     }
 
-    public CompanyResponseDto addCompanyImages(Authentication authentication,
+    public CompanyResponseDto setCompanyImages(Authentication authentication,
                                                MultipartFile image,
                                                MultipartFile banner) {
-        if (image == null || image.isEmpty()) {
-            throw new NotFoundException("Image is missing or empty");
-        }
-        return editCompanyImages(authentication, image, banner);
-    }
-
-    public CompanyResponseDto editCompanyImages(Authentication authentication,
-                                                MultipartFile image,
-                                                MultipartFile banner) {
         User currentUser = adminService.getCurrentUserOrThrow(authentication);
         Company company = getUserCompanyOrThrow(currentUser);
 

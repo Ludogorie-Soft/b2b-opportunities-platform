@@ -79,25 +79,17 @@ public class CompanyController {
         return companyService.editCompany(authentication, companyRequestDto, request);
     }
 
-    @PostMapping(value = "/images/edit", consumes = "multipart/form-data")
+    @PostMapping(value = "/images/set", consumes = "multipart/form-data")
     @ResponseStatus(HttpStatus.OK)
-    public CompanyResponseDto editCompanyImages(Authentication authentication,
-                                          @RequestParam(value = "image", required = false) MultipartFile image,
-                                          @RequestParam(value = "banner", required = false) MultipartFile banner) {
-        return companyService.editCompanyImages(authentication, image, banner);
-    }
-
-    @PostMapping(value = "/images/add", consumes = "multipart/form-data")
-    @ResponseStatus(HttpStatus.CREATED)
-    public CompanyResponseDto addCompanyImages(Authentication authentication,
-                                          @RequestParam(value = "image") MultipartFile image,
-                                          @RequestParam(value = "banner", required = false) MultipartFile banner) {
-        return companyService.addCompanyImages(authentication, image, banner);
+    public CompanyResponseDto setCompanyImages(Authentication authentication,
+                                               @RequestParam(value = "image", required = false) MultipartFile image,
+                                               @RequestParam(value = "banner", required = false) MultipartFile banner) {
+        return companyService.setCompanyImages(authentication, image, banner);
     }
 
     @PostMapping(value = "/images/delete-banner")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteCompanyBanner(Authentication authentication){
+    public void deleteCompanyBanner(Authentication authentication) {
         companyService.deleteCompanyBanner(authentication);
     }
 }
