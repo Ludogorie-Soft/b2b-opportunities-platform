@@ -9,14 +9,15 @@ import com.example.b2b_opportunities.Repository.CompanyRepository;
 import com.example.b2b_opportunities.Service.CompanyService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -49,14 +50,12 @@ public class CompanyController {
                 .orElseThrow(() -> new NotFoundException("Company with ID: " + id + " not found")));
     }
 
-    @PostMapping(consumes = "multipart/form-data")
+    @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public CompanyResponseDto createCompany(Authentication authentication,
-                                            @ModelAttribute CompanyRequestDto companyRequestDto,
-                                            @RequestParam("image") MultipartFile image,
-                                            @RequestParam(value = "banner", required = false) MultipartFile banner,
+                                            @RequestBody @Valid CompanyRequestDto companyRequestDto,
                                             HttpServletRequest request) {
-        return companyService.createCompany(authentication, companyRequestDto, image, banner, request);
+        return companyService.createCompany(authentication, companyRequestDto, request);
     }
 
     @GetMapping("/{id}/with-users")
@@ -72,13 +71,33 @@ public class CompanyController {
         response.sendRedirect(frontEndAddress + "/company/profile");
     }
 
-    @PostMapping(value = "/edit", consumes = "multipart/form-data")
+    @PostMapping("/edit")
     @ResponseStatus(HttpStatus.OK)
     public CompanyResponseDto editCompany(Authentication authentication,
-                                          @ModelAttribute CompanyRequestDto companyRequestDto,
-                                          @RequestParam(value = "image", required = false) MultipartFile image,
-                                          @RequestParam(value = "banner", required = false) MultipartFile banner,
+                                          @RequestBody @Valid CompanyRequestDto companyRequestDto,
                                           HttpServletRequest request) {
-        return companyService.editCompany(authentication, companyRequestDto, image, banner, request);
+        return companyService.editCompany(authentication, companyRequestDto, request);
+    }
+
+    @PostMapping(value = "/images/edit", consumes = "multipart/form-data")
+    @ResponseStatus(HttpStatus.OK)
+    public CompanyResponseDto editCompanyImages(Authentication authentication,
+                                          @RequestParam(value = "image", required = false) MultipartFile image,
+                                          @RequestParam(value = "banner", required = false) MultipartFile banner) {
+        return companyService.editCompanyImages(authentication, image, banner);
+    }
+
+    @PostMapping(value = "/images/add", consumes = "multipart/form-data")
+    @ResponseStatus(HttpStatus.CREATED)
+    public CompanyResponseDto addCompanyImages(Authentication authentication,
+                                          @RequestParam(value = "image") MultipartFile image,
+                                          @RequestParam(value = "banner", required = false) MultipartFile banner) {
+        return companyService.addCompanyImages(authentication, image, banner);
+    }
+
+    @PostMapping(value = "/images/delete-banner")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteCompanyBanner(Authentication authentication){
+        companyService.deleteCompanyBanner(authentication);
     }
 }
