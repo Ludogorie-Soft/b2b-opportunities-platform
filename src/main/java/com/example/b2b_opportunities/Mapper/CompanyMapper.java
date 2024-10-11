@@ -27,6 +27,12 @@ public class CompanyMapper {
 
     public static CompanyResponseDto toCompanyResponseDto(Company company) {
         List<Long> skillIDs = toSkillIdList(company.getSkills());
+
+        String description = company.getDescription();
+        if (description != null) {
+            description = company.getDescription().replace("\\n", "\n");
+        }
+
         return CompanyResponseDto.builder()
                 .id(company.getId())
                 .name(company.getName())
@@ -36,7 +42,7 @@ public class CompanyMapper {
                 .emailVerification(company.getEmailVerification().toString())
                 .website(company.getWebsite())
                 .linkedIn(company.getLinkedIn())
-                .description(company.getDescription())
+                .description(description)
                 .skills(skillIDs)
                 .build();
     }
