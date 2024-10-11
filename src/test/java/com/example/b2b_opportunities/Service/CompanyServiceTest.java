@@ -25,8 +25,6 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.multipart.MultipartFile;
-import org.testcontainers.shaded.org.checkerframework.checker.units.qual.C;
-import org.testcontainers.shaded.org.checkerframework.checker.units.qual.N;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -110,27 +108,15 @@ public class CompanyServiceTest {
     }
 
     @Test
-    public void testCreateCompanyWithNonAuthenticatedUserShouldThrowAuthenticationFailedException() {
-        MockMultipartFile image = new MockMultipartFile("image", "company.jpg", "image/jpeg", new byte[10]);
-        assertThrows(AuthenticationFailedException.class, () -> companyService.createCompany(null, companyRequestDto, image, null, request));
-    }
+    public void testCreateCompany_ThrowsAuthenticationFailedException() {
+        Authentication authentication = null;
 
-    @Test
-    public void testCreateCompany_ImageIsNull_ShouldThrowNotFoundException() {
-        when(authentication.isAuthenticated()).thenReturn(true);
-        when(adminService.getCurrentUser(authentication)).thenReturn(currentUser);
+        when(adminService.getCurrentUserOrThrow(authentication))
+                .thenThrow(new AuthenticationFailedException("User not authenticated"));
 
-        assertThrows(NotFoundException.class, () -> companyService.createCompany(authentication, companyRequestDto, null, null, request));
-    }
-
-    @Test
-    public void testCreateCompany_ImageIsEmpty_ShouldThrowNotFoundException() {
-        MockMultipartFile image = new MockMultipartFile("image", "empty.jpg", "image/jpeg", new byte[0]);
-
-        when(authentication.isAuthenticated()).thenReturn(true);
-        when(adminService.getCurrentUser(authentication)).thenReturn(currentUser);
-
-        assertThrows(NotFoundException.class, () -> companyService.createCompany(authentication, companyRequestDto, image, null, request));
+        assertThrows(AuthenticationFailedException.class, () -> {
+            companyService.createCompany(authentication, companyRequestDto, request);
+        });
     }
 
     @Test
@@ -138,18 +124,15 @@ public class CompanyServiceTest {
         Company existingCompany = new Company();
         existingCompany.setName("Existing Company");
         currentUser.setCompany(existingCompany);
-        MockMultipartFile image = new MockMultipartFile("image", "company.jpg", "image/jpeg", new byte[10]);
 
         when(authentication.isAuthenticated()).thenReturn(true);
-        when(adminService.getCurrentUser(authentication)).thenReturn(currentUser);
+        when(adminService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
 
-        assertThrows(AlreadyExistsException.class, () -> companyService.createCompany(authentication, companyRequestDto, image, null, request));
+        assertThrows(AlreadyExistsException.class, () -> companyService.createCompany(authentication, companyRequestDto, request));
     }
 
     @Test
     public void testCreateCompany_ValidRequest_ShouldCreateCompany() {
-        MockMultipartFile image = new MockMultipartFile("image", "company.jpg", "image/jpeg", new byte[10]);
-        MockMultipartFile banner = new MockMultipartFile("banner", "banner.jpg", "image/jpeg", new byte[10]);
         Company company = new Company();
         company.setId(1L);
 
@@ -158,14 +141,12 @@ public class CompanyServiceTest {
         currentUser.setCompany(null);
 
         when(authentication.isAuthenticated()).thenReturn(true);
-        when(adminService.getCurrentUser(authentication)).thenReturn(currentUser);
+        when(adminService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
         when(companyRepository.save(any(Company.class))).thenReturn(company);
 
-        CompanyResponseDto responseDto = companyService.createCompany(authentication, companyRequestDto, image, banner, request);
+        CompanyResponseDto responseDto = companyService.createCompany(authentication, companyRequestDto, request);
 
         verify(companyRepository, times(1)).save(any(Company.class));
-        verify(imageService, times(1)).upload(image, company.getId(), "image");
-        verify(imageService, times(1)).upload(banner, company.getId(), "banner");
         assertNotNull(responseDto);
     }
 
@@ -328,7 +309,7 @@ public class CompanyServiceTest {
         userCompany.setDomain(domain);
         userCompany.setSkills(skillSet);
 
-        when(adminService.getCurrentUser(authentication)).thenReturn(currentUser);
+        when(adminService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
         when(companyRepository.findById(currentUser.getId())).thenReturn(Optional.of(userCompany));
 
         when(companyRepository.save(any(Company.class))).thenReturn(userCompany);
@@ -341,7 +322,7 @@ public class CompanyServiceTest {
         companyRequestDto.setDomainId(domain.getId());
         companyRequestDto.setSkills(skillList);
 
-        CompanyResponseDto responseDto = companyService.editCompany(authentication, companyRequestDto, image, banner, request);
+        CompanyResponseDto responseDto = companyService.editCompany(authentication, companyRequestDto, request);
 
         assertNotNull(responseDto);
         assertEquals("New Company Name", responseDto.getName()); // Validate name is updated
@@ -352,16 +333,13 @@ public class CompanyServiceTest {
 
     @Test
     public void testEditCompany_UserHasNoCompany() {
-        MultipartFile image = mock(MultipartFile.class);
-        MultipartFile banner = mock(MultipartFile.class);
-
         User currentUser = new User();
 
-        when(adminService.getCurrentUser(authentication)).thenReturn(currentUser);
+        when(adminService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
         when(companyRepository.findById(currentUser.getId())).thenReturn(Optional.empty());
 
         assertThrows(NotFoundException.class, () -> {
-            companyService.editCompany(authentication, companyRequestDto, image, banner, request);
+            companyService.editCompany(authentication, companyRequestDto, request);
         });
 
         verify(companyRepository, never()).save(any());
