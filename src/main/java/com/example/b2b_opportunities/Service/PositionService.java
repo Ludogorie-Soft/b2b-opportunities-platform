@@ -98,7 +98,7 @@ public class PositionService {
         if (authentication == null) {
             throw new AuthenticationFailedException("User not authenticated");
         }
-        return adminService.getCurrentUser(authentication);
+        return adminService.getCurrentUserOrThrow(authentication);
     }
 
     private Company getUserCompanyOrThrow(User user) {

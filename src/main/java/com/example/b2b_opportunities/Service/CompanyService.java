@@ -10,22 +10,16 @@ import com.example.b2b_opportunities.Entity.Domain;
 import com.example.b2b_opportunities.Entity.Skill;
 import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Exception.AlreadyExistsException;
-import com.example.b2b_opportunities.Exception.AuthenticationFailedException;
 import com.example.b2b_opportunities.Exception.NotFoundException;
-import com.example.b2b_opportunities.Exception.UserNotFoundException;
 import com.example.b2b_opportunities.Mapper.CompanyMapper;
 import com.example.b2b_opportunities.Mapper.UserMapper;
 import com.example.b2b_opportunities.Repository.CompanyRepository;
 import com.example.b2b_opportunities.Repository.CompanyTypeRepository;
 import com.example.b2b_opportunities.Repository.DomainRepository;
-import com.example.b2b_opportunities.Repository.UserRepository;
 import com.example.b2b_opportunities.Static.EmailVerification;
-import com.example.b2b_opportunities.UserDetailsImpl;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -46,33 +40,15 @@ public class CompanyService {
 
     public CompanyResponseDto createCompany(Authentication authentication,
                                             CompanyRequestDto companyRequestDto,
-                                            MultipartFile image,
-                                            MultipartFile banner,
                                             HttpServletRequest request) {
-        if (authentication == null) {
-            throw new AuthenticationFailedException("User not authenticated");
-        }
-
-        if (image == null || image.isEmpty()) {
-            throw new NotFoundException("Image is missing or empty");
-        }
-
-        User currentUser = adminService.getCurrentUser(authentication);
-        if (currentUser.getCompany() != null) {
-            throw new AlreadyExistsException(currentUser.getUsername() + " is already associated with Company: " + currentUser.getCompany().getName());
-        }
+        User currentUser = adminService.getCurrentUserOrThrow(authentication);
+        validateUserIsNotAssociatedWithAnotherCompany(currentUser);
 
         validateCompanyRequestInput(companyRequestDto);
         Company company = companyRepository.save(setCompanyFields(companyRequestDto));
 
         setCompanyEmailVerificationStatusAndSendEmail(company, currentUser, companyRequestDto, request);
 
-//        addCompanyToUser(authentication, company);
-
-        imageService.upload(image, company.getId(), "image");
-        if (banner != null && !banner.isEmpty()) {
-            imageService.upload(banner, company.getId(), "banner");
-        }
         return generateCompanyResponseDto(company);
     }
 
@@ -98,10 +74,8 @@ public class CompanyService {
 
     public CompanyResponseDto editCompany(Authentication authentication,
                                           CompanyRequestDto companyRequestDto,
-                                          MultipartFile image,
-                                          MultipartFile banner,
                                           HttpServletRequest request) {
-        User currentUser = adminService.getCurrentUser(authentication);
+        User currentUser = adminService.getCurrentUserOrThrow(authentication);
         Company userCompany = getUserCompanyOrThrow(currentUser);
 
         updateCompanyName(userCompany, companyRequestDto);
@@ -110,11 +84,38 @@ public class CompanyService {
         setCompanyEmailVerificationStatusAndSendEmail(userCompany, currentUser, companyRequestDto, request);
 
         updateCompanyWebsiteAndLinkedIn(userCompany, companyRequestDto);
-        updateCompanyImages(userCompany, image, banner);
         updateOtherCompanyFields(userCompany, companyRequestDto);
         Company company = companyRepository.save(userCompany);
 
         return generateCompanyResponseDto(company);
+    }
+
+    public CompanyResponseDto setCompanyImages(Authentication authentication,
+                                               MultipartFile image,
+                                               MultipartFile banner) {
+        User currentUser = adminService.getCurrentUserOrThrow(authentication);
+        Company company = getUserCompanyOrThrow(currentUser);
+
+        updateCompanyImage(company.getId(), image, "image");
+        updateCompanyImage(company.getId(), banner, "banner");
+
+        return generateCompanyResponseDto(company);
+    }
+
+    public void deleteCompanyBanner(Authentication authentication) {
+        User currentUser = adminService.getCurrentUserOrThrow(authentication);
+        Company company = getUserCompanyOrThrow(currentUser);
+        if (imageService.doesImageExist(company.getId(), "banner")) {
+            imageService.deleteBanner(company.getId());
+        } else {
+            throw new NotFoundException("Banner doesn't exist for company with ID: " + company.getId());
+        }
+    }
+
+    private void validateUserIsNotAssociatedWithAnotherCompany(User user) {
+        if (user.getCompany() != null) {
+            throw new AlreadyExistsException(user.getUsername() + " is already associated with Company: " + user.getCompany().getName());
+        }
     }
 
     private EmailVerification setCompanyEmailVerificationStatus(Company userCompany, String userEmail, String newEmail) {
@@ -213,11 +214,6 @@ public class CompanyService {
             }
             userCompany.setLinkedIn(newLinkedIn);
         }
-    }
-
-    private void updateCompanyImages(Company userCompany, MultipartFile image, MultipartFile banner) {
-        updateCompanyImage(userCompany.getId(), image, "image");
-        updateCompanyImage(userCompany.getId(), banner, "banner");
     }
 
     private void updateCompanyImage(Long companyId, MultipartFile multipartFile, String imageName) {
