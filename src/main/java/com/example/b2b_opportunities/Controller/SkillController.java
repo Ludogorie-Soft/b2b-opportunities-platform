@@ -31,8 +31,12 @@ public class SkillController {
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     public SkillResponseDto getSkillById(@PathVariable(name = "id") Long id) {
-        Skill skill = skillRepository.findById(id)
-                .orElseThrow(() -> new SkillNotFoundException("Skill with ID: " + id + " not found"));
+        Skill skill = getSkillOrThrow(id);
         return SkillMapper.toResponseDto(skill);
+    }
+
+    private Skill getSkillOrThrow(Long id) {
+        return skillRepository.findById(id)
+                .orElseThrow(() -> new SkillNotFoundException("Skill with ID: " + id + " not found"));
     }
 }
