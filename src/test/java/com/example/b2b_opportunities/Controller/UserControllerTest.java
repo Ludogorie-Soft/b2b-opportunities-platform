@@ -27,7 +27,8 @@ import java.util.Map;
 import java.util.Objects;
 
 import static org.hamcrest.Matchers.is;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -35,7 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
-public class UserControllerTest extends BaseTest {
+class UserControllerTest extends BaseTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -46,7 +47,7 @@ public class UserControllerTest extends BaseTest {
     private User user;
 
     @BeforeEach
-    public void setUpUser() {
+    void setUpUser() {
         Role role = new Role(1L, RoleType.ROLE_USER.name());
         user = User.builder()
                 .username("oneUser")
@@ -62,7 +63,7 @@ public class UserControllerTest extends BaseTest {
     }
 
     @Test
-    public void shouldThrowAuthenticationFailedWithNoAuthenticationProvidedTest() throws Exception {
+    void shouldThrowAuthenticationFailedWithNoAuthenticationProvidedTest() throws Exception {
         SecurityContextHolder.clearContext();
 
         mockMvc.perform(get("/user"))
@@ -70,7 +71,7 @@ public class UserControllerTest extends BaseTest {
     }
 
     @Test
-    public void shouldThrowAuthenticationFailedWhenAuthenticationIsNullTest() throws Exception {
+    void shouldThrowAuthenticationFailedWhenAuthenticationIsNullTest() throws Exception {
         SecurityContextHolder.getContext().setAuthentication(null);
 
         mockMvc.perform(get("/user"))
@@ -80,7 +81,7 @@ public class UserControllerTest extends BaseTest {
     }
 
     @Test
-    public void shouldThrowAuthenticationFailedWhenUserIsNotAuthenticatedTest() throws Exception {
+    void shouldThrowAuthenticationFailedWhenUserIsNotAuthenticatedTest() throws Exception {
         Authentication unauthenticated = Mockito.mock(Authentication.class);
 
         Mockito.when(unauthenticated.isAuthenticated()).thenReturn(false);
@@ -94,7 +95,7 @@ public class UserControllerTest extends BaseTest {
     }
 
     @Test
-    public void shouldRetrieveSuccessfullyUserDetailsWithUsernameAndPasswordTest() throws Exception {
+    void shouldRetrieveSuccessfullyUserDetailsWithUsernameAndPasswordTest() throws Exception {
         UserDetailsImpl userDetails = new UserDetailsImpl(user);
         UsernamePasswordAuthenticationToken authenticationToken =
                 new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
@@ -112,7 +113,7 @@ public class UserControllerTest extends BaseTest {
     }
 
     @Test
-    public void shouldAuthenticateAsUsernamePasswordAuthenticationTokenTest() {
+    void shouldAuthenticateAsUsernamePasswordAuthenticationTokenTest() {
         UserDetailsImpl userDetails = new UserDetailsImpl(user);
         UsernamePasswordAuthenticationToken authenticationToken =
                 new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
@@ -124,7 +125,7 @@ public class UserControllerTest extends BaseTest {
     }
 
     @Test
-    public void shouldRetrieveSuccessfullyUserDetailsWithOAuth2AuthenticationTest() throws Exception {
+    void shouldRetrieveSuccessfullyUserDetailsWithOAuth2AuthenticationTest() throws Exception {
         Map<String, Object> attributesMap = new LinkedHashMap<>();
         attributesMap.put("email", "abvbg@abvto.bg");
         OAuth2User oAuth2User = Mockito.mock(OAuth2User.class);
@@ -145,7 +146,7 @@ public class UserControllerTest extends BaseTest {
     }
 
     @Test
-    public void shouldThrowIllegalStateExceptionForUnsupportedAuthenticationTypeTest() throws Exception {
+    void shouldThrowIllegalStateExceptionForUnsupportedAuthenticationTypeTest() throws Exception {
         Authentication unsupportedAuthType = Mockito.mock(Authentication.class);
 
         Mockito.when(unsupportedAuthType.isAuthenticated()).thenReturn(true);
