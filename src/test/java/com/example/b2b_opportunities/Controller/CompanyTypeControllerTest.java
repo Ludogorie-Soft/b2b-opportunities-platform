@@ -1,8 +1,6 @@
 package com.example.b2b_opportunities.Controller;
 
 import com.example.b2b_opportunities.Entity.CompanyType;
-import com.example.b2b_opportunities.Entity.Domain;
-import com.example.b2b_opportunities.Entity.PositionRole;
 import com.example.b2b_opportunities.Repository.CompanyTypeRepository;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
@@ -33,17 +31,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc(addFilters = false)
 @Testcontainers
 class CompanyTypeControllerTest {
-    private final static String hostPath = Paths.get("Deploy/icons").toAbsolutePath().toString();
-    private final static String containerPath = "/icons";
+    private static final String HOST_PATH = Paths.get("Deploy/icons").toAbsolutePath().toString();
+    private static final String CONTAINER_PATH = "/icons";
 
     @Container
-    protected static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>(DockerImageName.parse("postgres:16-alpine"))
-            .withExposedPorts(5432) // waits for the port to be available
-            .withFileSystemBind(hostPath, containerPath, BindMode.READ_ONLY);
-
+    private static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>(DockerImageName.parse("postgres:16-alpine"))
+            .withExposedPorts(5432)
+            .withFileSystemBind(HOST_PATH, CONTAINER_PATH, BindMode.READ_ONLY);
 
     @DynamicPropertySource
-    public static void overridePropertiesFile(DynamicPropertyRegistry registry) {
+    private static void overridePropertiesFile(DynamicPropertyRegistry registry) {
         registry.add("spring.datasource.url", postgres::getJdbcUrl);
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
@@ -92,7 +89,7 @@ class CompanyTypeControllerTest {
     }
 
     @Test
-    void shouldCreateNewCompanyTypeAndStripAndCapitalizeTheName() throws Exception{
+    void shouldCreateNewCompanyTypeAndStripAndCapitalizeTheName() throws Exception {
         mockMvc.perform(post("/roles")
                         .param("name", " cOmPanY    tyPe  "))
                 .andExpect(status().isCreated())

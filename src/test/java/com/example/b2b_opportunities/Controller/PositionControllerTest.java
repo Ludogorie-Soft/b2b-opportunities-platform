@@ -53,17 +53,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc(addFilters = true)
 @Testcontainers
 class PositionControllerTest {
-    private final static String hostPath = Paths.get("Deploy/icons").toAbsolutePath().toString();
-    private final static String containerPath = "/icons";
+    private static final String HOST_PATH = Paths.get("Deploy/icons").toAbsolutePath().toString();
+    private static final String CONTAINER_PATH = "/icons";
 
     @Container
-    protected static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>(DockerImageName.parse("postgres:16-alpine"))
-            .withExposedPorts(5432) // waits for the port to be available
-            .withFileSystemBind(hostPath, containerPath, BindMode.READ_ONLY);
-
+    private static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>(DockerImageName.parse("postgres:16-alpine"))
+            .withExposedPorts(5432)
+            .withFileSystemBind(HOST_PATH, CONTAINER_PATH, BindMode.READ_ONLY);
 
     @DynamicPropertySource
-    public static void overridePropertiesFile(DynamicPropertyRegistry registry) {
+    private static void overridePropertiesFile(DynamicPropertyRegistry registry) {
         registry.add("spring.datasource.url", postgres::getJdbcUrl);
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);

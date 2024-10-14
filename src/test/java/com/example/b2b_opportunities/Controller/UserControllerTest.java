@@ -1,6 +1,5 @@
 package com.example.b2b_opportunities.Controller;
 
-import com.example.b2b_opportunities.BaseTest;
 import com.example.b2b_opportunities.Entity.Role;
 import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Exception.AuthenticationFailedException;
@@ -19,8 +18,17 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
+import org.testcontainers.containers.BindMode;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.DockerImageName;
 
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -36,7 +44,23 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
-class UserControllerTest extends BaseTest {
+@Testcontainers
+@ActiveProfiles("test")
+class UserControllerTest {
+    private static final String HOST_PATH = Paths.get("Deploy/icons").toAbsolutePath().toString();
+    private static final String CONTAINER_PATH = "/icons";
+
+    @Container
+    private static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>(DockerImageName.parse("postgres:16-alpine"))
+            .withExposedPorts(5432)
+            .withFileSystemBind(HOST_PATH, CONTAINER_PATH, BindMode.READ_ONLY);
+
+    @DynamicPropertySource
+    private static void overridePropertiesFile(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", postgres::getJdbcUrl);
+        registry.add("spring.datasource.username", postgres::getUsername);
+        registry.add("spring.datasource.password", postgres::getPassword);
+    }
 
     @Autowired
     private MockMvc mockMvc;
@@ -160,5 +184,4 @@ class UserControllerTest extends BaseTest {
                 .andExpect(result -> assertInstanceOf(IllegalStateException.class, result.getResolvedException()))
                 .andExpect(result -> assertEquals("Unsupported authentication type", Objects.requireNonNull(result.getResolvedException()).getMessage()));
     }
-
 }
