@@ -23,7 +23,6 @@ public class CompanyRequestDto {
     @NotNull
     private Long companyTypeId;
 
-    @NotEmpty
     @URL
     private String website;
 
