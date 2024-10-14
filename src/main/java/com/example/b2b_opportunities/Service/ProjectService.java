@@ -2,10 +2,13 @@ package com.example.b2b_opportunities.Service;
 
 import com.example.b2b_opportunities.Dto.Request.ProjectEditRequestDto;
 import com.example.b2b_opportunities.Dto.Request.ProjectRequestDto;
+import com.example.b2b_opportunities.Dto.Response.PositionResponseDto;
 import com.example.b2b_opportunities.Dto.Response.ProjectResponseDto;
 import com.example.b2b_opportunities.Entity.Company;
+import com.example.b2b_opportunities.Entity.Position;
 import com.example.b2b_opportunities.Entity.Project;
 import com.example.b2b_opportunities.Exception.common.NotFoundException;
+import com.example.b2b_opportunities.Mapper.PositionMapper;
 import com.example.b2b_opportunities.Mapper.ProjectMapper;
 import com.example.b2b_opportunities.Repository.CompanyRepository;
 import com.example.b2b_opportunities.Repository.ProjectRepository;
@@ -13,7 +16,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -61,5 +66,15 @@ public class ProjectService {
 
     private Company getCompanyIfExists(Long id) {
         return companyRepository.findById(id).orElseThrow(() -> new NotFoundException("Company with ID: " + id + " not found"));
+    }
+
+    public List<PositionResponseDto> getPositionsByProject(Long id) {
+        Project project = getProjectIfExists(id);
+
+        List<Position> positions = project.getPositions();
+        if (project.getPositions() == null || project.getPositions().isEmpty())
+            throw new NotFoundException("No positions found for Project with ID: " + id);
+
+        return positions.stream().map(PositionMapper::toResponseDto).collect(Collectors.toList());
     }
 }
