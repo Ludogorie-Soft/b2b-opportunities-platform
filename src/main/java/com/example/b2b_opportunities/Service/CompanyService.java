@@ -200,7 +200,7 @@ public class CompanyService {
 
     private void updateCompanyWebsiteAndLinkedIn(Company userCompany, CompanyRequestDto companyRequestDto) {
         String newWebsite = companyRequestDto.getWebsite();
-        if (!newWebsite.equals(userCompany.getWebsite())) {
+        if (newWebsite != null && !newWebsite.isEmpty() && !newWebsite.equals(userCompany.getWebsite())) {
             if (companyRepository.findByWebsite(newWebsite).isPresent()) {
                 throw new AlreadyExistsException("Website already registered");
             }
@@ -208,7 +208,7 @@ public class CompanyService {
         }
 
         String newLinkedIn = companyRequestDto.getLinkedIn();
-        if (!newLinkedIn.equals(userCompany.getLinkedIn())) {
+        if (newLinkedIn != null && !newLinkedIn.isEmpty() && !newLinkedIn.equals(userCompany.getLinkedIn())) {
             if (companyRepository.findByLinkedIn(newLinkedIn).isPresent()) {
                 throw new AlreadyExistsException("LinkedIn already registered");
             }
