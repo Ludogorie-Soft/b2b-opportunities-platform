@@ -2,6 +2,7 @@ package com.example.b2b_opportunities.Controller;
 
 import com.example.b2b_opportunities.Dto.Request.ProjectEditRequestDto;
 import com.example.b2b_opportunities.Dto.Request.ProjectRequestDto;
+import com.example.b2b_opportunities.Dto.Response.PositionResponseDto;
 import com.example.b2b_opportunities.Dto.Response.ProjectResponseDto;
 import com.example.b2b_opportunities.Service.ProjectService;
 import jakarta.validation.Valid;
@@ -33,8 +34,14 @@ public class ProjectController {
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    private List<ProjectResponseDto> getAll() {
+    public List<ProjectResponseDto> getAll() {
         return projectService.getAll();
+    }
+
+    @GetMapping("{id}/positions")
+    @ResponseStatus(HttpStatus.OK)
+    public List<PositionResponseDto> getPositionsByProject(@PathVariable("id") Long id) {
+        return projectService.getPositionsByProject(id);
     }
 
     @PutMapping("/{id}")
