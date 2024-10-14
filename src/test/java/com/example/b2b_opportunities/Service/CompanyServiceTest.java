@@ -15,6 +15,7 @@ import com.example.b2b_opportunities.Mapper.UserMapper;
 import com.example.b2b_opportunities.Repository.CompanyRepository;
 import com.example.b2b_opportunities.Repository.CompanyTypeRepository;
 import com.example.b2b_opportunities.Repository.DomainRepository;
+import com.example.b2b_opportunities.Repository.UserRepository;
 import com.example.b2b_opportunities.Static.EmailVerification;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
@@ -61,6 +62,9 @@ public class CompanyServiceTest {
 
     @Mock
     private ImageService imageService;
+
+    @Mock
+    private UserRepository userRepository;
 
     @Mock
     private PatternService patternService;

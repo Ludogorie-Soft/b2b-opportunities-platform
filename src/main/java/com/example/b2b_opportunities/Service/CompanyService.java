@@ -16,6 +16,7 @@ import com.example.b2b_opportunities.Mapper.UserMapper;
 import com.example.b2b_opportunities.Repository.CompanyRepository;
 import com.example.b2b_opportunities.Repository.CompanyTypeRepository;
 import com.example.b2b_opportunities.Repository.DomainRepository;
+import com.example.b2b_opportunities.Repository.UserRepository;
 import com.example.b2b_opportunities.Static.EmailVerification;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +38,7 @@ public class CompanyService {
     private final PatternService patternService;
     private final MailService mailService;
     private final AdminService adminService;
+    private final UserRepository userRepository;
 
     public CompanyResponseDto createCompany(Authentication authentication,
                                             CompanyRequestDto companyRequestDto,
@@ -45,7 +47,12 @@ public class CompanyService {
         validateUserIsNotAssociatedWithAnotherCompany(currentUser);
 
         validateCompanyRequestInput(companyRequestDto);
-        Company company = companyRepository.save(setCompanyFields(companyRequestDto));
+        Company company = setCompanyFields(companyRequestDto);
+        company.setUsers(List.of(currentUser));
+
+        currentUser.setCompany(company);
+        userRepository.saveAndFlush(currentUser);
+        company = companyRepository.save(company);
 
         setCompanyEmailVerificationStatusAndSendEmail(company, currentUser, companyRequestDto, request);
 
