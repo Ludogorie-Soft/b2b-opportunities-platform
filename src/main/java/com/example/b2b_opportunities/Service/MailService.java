@@ -1,8 +1,10 @@
 package com.example.b2b_opportunities.Service;
 
 import com.example.b2b_opportunities.Entity.Company;
+import com.example.b2b_opportunities.Entity.ConfirmationToken;
 import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Exception.ServerErrorException;
+import com.example.b2b_opportunities.Repository.ConfirmationTokenRepository;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.servlet.http.HttpServletRequest;
@@ -12,25 +14,34 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 @Service
 @RequiredArgsConstructor
 public class MailService {
-    private final ConfirmationTokenService confirmationTokenService;
     private final JavaMailSender mailSender;
+    private final ConfirmationTokenRepository confirmationTokenRepository;
 
     @Value("${spring.mail.username}")
     private String fromMail;
 
     private String generateConfirmationLink(User user, HttpServletRequest request) {
         String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath();
-        String token = confirmationTokenService.generateUserToken(user);
+        String token = createAndSaveUserToken(user);
         return "<a href=" + baseUrl + "/api/auth/register/confirm?token=" + token + ">Confirm Email</a>";
     }
 
     private String generatePasswordRecoveryLink(User user, HttpServletRequest request) {
         String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath();
-        String token = confirmationTokenService.generateUserToken(user);
+        String token = createAndSaveUserToken(user);
         return "<a href=" + baseUrl + "/api/auth/reset-password?token=" + token + ">Reset password</a>";
+    }
+
+    public String createAndSaveUserToken(User user) {
+        String token = UUID.randomUUID().toString();
+        ConfirmationToken confirmationToken = new ConfirmationToken(token, user);
+        confirmationTokenRepository.save(confirmationToken);
+        return token;
     }
 
     private String generateEmailConfirmationLink(String token, HttpServletRequest request) {

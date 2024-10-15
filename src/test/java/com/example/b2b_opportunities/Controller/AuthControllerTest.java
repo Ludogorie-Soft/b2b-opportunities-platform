@@ -4,9 +4,9 @@ import com.example.b2b_opportunities.Dto.LoginDtos.LoginDto;
 import com.example.b2b_opportunities.Dto.Request.UserRequestDto;
 import com.example.b2b_opportunities.Dto.Response.UserResponseDto;
 import com.example.b2b_opportunities.Entity.User;
+import com.example.b2b_opportunities.Repository.ConfirmationTokenRepository;
 import com.example.b2b_opportunities.Repository.UserRepository;
 import com.example.b2b_opportunities.Service.AuthenticationService;
-import com.example.b2b_opportunities.Service.ConfirmationTokenService;
 import com.example.b2b_opportunities.Service.MailService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -75,7 +75,7 @@ public class AuthControllerTest {
         registry.add("spring.datasource.password", postgres::getPassword);
     }
 
-    @MockBean
+    @SpyBean
     private MailService mailService;
 
     @Autowired
@@ -94,7 +94,7 @@ public class AuthControllerTest {
     private AuthenticationService authenticationService;
 
     @Autowired
-    private ConfirmationTokenService confirmationTokenService;
+    private ConfirmationTokenRepository confirmationTokenRepository;
 
     private final UserRequestDto userRequestDto = new UserRequestDto(
             "Test-User",
@@ -275,7 +275,7 @@ public class AuthControllerTest {
         User user = userRepository.findByEmail(userRequestDto.getEmail().toLowerCase())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
         assertFalse(user.isEnabled());
-        String token = confirmationTokenService.generateUserToken(user);
+        String token = mailService.createAndSaveUserToken(user);
 
         mockMvc.perform(get("/api/auth/register/confirm")
                         .param("token", token))

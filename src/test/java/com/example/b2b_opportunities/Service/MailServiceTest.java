@@ -1,6 +1,7 @@
 package com.example.b2b_opportunities.Service;
 
 import com.example.b2b_opportunities.Entity.User;
+import com.example.b2b_opportunities.Repository.ConfirmationTokenRepository;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,9 +23,6 @@ class MailServiceTest {
     @Mock
     private JavaMailSender mailSender;
 
-    @Mock
-    private ConfirmationTokenService confirmationTokenService;
-
     @InjectMocks
     private MailService mailService;
 
@@ -33,6 +31,9 @@ class MailServiceTest {
 
     @Mock
     private MimeMessage mimeMessage;
+
+    @Mock
+    private ConfirmationTokenRepository confirmationTokenRepository;
 
     @BeforeEach
     void setUp() {
@@ -45,7 +46,6 @@ class MailServiceTest {
         user.setFirstName("Test");
         user.setEmail("test@test.com");
 
-        when(confirmationTokenService.generateUserToken(user)).thenReturn("generatedToken");
         when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
 
         mailService.sendConfirmationMail(user, request);
