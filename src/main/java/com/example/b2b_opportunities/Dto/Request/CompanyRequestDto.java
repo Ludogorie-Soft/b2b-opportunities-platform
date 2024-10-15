@@ -12,7 +12,6 @@ import java.util.List;
 @Getter
 @Setter
 public class CompanyRequestDto {
-
     @NotEmpty
     private String name;
 

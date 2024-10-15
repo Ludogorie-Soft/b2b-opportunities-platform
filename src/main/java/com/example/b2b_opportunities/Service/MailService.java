@@ -3,7 +3,6 @@ package com.example.b2b_opportunities.Service;
 import com.example.b2b_opportunities.Entity.Company;
 import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Exception.ServerErrorException;
-import com.example.b2b_opportunities.Repository.ConfirmationTokenRepository;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,9 +15,9 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class MailService {
-    private final ConfirmationTokenRepository confirmationTokenRepository;
     private final ConfirmationTokenService confirmationTokenService;
     private final JavaMailSender mailSender;
+
     @Value("${spring.mail.username}")
     private String fromMail;
 
@@ -34,9 +33,8 @@ public class MailService {
         return "<a href=" + baseUrl + "/api/auth/reset-password?token=" + token + ">Reset password</a>";
     }
 
-    private String generateEmailConfirmationLink(Company company, HttpServletRequest request) {
+    private String generateEmailConfirmationLink(String token, HttpServletRequest request) {
         String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath();
-        String token = confirmationTokenService.generateCompanyToken(company);
         return "<a href=" + baseUrl + "/company/confirm-email?token=" + token + ">Confirm your email address</a>";
     }
 
@@ -86,13 +84,13 @@ public class MailService {
         sendEmail(user.getEmail(), emailContent, subject);
     }
 
-    public void sendCompanyEmailConfirmation(Company company, HttpServletRequest request) {
+    public void sendCompanyEmailConfirmation(Company company, String token, HttpServletRequest request) {
         String emailContent = "<html>" +
                 "<body>" +
                 "<h2>Hello " + company.getName() + ",</h2>"
                 + "<h3><br/> Thank you for registering your company with B2B Opportunities."
                 + "<br/>To complete your registration and confirm your email address, please click the link below: </h3>"
-                + "<h2> <br/> " + generateEmailConfirmationLink(company, request) + "</h2>" +
+                + "<h2> <br/> " + generateEmailConfirmationLink(token, request) + "</h2>" +
                 "<h3><br/> Best regards,\n" +
                 "The B2B Opportunities Team,<br/></h3>" +
                 "</body>" +

@@ -35,3 +35,6 @@ databaseChangeLog:
   - include:
       file: 12-create-positions-and-roles-table.sql
       relativeToChangelogFile: true
+  - include:
+      file: 13-modify-companies-table.sql
+      relativeToChangelogFile: true

@@ -108,7 +108,7 @@ public class CompanyServiceTest {
         currentUser = new User();
         currentUser.setEmail("user@example.com");
 
-        doNothing().when(mailService).sendCompanyEmailConfirmation(any(Company.class), any(HttpServletRequest.class));
+        doNothing().when(mailService).sendCompanyEmailConfirmation(any(Company.class), any(String.class), any(HttpServletRequest.class));
     }
 
     @Test
@@ -150,7 +150,7 @@ public class CompanyServiceTest {
 
         CompanyResponseDto responseDto = companyService.createCompany(authentication, companyRequestDto, request);
 
-        verify(companyRepository, times(1)).save(any(Company.class));
+        verify(companyRepository, times(2)).save(any(Company.class));
         assertNotNull(responseDto);
     }
 
@@ -332,7 +332,7 @@ public class CompanyServiceTest {
         assertEquals("New Company Name", responseDto.getName()); // Validate name is updated
         assertEquals("newemail@example.com", userCompany.getEmail()); // Verify that the email has been updated
         assertEquals("newwebsite.com", userCompany.getWebsite()); // Verify that the website has been updated
-        verify(companyRepository).save(userCompany);
+        verify(companyRepository, times(2)).save(userCompany);
     }
 
     @Test

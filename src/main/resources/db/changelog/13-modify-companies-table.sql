@@ -1,0 +1,2 @@
+ALTER TABLE companies
+ALTER COLUMN website DROP NOT NULL;

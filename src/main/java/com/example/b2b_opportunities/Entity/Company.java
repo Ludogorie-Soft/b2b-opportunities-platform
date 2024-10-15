@@ -54,7 +54,6 @@ public class Company {
     @JoinColumn(name = "company_type_id")
     private CompanyType companyType;
 
-    @NotEmpty
     @URL
     private String website;
 
@@ -66,6 +65,7 @@ public class Company {
     private Domain domain;
 
     @Column(name = "linked_in")
+    @URL
     private String linkedIn;
 
     @OneToMany(mappedBy = "company")

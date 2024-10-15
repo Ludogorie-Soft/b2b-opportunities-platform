@@ -27,6 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -48,11 +49,11 @@ public class CompanyService {
 
         validateCompanyRequestInput(companyRequestDto);
         Company company = setCompanyFields(companyRequestDto);
-        company.setUsers(List.of(currentUser));
+        company.getUsers().add(currentUser);
 
+        company = companyRepository.save(company);
         currentUser.setCompany(company);
         userRepository.saveAndFlush(currentUser);
-        company = companyRepository.save(company);
 
         setCompanyEmailVerificationStatusAndSendEmail(company, currentUser, companyRequestDto, request);
 
@@ -196,18 +197,17 @@ public class CompanyService {
 
     private void setCompanyEmailVerificationStatusAndSendEmail(Company userCompany, User currentUser, CompanyRequestDto dto, HttpServletRequest request) {
         EmailVerification status = setCompanyEmailVerificationStatus(userCompany, currentUser.getEmail(), dto.getEmail());
-        sendEmailIfPending(status, userCompany, request);
-    }
-
-    private void sendEmailIfPending(EmailVerification status, Company userCompany, HttpServletRequest request) {
         if (status.equals(EmailVerification.PENDING)) {
-            mailService.sendCompanyEmailConfirmation(userCompany, request);
+            String token = UUID.randomUUID().toString();
+            userCompany.setEmailConfirmationToken(token);
+            companyRepository.save(userCompany);
+            mailService.sendCompanyEmailConfirmation(userCompany, token, request);
         }
     }
 
     private void updateCompanyWebsiteAndLinkedIn(Company userCompany, CompanyRequestDto companyRequestDto) {
         String newWebsite = companyRequestDto.getWebsite();
-        if (newWebsite != null && !newWebsite.isEmpty() && !newWebsite.equals(userCompany.getWebsite())) {
+        if (!newWebsite.equals(userCompany.getWebsite())) {
             if (companyRepository.findByWebsite(newWebsite).isPresent()) {
                 throw new AlreadyExistsException("Website already registered");
             }
@@ -215,7 +215,7 @@ public class CompanyService {
         }
 
         String newLinkedIn = companyRequestDto.getLinkedIn();
-        if (newLinkedIn != null && !newLinkedIn.isEmpty() && !newLinkedIn.equals(userCompany.getLinkedIn())) {
+        if (!newLinkedIn.equals(userCompany.getLinkedIn())) {
             if (companyRepository.findByLinkedIn(newLinkedIn).isPresent()) {
                 throw new AlreadyExistsException("LinkedIn already registered");
             }
@@ -247,9 +247,17 @@ public class CompanyService {
             throw new AlreadyExistsException("Name already registered");
         if (companyRepository.findByEmail(companyRequestDto.getEmail()).isPresent())
             throw new AlreadyExistsException("Email already registered");
-        if (companyRepository.findByWebsite(companyRequestDto.getWebsite()).isPresent())
-            throw new AlreadyExistsException("Website already registered");
-        if (companyRepository.findByLinkedIn(companyRequestDto.getLinkedIn()).isPresent())
-            throw new AlreadyExistsException("LinkedIn already registered");
+
+        String website = companyRequestDto.getWebsite();
+        if (website != null && !website.isEmpty()) {
+            if (companyRepository.findByWebsite(website).isPresent())
+                throw new AlreadyExistsException("Website already registered");
+        }
+
+        String linkedIn = companyRequestDto.getLinkedIn();
+        if (linkedIn != null && !linkedIn.isEmpty()) {
+            if (companyRepository.findByLinkedIn(linkedIn).isPresent())
+                throw new AlreadyExistsException("LinkedIn already registered");
+        }
     }
 }
