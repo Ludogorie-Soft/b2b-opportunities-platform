@@ -28,8 +28,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 @Service
 @RequiredArgsConstructor
@@ -146,18 +144,9 @@ public class CompanyService {
 
     private CompanyResponseDto generateCompanyResponseDto(Company company) {
         CompanyResponseDto companyResponseDto = CompanyMapper.toCompanyResponseDto(company);
-
-        setIfNotNull(() -> imageService.returnUrlIfPictureExists(company.getId(), "image"), companyResponseDto::setImage);
-        setIfNotNull(() -> imageService.returnUrlIfPictureExists(company.getId(), "banner"), companyResponseDto::setBanner);
-
+        companyResponseDto.setImage(imageService.returnUrlIfPictureExists(company.getId(), "image"));
+        companyResponseDto.setBanner(imageService.returnUrlIfPictureExists(company.getId(), "banner"));
         return companyResponseDto;
-    }
-
-    private void setIfNotNull(Supplier<String> imageSupplier, Consumer<String> setter) {
-        String result = imageSupplier.get();
-        if (result != null) {
-            setter.accept(result);
-        }
     }
 
     private Company setCompanyFields(CompanyRequestDto dto) {
@@ -249,6 +238,9 @@ public class CompanyService {
         List<Long> companySkills = company.getSkills().stream().map(Skill::getId).toList();
         if (!companySkills.equals(dto.getSkills())) {
             company.setSkills(getSkillsOrThrow(dto));
+        }
+        if (dto.getDescription() != null && !dto.getDescription().isEmpty() && !dto.getDescription().equals(company.getDescription())) {
+            company.setDescription(dto.getDescription());
         }
     }
 
