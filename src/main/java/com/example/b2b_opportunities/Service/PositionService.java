@@ -64,8 +64,7 @@ public class PositionService {
 
     public PositionResponseDto editPosition(Long id, PositionRequestDto dto, Authentication authentication) {
         validateUserAndCompany(authentication);
-        Position position = positionRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Position with ID: " + id + " not found"));
+        Position position = getPositionOrThrow(id);
 
         validateProjectAndUserAreRelated(position.getProject().getId(), authentication);
 
@@ -78,6 +77,25 @@ public class PositionService {
 
         setPositionFields(position, dto);
         return PositionMapper.toResponseDto(positionRepository.save(position));
+    }
+
+    public void deletePosition(Long id, Authentication authentication) {
+        Position position = getPositionOrThrow(id);
+        validateProjectAndUserAreRelated(position.getProject().getId(), authentication);
+        positionRepository.delete(position);
+    }
+
+    public PositionResponseDto getPosition(Long id) {
+        return PositionMapper.toResponseDto(getPositionOrThrow(id));
+    }
+
+    public List<PositionResponseDto> getPositions() {
+        List<Position> positions = positionRepository.findAll();
+        List<PositionResponseDto> positionResponseDtoList = new ArrayList<>();
+        for(Position position: positions){
+            positionResponseDtoList.add(PositionMapper.toResponseDto(position));
+        }
+        return positionResponseDtoList;
     }
 
     private void setPositionFields(Position position, PositionRequestDto dto) {
@@ -165,7 +183,7 @@ public class PositionService {
         if (dto == null || dto.isEmpty()) {
             throw new NotFoundException("RequiredSkillsDto is null or empty");
         }
-        position.setRequiredSkills(getRequiredSkillsList(dto));
+        position.setRequiredSkills(getRequiredSkillsList(dto, position));
     }
 
     private void setOptionalSkills(Position position, List<Long> skills) {
@@ -175,12 +193,13 @@ public class PositionService {
         position.setOptionalSkills(skillRepository.findAllById(skills));
     }
 
-    private List<RequiredSkill> getRequiredSkillsList(List<RequiredSkillsDto> dto) {
+    private List<RequiredSkill> getRequiredSkillsList(List<RequiredSkillsDto> dto, Position position) {
         List<RequiredSkill> requiredSkillList = new ArrayList<>();
         for (RequiredSkillsDto requiredSkill : dto) {
             Skill skill = skillRepository.findById(requiredSkill.getSkillId())
                     .orElseThrow(() -> new NotFoundException("Skill with ID: " + requiredSkill.getSkillId() + " was not found"));
             RequiredSkill requiredSkillResult = new RequiredSkill();
+            requiredSkillResult.setPosition(position);
             requiredSkillResult.setSkill(skill);
             if (requiredSkill.getExperienceRequestDto() != null) {
                 Experience experience = experienceRepository.save(ExperienceMapper
@@ -190,5 +209,10 @@ public class PositionService {
             requiredSkillList.add(requiredSkillResult);
         }
         return requiredSkillList;
+    }
+
+    private Position getPositionOrThrow(Long id){
+        return positionRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Position with ID: " + id + " not found"));
     }
 }
