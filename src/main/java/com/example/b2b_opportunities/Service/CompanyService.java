@@ -28,6 +28,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 @Service
 @RequiredArgsConstructor
@@ -56,7 +58,7 @@ public class CompanyService {
         currentUser.setCompany(company);
         userRepository.saveAndFlush(currentUser);
 
-        return CompanyMapper.toCompanyResponseDto(company);
+        return generateCompanyResponseDto(company);
     }
 
     public CompaniesAndUsersResponseDto getCompanyAndUsers(Long companyId) {
@@ -144,9 +146,18 @@ public class CompanyService {
 
     private CompanyResponseDto generateCompanyResponseDto(Company company) {
         CompanyResponseDto companyResponseDto = CompanyMapper.toCompanyResponseDto(company);
-        companyResponseDto.setImage(imageService.returnUrlIfPictureExists(company.getId(), "image"));
-        companyResponseDto.setBanner(imageService.returnUrlIfPictureExists(company.getId(), "banner"));
+
+        setIfNotNull(() -> imageService.returnUrlIfPictureExists(company.getId(), "image"), companyResponseDto::setImage);
+        setIfNotNull(() -> imageService.returnUrlIfPictureExists(company.getId(), "banner"), companyResponseDto::setBanner);
+
         return companyResponseDto;
+    }
+
+    private void setIfNotNull(Supplier<String> imageSupplier, Consumer<String> setter) {
+        String result = imageSupplier.get();
+        if (result != null) {
+            setter.accept(result);
+        }
     }
 
     private Company setCompanyFields(CompanyRequestDto dto) {

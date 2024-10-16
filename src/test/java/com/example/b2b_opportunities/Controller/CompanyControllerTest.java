@@ -10,6 +10,7 @@ import com.example.b2b_opportunities.Repository.CompanyTypeRepository;
 import com.example.b2b_opportunities.Repository.DomainRepository;
 import com.example.b2b_opportunities.Repository.RoleRepository;
 import com.example.b2b_opportunities.Repository.UserRepository;
+import com.example.b2b_opportunities.Service.ImageService;
 import com.example.b2b_opportunities.Static.EmailVerification;
 import com.example.b2b_opportunities.UserDetailsImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -18,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -38,6 +40,9 @@ import java.util.HashSet;
 import java.util.List;
 
 import static org.hamcrest.Matchers.hasSize;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -79,7 +84,8 @@ class CompanyControllerTest {
     private DomainRepository domainRepository;
     @Autowired
     private ObjectMapper objectMapper;
-
+    @MockBean
+    private ImageService imageService;
     private Company company1;
     private Company company2;
     private User user;
@@ -187,6 +193,9 @@ class CompanyControllerTest {
     @Test
     void createCompanyShouldReturnCreatedWhenValidRequest() throws Exception {
         SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        when(imageService.returnUrlIfPictureExists(anyLong(), eq("image"))).thenReturn(null);
+        when(imageService.returnUrlIfPictureExists(anyLong(), eq("banner"))).thenReturn(null);
 
         String companyRequestDtoJson = objectMapper.writeValueAsString(companyRequestDto);
 
