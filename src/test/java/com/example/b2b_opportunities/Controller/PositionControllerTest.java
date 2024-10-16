@@ -108,11 +108,13 @@ class PositionControllerTest {
     private PositionRequestDto requestDto;
     private Authentication authentication;
     private User user2;
-    private Project project = new Project();
+    private Project project;
     private PositionRole positionRole = new PositionRole();
+    private CompanyType companyType;
 
     @BeforeEach
     void init() {
+        // user role
         User user = User.builder()
                 .firstName("John")
                 .lastName("Doe")
@@ -141,7 +143,7 @@ class PositionControllerTest {
         UserDetailsImpl userDetails = new UserDetailsImpl(user);
         authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 
-        CompanyType companyType = CompanyType.builder()
+        companyType = CompanyType.builder()
                 .name("test")
                 .build();
 
@@ -354,28 +356,8 @@ class PositionControllerTest {
                 .andExpect(status().isNoContent());
     }
 
-    // TODO - not changing authentication for some reason
-    //    @Test
-    //    void shouldThrowErrorIfUserIsNotRelatedWithPosition() throws Exception{
-    //        Long id = createPositionAndGetID();
-    //
-    //        UserDetailsImpl userDetails = new UserDetailsImpl(user2);
-    //        Authentication authenticationForUser2 = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-    //        SecurityContextHolder.getContext().setAuthentication(authenticationForUser2);
-    //
-    //        String expectedMessage = "No company is associated with user " + user2.getUsername();
-    //
-    //        mockMvc.perform(delete("/positions/" + id))
-    //                .andExpect(status().isNotFound())
-    //                .andExpect(jsonPath("$.path").value("/positions"))
-    //                .andExpect(jsonPath("$.error").value("Not Found"))
-    //                .andExpect(jsonPath("$.message").value(expectedMessage))
-    //                .andExpect(jsonPath("$.status").value(404))
-    //                .andExpect(jsonPath("$.timestamp").exists());
-    //    }
-
     @Test
-    void shouldThrowErrorIfUserIsNotRelatedWithPosition() throws Exception {
+    void shouldThrowErrorIfPositionIsNotFound() throws Exception {
         long id = 9999L;
 
         String expectedMessage = "Position with ID: " + id + " not found";
@@ -387,6 +369,59 @@ class PositionControllerTest {
                 .andExpect(jsonPath("$.message").value(expectedMessage))
                 .andExpect(jsonPath("$.status").value(404))
                 .andExpect(jsonPath("$.timestamp").exists());
+    }
+
+    @Test
+    void shouldThrowErrorIfUserIsTryingToAddPositionWithoutHavingCompany() throws Exception {
+        UserDetailsImpl userDetails = new UserDetailsImpl(user2);
+        Authentication authenticationForUser2 = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(authenticationForUser2);
+
+        mockMvc.perform(post("/positions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(asJsonString(requestDto)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("No company is associated with user " + user2.getUsername()));
+
+    }
+
+    @Test
+    void shouldThrowErrorIfUserIsNotRelatedWithPosition() throws Exception {
+        UserDetailsImpl userDetails = new UserDetailsImpl(user2);
+        Authentication authenticationForUser2 = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(authenticationForUser2);
+
+        Company company2 = Company.builder()
+                .name("Test Company2")
+                .email("johndoe2@abv.bgg")
+                .companyType(companyType)
+                .website("https://www.x.com")
+                .emailVerification(EmailVerification.ACCEPTED)
+                .users(new ArrayList<>(List.of(user2)))
+                .build();
+        companyRepository.save(company2);
+
+        user2.setCompany(company2);
+        userRepository.save(user2);
+        userRepository.flush();
+
+
+        Project project2 = new Project();
+        project2.setName("Test Project 2");
+        project2.setCompany(company2);
+        project2 = projectRepository.save(project2);
+
+        company2.setProjects(new ArrayList<>(List.of(project2)));
+        companyRepository.save(company2);
+        companyRepository.flush();
+
+        String expectedMessage = "Project ID: " + requestDto.getProjectId() + " is not associated with company ID: " + company2.getId() + " and user: " + user2.getUsername();
+
+        mockMvc.perform(post("/positions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(asJsonString(requestDto)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value(expectedMessage));
     }
 
     private Long createPositionAndGetID() throws Exception {
