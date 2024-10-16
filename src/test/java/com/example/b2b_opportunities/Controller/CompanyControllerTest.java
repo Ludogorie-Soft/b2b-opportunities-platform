@@ -10,40 +10,54 @@ import com.example.b2b_opportunities.Repository.CompanyTypeRepository;
 import com.example.b2b_opportunities.Repository.DomainRepository;
 import com.example.b2b_opportunities.Repository.RoleRepository;
 import com.example.b2b_opportunities.Repository.UserRepository;
+import com.example.b2b_opportunities.Service.CompanyService;
 import com.example.b2b_opportunities.Service.ImageService;
 import com.example.b2b_opportunities.Static.EmailVerification;
 import com.example.b2b_opportunities.UserDetailsImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.minio.MakeBucketArgs;
+import io.minio.MinioClient;
+import io.minio.PutObjectArgs;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.containers.BindMode;
+import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
 import static org.hamcrest.Matchers.hasSize;
-import static org.mockito.ArgumentMatchers.anyLong;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -86,14 +100,43 @@ class CompanyControllerTest {
     private ObjectMapper objectMapper;
     @MockBean
     private ImageService imageService;
+    @InjectMocks
+    private CompanyService companyService;
+
     private Company company1;
     private Company company2;
     private User user;
     private Authentication authentication;
     private CompanyRequestDto companyRequestDto;
 
+    private static GenericContainer<?> minioContainer;
+    private MinioClient minioClient;
+
+    @BeforeAll
+    static void setUpMinioContainer() {
+        minioContainer = new GenericContainer<>("minio/minio")
+                .withEnv("MINIO_ROOT_USER", "testuser")
+                .withEnv("MINIO_ROOT_PASSWORD", "testpassword")
+                .withCommand("server /data")
+                .withExposedPorts(9000);
+
+        minioContainer.start();
+    }
+
     @BeforeEach
-    void init() {
+    void init() throws Exception {
+        String minioUrl = String.format("http://%s:%s", minioContainer.getHost(), minioContainer.getMappedPort(9000));
+        minioClient = MinioClient.builder()
+                .endpoint(minioUrl)
+                .credentials("testuser", "testpassword")
+                .build();
+
+        try {
+            minioClient.makeBucket(MakeBucketArgs.builder().bucket("testbucket").build());
+        } catch (Exception e) {
+            // Bucket already exists
+        }
+
         user = User.builder()
                 .firstName("John")
                 .lastName("Doe")
@@ -148,6 +191,11 @@ class CompanyControllerTest {
         companyRequestDto.setWebsite("http://test.com");
         companyRequestDto.setLinkedIn("http://test.com");
         companyRequestDto.setDescription("test test");
+
+        when(imageService.returnUrlIfPictureExists(any(Long.class), eq("banner"))).thenReturn("http://mocked-url.com/banner");
+        when(imageService.returnUrlIfPictureExists(any(Long.class), eq("image"))).thenReturn("http://mocked-url.com/image");
+
+        when(imageService.doesImageExist(any(Long.class), eq("banner"))).thenReturn(true);
     }
 
     @Test
@@ -193,9 +241,6 @@ class CompanyControllerTest {
     @Test
     void createCompanyShouldReturnCreatedWhenValidRequest() throws Exception {
         SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        when(imageService.returnUrlIfPictureExists(anyLong(), eq("image"))).thenReturn(null);
-        when(imageService.returnUrlIfPictureExists(anyLong(), eq("banner"))).thenReturn(null);
 
         String companyRequestDtoJson = objectMapper.writeValueAsString(companyRequestDto);
 
@@ -308,5 +353,43 @@ class CompanyControllerTest {
                 .andExpect(jsonPath("$.name").value("Company C"));
     }
 
-    //TODO - Company image uploading tests
+    @Test
+    void setCompanyImagesShouldReturnUpdatedCompanyWhenImagesAreUploaded() throws Exception {
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        user.setCompany(company1);
+        userRepository.save(user);
+
+        MockMultipartFile imageFile = new MockMultipartFile("image", "image.png", MediaType.IMAGE_PNG_VALUE, new byte[]{1, 2, 3});
+        MockMultipartFile bannerFile = new MockMultipartFile("banner", "banner.png", MediaType.IMAGE_PNG_VALUE, new byte[]{4, 5, 6});
+
+        mockMvc.perform(multipart("/companies/images/set")
+                        .file(imageFile)
+                        .file(bannerFile))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.image").value("http://mocked-url.com/image"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.banner").value("http://mocked-url.com/banner"));
+    }
+
+    @Test
+    void deleteCompanyBannerShouldRemoveBannerWhenExists() throws Exception {
+
+        user.setCompany(company1);
+        userRepository.save(user);
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        MockMultipartFile image = new MockMultipartFile("image", "image.png", MediaType.IMAGE_PNG_VALUE, new byte[]{1, 2, 3});
+        MockMultipartFile banner = new MockMultipartFile("banner", "banner.png", MediaType.IMAGE_PNG_VALUE, new byte[]{4, 5, 6});
+
+        mockMvc.perform(multipart("/companies/images/set")
+                        .file(image)
+                        .file(banner))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.image").value("http://mocked-url.com/image"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.banner").value("http://mocked-url.com/banner"));
+
+        mockMvc.perform(post("/companies/images/delete-banner"))
+                .andExpect(status().isNoContent());
+    }
 }
