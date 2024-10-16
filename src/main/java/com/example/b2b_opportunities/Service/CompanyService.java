@@ -56,7 +56,7 @@ public class CompanyService {
         currentUser.setCompany(company);
         userRepository.saveAndFlush(currentUser);
 
-        return generateCompanyResponseDto(company);
+        return CompanyMapper.toCompanyResponseDto(company);
     }
 
     public CompaniesAndUsersResponseDto getCompanyAndUsers(Long companyId) {
