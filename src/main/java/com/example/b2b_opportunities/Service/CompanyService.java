@@ -206,7 +206,7 @@ public class CompanyService {
 
     private void updateCompanyWebsiteAndLinkedIn(Company userCompany, CompanyRequestDto companyRequestDto) {
         String newWebsite = companyRequestDto.getWebsite();
-        if (!newWebsite.equals(userCompany.getWebsite())) {
+        if (newWebsite != null && !newWebsite.isEmpty() && !newWebsite.equals(userCompany.getWebsite())) {
             if (companyRepository.findByWebsite(newWebsite).isPresent()) {
                 throw new AlreadyExistsException("Website already registered");
             }
@@ -214,7 +214,7 @@ public class CompanyService {
         }
 
         String newLinkedIn = companyRequestDto.getLinkedIn();
-        if (!newLinkedIn.equals(userCompany.getLinkedIn())) {
+        if (newLinkedIn != null && !newLinkedIn.isEmpty() && !newLinkedIn.equals(userCompany.getLinkedIn())) {
             if (companyRepository.findByLinkedIn(newLinkedIn).isPresent()) {
                 throw new AlreadyExistsException("LinkedIn already registered");
             }
@@ -229,10 +229,10 @@ public class CompanyService {
     }
 
     private void updateOtherCompanyFields(Company company, CompanyRequestDto dto) {
-        if (!company.getCompanyType().getId().equals(dto.getCompanyTypeId())) {
+        if (dto.getCompanyTypeId() != null && !company.getCompanyType().getId().equals(dto.getCompanyTypeId())) {
             company.setCompanyType(getCompanyTypeOrThrow(dto));
         }
-        if (!company.getDomain().getId().equals(dto.getDomainId())) {
+        if (dto.getDomainId() != null && !company.getDomain().getId().equals(dto.getDomainId())) {
             company.setDomain(getDomainOrThrow(dto));
         }
         List<Long> companySkills = company.getSkills().stream().map(Skill::getId).toList();
