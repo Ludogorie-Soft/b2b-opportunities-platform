@@ -28,6 +28,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 @Service
 @RequiredArgsConstructor
@@ -144,9 +146,18 @@ public class CompanyService {
 
     private CompanyResponseDto generateCompanyResponseDto(Company company) {
         CompanyResponseDto companyResponseDto = CompanyMapper.toCompanyResponseDto(company);
-        companyResponseDto.setImage(imageService.returnUrlIfPictureExists(company.getId(), "image"));
-        companyResponseDto.setBanner(imageService.returnUrlIfPictureExists(company.getId(), "banner"));
+
+        setIfNotNull(() -> imageService.returnUrlIfPictureExists(company.getId(), "image"), companyResponseDto::setImage);
+        setIfNotNull(() -> imageService.returnUrlIfPictureExists(company.getId(), "banner"), companyResponseDto::setBanner);
+
         return companyResponseDto;
+    }
+
+    private void setIfNotNull(Supplier<String> imageSupplier, Consumer<String> setter) {
+        String result = imageSupplier.get();
+        if (result != null) {
+            setter.accept(result);
+        }
     }
 
     private Company setCompanyFields(CompanyRequestDto dto) {
@@ -206,7 +217,7 @@ public class CompanyService {
 
     private void updateCompanyWebsiteAndLinkedIn(Company userCompany, CompanyRequestDto companyRequestDto) {
         String newWebsite = companyRequestDto.getWebsite();
-        if (!newWebsite.equals(userCompany.getWebsite())) {
+        if (newWebsite != null && !newWebsite.isEmpty() && !newWebsite.equals(userCompany.getWebsite())) {
             if (companyRepository.findByWebsite(newWebsite).isPresent()) {
                 throw new AlreadyExistsException("Website already registered");
             }
@@ -214,7 +225,7 @@ public class CompanyService {
         }
 
         String newLinkedIn = companyRequestDto.getLinkedIn();
-        if (!newLinkedIn.equals(userCompany.getLinkedIn())) {
+        if (newLinkedIn != null && !newLinkedIn.isEmpty() && !newLinkedIn.equals(userCompany.getLinkedIn())) {
             if (companyRepository.findByLinkedIn(newLinkedIn).isPresent()) {
                 throw new AlreadyExistsException("LinkedIn already registered");
             }
@@ -229,10 +240,10 @@ public class CompanyService {
     }
 
     private void updateOtherCompanyFields(Company company, CompanyRequestDto dto) {
-        if (!company.getCompanyType().getId().equals(dto.getCompanyTypeId())) {
+        if (dto.getCompanyTypeId() != null && !company.getCompanyType().getId().equals(dto.getCompanyTypeId())) {
             company.setCompanyType(getCompanyTypeOrThrow(dto));
         }
-        if (!company.getDomain().getId().equals(dto.getDomainId())) {
+        if (dto.getDomainId() != null && !company.getDomain().getId().equals(dto.getDomainId())) {
             company.setDomain(getDomainOrThrow(dto));
         }
         List<Long> companySkills = company.getSkills().stream().map(Skill::getId).toList();
