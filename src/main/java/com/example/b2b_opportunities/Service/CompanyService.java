@@ -50,12 +50,11 @@ public class CompanyService {
         validateCompanyRequestInput(companyRequestDto);
         Company company = setCompanyFields(companyRequestDto);
         company.getUsers().add(currentUser);
+        setCompanyEmailVerificationStatusAndSendEmail(company, currentUser, companyRequestDto, request);
 
         company = companyRepository.save(company);
         currentUser.setCompany(company);
         userRepository.saveAndFlush(currentUser);
-
-        setCompanyEmailVerificationStatusAndSendEmail(company, currentUser, companyRequestDto, request);
 
         return generateCompanyResponseDto(company);
     }

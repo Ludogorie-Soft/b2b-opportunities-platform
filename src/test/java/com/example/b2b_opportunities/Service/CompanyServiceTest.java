@@ -139,6 +139,7 @@ public class CompanyServiceTest {
     public void testCreateCompany_ValidRequest_ShouldCreateCompany() {
         Company company = new Company();
         company.setId(1L);
+        company.setEmailVerification(EmailVerification.ACCEPTED);
 
         company.setSkills(new HashSet<>());
 
