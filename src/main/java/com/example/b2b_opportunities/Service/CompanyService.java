@@ -124,9 +124,6 @@ public class CompanyService {
     public List<ProjectResponseDto> getCompanyProjects(Long companyId) {
         Company company = companyRepository.findById(companyId)
                 .orElseThrow(() -> new NotFoundException("Company with ID: " + companyId + " not found"));
-        if (company.getProjects() == null || company.getProjects().isEmpty()) {
-            throw new NotFoundException("No projects found for Company with ID: " + company.getId());
-        }
         return ProjectMapper.toDtoList(company.getProjects());
     }
 
