@@ -18,6 +18,7 @@ import com.example.b2b_opportunities.Repository.CompanyTypeRepository;
 import com.example.b2b_opportunities.Repository.DomainRepository;
 import com.example.b2b_opportunities.Repository.UserRepository;
 import com.example.b2b_opportunities.Static.EmailVerification;
+import com.example.b2b_opportunities.Utils.StringUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
@@ -110,12 +111,21 @@ public class CompanyService {
     }
 
     public void deleteCompanyBanner(Authentication authentication) {
+        delete(authentication, "banner");
+    }
+
+    public void deleteCompanyImage(Authentication authentication) {
+        delete(authentication, "image");
+    }
+
+    private void delete(Authentication authentication, String imageOrBanner) {
         User currentUser = adminService.getCurrentUserOrThrow(authentication);
         Company company = getUserCompanyOrThrow(currentUser);
-        if (imageService.doesImageExist(company.getId(), "banner")) {
+        if (imageService.doesImageExist(company.getId(), imageOrBanner)) {
             imageService.deleteBanner(company.getId());
         } else {
-            throw new NotFoundException("Banner doesn't exist for company with ID: " + company.getId());
+            throw new NotFoundException(StringUtils.stripCapitalizeAndValidateNotEmpty(imageOrBanner, imageOrBanner) +
+                    " doesn't exist for company with ID: " + company.getId());
         }
     }
 

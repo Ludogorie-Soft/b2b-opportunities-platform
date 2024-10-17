@@ -70,10 +70,18 @@ public class ImageService {
     }
 
     public void deleteBanner(Long companyId) {
+        delete(companyId, "banner");
+    }
+
+    public void deleteImage(Long companyId) {
+        delete(companyId, "image");
+    }
+
+    public void delete(Long companyId, String imageOrBanner) {
         try {
             RemoveObjectArgs rArgs = RemoveObjectArgs.builder()
                     .bucket(bucketName)
-                    .object(companyId + "/banner")
+                    .object(companyId + "/" + imageOrBanner)
                     .build();
             minioClient.removeObject(rArgs);
         } catch (MinioException | IOException | InvalidKeyException | NoSuchAlgorithmException e) {

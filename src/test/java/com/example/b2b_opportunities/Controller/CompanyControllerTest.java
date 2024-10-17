@@ -17,8 +17,6 @@ import com.example.b2b_opportunities.UserDetailsImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
-import io.minio.PutObjectArgs;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -44,8 +42,6 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -56,9 +52,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrlPattern;
@@ -196,6 +194,7 @@ class CompanyControllerTest {
         when(imageService.returnUrlIfPictureExists(any(Long.class), eq("image"))).thenReturn("http://mocked-url.com/image");
 
         when(imageService.doesImageExist(any(Long.class), eq("banner"))).thenReturn(true);
+        when(imageService.doesImageExist(any(Long.class), eq("image"))).thenReturn(true);
     }
 
     @Test
@@ -345,7 +344,7 @@ class CompanyControllerTest {
 
         String editedCompanyJson = objectMapper.writeValueAsString(edited);
 
-        mockMvc.perform(post("/companies/edit")
+        mockMvc.perform(put("/companies")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(editedCompanyJson))
                 .andExpect(status().isOk())
@@ -372,7 +371,7 @@ class CompanyControllerTest {
     }
 
     @Test
-    void deleteCompanyBannerShouldRemoveBannerWhenExists() throws Exception {
+    void deleteCompanyBannerShouldRemoveBannerAndImageWhenExists() throws Exception {
 
         user.setCompany(company1);
         userRepository.save(user);
@@ -389,7 +388,10 @@ class CompanyControllerTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.image").value("http://mocked-url.com/image"))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.banner").value("http://mocked-url.com/banner"));
 
-        mockMvc.perform(post("/companies/images/delete-banner"))
+        mockMvc.perform(delete("/companies/images/banner"))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(delete("/companies/images/image"))
                 .andExpect(status().isNoContent());
     }
 }

@@ -14,9 +14,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -71,7 +73,7 @@ public class CompanyController {
         response.sendRedirect(frontEndAddress + "/company/profile");
     }
 
-    @PostMapping("/edit")
+    @PutMapping
     @ResponseStatus(HttpStatus.OK)
     public CompanyResponseDto editCompany(Authentication authentication,
                                           @RequestBody @Valid CompanyRequestDto companyRequestDto,
@@ -87,9 +89,15 @@ public class CompanyController {
         return companyService.setCompanyImages(authentication, image, banner);
     }
 
-    @PostMapping(value = "/images/delete-banner")
+    @DeleteMapping("/images/banner")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteCompanyBanner(Authentication authentication) {
         companyService.deleteCompanyBanner(authentication);
+    }
+
+    @DeleteMapping("/images/image")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteCompanyImage(Authentication authentication) {
+        companyService.deleteCompanyImage(authentication);
     }
 }
