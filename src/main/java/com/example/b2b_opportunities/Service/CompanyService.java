@@ -127,7 +127,7 @@ public class CompanyService {
         if (company.getProjects() == null || company.getProjects().isEmpty()) {
             throw new NotFoundException("No projects found for Company with ID: " + company.getId());
         }
-        return company.getProjects().stream().map(ProjectMapper::toDto).collect(Collectors.toList());
+        return ProjectMapper.toDtoList(company.getProjects());
     }
 
     private void delete(Authentication authentication, String imageOrBanner) {
