@@ -3,6 +3,7 @@ package com.example.b2b_opportunities.Service;
 import com.example.b2b_opportunities.Dto.Request.CompanyRequestDto;
 import com.example.b2b_opportunities.Dto.Response.CompaniesAndUsersResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyResponseDto;
+import com.example.b2b_opportunities.Dto.Response.ProjectResponseDto;
 import com.example.b2b_opportunities.Dto.Response.UserResponseDto;
 import com.example.b2b_opportunities.Entity.Company;
 import com.example.b2b_opportunities.Entity.CompanyType;
@@ -12,6 +13,7 @@ import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Exception.AlreadyExistsException;
 import com.example.b2b_opportunities.Exception.NotFoundException;
 import com.example.b2b_opportunities.Mapper.CompanyMapper;
+import com.example.b2b_opportunities.Mapper.ProjectMapper;
 import com.example.b2b_opportunities.Mapper.UserMapper;
 import com.example.b2b_opportunities.Repository.CompanyRepository;
 import com.example.b2b_opportunities.Repository.CompanyTypeRepository;
@@ -29,6 +31,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -116,6 +119,15 @@ public class CompanyService {
 
     public void deleteCompanyImage(Authentication authentication) {
         delete(authentication, "image");
+    }
+
+    public List<ProjectResponseDto> getCompanyProjects(Long companyId) {
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new NotFoundException("Company with ID: " + companyId + " not found"));
+        if (company.getProjects() == null || company.getProjects().isEmpty()) {
+            throw new NotFoundException("No projects found for Company with ID: " + company.getId());
+        }
+        return company.getProjects().stream().map(ProjectMapper::toDto).collect(Collectors.toList());
     }
 
     private void delete(Authentication authentication, String imageOrBanner) {

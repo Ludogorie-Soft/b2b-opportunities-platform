@@ -3,6 +3,7 @@ package com.example.b2b_opportunities.Controller;
 import com.example.b2b_opportunities.Dto.Request.CompanyRequestDto;
 import com.example.b2b_opportunities.Dto.Response.CompaniesAndUsersResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyResponseDto;
+import com.example.b2b_opportunities.Dto.Response.ProjectResponseDto;
 import com.example.b2b_opportunities.Exception.NotFoundException;
 import com.example.b2b_opportunities.Mapper.CompanyMapper;
 import com.example.b2b_opportunities.Repository.CompanyRepository;
@@ -50,6 +51,12 @@ public class CompanyController {
     public CompanyResponseDto getCompany(@PathVariable("id") Long id) {
         return CompanyMapper.toCompanyResponseDto(companyRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Company with ID: " + id + " not found")));
+    }
+
+    @GetMapping("{id}/projects")
+    @ResponseStatus(HttpStatus.OK)
+    public List<ProjectResponseDto> getCompanyProjects(@PathVariable("id") Long id) {
+        return companyService.getCompanyProjects(id);
     }
 
     @PostMapping
