@@ -339,7 +339,7 @@ class CompanyControllerTest {
 
         CompanyRequestDto edited = new CompanyRequestDto();
         edited.setName("Company C");
-        edited.setEmail("company_a@abvz.com");
+        edited.setEmail(company1.getEmail());
         edited.setCompanyTypeId(company1.getCompanyType().getId());
 
         String editedCompanyJson = objectMapper.writeValueAsString(edited);
