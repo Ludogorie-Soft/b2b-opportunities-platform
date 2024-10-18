@@ -2,6 +2,7 @@ package com.example.b2b_opportunities.Controller;
 
 import com.example.b2b_opportunities.Dto.Request.CompanyRequestDto;
 import com.example.b2b_opportunities.Dto.Response.CompaniesAndUsersResponseDto;
+import com.example.b2b_opportunities.Dto.Response.CompanyPublicResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyResponseDto;
 import com.example.b2b_opportunities.Dto.Response.ProjectResponseDto;
 import com.example.b2b_opportunities.Exception.NotFoundException;
@@ -42,8 +43,8 @@ public class CompanyController {
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public List<CompanyResponseDto> getCompanies() {
-        return CompanyMapper.toCompanyResponseDtoList(companyRepository.findAll());
+    public List<CompanyPublicResponseDto> getAcceptedCompaniesPublicData() {
+        return companyService.getAcceptedCompaniesPublicData();
     }
 
     @GetMapping("/{id}")
