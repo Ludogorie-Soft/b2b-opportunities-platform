@@ -9,6 +9,7 @@ import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Exception.AuthenticationFailedException;
 import com.example.b2b_opportunities.Exception.DisabledUserException;
 import com.example.b2b_opportunities.Exception.EmailInUseException;
+import com.example.b2b_opportunities.Exception.InvalidInputException;
 import com.example.b2b_opportunities.Exception.InvalidTokenException;
 import com.example.b2b_opportunities.Exception.PasswordsNotMatchingException;
 import com.example.b2b_opportunities.Exception.UserNotFoundException;
@@ -37,6 +38,8 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.security.Principal;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -85,6 +88,7 @@ public class AuthenticationService {
         if (bindingResult.hasErrors()) {
             throw new ValidationException(bindingResult);
         }
+        validateEmail(userRequestDto.getEmail());
         validateUser(userRequestDto);
 
         User user = UserMapper.toEntity(userRequestDto);
@@ -181,6 +185,25 @@ public class AuthenticationService {
         }
         if (!arePasswordsMatching(userRequestDto.getPassword(), userRequestDto.getRepeatedPassword())) {
             throw new PasswordsNotMatchingException("Passwords don't match");
+        }
+    }
+
+    private void validateEmail(String email) {
+        if (!isValidEmail(email) || !isValidDomain(email))
+            throw new InvalidInputException("Invalid email format or domain.");
+    }
+
+    private boolean isValidEmail(String email) {
+        return email.matches("^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$"); // Basic regex for email validation
+    }
+
+    private boolean isValidDomain(String email) {
+        String domain = email.substring(email.indexOf('@') + 1);
+        try {
+            InetAddress.getByName(domain); // Checks if the domain is resolvable
+            return true;
+        } catch (UnknownHostException e) {
+            return false;
         }
     }
 
