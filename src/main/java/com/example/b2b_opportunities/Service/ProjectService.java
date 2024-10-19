@@ -31,7 +31,7 @@ public class ProjectService {
     }
 
     public List<ProjectResponseDto> getAll() {
-        return ProjectMapper.toDtoList(projectRepository.findAll());
+        return ProjectMapper.toDtoList(projectRepository.findByProjectStatus(ProjectStatus.ACTIVE));
     }
 
     public ProjectResponseDto update(Long id, ProjectEditRequestDto dto) {
