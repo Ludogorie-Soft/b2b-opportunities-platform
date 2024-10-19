@@ -67,7 +67,7 @@ public class ProjectService {
         return positions.stream().map(PositionMapper::toResponseDto).collect(Collectors.toList());
     }
 
-    public ProjectResponseDto activateProject(Long projectId, Authentication authentication) {
+    public ProjectResponseDto reactivateProject(Long projectId, Authentication authentication) {
         Project project = getProjectIfExists(projectId);
         User currentUser = adminService.getCurrentUserOrThrow(authentication);
         if (!Objects.equals(project.getCompany().getId(), currentUser.getCompany().getId())) {
@@ -77,6 +77,8 @@ public class ProjectService {
             throw new DuplicateResourceException("This project is active already");
         }
         project.setProjectStatus(ProjectStatus.ACTIVE);
+        // so that the project can be auto-deactivated in 3 weeks after reactivation
+        project.setDatePosted(LocalDateTime.now());
         return ProjectMapper.toDto(projectRepository.save(project));
     }
 

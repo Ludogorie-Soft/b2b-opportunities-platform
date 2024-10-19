@@ -54,7 +54,7 @@ public class ProjectController {
     @PutMapping("/{id}/activate")
     @ResponseStatus(HttpStatus.OK)
     public ProjectResponseDto activate(@PathVariable("id") Long id, Authentication authentication) {
-        return projectService.activateProject(id, authentication);
+        return projectService.reactivateProject(id, authentication);
     }
 
     @PostMapping
