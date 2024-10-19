@@ -14,13 +14,16 @@ import com.example.b2b_opportunities.Service.CompanyService;
 import com.example.b2b_opportunities.Service.ImageService;
 import com.example.b2b_opportunities.Static.EmailVerification;
 import com.example.b2b_opportunities.UserDetailsImpl;
+import com.example.b2b_opportunities.Utils.EmailUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
+import jakarta.validation.constraints.Email;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
+import org.mockito.MockedStatic;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -50,7 +53,10 @@ import java.util.List;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -242,17 +248,21 @@ class CompanyControllerTest {
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         String companyRequestDtoJson = objectMapper.writeValueAsString(companyRequestDto);
+        try (MockedStatic<EmailUtils> mockedEmailUtils = mockStatic(EmailUtils.class)) {
+            // Do nothing when validateEmail() is called
+            mockedEmailUtils.when(() -> EmailUtils.validateEmail(anyString())).thenAnswer(invocation -> null);
 
-        mockMvc.perform(post("/companies")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(companyRequestDtoJson))
-                .andExpect(status().isCreated())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.name").value("New Company"))
-                .andExpect(jsonPath("$.email").value("johndoe@abv.bgg"))
-                .andExpect(jsonPath("$.website").value("http://test.com"))
-                .andExpect(jsonPath("$.linkedIn").value("http://test.com"))
-                .andExpect(jsonPath("$.description").value("test test"));
+            mockMvc.perform(post("/companies")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(companyRequestDtoJson))
+                    .andExpect(status().isCreated())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(jsonPath("$.name").value("New Company"))
+                    .andExpect(jsonPath("$.email").value("johndoe@abv.bgg"))
+                    .andExpect(jsonPath("$.website").value("http://test.com"))
+                    .andExpect(jsonPath("$.linkedIn").value("http://test.com"))
+                    .andExpect(jsonPath("$.description").value("test test"));
+        }
     }
 
     //TODO -> Add test to create company with different than user's email -> Email verification should be sent
@@ -344,12 +354,18 @@ class CompanyControllerTest {
 
         String editedCompanyJson = objectMapper.writeValueAsString(edited);
 
-        mockMvc.perform(put("/companies")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(editedCompanyJson))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.name").value("Company C"));
+        try (MockedStatic<EmailUtils> mockedEmailUtils = mockStatic(EmailUtils.class)) {
+            mockedEmailUtils.when(() -> EmailUtils.validateEmail(anyString())).thenAnswer(invocation -> null);
+
+            mockMvc.perform(put("/companies")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(editedCompanyJson))
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(jsonPath("$.name").value("Company C"));
+
+            mockedEmailUtils.verify(() -> EmailUtils.validateEmail(company1.getEmail()));
+        }
     }
 
     @Test
