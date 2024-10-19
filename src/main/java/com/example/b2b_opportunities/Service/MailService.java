@@ -100,6 +100,6 @@ public class MailService {
 
     private String generateEmailConfirmationLink(String token, HttpServletRequest request) {
         String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath();
-        return "<a href=" + baseUrl + "/company/confirm-email?token=" + token + ">Confirm your email address</a>";
+        return "<a href=" + baseUrl + "/companies/confirm-email?token=" + token + ">Confirm your email address</a>";
     }
 }
