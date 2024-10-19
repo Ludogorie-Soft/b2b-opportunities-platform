@@ -32,6 +32,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import static com.example.b2b_opportunities.Utils.EmailUtils.validateEmail;
+
 @Service
 @RequiredArgsConstructor
 public class CompanyService {
@@ -51,6 +53,7 @@ public class CompanyService {
         validateUserIsNotAssociatedWithAnotherCompany(currentUser);
 
         validateCompanyRequestInput(companyRequestDto);
+        validateEmail(companyRequestDto.getEmail());
         Company company = setCompanyFields(companyRequestDto);
         company.getUsers().add(currentUser);
         setCompanyEmailVerificationStatusAndSendEmail(company, currentUser, companyRequestDto, request);
@@ -89,7 +92,7 @@ public class CompanyService {
         Company userCompany = getUserCompanyOrThrow(currentUser);
 
         updateCompanyName(userCompany, companyRequestDto);
-
+        validateEmail(companyRequestDto.getEmail());
         if (updateCompanyEmailIfChanged(userCompany, companyRequestDto)) {
             setCompanyEmailVerificationStatusAndSendEmail(userCompany, currentUser, companyRequestDto, request);
         }

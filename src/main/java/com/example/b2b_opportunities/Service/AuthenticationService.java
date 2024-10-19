@@ -9,7 +9,6 @@ import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Exception.AuthenticationFailedException;
 import com.example.b2b_opportunities.Exception.DisabledUserException;
 import com.example.b2b_opportunities.Exception.EmailInUseException;
-import com.example.b2b_opportunities.Exception.InvalidInputException;
 import com.example.b2b_opportunities.Exception.InvalidTokenException;
 import com.example.b2b_opportunities.Exception.PasswordsNotMatchingException;
 import com.example.b2b_opportunities.Exception.UserNotFoundException;
@@ -38,8 +37,6 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.security.Principal;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -47,6 +44,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
+import static com.example.b2b_opportunities.Utils.EmailUtils.validateEmail;
 
 @Service
 @RequiredArgsConstructor
@@ -164,6 +163,19 @@ public class AuthenticationService {
         return "Account activated successfully";
     }
 
+    public void logout(HttpServletRequest request, HttpServletResponse response) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            Arrays.stream(cookies).forEach(cookie -> {
+                cookie.setValue(null);
+                cookie.setMaxAge(0);
+                cookie.setPath("/");
+                cookie.setHttpOnly(true);
+                response.addCookie(cookie);
+            });
+        }
+    }
+
     private UserDetails authenticate(LoginDto loginDto) {
         try {
             Authentication authentication = new UsernamePasswordAuthenticationToken(loginDto.getUsernameOrEmail().toLowerCase(), loginDto.getPassword());
@@ -185,25 +197,6 @@ public class AuthenticationService {
         }
         if (!arePasswordsMatching(userRequestDto.getPassword(), userRequestDto.getRepeatedPassword())) {
             throw new PasswordsNotMatchingException("Passwords don't match");
-        }
-    }
-
-    private void validateEmail(String email) {
-        if (!isValidEmail(email) || !isValidDomain(email))
-            throw new InvalidInputException("Invalid email format or domain.");
-    }
-
-    private boolean isValidEmail(String email) {
-        return email.matches("^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$"); // Basic regex for email validation
-    }
-
-    private boolean isValidDomain(String email) {
-        String domain = email.substring(email.indexOf('@') + 1);
-        try {
-            InetAddress.getByName(domain); // Checks if the domain is resolvable
-            return true;
-        } catch (UnknownHostException e) {
-            return false;
         }
     }
 
@@ -246,18 +239,5 @@ public class AuthenticationService {
         LocalDateTime currentDateTime = LocalDateTime.now();
         Duration duration = Duration.between(token.getCreatedAt(), currentDateTime);
         return duration.toDays() > tokenExpirationDays;
-    }
-
-    public void logout(HttpServletRequest request, HttpServletResponse response) {
-        Cookie[] cookies = request.getCookies();
-        if (cookies != null) {
-            Arrays.stream(cookies).forEach(cookie -> {
-                cookie.setValue(null);
-                cookie.setMaxAge(0);
-                cookie.setPath("/");
-                cookie.setHttpOnly(true);
-                response.addCookie(cookie);
-            });
-        }
     }
 }
