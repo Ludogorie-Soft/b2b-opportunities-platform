@@ -8,6 +8,7 @@ import com.example.b2b_opportunities.Service.ProjectService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -48,6 +49,12 @@ public class ProjectController {
     @ResponseStatus(HttpStatus.OK)
     public ProjectResponseDto update(@PathVariable("id") Long id, @RequestBody ProjectEditRequestDto dto) {
         return projectService.update(id, dto);
+    }
+
+    @PutMapping("/{id}/activate")
+    @ResponseStatus(HttpStatus.OK)
+    public ProjectResponseDto activate(@PathVariable("id") Long id, Authentication authentication) {
+        return projectService.activateProject(id, authentication);
     }
 
     @PostMapping
