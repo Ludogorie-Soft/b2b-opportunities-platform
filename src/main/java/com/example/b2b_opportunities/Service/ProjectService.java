@@ -12,11 +12,11 @@ import com.example.b2b_opportunities.Mapper.PositionMapper;
 import com.example.b2b_opportunities.Mapper.ProjectMapper;
 import com.example.b2b_opportunities.Repository.CompanyRepository;
 import com.example.b2b_opportunities.Repository.ProjectRepository;
+import com.example.b2b_opportunities.Static.ProjectStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -57,6 +57,7 @@ public class ProjectService {
         project.setEndDate(dto.getEndDate());
         project.setDuration(dto.getDuration());
         project.setDescription(dto.getDescription());
+        project.setProjectStatus(ProjectStatus.ACTIVE);
         return ProjectMapper.toDto(projectRepository.save(project));
     }
 
