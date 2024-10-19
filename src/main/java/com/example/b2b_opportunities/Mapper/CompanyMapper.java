@@ -1,6 +1,7 @@
 package com.example.b2b_opportunities.Mapper;
 
 import com.example.b2b_opportunities.Dto.Request.CompanyRequestDto;
+import com.example.b2b_opportunities.Dto.Response.CompanyPublicResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyResponseDto;
 import com.example.b2b_opportunities.Entity.Company;
 import com.example.b2b_opportunities.Entity.Skill;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Component
 public class CompanyMapper {
@@ -23,6 +25,19 @@ public class CompanyMapper {
                 .description(companyRequestDto.getDescription())
                 .users(new ArrayList<>())
                 .build();
+    }
+
+    public static CompanyPublicResponseDto toCompanyPublicResponseDto(Company company){
+        return CompanyPublicResponseDto.builder()
+                .id(company.getId())
+                .name(company.getName())
+                .build();
+    }
+
+    public static List<CompanyPublicResponseDto> toCompanyPublicResponseDtoList(List<Company> companies) {
+        return companies.stream()
+                .map(CompanyMapper::toCompanyPublicResponseDto)
+                .collect(Collectors.toList());
     }
 
     public static CompanyResponseDto toCompanyResponseDto(Company company) {
