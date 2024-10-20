@@ -86,6 +86,7 @@ public class ProjectService {
         project.setProjectStatus(ProjectStatus.ACTIVE);
         // so that the project can be auto-deactivated again in 3 weeks after reactivation
         project.setDatePosted(LocalDateTime.now());
+        project.setToken(null); // reset the token (if set) after reactivation
         return ProjectMapper.toDto(projectRepository.save(project));
     }
 
