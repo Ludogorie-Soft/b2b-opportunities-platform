@@ -89,8 +89,8 @@ public class ProjectService {
         return ProjectMapper.toDto(projectRepository.save(project));
     }
 
-    //Once per day
-    @Scheduled(cron = "0 * * * * *")
+    //Once per day at 13:00
+    @Scheduled(cron = "0 0 13 * * *")
     public void processExpiringProjects() {
         List<Project> projectsWithoutActivePositions = projectRepository.findProjectsWithoutActivePositions();
         for (Project project : projectsWithoutActivePositions) {
