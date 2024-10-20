@@ -18,6 +18,6 @@ import java.util.Set;
 public class CompanyFilterResponseDto {
     private Long id;
     private String name;
-    private Set<SkillResponseDto> skills;
+    private Set<SkillResponseNoParentsDto> skills;
     private Boolean isEnabled;
 }

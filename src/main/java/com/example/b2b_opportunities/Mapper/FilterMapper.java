@@ -17,7 +17,7 @@ public class FilterMapper {
                 .name(filter.getName())
                 .isEnabled(filter.getIsEnabled())
                 // TODO: use SET instead of List for all skills
-                .skills(new HashSet<>(SkillMapper.skillResponseDtoList(filter.getSkills().stream().toList())))
+                .skills(new HashSet<>(SkillMapper.toSkillResponseNoParentsDtoList(filter.getSkills().stream().toList())))
                 .build();
     }
 

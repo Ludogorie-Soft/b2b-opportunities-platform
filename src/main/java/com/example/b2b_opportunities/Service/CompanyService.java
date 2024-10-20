@@ -199,8 +199,7 @@ public class CompanyService {
 
     private Filter mapToFilter(CompanyFilterRequestDto dto, Company company){
         Filter filter = FilterMapper.toEntity(dto);  // set name + IsEnabled
-        filter.setSkills(new HashSet<>(patternService.getAllSkillsIfSkillIdsExist(dto.getSkillIds().stream().toList()))); // TODO: list to set
-        // TODO - check if filter is assignable + throw an error if not.
+        filter.setSkills(new HashSet<>(patternService.getAllAssignableSkillsIfSkillIdsExist(dto.getSkillIds().stream().toList()))); // TODO: list to set
         filter.setCompany(company);
         return filter;
     }

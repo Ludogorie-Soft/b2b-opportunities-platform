@@ -25,7 +25,7 @@ public class SkillController {
     @ResponseStatus(HttpStatus.OK)
     public List<SkillResponseDto> getSkills() {
         List<Skill> skills = skillRepository.findAll();
-        return SkillMapper.skillResponseDtoList(skills);
+        return SkillMapper.toSkillResponseDtoList(skills);
     }
 
     @GetMapping("/{id}")
