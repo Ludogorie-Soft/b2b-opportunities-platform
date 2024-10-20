@@ -17,12 +17,15 @@ import com.example.b2b_opportunities.Repository.CompanyRepository;
 import com.example.b2b_opportunities.Repository.ProjectRepository;
 import com.example.b2b_opportunities.Static.ProjectStatus;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,6 +34,11 @@ public class ProjectService {
     private final ProjectRepository projectRepository;
     private final CompanyRepository companyRepository;
     private final AdminService adminService;
+    private final MailService mailService;
+
+
+    @Value("${backend.address}")
+    private String backendAddress;
 
     public ProjectResponseDto get(Long id) {
         return ProjectMapper.toDto(getProjectIfExists(id));
@@ -49,7 +57,6 @@ public class ProjectService {
         Project project = new Project();
         project.setDatePosted(LocalDateTime.now());
         project.setCompany(getCompanyIfExists(dto.getCompanyId()));
-
         return createOrUpdate(dto, project);
     }
 
@@ -77,8 +84,37 @@ public class ProjectService {
             throw new DuplicateResourceException("This project is active already");
         }
         project.setProjectStatus(ProjectStatus.ACTIVE);
-        // so that the project can be auto-deactivated in 3 weeks after reactivation
+        // so that the project can be auto-deactivated again in 3 weeks after reactivation
         project.setDatePosted(LocalDateTime.now());
+        return ProjectMapper.toDto(projectRepository.save(project));
+    }
+
+    //Once per day
+    @Scheduled(cron = "0 * * * * *")
+    public void processExpiringProjects() {
+        List<Project> projectsWithoutActivePositions = projectRepository.findProjectsWithoutActivePositions();
+        for (Project project : projectsWithoutActivePositions) {
+            project.setProjectStatus(ProjectStatus.INACTIVE);
+            projectRepository.save(project);
+        }
+        List<Project> expiringProjects = projectRepository.findProjectsExpiringInTwoDays();
+        for (Project project : expiringProjects) {
+            project.setToken(UUID.randomUUID().toString()); // set token for extending expiration (via email)
+            projectRepository.save(project);
+            mailService.sendProjectExpiringMail(project, backendAddress, project.getToken());
+        }
+        List<Project> expiredProjects = projectRepository.findProjectsOlderThanTwentyOneDays();
+        for (Project project : expiredProjects) {
+            project.setProjectStatus(ProjectStatus.INACTIVE);
+            projectRepository.save(project);
+        }
+    }
+
+    public ProjectResponseDto extendProject(String token) {
+        Project project = projectRepository.findByToken(token).orElseThrow(() -> new NotFoundException("Invalid or expired token"));
+        project.setDatePosted(LocalDateTime.now());
+        project.setProjectStatus(ProjectStatus.ACTIVE);
+        project.setToken(null);
         return ProjectMapper.toDto(projectRepository.save(project));
     }
 
@@ -99,4 +135,5 @@ public class ProjectService {
     private Company getCompanyIfExists(Long id) {
         return companyRepository.findById(id).orElseThrow(() -> new NotFoundException("Company with ID: " + id + " not found"));
     }
+
 }

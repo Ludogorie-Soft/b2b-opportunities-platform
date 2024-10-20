@@ -34,7 +34,7 @@ public class Project {
     @Column(name = "id", nullable = false)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "company_id", nullable = false)
     @JsonManagedReference
     private Company company;
@@ -55,6 +55,7 @@ public class Project {
     @Enumerated(EnumType.STRING)
     private ProjectStatus projectStatus;
 
+    private String token;
     public void setName(@NotEmpty String name) {
         this.name = name.strip();
     }

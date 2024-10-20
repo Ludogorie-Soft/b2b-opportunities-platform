@@ -2,6 +2,7 @@ package com.example.b2b_opportunities.Service;
 
 import com.example.b2b_opportunities.Entity.Company;
 import com.example.b2b_opportunities.Entity.ConfirmationToken;
+import com.example.b2b_opportunities.Entity.Project;
 import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Exception.ServerErrorException;
 import com.example.b2b_opportunities.Repository.ConfirmationTokenRepository;
@@ -49,6 +50,9 @@ public class MailService {
         return "<a href=" + baseUrl + "/company/confirm-email?token=" + token + ">Confirm your email address</a>";
     }
 
+    private String generateProjectExtendingLink(Project project, String backendAddress, String token) {
+        return "<a href=" + backendAddress + "/projects/" + project.getId() + "/extend?token=" + token + ">Click here to extend your project</a>";
+    }
 
     public void sendConfirmationMail(User user, HttpServletRequest request) {
         String emailContent = "<html>" +
@@ -108,5 +112,21 @@ public class MailService {
                 "</html>";
         String subject = "Company mail confirmation - B2B Opportunities";
         sendEmail(company.getEmail(), emailContent, subject);
+    }
+
+    public void sendProjectExpiringMail(Project project, String backendAddress, String token) {
+        String emailContent = "<html>" +
+                "<body>" +
+                "<h2>Dear " + project.getCompany().getName() + ",</h2>"
+                + "<h3><br/> This is a friendly reminder regarding your project '" + project.getName() + "' will expire in <b>2 days</b>."
+                + "<br/>To ensure your project remains active and continues to be visible to potential clients, you can easily extend its duration."
+                + "<br/>To extend your project for an additional 3 weeks, simply click the link below:.</h3>"
+                + "<h2> <br/> " + generateProjectExtendingLink(project, backendAddress, token) + "</h2>" +
+                "<h3><br/> Best regards,\n" +
+                "The B2B Opportunities Team,<br/></h3>" +
+                "</body>" +
+                "</html>";
+        String subject = "B2B Reminder: Your Project is Expiring in 2 Days – Reactivate Now!";
+        sendEmail(project.getCompany().getEmail(), emailContent, subject);
     }
 }

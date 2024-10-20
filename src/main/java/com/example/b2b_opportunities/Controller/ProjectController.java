@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -51,10 +52,16 @@ public class ProjectController {
         return projectService.update(id, dto);
     }
 
-    @PutMapping("/{id}/activate")
+    @GetMapping("/{id}/reactivate")
     @ResponseStatus(HttpStatus.OK)
     public ProjectResponseDto activate(@PathVariable("id") Long id, Authentication authentication) {
         return projectService.reactivateProject(id, authentication);
+    }
+
+    @GetMapping("{id}/extend")
+    @ResponseStatus(HttpStatus.OK)
+    public ProjectResponseDto extendProject(@RequestParam("token") String token) {
+        return projectService.extendProject(token);
     }
 
     @PostMapping

@@ -39,5 +39,5 @@ databaseChangeLog:
       file: 13-modify-companies-table.sql
       relativeToChangelogFile: true
   - include:
-      file: 14-modify-projects-table.sql
+      file: 15-modify-projects-table.sql
       relativeToChangelogFile: true
