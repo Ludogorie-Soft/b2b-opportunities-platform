@@ -1,27 +1,34 @@
 package com.example.b2b_opportunities.Service;
 
+import com.example.b2b_opportunities.Dto.Request.CompanyFilterEditDto;
+import com.example.b2b_opportunities.Dto.Request.CompanyFilterRequestDto;
 import com.example.b2b_opportunities.Dto.Request.CompanyRequestDto;
 import com.example.b2b_opportunities.Dto.Response.CompaniesAndUsersResponseDto;
+import com.example.b2b_opportunities.Dto.Response.CompanyFilterResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyResponseDto;
 import com.example.b2b_opportunities.Dto.Response.ProjectResponseDto;
 import com.example.b2b_opportunities.Dto.Response.UserResponseDto;
 import com.example.b2b_opportunities.Entity.Company;
 import com.example.b2b_opportunities.Entity.CompanyType;
 import com.example.b2b_opportunities.Entity.Domain;
+import com.example.b2b_opportunities.Entity.Filter;
 import com.example.b2b_opportunities.Entity.Skill;
 import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Exception.AlreadyExistsException;
 import com.example.b2b_opportunities.Exception.NotFoundException;
 import com.example.b2b_opportunities.Mapper.CompanyMapper;
+import com.example.b2b_opportunities.Mapper.FilterMapper;
 import com.example.b2b_opportunities.Mapper.ProjectMapper;
 import com.example.b2b_opportunities.Mapper.UserMapper;
 import com.example.b2b_opportunities.Repository.CompanyRepository;
 import com.example.b2b_opportunities.Repository.CompanyTypeRepository;
 import com.example.b2b_opportunities.Repository.DomainRepository;
+import com.example.b2b_opportunities.Repository.FilterRepository;
 import com.example.b2b_opportunities.Repository.UserRepository;
 import com.example.b2b_opportunities.Static.EmailVerification;
 import com.example.b2b_opportunities.Utils.StringUtils;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
@@ -31,7 +38,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -44,6 +50,7 @@ public class CompanyService {
     private final MailService mailService;
     private final AdminService adminService;
     private final UserRepository userRepository;
+    private final FilterRepository filterRepository;
 
     public CompanyResponseDto createCompany(Authentication authentication,
                                             CompanyRequestDto companyRequestDto,
@@ -125,6 +132,77 @@ public class CompanyService {
         Company company = companyRepository.findById(companyId)
                 .orElseThrow(() -> new NotFoundException("Company with ID: " + companyId + " not found"));
         return ProjectMapper.toDtoList(company.getProjects());
+    }
+
+    public List<CompanyFilterResponseDto> getCompanyFilters(Authentication authentication) {
+        User currentUser = adminService.getCurrentUserOrThrow(authentication);
+        Company userCompany = getUserCompanyOrThrow(currentUser);
+
+        Set<Filter> filters = userCompany.getFilters();
+        return FilterMapper.toDtoList(filters);
+    }
+
+    public CompanyFilterResponseDto getCompanyFilter(Long id, Authentication authentication) {
+        User currentUser = adminService.getCurrentUserOrThrow(authentication);
+        Company company = getUserCompanyOrThrow(currentUser);
+        validateFilterIsRelatedToTheCompany(id, company);
+
+        return FilterMapper.toDto(getFilterIfExists(id));
+    }
+
+    public CompanyFilterResponseDto editCompanyFilter(Long id, CompanyFilterEditDto dto, Authentication authentication) {
+        User currentUser = adminService.getCurrentUserOrThrow(authentication);
+        Company company = getUserCompanyOrThrow(currentUser);
+        validateFilterIsRelatedToTheCompany(id, company);
+
+        Filter filter = mapToFilter(dto, company);
+        filter.setId(id);
+        return FilterMapper.toDto(filterRepository.save(filter));
+    }
+
+    public void deleteCompanyFilter(Long id, Authentication authentication) {
+        User currentUser = adminService.getCurrentUserOrThrow(authentication);
+        Company company = getUserCompanyOrThrow(currentUser);
+        validateFilterIsRelatedToTheCompany(id, company);
+
+        filterRepository.deleteById(id);
+    }
+
+    public CompanyFilterResponseDto addCompanyFilter(Authentication authentication, @Valid CompanyFilterRequestDto dto) {
+        User currentUser = adminService.getCurrentUserOrThrow(authentication);
+        Company userCompany = getUserCompanyOrThrow(currentUser);
+
+        Filter filter = mapToFilter(dto, userCompany);
+
+        filter = filterRepository.save(filter);
+
+        userCompany.getFilters().add(filter);
+        companyRepository.save(userCompany);
+
+        return FilterMapper.toDto(filter);
+    }
+
+    private Filter getFilterIfExists(Long id){
+        return filterRepository.findById(id).orElseThrow(() -> new NotFoundException("Filter with ID: " + id + " not found."));
+    }
+
+    private void validateFilterIsRelatedToTheCompany(Long id, Company company){
+        getFilterIfExists(id);  // Throw an error if ID doesn't exist.
+        boolean idExists = company.getFilters().stream()
+                .map(Filter::getId)
+                .anyMatch(filterId -> filterId.equals(id));
+
+        if (!idExists) {
+            throw new NotFoundException("The filter ID: " + id + " is not related to the company.");
+        }
+    }
+
+    private Filter mapToFilter(CompanyFilterRequestDto dto, Company company){
+        Filter filter = FilterMapper.toEntity(dto);  // set name + IsEnabled
+        filter.setSkills(new HashSet<>(patternService.getAllSkillsIfSkillIdsExist(dto.getSkillIds().stream().toList()))); // TODO: list to set
+        // TODO - check if filter is assignable + throw an error if not.
+        filter.setCompany(company);
+        return filter;
     }
 
     private void delete(Authentication authentication, String imageOrBanner) {
