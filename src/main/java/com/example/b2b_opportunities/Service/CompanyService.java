@@ -41,12 +41,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -193,32 +191,6 @@ public class CompanyService {
         return FilterMapper.toDto(filter);
     }
 
-    public void sendEmailNotification() {
-        List<Company> companies = companyRepository.findAll();
-        for (Company c : companies) {
-            Set<Project> projects = new HashSet<>();
-            for (Filter f : c.getFilters()) {
-                for (Skill s : f.getSkills()) {
-                    projects.addAll(getProjectsWithRequiredSkill(s));
-                }
-            }
-            boolean hasChanged = false;
-            Set<Project> projectsForEmail = new HashSet<>();
-            for (Project p : projects) {
-                if (!c.getProjectIdsNotified().contains(p.getId())) {
-                    projectsForEmail.add(p);
-                    c.getProjectIdsNotified().add(p.getId());
-                    hasChanged = true;
-                }
-            }
-
-            if (hasChanged) {
-                // TODO: Send email.
-                companyRepository.save(c);
-            }
-        }
-    }
-
     @Scheduled(cron = "0 0 9 * * MON")
     public void sendEmailEveryMonday() {
         List<Project> projectsLastThreeDays = getProjectsUpdatedInPastDays(3);
@@ -226,7 +198,7 @@ public class CompanyService {
     }
 
     @Scheduled(cron = "0 0 9 * * TUE, WED, THU, FRI")
-    public void sendEmailTuesdayToFriday(){
+    public void sendEmailTuesdayToFriday() {
         List<Project> projectsLastOneDay = getProjectsUpdatedInPastDays(1);
         sendEmailToEveryCompany(projectsLastOneDay);
     }
@@ -332,15 +304,6 @@ public class CompanyService {
     private List<Project> getProjectsUpdatedInPastDays(int days) {
         LocalDateTime dateThreshold = LocalDateTime.now().minusDays(days);
         return projectRepository.findAllByDateUpdatedAfter(dateThreshold);
-    }
-
-    private Set<Project> getProjectsWithRequiredSkill(Skill skill) {
-        if (skill == null || skill.getId() == null) {
-            return Collections.emptySet();
-        }
-
-        List<Position> positions = positionRepository.findAllBySkillIdRequiredOrOptional(skill.getId());
-        return positions.stream().map(Position::getProject).collect(Collectors.toSet());
     }
 
     private Filter getFilterIfExists(Long id) {
