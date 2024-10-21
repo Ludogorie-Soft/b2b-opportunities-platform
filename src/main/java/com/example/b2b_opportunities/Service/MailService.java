@@ -3,6 +3,7 @@ package com.example.b2b_opportunities.Service;
 import com.example.b2b_opportunities.Dto.Request.EmailRequest;
 import com.example.b2b_opportunities.Entity.Company;
 import com.example.b2b_opportunities.Entity.ConfirmationToken;
+import com.example.b2b_opportunities.Entity.Project;
 import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Repository.ConfirmationTokenRepository;
 import jakarta.servlet.http.HttpServletRequest;
@@ -28,7 +29,6 @@ public class MailService {
         confirmationTokenRepository.save(confirmationToken);
         return token;
     }
-
     public void sendConfirmationMail(User user, HttpServletRequest request) {
         String emailContent = "<html>" +
                 "<body>" +
@@ -74,7 +74,21 @@ public class MailService {
         String subject = "Company mail confirmation - B2B Opportunities";
         sendEmail(company.getEmail(), emailContent, subject);
     }
-
+    public void sendProjectExpiringMail(Project project) {
+        String emailContent = "<html>" +
+                "<body>" +
+                "<h2>Dear " + project.getCompany().getName() + ",</h2>"
+                + "<h3><br/> This is a friendly reminder regarding your project '" + project.getName() + "' will expire in <b>2 days</b>."
+                + "<br/>To ensure your project remains active and continues to be visible to potential clients, you can easily extend its duration."
+                + "<br/>To extend your project for an additional 3 weeks, please visit our website.</h3>" +
+                "<h3><br/> Best regards,\n" +
+                "The B2B Opportunities Team,<br/></h3>" +
+                "</body>" +
+                "</html>";
+        String subject = "B2B Reminder: Your Project is Expiring in 2 Days – Reactivate Now!";
+        sendEmail(project.getCompany().getEmail(), emailContent, subject);
+    }
+  
     private void sendEmail(String receiver, String content, String subject) {
         EmailRequest er = EmailRequest.builder()
                 .receiver(receiver)

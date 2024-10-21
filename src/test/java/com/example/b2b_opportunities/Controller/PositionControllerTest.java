@@ -20,6 +20,7 @@ import com.example.b2b_opportunities.Repository.RoleRepository;
 import com.example.b2b_opportunities.Repository.UserRepository;
 import com.example.b2b_opportunities.Repository.WorkModeRepository;
 import com.example.b2b_opportunities.Static.EmailVerification;
+import com.example.b2b_opportunities.Static.ProjectStatus;
 import com.example.b2b_opportunities.UserDetailsImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -166,6 +167,7 @@ class PositionControllerTest {
         project = new Project();
         project.setName("Test Project");
         project.setCompany(company);
+        project.setProjectStatus(ProjectStatus.ACTIVE);
         project = projectRepository.save(project);
 
         company.setProjects(new ArrayList<>(List.of(project)));
