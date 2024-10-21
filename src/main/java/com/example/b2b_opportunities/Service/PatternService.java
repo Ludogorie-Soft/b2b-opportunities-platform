@@ -4,7 +4,7 @@ import com.example.b2b_opportunities.Dto.Request.PatternRequestDto;
 import com.example.b2b_opportunities.Dto.Response.PatternResponseDto;
 import com.example.b2b_opportunities.Entity.Pattern;
 import com.example.b2b_opportunities.Entity.Skill;
-import com.example.b2b_opportunities.Exception.common.DuplicateResourceException;
+import com.example.b2b_opportunities.Exception.common.AlreadyExistsException;
 import com.example.b2b_opportunities.Exception.common.NotFoundException;
 import com.example.b2b_opportunities.Mapper.PatternMapper;
 import com.example.b2b_opportunities.Repository.PatternRepository;
@@ -12,7 +12,6 @@ import com.example.b2b_opportunities.Repository.SkillRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -102,7 +101,7 @@ public class PatternService {
 
         if (optionalPattern.isPresent()) {
             if (Objects.equals(id, null) || !Objects.equals(optionalPattern.get().getId(), id)) {
-                throw new DuplicateResourceException("Pattern with name: '" + name + "' already exists.");
+                throw new AlreadyExistsException("Pattern with name: '" + name + "' already exists.");
             }
         }
     }

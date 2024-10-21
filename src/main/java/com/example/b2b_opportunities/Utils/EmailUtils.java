@@ -1,6 +1,6 @@
 package com.example.b2b_opportunities.Utils;
 
-import com.example.b2b_opportunities.Exception.InvalidInputException;
+import com.example.b2b_opportunities.Exception.common.InvalidRequestException;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -9,7 +9,7 @@ public class EmailUtils {
 
     public static void validateEmail(String email) {
         if (!isValidEmail(email) || !isValidDomain(email))
-            throw new InvalidInputException("Invalid email format or domain.");
+            throw new InvalidRequestException("Invalid email format or domain.");
     }
 
     private static boolean isValidEmail(String email) {

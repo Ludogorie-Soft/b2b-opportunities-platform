@@ -1,7 +1,7 @@
 package com.example.b2b_opportunities.Controller;
 
 import com.example.b2b_opportunities.Entity.Domain;
-import com.example.b2b_opportunities.Exception.AlreadyExistsException;
+import com.example.b2b_opportunities.Exception.common.AlreadyExistsException;
 import com.example.b2b_opportunities.Exception.common.NotFoundException;
 import com.example.b2b_opportunities.Repository.DomainRepository;
 import com.example.b2b_opportunities.Utils.StringUtils;

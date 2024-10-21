@@ -13,7 +13,7 @@ import com.example.b2b_opportunities.Entity.Skill;
 import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Entity.WorkMode;
 import com.example.b2b_opportunities.Exception.AuthenticationFailedException;
-import com.example.b2b_opportunities.Exception.InvalidInputException;
+import com.example.b2b_opportunities.Exception.common.InvalidRequestException;
 import com.example.b2b_opportunities.Exception.common.NotFoundException;
 import com.example.b2b_opportunities.Mapper.ExperienceMapper;
 import com.example.b2b_opportunities.Mapper.PositionMapper;
@@ -192,7 +192,7 @@ public class PositionService {
 
     private void setRate(Position position, RateRequestDto rateRequestDto) {
         if (rateRequestDto.getMin() > rateRequestDto.getMax()) {
-            throw new InvalidInputException("Min rate cannot exceed max rate");
+            throw new InvalidRequestException("Min rate cannot exceed max rate");
         }
         position.setRate(rateRepository.save(RateMapper.toRate(rateRequestDto)));
     }

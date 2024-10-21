@@ -7,13 +7,11 @@ import com.example.b2b_opportunities.Entity.ConfirmationToken;
 import com.example.b2b_opportunities.Entity.Role;
 import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Exception.AuthenticationFailedException;
-import com.example.b2b_opportunities.Exception.DisabledUserException;
-import com.example.b2b_opportunities.Exception.EmailInUseException;
-import com.example.b2b_opportunities.Exception.InvalidTokenException;
+import com.example.b2b_opportunities.Exception.common.DuplicateCredentialException;
 import com.example.b2b_opportunities.Exception.PasswordsNotMatchingException;
-import com.example.b2b_opportunities.Exception.UserNotFoundException;
-import com.example.b2b_opportunities.Exception.UsernameInUseException;
 import com.example.b2b_opportunities.Exception.ValidationException;
+import com.example.b2b_opportunities.Exception.common.InvalidRequestException;
+import com.example.b2b_opportunities.Exception.common.NotFoundException;
 import com.example.b2b_opportunities.Mapper.UserMapper;
 import com.example.b2b_opportunities.Repository.ConfirmationTokenRepository;
 import com.example.b2b_opportunities.Repository.UserRepository;
@@ -103,7 +101,7 @@ public class AuthenticationService {
 
     public String resendConfirmationMail(String email, HttpServletRequest request) {
         User user = userRepository.findByEmail(email).orElseThrow(()
-                -> new UserNotFoundException("User not found with email: " + email));
+                -> new NotFoundException("User not found with email: " + email));
         if (user.isEnabled()) {
             return "Account already activated";
         }
@@ -143,11 +141,11 @@ public class AuthenticationService {
     public ConfirmationToken validateAndReturnToken(String token) {
         Optional<ConfirmationToken> optionalConfirmationToken = confirmationTokenRepository.findByToken(token);
         if (optionalConfirmationToken.isEmpty()) {
-            throw new InvalidTokenException("Invalid token");
+            throw new InvalidRequestException("Invalid token");
         }
         ConfirmationToken confirmationToken = optionalConfirmationToken.get();
         if (isTokenExpired(confirmationToken)) {
-            throw new InvalidTokenException("Expired token");
+            throw new InvalidRequestException("Expired token");
         }
         return optionalConfirmationToken.get();
     }
@@ -182,7 +180,7 @@ public class AuthenticationService {
             Authentication authResult = authenticationManager.authenticate(authentication);
             return (UserDetailsImpl) authResult.getPrincipal();
         } catch (DisabledException e) {
-            throw new DisabledUserException("This account is not activated yet."); // TODO: email confirmation not accepted
+            throw new AuthenticationFailedException("This account is not activated yet."); // TODO: email confirmation not accepted
         } catch (AuthenticationException e) {
             throw new AuthenticationFailedException("Authentication failed: Invalid username or password.");
         }
@@ -190,10 +188,10 @@ public class AuthenticationService {
 
     private void validateUser(UserRequestDto userRequestDto) {
         if (isEmailInDB(userRequestDto.getEmail().toLowerCase())) {
-            throw new EmailInUseException("Email already in use. Please use a different email");
+            throw new DuplicateCredentialException("Email already in use. Please use a different email");
         }
         if (isUsernameInDB(userRequestDto.getUsername().toLowerCase())) {
-            throw new UsernameInUseException("Username already in use. Please use a different username");
+            throw new DuplicateCredentialException("Username already in use. Please use a different username");
         }
         if (!arePasswordsMatching(userRequestDto.getPassword(), userRequestDto.getRepeatedPassword())) {
             throw new PasswordsNotMatchingException("Passwords don't match");
@@ -227,7 +225,7 @@ public class AuthenticationService {
     }
 
     private void generateLoginResponse(HttpServletRequest request, HttpServletResponse response, String email) {
-        User user = userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new NotFoundException("User not found with email: " + email));
         UserDetailsImpl userDetails = new UserDetailsImpl(user);
 
         String jwtToken = jwtService.generateToken(userDetails);

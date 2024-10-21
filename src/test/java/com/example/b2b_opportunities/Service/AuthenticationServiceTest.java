@@ -6,11 +6,10 @@ import com.example.b2b_opportunities.Dto.Response.UserResponseDto;
 import com.example.b2b_opportunities.Entity.ConfirmationToken;
 import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Exception.AuthenticationFailedException;
-import com.example.b2b_opportunities.Exception.DisabledUserException;
-import com.example.b2b_opportunities.Exception.EmailInUseException;
-import com.example.b2b_opportunities.Exception.InvalidTokenException;
+import com.example.b2b_opportunities.Exception.common.DuplicateCredentialException;
+import com.example.b2b_opportunities.Exception.common.InvalidRequestException;
 import com.example.b2b_opportunities.Exception.PasswordsNotMatchingException;
-import com.example.b2b_opportunities.Exception.UserNotFoundException;
+import com.example.b2b_opportunities.Exception.common.NotFoundException;
 import com.example.b2b_opportunities.Mapper.UserMapper;
 import com.example.b2b_opportunities.Repository.ConfirmationTokenRepository;
 import com.example.b2b_opportunities.Repository.UserRepository;
@@ -42,7 +41,6 @@ import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -145,7 +143,7 @@ class AuthenticationServiceTest {
         when(authenticationManager.authenticate(any(Authentication.class)))
                 .thenThrow(new DisabledException(""));
 
-        DisabledUserException exception = assertThrows(DisabledUserException.class, () -> {
+        AuthenticationFailedException exception = assertThrows(AuthenticationFailedException.class, () -> {
             authenticationService.login(loginDto, request, response);
         });
 
@@ -213,7 +211,7 @@ class AuthenticationServiceTest {
         when(bindingResult.hasErrors()).thenReturn(false);
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(new User()));
 
-        EmailInUseException exception = assertThrows(EmailInUseException.class, () -> {
+        DuplicateCredentialException exception = assertThrows(DuplicateCredentialException.class, () -> {
             authenticationService.register(userRequestDto, bindingResult, request);
         });
 
@@ -231,7 +229,7 @@ class AuthenticationServiceTest {
         when(confirmationToken.getUser())
                 .thenReturn(new User());
 
-        InvalidTokenException exception = assertThrows(InvalidTokenException.class, () -> {
+        InvalidRequestException exception = assertThrows(InvalidRequestException.class, () -> {
             authenticationService.confirmEmail(token);
         });
 
@@ -299,7 +297,7 @@ class AuthenticationServiceTest {
 
         when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
 
-        UserNotFoundException exception = assertThrows(UserNotFoundException.class, () -> {
+        NotFoundException exception = assertThrows(NotFoundException.class, () -> {
             authenticationService.resendConfirmationMail(email, request);
         });
 

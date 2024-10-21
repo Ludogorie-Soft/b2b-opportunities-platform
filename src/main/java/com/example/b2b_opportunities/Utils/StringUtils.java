@@ -1,6 +1,6 @@
 package com.example.b2b_opportunities.Utils;
 
-import com.example.b2b_opportunities.Exception.InvalidInputException;
+import com.example.b2b_opportunities.Exception.common.InvalidRequestException;
 
 public class StringUtils {
     public static String stripCapitalizeAndValidateNotEmpty(String name, String context) {
@@ -10,7 +10,7 @@ public class StringUtils {
 
     private static void validateNameNotBlank(String name, String context) {
         if (name == null || name.isBlank()) {
-            throw new InvalidInputException(context.strip() + " cannot be null or blank");
+            throw new InvalidRequestException(context.strip() + " cannot be null or blank");
         }
     }
 

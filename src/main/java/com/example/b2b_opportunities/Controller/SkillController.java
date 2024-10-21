@@ -2,7 +2,7 @@ package com.example.b2b_opportunities.Controller;
 
 import com.example.b2b_opportunities.Dto.Response.SkillResponseDto;
 import com.example.b2b_opportunities.Entity.Skill;
-import com.example.b2b_opportunities.Exception.SkillNotFoundException;
+import com.example.b2b_opportunities.Exception.common.NotFoundException;
 import com.example.b2b_opportunities.Mapper.SkillMapper;
 import com.example.b2b_opportunities.Repository.SkillRepository;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +37,6 @@ public class SkillController {
 
     private Skill getSkillOrThrow(Long id) {
         return skillRepository.findById(id)
-                .orElseThrow(() -> new SkillNotFoundException("Skill with ID: " + id + " not found"));
+                .orElseThrow(() -> new NotFoundException("Skill with ID: " + id + " not found"));
     }
 }

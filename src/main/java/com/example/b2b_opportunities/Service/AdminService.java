@@ -3,7 +3,7 @@ package com.example.b2b_opportunities.Service;
 import com.example.b2b_opportunities.Dto.Response.UserResponseDto;
 import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Exception.AuthenticationFailedException;
-import com.example.b2b_opportunities.Exception.UserNotFoundException;
+import com.example.b2b_opportunities.Exception.common.NotFoundException;
 import com.example.b2b_opportunities.Mapper.UserMapper;
 import com.example.b2b_opportunities.Repository.UserRepository;
 import com.example.b2b_opportunities.UserDetailsImpl;
@@ -21,7 +21,7 @@ public class AdminService {
     private final UserRepository userRepository;
 
     public UserResponseDto approve(Long id) {
-        User user = userRepository.findById(id).orElseThrow(() -> new UserNotFoundException("User with id " + id + " not found"));
+        User user = userRepository.findById(id).orElseThrow(() -> new NotFoundException("User with id " + id + " not found"));
         if (user.isApproved()) {
             return UserMapper.toResponseDto(user);
         }
@@ -42,11 +42,11 @@ public class AdminService {
         if (authentication instanceof OAuth2AuthenticationToken) {
             OAuth2User oauthUser = ((OAuth2AuthenticationToken) authentication).getPrincipal();
             String email = (String) oauthUser.getAttributes().get("email");
-            return userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User with email: " + email + " not found"));
+            return userRepository.findByEmail(email).orElseThrow(() -> new NotFoundException("User with email: " + email + " not found"));
         }
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         // This will lazy load all company fields
         String email = userDetails.getUser().getEmail();
-        return userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User with email: " + email + " not found"));
+        return userRepository.findByEmail(email).orElseThrow(() -> new NotFoundException("User with email: " + email + " not found"));
     }
 }

@@ -1,7 +1,7 @@
 package com.example.b2b_opportunities.Controller;
 
 import com.example.b2b_opportunities.Entity.Seniority;
-import com.example.b2b_opportunities.Exception.SeniorityNotFoundException;
+import com.example.b2b_opportunities.Exception.common.NotFoundException;
 import com.example.b2b_opportunities.Repository.SeniorityRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -30,6 +30,6 @@ public class SeniorityController {
     @ResponseStatus(HttpStatus.OK)
     public Seniority getSeniority(@PathVariable("id") Long id) {
         return seniorityRepository.findById(id)
-                .orElseThrow(() -> new SeniorityNotFoundException("Seniority with id '" + id + "' not found"));
+                .orElseThrow(() -> new NotFoundException("Seniority with id '" + id + "' not found"));
     }
 }

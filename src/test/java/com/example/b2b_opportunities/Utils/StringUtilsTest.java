@@ -1,6 +1,6 @@
 package com.example.b2b_opportunities.Utils;
 
-import com.example.b2b_opportunities.Exception.InvalidInputException;
+import com.example.b2b_opportunities.Exception.common.InvalidRequestException;
 import org.junit.jupiter.api.Test;
 
 import static com.example.b2b_opportunities.Utils.StringUtils.stripCapitalizeAndValidateNotEmpty;
@@ -13,7 +13,7 @@ class StringUtilsTest {
     @Test
     void throwErrorWhenNameIsNull() {
         String name = null;
-        InvalidInputException exception = assertThrows(InvalidInputException.class, () -> {
+        InvalidRequestException exception = assertThrows(InvalidRequestException.class, () -> {
             stripCapitalizeAndValidateNotEmpty(name, context);
         });
     }
@@ -21,7 +21,7 @@ class StringUtilsTest {
     @Test
     void throwErrorWhenNameIsEmpty() {
         String name = "";
-        InvalidInputException exception = assertThrows(InvalidInputException.class, () -> {
+        InvalidRequestException exception = assertThrows(InvalidRequestException.class, () -> {
             stripCapitalizeAndValidateNotEmpty(name, context);
         });
     }
@@ -29,7 +29,7 @@ class StringUtilsTest {
     @Test
     void throwErrorWhenNameIsBlank() {
         String name = "   ";
-        InvalidInputException exception = assertThrows(InvalidInputException.class, () -> {
+        InvalidRequestException exception = assertThrows(InvalidRequestException.class, () -> {
             stripCapitalizeAndValidateNotEmpty(name, context);
         });
     }
@@ -37,7 +37,7 @@ class StringUtilsTest {
     @Test
     void shouldStripTheContextWithSingleWord() {
         String name = "   ";
-        InvalidInputException exception = assertThrows(InvalidInputException.class, () -> {
+        InvalidRequestException exception = assertThrows(InvalidRequestException.class, () -> {
             stripCapitalizeAndValidateNotEmpty(name, "  word  ");
         });
         assertEquals(exception.getMessage(), "word cannot be null or blank");
@@ -46,7 +46,7 @@ class StringUtilsTest {
     @Test
     void shouldStripTheContextWithMultipleWordsAndKeepTheCapitalizationAndSpacesBetweenWords() {
         String name = "   ";
-        InvalidInputException exception = assertThrows(InvalidInputException.class, () -> {
+        InvalidRequestException exception = assertThrows(InvalidRequestException.class, () -> {
             stripCapitalizeAndValidateNotEmpty(name, "  One   twO  ");
         });
         assertEquals(exception.getMessage(), "One   twO cannot be null or blank");

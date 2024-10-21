@@ -3,11 +3,11 @@ package com.example.b2b_opportunities.Service;
 import com.example.b2b_opportunities.Dto.Request.ResetPasswordDto;
 import com.example.b2b_opportunities.Entity.ConfirmationToken;
 import com.example.b2b_opportunities.Entity.User;
-import com.example.b2b_opportunities.Exception.DisabledUserException;
-import com.example.b2b_opportunities.Exception.InvalidTokenException;
-import com.example.b2b_opportunities.Exception.OAuthUserPasswordResetException;
+import com.example.b2b_opportunities.Exception.AuthenticationFailedException;
+import com.example.b2b_opportunities.Exception.common.InvalidRequestException;
 import com.example.b2b_opportunities.Exception.PasswordsNotMatchingException;
-import com.example.b2b_opportunities.Exception.UserNotFoundException;
+import com.example.b2b_opportunities.Exception.common.NotFoundException;
+import com.example.b2b_opportunities.Exception.common.PermissionDeniedException;
 import com.example.b2b_opportunities.Repository.ConfirmationTokenRepository;
 import com.example.b2b_opportunities.Repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
@@ -72,7 +72,7 @@ class PasswordServiceTest {
     void testRequestPasswordRecovery_NotRegisteredUser() {
         when(userRepository.findByEmail("nonexistent@abv.bg")).thenReturn(Optional.empty());
 
-        UserNotFoundException exception = assertThrows(UserNotFoundException.class, () ->
+        NotFoundException exception = assertThrows(NotFoundException.class, () ->
                 passwordService.requestPasswordRecovery("nonexistent@abv.bg", request));
 
         assertEquals("User not registered", exception.getMessage());
@@ -83,7 +83,7 @@ class PasswordServiceTest {
         when(userRepository.findByEmail("test@abv.bg")).thenReturn(Optional.of(user));
         user.setProvider("testProvider");
 
-        OAuthUserPasswordResetException exception = assertThrows(OAuthUserPasswordResetException.class, () ->
+        PermissionDeniedException exception = assertThrows(PermissionDeniedException.class, () ->
                 passwordService.requestPasswordRecovery("test@abv.bg", request));
 
         assertEquals("User registered using oAuth - " + user.getProvider(), exception.getMessage());
@@ -95,7 +95,7 @@ class PasswordServiceTest {
         user.setProvider(null);
         user.setEnabled(false);
 
-        DisabledUserException exception = assertThrows(DisabledUserException.class, () ->
+        AuthenticationFailedException exception = assertThrows(AuthenticationFailedException.class, () ->
                 passwordService.requestPasswordRecovery("test@abv.bg", request));
 
         assertEquals("Account not activated", exception.getMessage());
@@ -135,13 +135,13 @@ class PasswordServiceTest {
 
         when(confirmationTokenRepository.findByToken("expiredToken")).thenReturn(Optional.of(confirmationToken));
 
-        when(authenticationService.validateAndReturnToken("expiredToken")).thenThrow(new InvalidTokenException("Expired token"));
+        when(authenticationService.validateAndReturnToken("expiredToken")).thenThrow(new InvalidRequestException("Expired token"));
 
         when(authenticationService.arePasswordsMatching("newPassword", "newPassword")).thenReturn(true);
 
         ResetPasswordDto resetPasswordDto = new ResetPasswordDto("expiredToken", "newPassword", "newPassword");
 
-        InvalidTokenException exception = assertThrows(InvalidTokenException.class, () -> passwordService.setNewPassword(resetPasswordDto));
+        InvalidRequestException exception = assertThrows(InvalidRequestException.class, () -> passwordService.setNewPassword(resetPasswordDto));
 
         assertEquals("Expired token", exception.getMessage());
         assertEquals("oldPassword", user.getPassword());
@@ -159,13 +159,13 @@ class PasswordServiceTest {
 
         when(confirmationTokenRepository.findByToken("invalidToken")).thenReturn(Optional.empty());
 
-        when(authenticationService.validateAndReturnToken("invalidToken")).thenThrow(new InvalidTokenException("Invalid token"));
+        when(authenticationService.validateAndReturnToken("invalidToken")).thenThrow(new InvalidRequestException("Invalid token"));
 
         when(authenticationService.arePasswordsMatching("newPassword", "newPassword")).thenReturn(true);
 
         ResetPasswordDto resetPasswordDto = new ResetPasswordDto("invalidToken", "newPassword", "newPassword");
 
-        InvalidTokenException exception = assertThrows(InvalidTokenException.class, () -> passwordService.setNewPassword(resetPasswordDto));
+        InvalidRequestException exception = assertThrows(InvalidRequestException.class, () -> passwordService.setNewPassword(resetPasswordDto));
 
         assertEquals("Invalid token", exception.getMessage());
         assertEquals("oldPassword", user.getPassword());

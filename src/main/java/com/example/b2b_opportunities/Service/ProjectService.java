@@ -8,8 +8,8 @@ import com.example.b2b_opportunities.Entity.Company;
 import com.example.b2b_opportunities.Entity.Position;
 import com.example.b2b_opportunities.Entity.Project;
 import com.example.b2b_opportunities.Entity.User;
-import com.example.b2b_opportunities.Exception.PermissionDeniedException;
-import com.example.b2b_opportunities.Exception.common.DuplicateResourceException;
+import com.example.b2b_opportunities.Exception.common.AlreadyExistsException;
+import com.example.b2b_opportunities.Exception.common.PermissionDeniedException;
 import com.example.b2b_opportunities.Exception.common.NotFoundException;
 import com.example.b2b_opportunities.Mapper.PositionMapper;
 import com.example.b2b_opportunities.Mapper.ProjectMapper;
@@ -82,7 +82,7 @@ public class ProjectService {
         Project project = getProjectIfExists(projectId);
         validateProjectBelongsToUser(authentication, project);
         if (project.getProjectStatus().equals(ProjectStatus.ACTIVE)) {
-            throw new DuplicateResourceException("This project is active already");
+            throw new AlreadyExistsException("This project is active already");
         }
         project.setProjectStatus(ProjectStatus.ACTIVE);
         // so that the project can be auto-deactivated again in 3 weeks after reactivation
