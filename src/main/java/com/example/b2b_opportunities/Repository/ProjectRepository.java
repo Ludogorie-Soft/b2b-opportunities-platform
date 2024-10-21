@@ -17,11 +17,4 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
 
     @Query(value = "SELECT * FROM projects p WHERE p.date_posted <= CURRENT_DATE - INTERVAL '21 days'", nativeQuery = true)
     List<Project> findProjectsOlderThanTwentyOneDays();
-
-    Optional<Project> findByToken(String token);
-    @Query("SELECT p FROM Project p LEFT JOIN p.positions pos " +
-            "GROUP BY p " +
-            "HAVING COUNT(pos) = 0 OR SUM(CASE WHEN pos.isActive = true THEN 1 ELSE 0 END) = 0")
-    List<Project> findProjectsWithoutActivePositions();
-
 }

@@ -93,12 +93,6 @@ public class ProjectService {
     //Once per day at 13:00
     @Scheduled(cron = "0 0 13 * * *")
     public void processExpiringProjects() {
-        //TODO - remove this when the logic is implemented between logic and position
-        List<Project> projectsWithoutActivePositions = projectRepository.findProjectsWithoutActivePositions();
-        for (Project project : projectsWithoutActivePositions) {
-            project.setProjectStatus(ProjectStatus.INACTIVE);
-            projectRepository.save(project);
-        }
         List<Project> expiringProjects = projectRepository.findProjectsExpiringInTwoDays();
         for (Project project : expiringProjects) {
             mailService.sendProjectExpiringMail(project);
