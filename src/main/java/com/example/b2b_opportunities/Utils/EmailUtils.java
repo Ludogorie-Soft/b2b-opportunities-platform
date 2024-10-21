@@ -4,8 +4,11 @@ import com.example.b2b_opportunities.Exception.common.InvalidRequestException;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.regex.Pattern;
 
 public class EmailUtils {
+    private static final Pattern EMAIL_PATTERN = Pattern.compile("^[\\w.-]+@([\\w-]+\\.)+[\\w-]{2,4}$");
+
 
     public static void validateEmail(String email) {
         if (!isValidEmail(email) || !isValidDomain(email))
@@ -13,7 +16,10 @@ public class EmailUtils {
     }
 
     private static boolean isValidEmail(String email) {
-        return email.matches("^[\\w.-]+@([\\w-]+\\.)+[\\w-]{2,4}$"); // Basic regex for email validation
+        if (email == null || email.length() > 320) { // Basic check for null or unreasonably long emails
+            return false;
+        }
+        return EMAIL_PATTERN.matcher(email).matches();
     }
 
     private static boolean isValidDomain(String email) {
