@@ -87,6 +87,9 @@ public class Company {
     @JsonBackReference
     private List<Project> projects;
 
+    @OneToMany(mappedBy = "company")
+    private Set<Filter> filters;
+
     public void setName(@NotEmpty String name) {
         this.name = name.strip();
     }
@@ -94,4 +97,6 @@ public class Company {
     public void setEmail(@NotEmpty @Email String email) {
         this.email = email.strip().toLowerCase();
     }
+
+    Set<Long> projectIdsNotified;
 }

@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -55,23 +56,45 @@ public class PatternService {
         return PatternMapper.toDto(patternRepository.save(pattern));
     }
 
-    protected List<Skill> getAllSkillsIfSkillIdsExist(List<Long> skillList) {
-        if (skillList != null) {
-            List<Skill> suggestedSkills = skillRepository.findAllById(skillList);
 
-            // Check if any skill IDs are missing
-            if (suggestedSkills.size() != skillList.size()) {
-                List<Long> foundSkillIds = suggestedSkills.stream()
-                        .map(Skill::getId).toList();
+    // TODO: move this method to a better place (make SET)
+    public List<Skill> getAllSkillsIfSkillIdsExist(List<Long> skillList) {
+        return getAllSkillsIfSkillIdsExist(skillList, false);
+    }
 
-                List<Long> missingSkillIds = skillList.stream()
-                        .filter(id -> !foundSkillIds.contains(id)).toList();
+    public List<Skill> getAllAssignableSkillsIfSkillIdsExist(List<Long> skillList) {
+        return getAllSkillsIfSkillIdsExist(skillList, true);
+    }
 
-                throw new NotFoundException("Skills with ID(s) " + missingSkillIds + " not found.");
-            }
-            return suggestedSkills;
+    public List<Skill> getAllSkillsIfSkillIdsExist(List<Long> skillIds, boolean getAssignableOnly) {
+        if (skillIds == null || skillIds.isEmpty()) {
+            return Collections.emptyList();
         }
-        return new ArrayList<>();
+
+        List<Skill> skills = skillRepository.findAllById(skillIds);
+
+        // Check for missing skill IDs
+        List<Long> missingSkillIds = skillIds.stream()
+                .filter(id -> skills.stream().noneMatch(skill -> skill.getId().equals(id)))
+                .toList();
+
+        if (!missingSkillIds.isEmpty()) {
+            throw new NotFoundException("Skills with ID(s) " + missingSkillIds + " not found.");
+        }
+
+        // Check if skills can be assigned
+        if (getAssignableOnly) {
+            List<Long> nonAssignableSkillIds = skills.stream()
+                    .filter(skill -> Boolean.FALSE.equals(skill.getAssignable()))
+                    .map(Skill::getId)
+                    .toList();
+
+            if (!nonAssignableSkillIds.isEmpty()) {
+                throw new NotFoundException("Skills with ID(s) " + nonAssignableSkillIds + " cannot be assigned.");
+            }
+        }
+
+        return skills;
     }
 
     private void checkIfPatternNameAlreadyExistsForAnotherID(String name, Long id) {

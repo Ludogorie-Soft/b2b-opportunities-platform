@@ -1,7 +1,10 @@
 package com.example.b2b_opportunities.Controller;
 
+import com.example.b2b_opportunities.Dto.Request.CompanyFilterEditDto;
+import com.example.b2b_opportunities.Dto.Request.CompanyFilterRequestDto;
 import com.example.b2b_opportunities.Dto.Request.CompanyRequestDto;
 import com.example.b2b_opportunities.Dto.Response.CompaniesAndUsersResponseDto;
+import com.example.b2b_opportunities.Dto.Response.CompanyFilterResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyPublicResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyResponseDto;
 import com.example.b2b_opportunities.Dto.Response.ProjectResponseDto;
@@ -58,6 +61,7 @@ public class CompanyController {
     @ResponseStatus(HttpStatus.OK)
     public List<ProjectResponseDto> getCompanyProjects(@PathVariable("id") Long id) {
         return companyService.getCompanyProjects(id);
+        // TODO: this needs to use Authentication instead of ID
     }
 
     @PostMapping
@@ -107,5 +111,38 @@ public class CompanyController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteCompanyImage(Authentication authentication) {
         companyService.deleteCompanyImage(authentication);
+    }
+
+    @PostMapping("/filters/add")
+    @ResponseStatus(HttpStatus.CREATED)
+    public CompanyFilterResponseDto addCompanyFilter(Authentication authentication,
+                                                     @RequestBody @Valid CompanyFilterRequestDto dto) {
+        return companyService.addCompanyFilter(authentication, dto);
+    }
+
+    @GetMapping("/filters/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public CompanyFilterResponseDto getCompanyFilter(@PathVariable("id") Long id, Authentication authentication) {
+        return companyService.getCompanyFilter(id, authentication);
+    }
+
+    @GetMapping("/filters")
+    @ResponseStatus(HttpStatus.OK)
+    public List<CompanyFilterResponseDto> getCompanyFilters(Authentication authentication) {
+        return companyService.getCompanyFilters(authentication);
+    }
+
+    @PutMapping("/filters/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public CompanyFilterResponseDto editCompanyFilter(@PathVariable("id") Long id,
+                                                      @RequestBody @Valid CompanyFilterEditDto dto,
+                                                      Authentication authentication) {
+        return companyService.editCompanyFilter(id, dto, authentication);
+    }
+
+    @DeleteMapping("/filters/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteCompanyFilter(@PathVariable("id") Long id, Authentication authentication) {
+        companyService.deleteCompanyFilter(id, authentication);
     }
 }

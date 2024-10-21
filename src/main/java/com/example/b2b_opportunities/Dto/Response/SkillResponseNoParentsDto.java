@@ -7,7 +7,9 @@ import lombok.Setter;
 @Getter
 @Setter
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class SkillResponseDto extends SkillResponseNoParentsDto{
-    private SkillResponseDto parent;
-    private Boolean assignable;
+public class SkillResponseNoParentsDto {
+    private Long id;
+    private String name;
+    private String imageType;
+    private String imageBase64;
 }

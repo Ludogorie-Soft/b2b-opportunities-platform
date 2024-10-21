@@ -110,6 +110,7 @@ public class ProjectService {
         project.setEndDate(dto.getEndDate());
         project.setDuration(dto.getDuration());
         project.setDescription(dto.getDescription());
+        project.setDateUpdated(LocalDateTime.now());
         project.setProjectStatus(ProjectStatus.ACTIVE);
         return ProjectMapper.toDto(projectRepository.save(project));
     }

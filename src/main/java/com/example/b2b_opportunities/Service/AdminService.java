@@ -45,6 +45,8 @@ public class AdminService {
             return userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User with email: " + email + " not found"));
         }
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-        return userDetails.getUser();
+        // This will lazy load all company fields
+        String email = userDetails.getUser().getEmail();
+        return userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User with email: " + email + " not found"));
     }
 }

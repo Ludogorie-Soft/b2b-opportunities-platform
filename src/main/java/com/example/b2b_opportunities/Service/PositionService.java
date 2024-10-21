@@ -32,6 +32,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -59,6 +60,7 @@ public class PositionService {
 
         setProjectOrThrow(position, dto.getProjectId());
         setPositionFields(position, dto);
+        updateProjectDateUpdated(position);
         activateProjectIfInactive(position.getProject());
 
         return PositionMapper.toResponseDto(positionRepository.save(position));
@@ -84,6 +86,8 @@ public class PositionService {
         position.setDescription(dto.getDescription());
 
         setPositionFields(position, dto);
+        updateProjectDateUpdated(position);
+
         return PositionMapper.toResponseDto(positionRepository.save(position));
     }
 
@@ -104,6 +108,12 @@ public class PositionService {
             positionResponseDtoList.add(PositionMapper.toResponseDto(position));
         }
         return positionResponseDtoList;
+    }
+
+    private void updateProjectDateUpdated(Position position) {
+        Project project = position.getProject();
+        project.setDateUpdated(LocalDateTime.now());
+        projectRepository.save(project);
     }
 
     private void setPositionFields(Position position, PositionRequestDto dto) {
