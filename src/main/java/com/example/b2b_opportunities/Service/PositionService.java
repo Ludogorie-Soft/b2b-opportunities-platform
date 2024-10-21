@@ -14,7 +14,7 @@ import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Entity.WorkMode;
 import com.example.b2b_opportunities.Exception.AuthenticationFailedException;
 import com.example.b2b_opportunities.Exception.InvalidInputException;
-import com.example.b2b_opportunities.Exception.NotFoundException;
+import com.example.b2b_opportunities.Exception.common.NotFoundException;
 import com.example.b2b_opportunities.Mapper.ExperienceMapper;
 import com.example.b2b_opportunities.Mapper.PositionMapper;
 import com.example.b2b_opportunities.Mapper.RateMapper;

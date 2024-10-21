@@ -1,7 +1,7 @@
 package com.example.b2b_opportunities.Service;
 
 import com.example.b2b_opportunities.Entity.Location;
-import com.example.b2b_opportunities.Exception.NotFoundException;
+import com.example.b2b_opportunities.Exception.common.NotFoundException;
 import com.example.b2b_opportunities.Repository.LocationRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
