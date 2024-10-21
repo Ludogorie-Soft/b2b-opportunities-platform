@@ -15,6 +15,7 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
     @Query(value = "SELECT * FROM projects p WHERE p.date_posted = CURRENT_DATE - INTERVAL '19 days'", nativeQuery = true)
     List<Project> findProjectsExpiringInTwoDays();
 
-    @Query(value = "SELECT * FROM projects p WHERE p.date_posted <= CURRENT_DATE - INTERVAL '21 days'", nativeQuery = true)
-    List<Project> findProjectsOlderThanTwentyOneDays();
+    @Query(value = "SELECT * FROM projects p WHERE p.date_posted <= CURRENT_DATE - INTERVAL :daysToSubtract DAY", nativeQuery = true)
+    List<Project> findProjectsOlderThan(@Param("daysToSubtract") int daysToSubtract);
+
 }

@@ -97,7 +97,7 @@ public class ProjectService {
         for (Project project : expiringProjects) {
             mailService.sendProjectExpiringMail(project);
         }
-        List<Project> expiredProjects = projectRepository.findProjectsOlderThanTwentyOneDays();
+        List<Project> expiredProjects = projectRepository.findProjectsOlderThan(21);
         for (Project project : expiredProjects) {
             project.setProjectStatus(ProjectStatus.INACTIVE);
             projectRepository.save(project);
