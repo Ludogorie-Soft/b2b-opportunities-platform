@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import static com.example.b2b_opportunities.Mapper.CompanyMapper.toCompanyPublicResponseDtoList;
 import static com.example.b2b_opportunities.Utils.EmailUtils.validateEmail;
 
 @Service
