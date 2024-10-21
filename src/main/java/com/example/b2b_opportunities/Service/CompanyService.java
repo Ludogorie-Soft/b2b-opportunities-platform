@@ -2,6 +2,7 @@ package com.example.b2b_opportunities.Service;
 
 import com.example.b2b_opportunities.Dto.Request.CompanyRequestDto;
 import com.example.b2b_opportunities.Dto.Response.CompaniesAndUsersResponseDto;
+import com.example.b2b_opportunities.Dto.Response.CompanyPublicResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyResponseDto;
 import com.example.b2b_opportunities.Dto.Response.ProjectResponseDto;
 import com.example.b2b_opportunities.Dto.Response.UserResponseDto;
@@ -27,6 +28,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -283,5 +285,19 @@ public class CompanyService {
             if (companyRepository.findByLinkedIn(linkedIn).isPresent())
                 throw new AlreadyExistsException("LinkedIn already registered");
         }
+    }
+
+    public List<CompanyPublicResponseDto> getAcceptedCompaniesPublicData() {
+        List<Company> verifiedCompanies = companyRepository.findCompaniesByEmailVerificationAccepted();
+        List<CompanyPublicResponseDto> companiesPublicDataNoImg = toCompanyPublicResponseDtoList(verifiedCompanies);
+
+        List<CompanyPublicResponseDto> result = new ArrayList<>();
+
+        for (CompanyPublicResponseDto c : companiesPublicDataNoImg) {
+            c.setImage(imageService.returnUrlIfPictureExists(c.getId(), "image"));
+            result.add(c);
+        }
+
+        return result;
     }
 }
