@@ -37,6 +37,7 @@ public class Project {
     private Company company;
 
     private LocalDateTime datePosted;
+    private LocalDateTime dateUpdated;
 
     @NotEmpty
     private String name;

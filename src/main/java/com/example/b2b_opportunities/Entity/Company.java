@@ -97,4 +97,6 @@ public class Company {
     public void setEmail(@NotEmpty @Email String email) {
         this.email = email.strip().toLowerCase();
     }
+
+    Set<Long> projectIdsNotified;
 }

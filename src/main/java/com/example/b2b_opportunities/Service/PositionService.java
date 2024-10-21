@@ -31,6 +31,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -55,6 +56,7 @@ public class PositionService {
         validateProjectAndUserAreRelated(dto.getProjectId(), authentication);
 
         Position position = PositionMapper.toPosition(dto);
+        updateProjectDateUpdated(position);
 
         setProjectOrThrow(position, dto.getProjectId());
         setPositionFields(position, dto);
@@ -65,6 +67,7 @@ public class PositionService {
     public PositionResponseDto editPosition(Long id, PositionRequestDto dto, Authentication authentication) {
         validateUserAndCompany(authentication);
         Position position = getPositionOrThrow(id);
+        updateProjectDateUpdated(position);
 
         validateProjectAndUserAreRelated(position.getProject().getId(), authentication);
 
@@ -76,6 +79,7 @@ public class PositionService {
         position.setDescription(dto.getDescription());
 
         setPositionFields(position, dto);
+
         return PositionMapper.toResponseDto(positionRepository.save(position));
     }
 
@@ -96,6 +100,12 @@ public class PositionService {
             positionResponseDtoList.add(PositionMapper.toResponseDto(position));
         }
         return positionResponseDtoList;
+    }
+
+    private void updateProjectDateUpdated(Position position) {
+        Project project = position.getProject();
+        project.setDateUpdated(LocalDateTime.now());
+        projectRepository.save(project);
     }
 
     private void setPositionFields(Position position, PositionRequestDto dto) {

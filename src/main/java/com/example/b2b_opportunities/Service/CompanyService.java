@@ -12,6 +12,9 @@ import com.example.b2b_opportunities.Entity.Company;
 import com.example.b2b_opportunities.Entity.CompanyType;
 import com.example.b2b_opportunities.Entity.Domain;
 import com.example.b2b_opportunities.Entity.Filter;
+import com.example.b2b_opportunities.Entity.Position;
+import com.example.b2b_opportunities.Entity.Project;
+import com.example.b2b_opportunities.Entity.RequiredSkill;
 import com.example.b2b_opportunities.Entity.Skill;
 import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Exception.AlreadyExistsException;
@@ -24,20 +27,26 @@ import com.example.b2b_opportunities.Repository.CompanyRepository;
 import com.example.b2b_opportunities.Repository.CompanyTypeRepository;
 import com.example.b2b_opportunities.Repository.DomainRepository;
 import com.example.b2b_opportunities.Repository.FilterRepository;
+import com.example.b2b_opportunities.Repository.PositionRepository;
+import com.example.b2b_opportunities.Repository.ProjectRepository;
 import com.example.b2b_opportunities.Repository.UserRepository;
 import com.example.b2b_opportunities.Static.EmailVerification;
 import com.example.b2b_opportunities.Utils.StringUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -51,6 +60,8 @@ public class CompanyService {
     private final AdminService adminService;
     private final UserRepository userRepository;
     private final FilterRepository filterRepository;
+    private final ProjectRepository projectRepository;
+    private final PositionRepository positionRepository;
 
     public CompanyResponseDto createCompany(Authentication authentication,
                                             CompanyRequestDto companyRequestDto,
@@ -182,11 +193,161 @@ public class CompanyService {
         return FilterMapper.toDto(filter);
     }
 
-    private Filter getFilterIfExists(Long id){
+    public void sendEmailNotification() {
+        List<Company> companies = companyRepository.findAll();
+        for (Company c : companies) {
+            Set<Project> projects = new HashSet<>();
+            for (Filter f : c.getFilters()) {
+                for (Skill s : f.getSkills()) {
+                    projects.addAll(getProjectsWithRequiredSkill(s));
+                }
+            }
+            boolean hasChanged = false;
+            Set<Project> projectsForEmail = new HashSet<>();
+            for (Project p : projects) {
+                if (!c.getProjectIdsNotified().contains(p.getId())) {
+                    projectsForEmail.add(p);
+                    c.getProjectIdsNotified().add(p.getId());
+                    hasChanged = true;
+                }
+            }
+
+            if (hasChanged) {
+                // TODO: Send email.
+                companyRepository.save(c);
+            }
+        }
+    }
+
+    @Scheduled(cron = "0 0 9 * * MON")
+    public void sendEmailEveryMonday() {
+        List<Project> projectsLastThreeDays = getProjectsUpdatedInPastDays(3);
+        sendEmailToEveryCompany(projectsLastThreeDays);
+    }
+
+    @Scheduled(cron = "0 0 9 * * TUE, WED, THU, FRI")
+    public void sendEmailTuesdayToFriday(){
+        List<Project> projectsLastOneDay = getProjectsUpdatedInPastDays(1);
+        sendEmailToEveryCompany(projectsLastOneDay);
+    }
+
+    private void sendEmailToEveryCompany(List<Project> projectsToCheck) {
+        List<Company> companies = companyRepository.findAll();
+
+        for (Company c : companies) {
+            Set<Skill> skills = getAllEnabledCompanyFilterSkills(c);
+            Set<Project> projectsThatMatchAtLeastOneSkill = getMatchingProjects(skills, projectsToCheck);
+
+            boolean hasChanged = false;
+            Set<Project> newProjects = new HashSet<>();
+            Set<Project> modifiedProjects = new HashSet<>();
+            for (Project p : projectsThatMatchAtLeastOneSkill) {
+                if (!c.getProjectIdsNotified().contains(p.getId())) {
+                    newProjects.add(p);
+                    c.getProjectIdsNotified().add(p.getId());
+                    hasChanged = true;
+                } else {
+                    modifiedProjects.add(p);
+                }
+            }
+
+            if (hasChanged) {
+                companyRepository.save(c);
+            }
+
+            if (!newProjects.isEmpty() || !modifiedProjects.isEmpty()) {
+                String emailContent = generateEmailContent(newProjects, modifiedProjects);
+                String receiver = c.getEmail();
+                String title = "B2B Don't miss on new projects";
+                // TODO: send email
+            }
+        }
+    }
+
+    private String generateEmailContent(Set<Project> newProjects, Set<Project> modifiedProjects) {
+        StringBuilder result = new StringBuilder();
+        result.append("Hello,\n\n");
+
+        if (!newProjects.isEmpty()) {
+            result.append("There are new projects available for you that match some of your skills:\n");
+
+            for (Project project : newProjects) {
+                result.append("Project ID: ").append(project.getId()).append("\n");
+                // TODO - return front end address to the projects
+            }
+
+            result.append("\n");
+        }
+
+        if (!modifiedProjects.isEmpty()) {
+            if (!newProjects.isEmpty()) {
+                result.append("You might also want to checkout some of the projects that got modified recently:\n");
+            } else {
+                result.append("There are some projects that got modified recently:\n");
+            }
+
+            for (Project project : modifiedProjects) {
+                result.append("Modified Project ID: ").append(project.getId()).append("\n");
+            }
+        }
+
+        result.append("\nThank you for your attention!");
+
+        return result.toString();
+    }
+
+    private Set<Project> getMatchingProjects(Set<Skill> skills, List<Project> projectsToCheck) {
+        Set<Project> matchingProjects = new HashSet<>();
+        for (Skill skill : skills) {
+            Project p = getProjectIfContainsSkill(skill, projectsToCheck);
+            if (p != null) {
+                matchingProjects.add(p);
+            }
+        }
+        return matchingProjects;
+    }
+
+    private Set<Skill> getAllEnabledCompanyFilterSkills(Company company) {
+        Set<Skill> skills = new HashSet<>();
+        for (Filter filter : company.getFilters()) {
+            if (filter.getIsEnabled()) {
+                skills.addAll(filter.getSkills());
+            }
+        }
+        return skills;
+    }
+
+    private Project getProjectIfContainsSkill(Skill skill, List<Project> projectsToCheck) {
+        for (Project p : projectsToCheck) {
+            for (Position position : p.getPositions()) {
+                List<Skill> skills = position.getRequiredSkills().stream().map(RequiredSkill::getSkill).toList();
+                if (skills.contains(skill) || position.getOptionalSkills().contains(skill)) {
+                    return p;
+                }
+            }
+        }
+        return null;
+    }
+
+    private List<Project> getProjectsUpdatedInPastDays(int days) {
+        LocalDateTime dateThreshold = LocalDateTime.now().minusDays(days);
+        return projectRepository.findAllByDateUpdatedAfter(dateThreshold);
+    }
+
+    private Set<Project> getProjectsWithRequiredSkill(Skill skill) {
+        if (skill == null || skill.getId() == null) {
+            return Collections.emptySet();
+        }
+
+        List<Position> positions = positionRepository.findAllBySkillIdRequiredOrOptional(skill.getId());
+        return positions.stream().map(Position::getProject).collect(Collectors.toSet());
+    }
+
+    private Filter getFilterIfExists(Long id) {
         return filterRepository.findById(id).orElseThrow(() -> new NotFoundException("Filter with ID: " + id + " not found."));
     }
 
-    private void validateFilterIsRelatedToTheCompany(Long id, Company company){
+    private void validateFilterIsRelatedToTheCompany(Long id, Company company) {
         getFilterIfExists(id);  // Throw an error if ID doesn't exist.
         boolean idExists = company.getFilters().stream()
                 .map(Filter::getId)
@@ -197,7 +358,7 @@ public class CompanyService {
         }
     }
 
-    private Filter mapToFilter(CompanyFilterRequestDto dto, Company company){
+    private Filter mapToFilter(CompanyFilterRequestDto dto, Company company) {
         Filter filter = FilterMapper.toEntity(dto);  // set name + IsEnabled
         filter.setSkills(new HashSet<>(patternService.getAllAssignableSkillsIfSkillIdsExist(dto.getSkillIds().stream().toList()))); // TODO: list to set
         filter.setCompany(company);
