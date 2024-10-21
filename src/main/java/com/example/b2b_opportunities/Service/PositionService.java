@@ -26,6 +26,7 @@ import com.example.b2b_opportunities.Repository.RateRepository;
 import com.example.b2b_opportunities.Repository.SeniorityRepository;
 import com.example.b2b_opportunities.Repository.SkillRepository;
 import com.example.b2b_opportunities.Repository.WorkModeRepository;
+import com.example.b2b_opportunities.Static.ProjectStatus;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
@@ -60,6 +61,7 @@ public class PositionService {
         setProjectOrThrow(position, dto.getProjectId());
         setPositionFields(position, dto);
         updateProjectDateUpdated(position);
+        activateProjectIfInactive(position.getProject());
 
         return PositionMapper.toResponseDto(positionRepository.save(position));
     }
@@ -69,8 +71,14 @@ public class PositionService {
         Position position = getPositionOrThrow(id);
 
         validateProjectAndUserAreRelated(position.getProject().getId(), authentication);
-
         position.setIsActive(dto.getIsActive());
+
+        if (dto.getIsActive().equals(true)) {
+            activateProjectIfInactive(position.getProject());
+        } else {
+            deactivateProjectIfNoActivePositions(position.getProject());
+        }
+
         position.setMinYearsExperience(dto.getMinYearsExperience());
         position.setHoursPerWeek(dto.getHoursPerWeek());
         position.setResponsibilities(dto.getResponsibilities());
@@ -96,7 +104,7 @@ public class PositionService {
     public List<PositionResponseDto> getPositions() {
         List<Position> positions = positionRepository.findAll();
         List<PositionResponseDto> positionResponseDtoList = new ArrayList<>();
-        for(Position position: positions){
+        for (Position position : positions) {
             positionResponseDtoList.add(PositionMapper.toResponseDto(position));
         }
         return positionResponseDtoList;
@@ -221,8 +229,31 @@ public class PositionService {
         return requiredSkillList;
     }
 
-    private Position getPositionOrThrow(Long id){
+    private Position getPositionOrThrow(Long id) {
         return positionRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Position with ID: " + id + " not found"));
+    }
+
+
+    private void activateProjectIfInactive(Project project) {
+        if (project.getProjectStatus().equals(ProjectStatus.INACTIVE)) {
+            project.setProjectStatus(ProjectStatus.ACTIVE);
+            projectRepository.save(project);
+        }
+    }
+
+    private void deactivateProjectIfNoActivePositions(Project project) {
+        List<Position> positions = project.getPositions();
+        boolean hasActivePosition = false;
+        for (Position position : positions) {
+            if (position.getIsActive()) {
+                hasActivePosition = true;
+                break;
+            }
+        }
+        if (!hasActivePosition) {
+            project.setProjectStatus(ProjectStatus.INACTIVE);
+            projectRepository.save(project);
+        }
     }
 }

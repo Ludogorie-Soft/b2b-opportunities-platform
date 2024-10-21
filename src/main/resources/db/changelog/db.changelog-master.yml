@@ -42,5 +42,8 @@ databaseChangeLog:
       file: 14-create-filters-table.sql
       relativeToChangelogFile: true
   - include:
+      file: 15-modify-projects-table.sql
+      relativeToChangelogFile: true      
+  - include:
       file: 16-create-company-project-notified-table.sql
       relativeToChangelogFile: true

@@ -1,8 +1,11 @@
 package com.example.b2b_opportunities.Entity;
 
+import com.example.b2b_opportunities.Static.ProjectStatus;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -31,7 +34,7 @@ public class Project {
     @Column(name = "id", nullable = false)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "company_id", nullable = false)
     @JsonManagedReference
     private Company company;
@@ -49,6 +52,9 @@ public class Project {
     @OneToMany(mappedBy = "project", fetch = FetchType.LAZY)
     private List<Position> positions;
     private String description;
+
+    @Enumerated(EnumType.STRING)
+    private ProjectStatus projectStatus;
 
     public void setName(@NotEmpty String name) {
         this.name = name.strip();

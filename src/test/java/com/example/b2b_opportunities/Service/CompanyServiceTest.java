@@ -92,6 +92,7 @@ public class CompanyServiceTest {
         companyRequestDto = new CompanyRequestDto();
         companyRequestDto.setCompanyTypeId(999L);
         companyRequestDto.setDomainId(9999L);
+        companyRequestDto.setEmail("test@test.com");
         currentUser = new User();
 
         CompanyType mockCompanyType = new CompanyType();
@@ -148,6 +149,8 @@ public class CompanyServiceTest {
         when(authentication.isAuthenticated()).thenReturn(true);
         when(adminService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
         when(companyRepository.save(any(Company.class))).thenReturn(company);
+
+        doNothing().when(mailService).sendCompanyEmailConfirmation(any(Company.class), any(String.class), any(HttpServletRequest.class));
 
         CompanyResponseDto responseDto = companyService.createCompany(authentication, companyRequestDto, request);
 

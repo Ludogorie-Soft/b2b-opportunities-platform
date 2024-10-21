@@ -5,6 +5,7 @@ import com.example.b2b_opportunities.Dto.Request.CompanyFilterRequestDto;
 import com.example.b2b_opportunities.Dto.Request.CompanyRequestDto;
 import com.example.b2b_opportunities.Dto.Response.CompaniesAndUsersResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyFilterResponseDto;
+import com.example.b2b_opportunities.Dto.Response.CompanyPublicResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyResponseDto;
 import com.example.b2b_opportunities.Dto.Response.ProjectResponseDto;
 import com.example.b2b_opportunities.Dto.Response.UserResponseDto;
@@ -41,10 +42,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+
+import static com.example.b2b_opportunities.Mapper.CompanyMapper.toCompanyPublicResponseDtoList;
+import static com.example.b2b_opportunities.Utils.EmailUtils.validateEmail;
 
 @Service
 @RequiredArgsConstructor
@@ -68,6 +73,7 @@ public class CompanyService {
         validateUserIsNotAssociatedWithAnotherCompany(currentUser);
 
         validateCompanyRequestInput(companyRequestDto);
+        validateEmail(companyRequestDto.getEmail());
         Company company = setCompanyFields(companyRequestDto);
         company.getUsers().add(currentUser);
         setCompanyEmailVerificationStatusAndSendEmail(company, currentUser, companyRequestDto, request);
@@ -106,10 +112,10 @@ public class CompanyService {
         Company userCompany = getUserCompanyOrThrow(currentUser);
 
         updateCompanyName(userCompany, companyRequestDto);
-
-        updateCompanyEmail(userCompany, companyRequestDto);
-        setCompanyEmailVerificationStatusAndSendEmail(userCompany, currentUser, companyRequestDto, request);
-
+        validateEmail(companyRequestDto.getEmail());
+        if (updateCompanyEmailIfChanged(userCompany, companyRequestDto)) {
+            setCompanyEmailVerificationStatusAndSendEmail(userCompany, currentUser, companyRequestDto, request);
+        }
         updateCompanyWebsiteAndLinkedIn(userCompany, companyRequestDto);
         updateOtherCompanyFields(userCompany, companyRequestDto);
         Company company = companyRepository.save(userCompany);
@@ -403,15 +409,16 @@ public class CompanyService {
         }
     }
 
-    private void updateCompanyEmail(Company userCompany, CompanyRequestDto companyRequestDto) {
+    private boolean updateCompanyEmailIfChanged(Company userCompany, CompanyRequestDto companyRequestDto) {
         String newEmail = companyRequestDto.getEmail();
         if (!newEmail.equals(userCompany.getEmail())) {
             if (companyRepository.findByEmail(companyRequestDto.getEmail()).isPresent()) {
                 throw new AlreadyExistsException("Email already registered");
             }
-
             userCompany.setEmail(companyRequestDto.getEmail());
+            return true; //mail was changed
         }
+        return false; //mail was not changed
     }
 
     private void setCompanyEmailVerificationStatusAndSendEmail(Company userCompany, User currentUser, CompanyRequestDto dto, HttpServletRequest request) {
@@ -481,5 +488,19 @@ public class CompanyService {
             if (companyRepository.findByLinkedIn(linkedIn).isPresent())
                 throw new AlreadyExistsException("LinkedIn already registered");
         }
+    }
+
+    public List<CompanyPublicResponseDto> getAcceptedCompaniesPublicData() {
+        List<Company> verifiedCompanies = companyRepository.findCompaniesByEmailVerificationAccepted();
+        List<CompanyPublicResponseDto> companiesPublicDataNoImg = toCompanyPublicResponseDtoList(verifiedCompanies);
+
+        List<CompanyPublicResponseDto> result = new ArrayList<>();
+
+        for (CompanyPublicResponseDto c : companiesPublicDataNoImg) {
+            c.setImage(imageService.returnUrlIfPictureExists(c.getId(), "image"));
+            result.add(c);
+        }
+
+        return result;
     }
 }

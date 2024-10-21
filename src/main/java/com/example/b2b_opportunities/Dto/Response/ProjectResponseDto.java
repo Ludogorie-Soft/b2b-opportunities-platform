@@ -25,4 +25,5 @@ public class ProjectResponseDto {
     private Integer duration; // months
 
     private String Description;
+    private String status;
 }

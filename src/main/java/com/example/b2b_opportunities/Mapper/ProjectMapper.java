@@ -17,6 +17,7 @@ public class ProjectMapper {
                 .endDate(project.getEndDate())
                 .duration(project.getDuration())
                 .Description(project.getDescription())
+                .status(project.getProjectStatus().toString())
                 .build();
     }
 

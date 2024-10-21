@@ -8,6 +8,7 @@ import com.example.b2b_opportunities.Service.ProjectService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -41,13 +43,19 @@ public class ProjectController {
     @GetMapping("{id}/positions")
     @ResponseStatus(HttpStatus.OK)
     public List<PositionResponseDto> getPositionsByProject(@PathVariable("id") Long id) {
-        return projectService.getPositionsByProject(id);
+        return projectService.getPositionsByProject(id);  // field boolean isPrivate = false?
     }
 
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public ProjectResponseDto update(@PathVariable("id") Long id, @RequestBody ProjectEditRequestDto dto) {
-        return projectService.update(id, dto);
+    public ProjectResponseDto update(@PathVariable("id") Long id, @RequestBody ProjectEditRequestDto dto, Authentication authentication) {
+        return projectService.update(id, dto, authentication);
+    }
+
+    @GetMapping("/{id}/reactivate")
+    @ResponseStatus(HttpStatus.OK)
+    public ProjectResponseDto activate(@PathVariable("id") Long id, Authentication authentication) {
+        return projectService.reactivateProject(id, authentication);
     }
 
     @PostMapping
@@ -58,7 +66,7 @@ public class ProjectController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable("id") Long id) {
-        projectService.delete(id);
+    public void delete(@PathVariable("id") Long id, Authentication authentication) {
+        projectService.delete(id, authentication);
     }
 }
