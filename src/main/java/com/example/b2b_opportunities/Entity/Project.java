@@ -55,7 +55,6 @@ public class Project {
     @Enumerated(EnumType.STRING)
     private ProjectStatus projectStatus;
 
-    private String token;
     public void setName(@NotEmpty String name) {
         this.name = name.strip();
     }

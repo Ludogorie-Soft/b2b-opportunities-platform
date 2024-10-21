@@ -17,7 +17,6 @@ import com.example.b2b_opportunities.Repository.CompanyRepository;
 import com.example.b2b_opportunities.Repository.ProjectRepository;
 import com.example.b2b_opportunities.Static.ProjectStatus;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
@@ -25,7 +24,6 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -36,10 +34,6 @@ public class ProjectService {
     private final AdminService adminService;
     private final MailService mailService;
 
-
-    @Value("${backend.address}")
-    private String backendAddress;
-
     public ProjectResponseDto get(Long id) {
         return ProjectMapper.toDto(getProjectIfExists(id));
     }
@@ -48,8 +42,9 @@ public class ProjectService {
         return ProjectMapper.toDtoList(projectRepository.findByProjectStatus(ProjectStatus.ACTIVE));
     }
 
-    public ProjectResponseDto update(Long id, ProjectEditRequestDto dto) {
+    public ProjectResponseDto update(Long id, ProjectEditRequestDto dto, Authentication authentication) {
         Project project = getProjectIfExists(id);
+        validateProjectBelongsToUser(authentication, project);
         return createOrUpdate(dto, project);
     }
 
@@ -60,8 +55,17 @@ public class ProjectService {
         return createOrUpdate(dto, project);
     }
 
-    public void delete(Long id) {
-        projectRepository.delete(getProjectIfExists(id));
+    public void delete(Long id, Authentication authentication) {
+        Project project = getProjectIfExists(id);
+        validateProjectBelongsToUser(authentication, project);
+        projectRepository.delete(project);
+    }
+
+    private void validateProjectBelongsToUser(Authentication authentication, Project project) {
+        User user = adminService.getCurrentUserOrThrow(authentication);
+        if (!Objects.equals(user.getCompany().getId(), project.getCompany().getId())) {
+            throw new PermissionDeniedException("Project belongs to another company");
+        }
     }
 
     public List<PositionResponseDto> getPositionsByProject(Long id) {
@@ -76,23 +80,20 @@ public class ProjectService {
 
     public ProjectResponseDto reactivateProject(Long projectId, Authentication authentication) {
         Project project = getProjectIfExists(projectId);
-        User currentUser = adminService.getCurrentUserOrThrow(authentication);
-        if (!Objects.equals(project.getCompany().getId(), currentUser.getCompany().getId())) {
-            throw new PermissionDeniedException("Activation denied: project belongs to another company");
-        }
+        validateProjectBelongsToUser(authentication, project);
         if (project.getProjectStatus().equals(ProjectStatus.ACTIVE)) {
             throw new DuplicateResourceException("This project is active already");
         }
         project.setProjectStatus(ProjectStatus.ACTIVE);
         // so that the project can be auto-deactivated again in 3 weeks after reactivation
         project.setDatePosted(LocalDateTime.now());
-        project.setToken(null); // reset the token (if set) after reactivation
         return ProjectMapper.toDto(projectRepository.save(project));
     }
 
     //Once per day at 13:00
     @Scheduled(cron = "0 0 13 * * *")
     public void processExpiringProjects() {
+        //TODO - remove this when the logic is implemented between logic and position
         List<Project> projectsWithoutActivePositions = projectRepository.findProjectsWithoutActivePositions();
         for (Project project : projectsWithoutActivePositions) {
             project.setProjectStatus(ProjectStatus.INACTIVE);
@@ -100,23 +101,13 @@ public class ProjectService {
         }
         List<Project> expiringProjects = projectRepository.findProjectsExpiringInTwoDays();
         for (Project project : expiringProjects) {
-            project.setToken(UUID.randomUUID().toString()); // set token for extending expiration (via email)
-            projectRepository.save(project);
-            mailService.sendProjectExpiringMail(project, backendAddress, project.getToken());
+            mailService.sendProjectExpiringMail(project);
         }
         List<Project> expiredProjects = projectRepository.findProjectsOlderThanTwentyOneDays();
         for (Project project : expiredProjects) {
             project.setProjectStatus(ProjectStatus.INACTIVE);
             projectRepository.save(project);
         }
-    }
-
-    public ProjectResponseDto extendProject(String token) {
-        Project project = projectRepository.findByToken(token).orElseThrow(() -> new NotFoundException("Invalid or expired token"));
-        project.setDatePosted(LocalDateTime.now());
-        project.setProjectStatus(ProjectStatus.ACTIVE);
-        project.setToken(null);
-        return ProjectMapper.toDto(projectRepository.save(project));
     }
 
     private ProjectResponseDto createOrUpdate(ProjectEditRequestDto dto, Project project) {

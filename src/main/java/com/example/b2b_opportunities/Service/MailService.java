@@ -50,10 +50,6 @@ public class MailService {
         return "<a href=" + baseUrl + "/company/confirm-email?token=" + token + ">Confirm your email address</a>";
     }
 
-    private String generateProjectExtendingLink(Project project, String backendAddress, String token) {
-        return "<a href=" + backendAddress + "/projects/" + project.getId() + "/extend?token=" + token + ">Click here to extend your project</a>";
-    }
-
     public void sendConfirmationMail(User user, HttpServletRequest request) {
         String emailContent = "<html>" +
                 "<body>" +
@@ -114,14 +110,13 @@ public class MailService {
         sendEmail(company.getEmail(), emailContent, subject);
     }
 
-    public void sendProjectExpiringMail(Project project, String backendAddress, String token) {
+    public void sendProjectExpiringMail(Project project) {
         String emailContent = "<html>" +
                 "<body>" +
                 "<h2>Dear " + project.getCompany().getName() + ",</h2>"
                 + "<h3><br/> This is a friendly reminder regarding your project '" + project.getName() + "' will expire in <b>2 days</b>."
                 + "<br/>To ensure your project remains active and continues to be visible to potential clients, you can easily extend its duration."
-                + "<br/>To extend your project for an additional 3 weeks, simply click the link below:.</h3>"
-                + "<h2> <br/> " + generateProjectExtendingLink(project, backendAddress, token) + "</h2>" +
+                + "<br/>To extend your project for an additional 3 weeks, please visit our website.</h3>" +
                 "<h3><br/> Best regards,\n" +
                 "The B2B Opportunities Team,<br/></h3>" +
                 "</body>" +

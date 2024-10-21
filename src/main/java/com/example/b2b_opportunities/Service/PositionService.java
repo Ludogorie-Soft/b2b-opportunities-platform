@@ -58,7 +58,7 @@ public class PositionService {
 
         setProjectOrThrow(position, dto.getProjectId());
         setPositionFields(position, dto);
-
+        //TODO: if project is inactive -> change to active
         return PositionMapper.toResponseDto(positionRepository.save(position));
     }
 
@@ -69,6 +69,8 @@ public class PositionService {
         validateProjectAndUserAreRelated(position.getProject().getId(), authentication);
 
         position.setIsActive(dto.getIsActive());
+        //TODO: if project is inactive -> change to active
+        //TODO - check if there are other active positions left -> if not - set project to inactive
         position.setMinYearsExperience(dto.getMinYearsExperience());
         position.setHoursPerWeek(dto.getHoursPerWeek());
         position.setResponsibilities(dto.getResponsibilities());

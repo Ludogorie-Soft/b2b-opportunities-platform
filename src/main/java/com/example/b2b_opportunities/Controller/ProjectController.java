@@ -43,25 +43,19 @@ public class ProjectController {
     @GetMapping("{id}/positions")
     @ResponseStatus(HttpStatus.OK)
     public List<PositionResponseDto> getPositionsByProject(@PathVariable("id") Long id) {
-        return projectService.getPositionsByProject(id);
+        return projectService.getPositionsByProject(id);  // field boolean isPrivate = false?
     }
 
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public ProjectResponseDto update(@PathVariable("id") Long id, @RequestBody ProjectEditRequestDto dto) {
-        return projectService.update(id, dto);
+    public ProjectResponseDto update(@PathVariable("id") Long id, @RequestBody ProjectEditRequestDto dto, Authentication authentication) {
+        return projectService.update(id, dto, authentication);
     }
 
     @GetMapping("/{id}/reactivate")
     @ResponseStatus(HttpStatus.OK)
     public ProjectResponseDto activate(@PathVariable("id") Long id, Authentication authentication) {
         return projectService.reactivateProject(id, authentication);
-    }
-
-    @GetMapping("{id}/extend")
-    @ResponseStatus(HttpStatus.OK)
-    public ProjectResponseDto extendProject(@RequestParam("token") String token) {
-        return projectService.extendProject(token);
     }
 
     @PostMapping
@@ -72,7 +66,7 @@ public class ProjectController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable("id") Long id) {
-        projectService.delete(id);
+    public void delete(@PathVariable("id") Long id, Authentication authentication) {
+        projectService.delete(id, authentication);
     }
 }
