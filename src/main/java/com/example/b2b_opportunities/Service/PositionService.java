@@ -117,12 +117,12 @@ public class PositionService {
     }
 
     private void setPositionFields(Position position, PositionRequestDto dto) {
-        setPositionRoleOrThrow(position, dto.getRoleId());
-        setSeniorityOrThrow(position, dto.getSeniorityId());
-        setWorkModeOrThrow(position, dto.getWorkModeIds());
+        setPositionRoleOrThrow(position, dto.getRole());
+        setSeniorityOrThrow(position, dto.getSeniority());
+        setWorkModeOrThrow(position, dto.getWorkMode());
         setRate(position, dto.getRate());
-        setRequiredSkillsForPosition(position, dto.getRequiredSkillsList());
-        setOptionalSkills(position, dto.getOptionalSkillsList());
+        setRequiredSkillsForPosition(position, dto.getRequiredSkills());
+        setOptionalSkills(position, dto.getOptionalSkills());
     }
 
     private void validateUserAndCompany(Authentication authentication) {

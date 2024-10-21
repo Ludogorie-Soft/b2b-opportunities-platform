@@ -180,10 +180,10 @@ class PositionControllerTest {
         // Create a sample PositionRequestDto with valid data
         requestDto = new PositionRequestDto();
         requestDto.setProjectId(project.getId());
-        requestDto.setRoleId(positionRole.getId());
+        requestDto.setRole(positionRole.getId());
         requestDto.setIsActive(true);
-        requestDto.setSeniorityId(3L);
-        requestDto.setWorkModeIds(List.of(1L, 2L));
+        requestDto.setSeniority(3L);
+        requestDto.setWorkMode(List.of(1L, 2L));
 
         // Create a valid RateRequestDto
         RateRequestDto rateRequestDto = new RateRequestDto();
@@ -200,11 +200,11 @@ class PositionControllerTest {
         experienceRequestDto.setMonths(6);
         experienceRequestDto.setYears(2);
         requiredSkillsDto.setExperienceRequestDto(experienceRequestDto);
-        requestDto.setRequiredSkillsList(List.of(requiredSkillsDto));
+        requestDto.setRequiredSkills(List.of(requiredSkillsDto));
 
-        requestDto.setOptionalSkillsList(List.of(6L, 7L));
+        requestDto.setOptionalSkills(List.of(6L, 7L));
         requestDto.setMinYearsExperience(2);
-        requestDto.setLocationId(8L);
+        requestDto.setLocation(8L);
         requestDto.setHoursPerWeek(40);
         requestDto.setResponsibilities(List.of("Develop software", "Review code"));
         requestDto.setHiringProcess("Interview -> Coding Test -> Offer");

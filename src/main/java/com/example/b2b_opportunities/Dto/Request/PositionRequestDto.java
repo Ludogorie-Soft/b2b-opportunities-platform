@@ -17,16 +17,16 @@ public class PositionRequestDto {
     private Long projectId;
 
     @NotNull
-    private Long roleId;
+    private Long role;
 
     @NotNull
     private Boolean isActive;
 
     @NotNull
-    private Long seniorityId;
+    private Long seniority;
 
     @NotNull
-    private List<Long> workModeIds;
+    private List<Long> workMode;
 
     @NotNull
     @Valid
@@ -34,14 +34,14 @@ public class PositionRequestDto {
 
     @NotNull
     @Valid
-    private List<RequiredSkillsDto> requiredSkillsList;
+    private List<RequiredSkillsDto> requiredSkills;
 
-    private List<Long> optionalSkillsList;
+    private List<Long> optionalSkills;
 
     @Min(0)
     private Integer minYearsExperience;
 
-    private Long locationId;
+    private Long location;
 
     @Min(0)
     @Max(168)
