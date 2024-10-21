@@ -203,7 +203,7 @@ public class CompanyService {
         sendEmailToEveryCompany(projectsLastThreeDays);
     }
 
-    @Scheduled(cron = "0 0 9 * * TUE, WED, THU, FRI")
+    @Scheduled(cron = "0 0 9 * * 2-5")
     public void sendEmailTuesdayToFriday() {
         List<Project> projectsLastOneDay = getProjectsUpdatedInPastDays(1);
         sendEmailToEveryCompany(projectsLastOneDay);
