@@ -45,6 +45,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static com.example.b2b_opportunities.Utils.EmailUtils.validateEmail;
+
 @Service
 @RequiredArgsConstructor
 public class AuthenticationService {
@@ -85,6 +87,7 @@ public class AuthenticationService {
         if (bindingResult.hasErrors()) {
             throw new ValidationException(bindingResult);
         }
+        validateEmail(userRequestDto.getEmail());
         validateUser(userRequestDto);
 
         User user = UserMapper.toEntity(userRequestDto);
@@ -160,6 +163,19 @@ public class AuthenticationService {
         return "Account activated successfully";
     }
 
+    public void logout(HttpServletRequest request, HttpServletResponse response) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            Arrays.stream(cookies).forEach(cookie -> {
+                cookie.setValue(null);
+                cookie.setMaxAge(0);
+                cookie.setPath("/");
+                cookie.setHttpOnly(true);
+                response.addCookie(cookie);
+            });
+        }
+    }
+
     private UserDetails authenticate(LoginDto loginDto) {
         try {
             Authentication authentication = new UsernamePasswordAuthenticationToken(loginDto.getUsernameOrEmail().toLowerCase(), loginDto.getPassword());
@@ -223,18 +239,5 @@ public class AuthenticationService {
         LocalDateTime currentDateTime = LocalDateTime.now();
         Duration duration = Duration.between(token.getCreatedAt(), currentDateTime);
         return duration.toDays() > tokenExpirationDays;
-    }
-
-    public void logout(HttpServletRequest request, HttpServletResponse response) {
-        Cookie[] cookies = request.getCookies();
-        if (cookies != null) {
-            Arrays.stream(cookies).forEach(cookie -> {
-                cookie.setValue(null);
-                cookie.setMaxAge(0);
-                cookie.setPath("/");
-                cookie.setHttpOnly(true);
-                response.addCookie(cookie);
-            });
-        }
     }
 }
