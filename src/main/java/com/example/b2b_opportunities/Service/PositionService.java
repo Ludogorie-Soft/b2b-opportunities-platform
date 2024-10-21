@@ -56,10 +56,10 @@ public class PositionService {
         validateProjectAndUserAreRelated(dto.getProjectId(), authentication);
 
         Position position = PositionMapper.toPosition(dto);
-        updateProjectDateUpdated(position);
 
         setProjectOrThrow(position, dto.getProjectId());
         setPositionFields(position, dto);
+        updateProjectDateUpdated(position);
 
         return PositionMapper.toResponseDto(positionRepository.save(position));
     }
@@ -67,7 +67,6 @@ public class PositionService {
     public PositionResponseDto editPosition(Long id, PositionRequestDto dto, Authentication authentication) {
         validateUserAndCompany(authentication);
         Position position = getPositionOrThrow(id);
-        updateProjectDateUpdated(position);
 
         validateProjectAndUserAreRelated(position.getProject().getId(), authentication);
 
@@ -79,6 +78,7 @@ public class PositionService {
         position.setDescription(dto.getDescription());
 
         setPositionFields(position, dto);
+        updateProjectDateUpdated(position);
 
         return PositionMapper.toResponseDto(positionRepository.save(position));
     }
