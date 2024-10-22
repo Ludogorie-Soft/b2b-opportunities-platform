@@ -26,4 +26,5 @@ public class ProjectResponseDto {
 
     private String Description;
     private String status;
+    private boolean isPartnerOnly;
 }

@@ -18,6 +18,7 @@ public class ProjectMapper {
                 .duration(project.getDuration())
                 .Description(project.getDescription())
                 .status(project.getProjectStatus().toString())
+                .isPartnerOnly(project.isPartnerOnly())
                 .build();
     }
 

@@ -1,6 +1,5 @@
 package com.example.b2b_opportunities.Controller;
 
-import com.example.b2b_opportunities.Dto.Request.ProjectEditRequestDto;
 import com.example.b2b_opportunities.Dto.Request.ProjectRequestDto;
 import com.example.b2b_opportunities.Dto.Response.PositionResponseDto;
 import com.example.b2b_opportunities.Dto.Response.ProjectResponseDto;
@@ -48,7 +47,7 @@ public class ProjectController {
 
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public ProjectResponseDto update(@PathVariable("id") Long id, @RequestBody ProjectEditRequestDto dto, Authentication authentication) {
+    public ProjectResponseDto update(@PathVariable("id") Long id, @RequestBody ProjectRequestDto dto, Authentication authentication) {
         return projectService.update(id, dto, authentication);
     }
 
@@ -60,8 +59,9 @@ public class ProjectController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ProjectResponseDto create(@RequestBody @Valid ProjectRequestDto projectRequestDto) {
-        return projectService.create(projectRequestDto);
+    public ProjectResponseDto create(Authentication authentication,
+            @RequestBody @Valid ProjectRequestDto projectRequestDto) {
+        return projectService.create(authentication, projectRequestDto);
     }
 
     @DeleteMapping("/{id}")

@@ -1,6 +1,5 @@
 package com.example.b2b_opportunities.Service;
 
-import com.example.b2b_opportunities.Dto.Request.ProjectEditRequestDto;
 import com.example.b2b_opportunities.Dto.Request.ProjectRequestDto;
 import com.example.b2b_opportunities.Dto.Response.PositionResponseDto;
 import com.example.b2b_opportunities.Dto.Response.ProjectResponseDto;
@@ -9,8 +8,8 @@ import com.example.b2b_opportunities.Entity.Position;
 import com.example.b2b_opportunities.Entity.Project;
 import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Exception.common.AlreadyExistsException;
-import com.example.b2b_opportunities.Exception.common.PermissionDeniedException;
 import com.example.b2b_opportunities.Exception.common.NotFoundException;
+import com.example.b2b_opportunities.Exception.common.PermissionDeniedException;
 import com.example.b2b_opportunities.Mapper.PositionMapper;
 import com.example.b2b_opportunities.Mapper.ProjectMapper;
 import com.example.b2b_opportunities.Repository.CompanyRepository;
@@ -55,16 +54,19 @@ public class ProjectService {
         return combinedProjects;
     }
 
-    public ProjectResponseDto update(Long id, ProjectEditRequestDto dto, Authentication authentication) {
+    public ProjectResponseDto update(Long id, ProjectRequestDto dto, Authentication authentication) {
         Project project = getProjectIfExists(id);
         validateProjectBelongsToUser(authentication, project);
         return createOrUpdate(dto, project);
     }
 
-    public ProjectResponseDto create(ProjectRequestDto dto) {
+    public ProjectResponseDto create(Authentication authentication, ProjectRequestDto dto) {
+        User user = adminService.getCurrentUserOrThrow(authentication);
+        Company company = companyRepository.findById(user.getCompany().getId())
+                .orElseThrow(() -> new NotFoundException("User does not associate with any company"));
         Project project = new Project();
         project.setDatePosted(LocalDateTime.now());
-        project.setCompany(getCompanyIfExists(dto.getCompanyId()));
+        project.setCompany(company);
         return createOrUpdate(dto, project);
     }
 
@@ -110,7 +112,7 @@ public class ProjectService {
         }
     }
 
-    private ProjectResponseDto createOrUpdate(ProjectEditRequestDto dto, Project project) {
+    private ProjectResponseDto createOrUpdate(ProjectRequestDto dto, Project project) {
         project.setName(dto.getName());
         project.setStartDate(dto.getStartDate());
         project.setEndDate(dto.getEndDate());
@@ -118,6 +120,7 @@ public class ProjectService {
         project.setDescription(dto.getDescription());
         project.setDateUpdated(LocalDateTime.now());
         project.setProjectStatus(ProjectStatus.ACTIVE);
+        project.setPartnerOnly(dto.isPartnerOnly());
         return ProjectMapper.toDto(projectRepository.save(project));
     }
 
