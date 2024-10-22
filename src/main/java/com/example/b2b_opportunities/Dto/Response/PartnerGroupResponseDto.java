@@ -6,7 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.Set;
+import java.util.List;
 
 @Getter
 @Setter
@@ -16,5 +16,5 @@ import java.util.Set;
 public class PartnerGroupResponseDto {
     private Long id;
     private String name;
-    private Set<CompanyResponseDto> companies;
+    private List<CompanyPublicResponseDto> companies;
 }

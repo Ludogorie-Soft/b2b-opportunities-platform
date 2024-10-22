@@ -24,7 +24,4 @@ public interface CompanyRepository extends JpaRepository<Company, Long> {
 
     @Query(value = "SELECT * FROM companies c WHERE c.email_verification = 'ACCEPTED'", nativeQuery = true)
     List<Company> findCompaniesByEmailVerificationAccepted();
-
-    @Query("SELECT c FROM Company c JOIN c.partners p WHERE p = :userCompany")
-    List<Company> findCompaniesByPartnersContaining(@Param("userCompany") Company userCompany);
 }

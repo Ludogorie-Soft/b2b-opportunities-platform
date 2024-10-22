@@ -27,6 +27,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.validator.constraints.URL;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -101,7 +102,11 @@ public class Company {
 
     Set<Long> projectIdsNotified;
 
-    @OneToMany(mappedBy = "partners", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToMany
+    @JoinTable(
+            name = "company_partner_groups",
+            joinColumns = @JoinColumn(name = "company_id"),
+            inverseJoinColumns = @JoinColumn(name = "partner_group_id")
+    )
     private Set<PartnerGroup> partnerGroups;
-
 }

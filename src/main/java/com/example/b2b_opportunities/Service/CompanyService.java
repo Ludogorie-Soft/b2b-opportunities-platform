@@ -52,6 +52,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static com.example.b2b_opportunities.Mapper.CompanyMapper.toCompanyPublicResponseDtoList;
 import static com.example.b2b_opportunities.Utils.EmailUtils.validateEmail;
@@ -512,7 +513,7 @@ public class CompanyService {
     public PartnerGroupResponseDto createPartnerGroup(Authentication authentication, String partnershipName) {
         User user = adminService.getCurrentUserOrThrow(authentication);
         Company company = getUserCompanyOrThrow(user); //check if user belongs to a company
-        PartnerGroup partnerGroup = partnerGroupRepository.save(PartnerGroup.builder().name(partnershipName).build());
+        PartnerGroup partnerGroup = partnerGroupRepository.save(PartnerGroup.builder().name(partnershipName).partners(new HashSet<>()).build());
         company.getPartnerGroups().add(partnerGroup);
         companyRepository.save(company);
         return PartnerGroupMapper.toPartnerGroupResponseDto(partnerGroup);
@@ -545,5 +546,12 @@ public class CompanyService {
         if (partnerGroup.getPartners().contains(partnerCompany)) {
             throw new AlreadyExistsException("This company is already in this partner group");
         }
+    }
+
+    public List<PartnerGroupResponseDto> getPartnerGroups(Authentication authentication) {
+        User user = adminService.getCurrentUserOrThrow(authentication);
+        Company company = getUserCompanyOrThrow(user);
+        Set<PartnerGroup> partnerGroups = company.getPartnerGroups();
+        return partnerGroups.stream().map(PartnerGroupMapper::toPartnerGroupResponseDto).collect(Collectors.toList());
     }
 }
