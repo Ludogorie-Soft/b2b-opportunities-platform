@@ -22,6 +22,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -38,8 +39,20 @@ public class ProjectService {
         return ProjectMapper.toDto(getProjectIfExists(id));
     }
 
-    public List<ProjectResponseDto> getAll() {
-        return ProjectMapper.toDtoList(projectRepository.findByProjectStatus(ProjectStatus.ACTIVE));
+    public List<ProjectResponseDto> getAvailableProjects(Authentication authentication) {
+        User user = adminService.getCurrentUserOrThrow(authentication);
+        Company company = getCompanyIfExists(user.getCompany().getId());
+
+        //all public projects that are active
+        List<ProjectResponseDto> publicProjects = ProjectMapper.toDtoList(projectRepository
+                .findByProjectStatusAndIsPartnerOnlyFalse(ProjectStatus.ACTIVE));
+        //all projects shared with current user company
+        List<ProjectResponseDto> partnerProjects = getPartnerProjects(company);
+
+        List<ProjectResponseDto> combinedProjects = new ArrayList<>();
+        combinedProjects.addAll(publicProjects);
+        combinedProjects.addAll(partnerProjects);
+        return combinedProjects;
     }
 
     public ProjectResponseDto update(Long id, ProjectEditRequestDto dto, Authentication authentication) {
@@ -59,13 +72,6 @@ public class ProjectService {
         Project project = getProjectIfExists(id);
         validateProjectBelongsToUser(authentication, project);
         projectRepository.delete(project);
-    }
-
-    private void validateProjectBelongsToUser(Authentication authentication, Project project) {
-        User user = adminService.getCurrentUserOrThrow(authentication);
-        if (!Objects.equals(user.getCompany().getId(), project.getCompany().getId())) {
-            throw new PermissionDeniedException("Project belongs to another company");
-        }
     }
 
     public List<PositionResponseDto> getPositionsByProject(Long id) {
@@ -123,4 +129,19 @@ public class ProjectService {
         return companyRepository.findById(id).orElseThrow(() -> new NotFoundException("Company with ID: " + id + " not found"));
     }
 
+
+    private List<ProjectResponseDto> getPartnerProjects(Company userCompany) {
+        List<Company> partnersWithUserCompany = companyRepository.findCompaniesByPartnersContaining(userCompany);
+        return partnersWithUserCompany.stream()
+                .flatMap(company -> company.getProjects().stream())
+                .map(ProjectMapper::toDto)
+                .toList();
+    }
+
+    private void validateProjectBelongsToUser(Authentication authentication, Project project) {
+        User user = adminService.getCurrentUserOrThrow(authentication);
+        if (!Objects.equals(user.getCompany().getId(), project.getCompany().getId())) {
+            throw new PermissionDeniedException("Project belongs to another company");
+        }
+    }
 }

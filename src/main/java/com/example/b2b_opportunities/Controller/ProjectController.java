@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -36,13 +35,14 @@ public class ProjectController {
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public List<ProjectResponseDto> getAll() {
-        return projectService.getAll();
+    public List<ProjectResponseDto> getAll(Authentication authentication) {
+        return projectService.getAvailableProjects(authentication);
     }
 
     @GetMapping("{id}/positions")
     @ResponseStatus(HttpStatus.OK)
     public List<PositionResponseDto> getPositionsByProject(@PathVariable("id") Long id) {
+        //TODO - add authentication and check if project is visible to current user (if shared ony w/ partners)
         return projectService.getPositionsByProject(id);  // field boolean isPrivate = false?
     }
 

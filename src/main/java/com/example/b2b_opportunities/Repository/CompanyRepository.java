@@ -3,6 +3,7 @@ package com.example.b2b_opportunities.Repository;
 import com.example.b2b_opportunities.Entity.Company;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -23,4 +24,7 @@ public interface CompanyRepository extends JpaRepository<Company, Long> {
 
     @Query(value = "SELECT * FROM companies c WHERE c.email_verification = 'ACCEPTED'", nativeQuery = true)
     List<Company> findCompaniesByEmailVerificationAccepted();
+
+    @Query("SELECT c FROM Company c JOIN c.partners p WHERE p = :userCompany")
+    List<Company> findCompaniesByPartnersContaining(@Param("userCompany") Company userCompany);
 }
