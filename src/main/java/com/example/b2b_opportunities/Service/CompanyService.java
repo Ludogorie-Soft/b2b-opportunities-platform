@@ -530,7 +530,9 @@ public class CompanyService {
         }
         Company partnerCompany = companyRepository.findById(partnerCompanyId)
                 .orElseThrow(() -> new NotFoundException("Company with ID: " + partnerCompanyId + " not found"));
-        userCompany.getPartners().remove(partnerCompany);
+        if (!userCompany.getPartners().remove(partnerCompany)) {
+            throw new NotFoundException("Your company does not have a partnership with this company.");
+        }
         companyRepository.save(userCompany);
     }
 }
