@@ -99,4 +99,11 @@ public class Company {
     }
 
     Set<Long> projectIdsNotified;
+    @ManyToMany
+    @JoinTable(
+            name = "company_partners",
+            joinColumns = @JoinColumn(name = "company_id"),
+            inverseJoinColumns = @JoinColumn(name = "partner_id")
+    )
+    private Set<Company> partners;
 }

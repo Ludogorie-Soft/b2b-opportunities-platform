@@ -19,6 +19,7 @@ import com.example.b2b_opportunities.Entity.RequiredSkill;
 import com.example.b2b_opportunities.Entity.Skill;
 import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Exception.common.AlreadyExistsException;
+import com.example.b2b_opportunities.Exception.common.InvalidRequestException;
 import com.example.b2b_opportunities.Exception.common.NotFoundException;
 import com.example.b2b_opportunities.Mapper.CompanyMapper;
 import com.example.b2b_opportunities.Mapper.FilterMapper;
@@ -28,7 +29,6 @@ import com.example.b2b_opportunities.Repository.CompanyRepository;
 import com.example.b2b_opportunities.Repository.CompanyTypeRepository;
 import com.example.b2b_opportunities.Repository.DomainRepository;
 import com.example.b2b_opportunities.Repository.FilterRepository;
-import com.example.b2b_opportunities.Repository.PositionRepository;
 import com.example.b2b_opportunities.Repository.ProjectRepository;
 import com.example.b2b_opportunities.Repository.UserRepository;
 import com.example.b2b_opportunities.Static.EmailVerification;
@@ -64,7 +64,6 @@ public class CompanyService {
     private final UserRepository userRepository;
     private final FilterRepository filterRepository;
     private final ProjectRepository projectRepository;
-    private final PositionRepository positionRepository;
 
     public CompanyResponseDto createCompany(Authentication authentication,
                                             CompanyRequestDto companyRequestDto,
@@ -502,5 +501,36 @@ public class CompanyService {
         }
 
         return result;
+    }
+
+    public void addCompanyToPartners(Authentication authentication, Long partnerCompanyId) {
+        User user = adminService.getCurrentUserOrThrow(authentication);
+        Company userCompany = getUserCompanyOrThrow(user);
+        if (userCompany.getId().equals(partnerCompanyId))
+            throw new InvalidRequestException("You can't send a partnership request to your company");
+        Company partnerCompany = companyRepository.findById(partnerCompanyId)
+                .orElseThrow(() -> new NotFoundException("Company with ID: " + partnerCompanyId + " not found"));
+        checkIfPartnersAlready(userCompany, partnerCompany);
+        userCompany.getPartners().add(partnerCompany);
+        companyRepository.save(userCompany);
+    }
+
+    private void checkIfPartnersAlready(Company companyA, Company companyB) {
+        Set<Company> companyAPartners = companyA.getPartners();
+        if (companyAPartners.contains(companyB)) {
+            throw new AlreadyExistsException("This company is already in your partners list");
+        }
+    }
+
+    public void removePartner(Authentication authentication, Long partnerCompanyId) {
+        User user = adminService.getCurrentUserOrThrow(authentication);
+        Company userCompany = getUserCompanyOrThrow(user);
+        if (userCompany.getId().equals(partnerCompanyId)) {
+            throw new InvalidRequestException("Partnership with your own company cannot be cancelled");
+        }
+        Company partnerCompany = companyRepository.findById(partnerCompanyId)
+                .orElseThrow(() -> new NotFoundException("Company with ID: " + partnerCompanyId + " not found"));
+        userCompany.getPartners().remove(partnerCompany);
+        companyRepository.save(userCompany);
     }
 }

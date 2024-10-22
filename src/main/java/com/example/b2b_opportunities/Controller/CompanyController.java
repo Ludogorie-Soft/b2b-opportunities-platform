@@ -72,6 +72,19 @@ public class CompanyController {
         return companyService.createCompany(authentication, companyRequestDto, request);
     }
 
+    @PostMapping("/add-partners")
+    @ResponseStatus(HttpStatus.OK)
+    public void addCompanyToPartners(Authentication authentication,
+                                     @RequestParam("companyId") Long companyId) {
+        companyService.addCompanyToPartners(authentication, companyId);
+    }
+
+    @PostMapping("/cancel-partnership")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void removePartner(Authentication authentication, @RequestParam("companyId") Long companyId) {
+        companyService.removePartner(authentication, companyId);
+    }
+
     @GetMapping("/{id}/with-users")
     @ResponseStatus(HttpStatus.OK)
     public CompaniesAndUsersResponseDto getCompanyAndUsers(@PathVariable("id") Long companyId) {
@@ -145,4 +158,5 @@ public class CompanyController {
     public void deleteCompanyFilter(@PathVariable("id") Long id, Authentication authentication) {
         companyService.deleteCompanyFilter(id, authentication);
     }
+
 }

@@ -47,3 +47,6 @@ databaseChangeLog:
   - include:
       file: 16-create-company-project-notified-table.sql
       relativeToChangelogFile: true
+  - include:
+      file: 17-create-partners-table.sql
+      relativeToChangelogFile: true
