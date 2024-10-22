@@ -7,6 +7,7 @@ import com.example.b2b_opportunities.Dto.Response.CompaniesAndUsersResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyFilterResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyPublicResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyResponseDto;
+import com.example.b2b_opportunities.Dto.Response.PartnerGroupResponseDto;
 import com.example.b2b_opportunities.Dto.Response.ProjectResponseDto;
 import com.example.b2b_opportunities.Exception.common.NotFoundException;
 import com.example.b2b_opportunities.Mapper.CompanyMapper;
@@ -72,19 +73,20 @@ public class CompanyController {
         return companyService.createCompany(authentication, companyRequestDto, request);
     }
 
-    @PostMapping("/add-partners")
+    @PostMapping("/partners/create")
+    @ResponseStatus(HttpStatus.CREATED)
+    public PartnerGroupResponseDto createPartnerGroup(Authentication authentication, @RequestParam("name") String partnershipName) {
+        return companyService.createPartnerGroup(authentication, partnershipName);
+    }
+
+    @PostMapping("/partners/add")
     @ResponseStatus(HttpStatus.OK)
-    public void addCompanyToPartners(Authentication authentication,
-                                     @RequestParam("companyId") Long companyId) {
-        companyService.addCompanyToPartners(authentication, companyId);
+    public PartnerGroupResponseDto addCompanyToPartners(Authentication authentication,
+                                                        @RequestParam("partnerGroupId") Long partnerGroupId,
+                                                        @RequestParam("companyId") Long companyId) {
+        return companyService.addCompanyToPartners(authentication, partnerGroupId, companyId);
     }
-
-    @PostMapping("/cancel-partnership")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void removePartner(Authentication authentication, @RequestParam("companyId") Long companyId) {
-        companyService.removePartner(authentication, companyId);
-    }
-
+    //TODO - remove company from a partner group / remove partner group
     @GetMapping("/{id}/with-users")
     @ResponseStatus(HttpStatus.OK)
     public CompaniesAndUsersResponseDto getCompanyAndUsers(@PathVariable("id") Long companyId) {

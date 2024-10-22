@@ -28,20 +28,19 @@ public class ProjectController {
 
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public ProjectResponseDto get(@PathVariable("id") Long id) {
-        return projectService.get(id);
+    public ProjectResponseDto get(Authentication authentication, @PathVariable("id") Long id) {
+        return projectService.get(authentication, id);
     }
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public List<ProjectResponseDto> getAll(Authentication authentication) {
+    public List<ProjectResponseDto> getAvailableProjects(Authentication authentication) {
         return projectService.getAvailableProjects(authentication);
     }
 
     @GetMapping("{id}/positions")
     @ResponseStatus(HttpStatus.OK)
     public List<PositionResponseDto> getPositionsByProject(Authentication authentication, @PathVariable("id") Long id) {
-        //TODO - add authentication and check if project is visible to current user (if shared ony w/ partners)
         return projectService.getPositionsByProject(authentication, id);
     }
 

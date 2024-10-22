@@ -2,6 +2,7 @@ package com.example.b2b_opportunities.Entity;
 
 import com.example.b2b_opportunities.Static.EmailVerification;
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -99,11 +100,8 @@ public class Company {
     }
 
     Set<Long> projectIdsNotified;
-    @ManyToMany
-    @JoinTable(
-            name = "company_partners",
-            joinColumns = @JoinColumn(name = "company_id"),
-            inverseJoinColumns = @JoinColumn(name = "partner_id")
-    )
-    private Set<Company> partners;
+
+    @OneToMany(mappedBy = "partners", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<PartnerGroup> partnerGroups;
+
 }

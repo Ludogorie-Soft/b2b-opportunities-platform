@@ -8,6 +8,7 @@ import com.example.b2b_opportunities.Entity.Skill;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -27,7 +28,7 @@ public class CompanyMapper {
                 .build();
     }
 
-    public static CompanyPublicResponseDto toCompanyPublicResponseDto(Company company){
+    public static CompanyPublicResponseDto toCompanyPublicResponseDto(Company company) {
         return CompanyPublicResponseDto.builder()
                 .id(company.getId())
                 .name(company.getName())
@@ -76,5 +77,13 @@ public class CompanyMapper {
             responseDtoList.add(toCompanyResponseDto(company));
         }
         return responseDtoList;
+    }
+
+    public static Set<CompanyResponseDto> toCompanyResponseDtoSet(Set<Company> companyList) {
+        Set<CompanyResponseDto> responseDtoSet = new HashSet<>();
+        for (Company company : companyList) {
+            responseDtoSet.add(toCompanyResponseDto(company));
+        }
+        return responseDtoSet;
     }
 }

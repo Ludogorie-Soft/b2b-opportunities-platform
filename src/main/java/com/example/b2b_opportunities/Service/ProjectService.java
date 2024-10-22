@@ -4,7 +4,7 @@ import com.example.b2b_opportunities.Dto.Request.ProjectRequestDto;
 import com.example.b2b_opportunities.Dto.Response.PositionResponseDto;
 import com.example.b2b_opportunities.Dto.Response.ProjectResponseDto;
 import com.example.b2b_opportunities.Entity.Company;
-import com.example.b2b_opportunities.Entity.Position;
+import com.example.b2b_opportunities.Entity.PartnerGroup;
 import com.example.b2b_opportunities.Entity.Project;
 import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Exception.common.AlreadyExistsException;
@@ -13,6 +13,7 @@ import com.example.b2b_opportunities.Exception.common.PermissionDeniedException;
 import com.example.b2b_opportunities.Mapper.PositionMapper;
 import com.example.b2b_opportunities.Mapper.ProjectMapper;
 import com.example.b2b_opportunities.Repository.CompanyRepository;
+import com.example.b2b_opportunities.Repository.PartnerGroupRepository;
 import com.example.b2b_opportunities.Repository.ProjectRepository;
 import com.example.b2b_opportunities.Static.ProjectStatus;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +25,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -33,8 +34,13 @@ public class ProjectService {
     private final CompanyRepository companyRepository;
     private final AdminService adminService;
     private final MailService mailService;
+    private final PartnerGroupRepository partnerGroupRepository;
 
-    public ProjectResponseDto get(Long id) {
+    public ProjectResponseDto get(Authentication authentication, Long id) {
+        User user = adminService.getCurrentUserOrThrow(authentication);
+        Company company = getCompanyIfExists(user.getCompany().getId());
+        Project project = getProjectIfExists(id);
+        validateProjectIsAvailableToCompany(project, company);
         return ProjectMapper.toDto(getProjectIfExists(id));
     }
 
@@ -42,16 +48,22 @@ public class ProjectService {
         User user = adminService.getCurrentUserOrThrow(authentication);
         Company company = getCompanyIfExists(user.getCompany().getId());
 
-        //all public projects that are active
+        //all public && active projects
         List<ProjectResponseDto> publicProjects = ProjectMapper.toDtoList(projectRepository
                 .findByProjectStatusAndIsPartnerOnlyFalse(ProjectStatus.ACTIVE));
-        //all projects shared with current user company
+
+        //all projects available for current user company
         List<ProjectResponseDto> partnerProjects = getPartnerProjects(company);
 
         List<ProjectResponseDto> combinedProjects = new ArrayList<>();
         combinedProjects.addAll(publicProjects);
         combinedProjects.addAll(partnerProjects);
         return combinedProjects;
+    }
+
+    private List<ProjectResponseDto> getPartnerProjects(Company company) {
+        List<Project> partnerProjects = projectRepository.findActiveProjectsByCompanyInPartnerGroups(company.getId(), ProjectStatus.ACTIVE);
+        return ProjectMapper.toDtoList(partnerProjects);
     }
 
     public ProjectResponseDto update(Long id, ProjectRequestDto dto, Authentication authentication) {
@@ -80,15 +92,26 @@ public class ProjectService {
         User user = adminService.getCurrentUserOrThrow(authentication);
         Company userCompany = companyRepository.findById(user.getCompany().getId())
                 .orElseThrow(() -> new NotFoundException("User does not associate with any company"));
+
         Project project = getProjectIfExists(id);
-        if (project.getPositions() == null || project.getPositions().isEmpty())
+        validateProjectIsAvailableToCompany(project, userCompany);
+
+        if (project.getPositions() == null || project.getPositions().isEmpty()) {
             throw new NotFoundException("No positions found for Project with ID: " + id);
-        if (project.isPartnerOnly() && !project.getCompany().getPartners().contains(userCompany)) {
-            throw new PermissionDeniedException("This project is not shared with this company");
         }
 
-        List<Position> positions = project.getPositions();
-        return positions.stream().map(PositionMapper::toResponseDto).collect(Collectors.toList());
+        return PositionMapper.toDtoList(project.getPositions());
+    }
+
+    private void validateProjectIsAvailableToCompany(Project project, Company userCompany) {
+        if (project.isPartnerOnly()) {
+            boolean isCompanyInGroup = project.getPartnerGroupList().stream()
+                    .anyMatch(partnerGroup -> partnerGroup.getPartners().contains(userCompany));
+
+            if (!isCompanyInGroup) {
+                throw new PermissionDeniedException("This project is only shared with partners");
+            }
+        }
     }
 
     public ProjectResponseDto reactivateProject(Long projectId, Authentication authentication) {
@@ -125,8 +148,37 @@ public class ProjectService {
         project.setDescription(dto.getDescription());
         project.setDateUpdated(LocalDateTime.now());
         project.setProjectStatus(ProjectStatus.ACTIVE);
-        project.setPartnerOnly(dto.isPartnerOnly());
+        if (dto.isPartnerOnly()) {
+            project.setPartnerOnly(true);
+            List<PartnerGroup> projectPartnerGroups = getPartnerGroupsOrThrow(dto.getPartnerGroupIds());
+            validatePartnerGroupsBelongToCompany(project.getCompany(), projectPartnerGroups);
+            project.setPartnerGroupList(projectPartnerGroups);
+        }
         return ProjectMapper.toDto(projectRepository.save(project));
+    }
+
+    private List<PartnerGroup> getPartnerGroupsOrThrow(List<Long> partnerGroupIds) {
+        List<PartnerGroup> partnerGroups = partnerGroupRepository.findAllById(partnerGroupIds);
+
+        // Check for missing PartnerGroup IDs
+        List<Long> missingPartnerGroupIds = partnerGroupIds.stream()
+                .filter(id -> partnerGroups.stream().noneMatch(partnerGroup -> partnerGroup.getId().equals(id)))
+                .toList();
+
+        if (!missingPartnerGroupIds.isEmpty()) {
+            throw new NotFoundException("PartnerGroups with ID(s) " + missingPartnerGroupIds + " not found.");
+        }
+
+        return partnerGroups;
+    }
+
+    private void validatePartnerGroupsBelongToCompany(Company company, List<PartnerGroup> partnerGroups) {
+        Set<PartnerGroup> companyPartnerGroup = company.getPartnerGroups();
+        for (PartnerGroup partnerGroup : partnerGroups) {
+            if (!companyPartnerGroup.contains(partnerGroup)) {
+                throw new PermissionDeniedException("Partner group with ID " + partnerGroup.getId() + " does not belong to this company.");
+            }
+        }
     }
 
     private Project getProjectIfExists(Long id) {
@@ -135,15 +187,6 @@ public class ProjectService {
 
     private Company getCompanyIfExists(Long id) {
         return companyRepository.findById(id).orElseThrow(() -> new NotFoundException("Company with ID: " + id + " not found"));
-    }
-
-
-    private List<ProjectResponseDto> getPartnerProjects(Company userCompany) {
-        List<Company> partnersWithUserCompany = companyRepository.findCompaniesByPartnersContaining(userCompany);
-        return partnersWithUserCompany.stream()
-                .flatMap(company -> company.getProjects().stream())
-                .map(ProjectMapper::toDto)
-                .toList();
     }
 
     private void validateProjectBelongsToUser(Authentication authentication, Project project) {

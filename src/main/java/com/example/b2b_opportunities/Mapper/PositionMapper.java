@@ -47,4 +47,12 @@ public class PositionMapper {
                 .description(position.getDescription())
                 .build();
     }
+
+    public static List<PositionResponseDto> toDtoList(List<Position> positionList){
+        List<PositionResponseDto> dtoList = new ArrayList<>();
+        for(Position position: positionList){
+            dtoList.add(PositionMapper.toResponseDto(position));
+        }
+        return dtoList;
+    }
 }

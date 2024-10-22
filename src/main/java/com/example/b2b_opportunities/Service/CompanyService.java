@@ -7,12 +7,14 @@ import com.example.b2b_opportunities.Dto.Response.CompaniesAndUsersResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyFilterResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyPublicResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyResponseDto;
+import com.example.b2b_opportunities.Dto.Response.PartnerGroupResponseDto;
 import com.example.b2b_opportunities.Dto.Response.ProjectResponseDto;
 import com.example.b2b_opportunities.Dto.Response.UserResponseDto;
 import com.example.b2b_opportunities.Entity.Company;
 import com.example.b2b_opportunities.Entity.CompanyType;
 import com.example.b2b_opportunities.Entity.Domain;
 import com.example.b2b_opportunities.Entity.Filter;
+import com.example.b2b_opportunities.Entity.PartnerGroup;
 import com.example.b2b_opportunities.Entity.Position;
 import com.example.b2b_opportunities.Entity.Project;
 import com.example.b2b_opportunities.Entity.RequiredSkill;
@@ -21,14 +23,17 @@ import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Exception.common.AlreadyExistsException;
 import com.example.b2b_opportunities.Exception.common.InvalidRequestException;
 import com.example.b2b_opportunities.Exception.common.NotFoundException;
+import com.example.b2b_opportunities.Exception.common.PermissionDeniedException;
 import com.example.b2b_opportunities.Mapper.CompanyMapper;
 import com.example.b2b_opportunities.Mapper.FilterMapper;
+import com.example.b2b_opportunities.Mapper.PartnerGroupMapper;
 import com.example.b2b_opportunities.Mapper.ProjectMapper;
 import com.example.b2b_opportunities.Mapper.UserMapper;
 import com.example.b2b_opportunities.Repository.CompanyRepository;
 import com.example.b2b_opportunities.Repository.CompanyTypeRepository;
 import com.example.b2b_opportunities.Repository.DomainRepository;
 import com.example.b2b_opportunities.Repository.FilterRepository;
+import com.example.b2b_opportunities.Repository.PartnerGroupRepository;
 import com.example.b2b_opportunities.Repository.ProjectRepository;
 import com.example.b2b_opportunities.Repository.UserRepository;
 import com.example.b2b_opportunities.Static.EmailVerification;
@@ -64,6 +69,7 @@ public class CompanyService {
     private final UserRepository userRepository;
     private final FilterRepository filterRepository;
     private final ProjectRepository projectRepository;
+    private final PartnerGroupRepository partnerGroupRepository;
 
     public CompanyResponseDto createCompany(Authentication authentication,
                                             CompanyRequestDto companyRequestDto,
@@ -503,36 +509,41 @@ public class CompanyService {
         return result;
     }
 
-    public void addCompanyToPartners(Authentication authentication, Long partnerCompanyId) {
+    public PartnerGroupResponseDto createPartnerGroup(Authentication authentication, String partnershipName) {
+        User user = adminService.getCurrentUserOrThrow(authentication);
+        Company company = getUserCompanyOrThrow(user); //check if user belongs to a company
+        PartnerGroup partnerGroup = partnerGroupRepository.save(PartnerGroup.builder().name(partnershipName).build());
+        company.getPartnerGroups().add(partnerGroup);
+        companyRepository.save(company);
+        return PartnerGroupMapper.toPartnerGroupResponseDto(partnerGroup);
+    }
+
+    public PartnerGroupResponseDto addCompanyToPartners(Authentication authentication, Long partnerGroupId, Long partnerCompanyId) {
         User user = adminService.getCurrentUserOrThrow(authentication);
         Company userCompany = getUserCompanyOrThrow(user);
         if (userCompany.getId().equals(partnerCompanyId))
-            throw new InvalidRequestException("You can't send a partnership request to your company");
-        Company partnerCompany = companyRepository.findById(partnerCompanyId)
+            throw new InvalidRequestException("You can't add your company to a partner group");
+
+        Company potentialPartnerCompany = companyRepository.findById(partnerCompanyId)
                 .orElseThrow(() -> new NotFoundException("Company with ID: " + partnerCompanyId + " not found"));
-        checkIfPartnersAlready(userCompany, partnerCompany);
-        userCompany.getPartners().add(partnerCompany);
-        companyRepository.save(userCompany);
+        PartnerGroup partnerGroup = partnerGroupRepository.findById(partnerGroupId)
+                .orElseThrow(() -> new NotFoundException("Partner group with ID: " + partnerGroupId + " not found"));
+        validatePartnerGroupBelongsToCompany(partnerGroup, userCompany);
+        checkIfPartnersAlready(potentialPartnerCompany, partnerGroup);
+        partnerGroup.getPartners().add(potentialPartnerCompany);
+        partnerGroupRepository.save(partnerGroup);
+        return PartnerGroupMapper.toPartnerGroupResponseDto(partnerGroup);
     }
 
-    private void checkIfPartnersAlready(Company companyA, Company companyB) {
-        Set<Company> companyAPartners = companyA.getPartners();
-        if (companyAPartners.contains(companyB)) {
-            throw new AlreadyExistsException("This company is already in your partners list");
+    private void validatePartnerGroupBelongsToCompany(PartnerGroup partnerGroup, Company company) {
+        if (!company.getPartnerGroups().contains(partnerGroup)) {
+            throw new PermissionDeniedException("Partner group does not belong to this company");
         }
     }
 
-    public void removePartner(Authentication authentication, Long partnerCompanyId) {
-        User user = adminService.getCurrentUserOrThrow(authentication);
-        Company userCompany = getUserCompanyOrThrow(user);
-        if (userCompany.getId().equals(partnerCompanyId)) {
-            throw new InvalidRequestException("Partnership with your own company cannot be cancelled");
+    private void checkIfPartnersAlready(Company partnerCompany, PartnerGroup partnerGroup) {
+        if (partnerGroup.getPartners().contains(partnerCompany)) {
+            throw new AlreadyExistsException("This company is already in this partner group");
         }
-        Company partnerCompany = companyRepository.findById(partnerCompanyId)
-                .orElseThrow(() -> new NotFoundException("Company with ID: " + partnerCompanyId + " not found"));
-        if (!userCompany.getPartners().remove(partnerCompany)) {
-            throw new NotFoundException("Your company does not have a partnership with this company.");
-        }
-        companyRepository.save(userCompany);
     }
 }

@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Getter
 @Setter
@@ -16,4 +17,5 @@ public class ProjectRequestDto {
 
     private String Description;
     private boolean isPartnerOnly;
+    private List<Long> partnerGroupIds; //if isPartnerOnly = true
 }
