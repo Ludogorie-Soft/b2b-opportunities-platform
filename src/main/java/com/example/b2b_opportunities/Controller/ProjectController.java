@@ -40,9 +40,9 @@ public class ProjectController {
 
     @GetMapping("{id}/positions")
     @ResponseStatus(HttpStatus.OK)
-    public List<PositionResponseDto> getPositionsByProject(@PathVariable("id") Long id) {
+    public List<PositionResponseDto> getPositionsByProject(Authentication authentication, @PathVariable("id") Long id) {
         //TODO - add authentication and check if project is visible to current user (if shared ony w/ partners)
-        return projectService.getPositionsByProject(id);  // field boolean isPrivate = false?
+        return projectService.getPositionsByProject(authentication, id);
     }
 
     @PutMapping("/{id}")
@@ -60,7 +60,7 @@ public class ProjectController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ProjectResponseDto create(Authentication authentication,
-            @RequestBody @Valid ProjectRequestDto projectRequestDto) {
+                                     @RequestBody @Valid ProjectRequestDto projectRequestDto) {
         return projectService.create(authentication, projectRequestDto);
     }
 

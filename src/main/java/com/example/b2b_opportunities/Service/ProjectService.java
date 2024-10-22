@@ -76,13 +76,18 @@ public class ProjectService {
         projectRepository.delete(project);
     }
 
-    public List<PositionResponseDto> getPositionsByProject(Long id) {
+    public List<PositionResponseDto> getPositionsByProject(Authentication authentication, Long id) {
+        User user = adminService.getCurrentUserOrThrow(authentication);
+        Company userCompany = companyRepository.findById(user.getCompany().getId())
+                .orElseThrow(() -> new NotFoundException("User does not associate with any company"));
         Project project = getProjectIfExists(id);
-
-        List<Position> positions = project.getPositions();
         if (project.getPositions() == null || project.getPositions().isEmpty())
             throw new NotFoundException("No positions found for Project with ID: " + id);
+        if (project.isPartnerOnly() && !project.getCompany().getPartners().contains(userCompany)) {
+            throw new PermissionDeniedException("This project is not shared with this company");
+        }
 
+        List<Position> positions = project.getPositions();
         return positions.stream().map(PositionMapper::toResponseDto).collect(Collectors.toList());
     }
 
@@ -125,7 +130,7 @@ public class ProjectService {
     }
 
     private Project getProjectIfExists(Long id) {
-        return projectRepository.findById(id).orElseThrow(() -> new NotFoundException("Pattern with ID: " + id + " not found"));
+        return projectRepository.findById(id).orElseThrow(() -> new NotFoundException("Project with ID: " + id + " not found"));
     }
 
     private Company getCompanyIfExists(Long id) {
