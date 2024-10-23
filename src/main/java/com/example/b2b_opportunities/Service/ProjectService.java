@@ -98,7 +98,7 @@ public class ProjectService {
             throw new NotFoundException("No positions found for Project with ID: " + id);
         }
 
-        return PositionMapper.toDtoList(project.getPositions());
+        return PositionMapper.toResponseDtoList(project.getPositions());
     }
 
     private void validateProjectIsAvailableToCompany(Project project, Company userCompany) {
