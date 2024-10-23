@@ -34,6 +34,7 @@ public class AdminService {
         return UserMapper.toResponseDtoList(users);
     }
 
+    // TODO: move to a different location ?
     public User getCurrentUserOrThrow(Authentication authentication) {
         if (authentication == null) {
             throw new AuthenticationFailedException("User not authenticated");

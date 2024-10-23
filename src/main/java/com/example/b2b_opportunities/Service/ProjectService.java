@@ -74,8 +74,7 @@ public class ProjectService {
 
     public ProjectResponseDto create(Authentication authentication, ProjectRequestDto dto) {
         User user = adminService.getCurrentUserOrThrow(authentication);
-        Company company = companyRepository.findById(user.getCompany().getId())
-                .orElseThrow(() -> new NotFoundException("User does not associate with any company"));
+        Company company = getCompanyIfExists(user.getCompany().getId());
         Project project = new Project();
         project.setDatePosted(LocalDateTime.now());
         project.setCompany(company);
@@ -90,8 +89,7 @@ public class ProjectService {
 
     public List<PositionResponseDto> getPositionsByProject(Authentication authentication, Long id) {
         User user = adminService.getCurrentUserOrThrow(authentication);
-        Company userCompany = companyRepository.findById(user.getCompany().getId())
-                .orElseThrow(() -> new NotFoundException("User does not associate with any company"));
+        Company userCompany = getCompanyIfExists(user.getCompany().getId());
 
         Project project = getProjectIfExists(id);
         validateProjectIsAvailableToCompany(project, userCompany);
@@ -186,6 +184,9 @@ public class ProjectService {
     }
 
     private Company getCompanyIfExists(Long id) {
+        if (id == null) {
+            throw new NotFoundException("User does not associate with any company");
+        }
         return companyRepository.findById(id).orElseThrow(() -> new NotFoundException("Company with ID: " + id + " not found"));
     }
 
