@@ -62,7 +62,7 @@ public class ProjectService {
     }
 
     private List<ProjectResponseDto> getPartnerProjects(Company company) {
-        List<Project> partnerProjects = projectRepository.findActiveProjectsByCompanyInPartnerGroups(company.getId(), ProjectStatus.ACTIVE);
+        List<Project> partnerProjects = projectRepository.findPartnerOnlyProjectsByCompanyInPartnerGroupsAndStatus(company.getId(), ProjectStatus.ACTIVE);
         return ProjectMapper.toDtoList(partnerProjects);
     }
 

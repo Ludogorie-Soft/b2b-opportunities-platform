@@ -24,3 +24,11 @@ CREATE TABLE partner_group_companies (
     FOREIGN KEY (partner_group_id) REFERENCES partner_groups(id),
     FOREIGN KEY (company_id) REFERENCES companies(id)
 );
+
+CREATE TABLE project_partner_group (
+    project_id BIGINT NOT NULL,
+    partner_group_id BIGINT NOT NULL,
+    PRIMARY KEY (project_id, partner_group_id),
+    CONSTRAINT fk_project FOREIGN KEY (project_id) REFERENCES projects(id),
+    CONSTRAINT fk_partner_group FOREIGN KEY (partner_group_id) REFERENCES partner_groups(id)
+);
