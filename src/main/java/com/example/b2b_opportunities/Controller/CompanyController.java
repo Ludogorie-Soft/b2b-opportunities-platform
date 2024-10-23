@@ -73,13 +73,13 @@ public class CompanyController {
         return companyService.createCompany(authentication, companyRequestDto, request);
     }
 
-    @GetMapping("/partners/")
+    @GetMapping("/partners")
     @ResponseStatus(HttpStatus.OK)
     public List<PartnerGroupResponseDto> getPartnerGroups(Authentication authentication) {
         return companyService.getPartnerGroups(authentication);
     }
 
-    @PostMapping("/partners/")
+    @PostMapping("/partners")
     @ResponseStatus(HttpStatus.CREATED)
     public PartnerGroupResponseDto createPartnerGroup(Authentication authentication, @RequestParam("name") String partnershipName) {
         return companyService.createPartnerGroup(authentication, partnershipName);
