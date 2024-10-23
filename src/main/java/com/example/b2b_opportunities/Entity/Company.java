@@ -102,7 +102,7 @@ public class Company {
 
     Set<Long> projectIdsNotified;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "company_partner_groups",
             joinColumns = @JoinColumn(name = "company_id"),

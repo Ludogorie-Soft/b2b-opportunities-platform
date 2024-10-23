@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,6 +16,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
@@ -32,11 +34,13 @@ public class PartnerGroup {
 
     private String name;
 
-    @ManyToMany
-    @JoinTable(
-            name = "partner_group_companies",
-            joinColumns = @JoinColumn(name = "partner_group_id"),
-            inverseJoinColumns = @JoinColumn(name = "company_id")
-    )
-    private Set<Company> partners;
+//    @ManyToMany
+//    @JoinTable(
+//            name = "company_partner_groups",
+//            joinColumns = @JoinColumn(name = "partner_group_id"),
+//            inverseJoinColumns = @JoinColumn(name = "company_id")
+//    )
+    @Builder.Default
+    @ManyToMany(mappedBy = "partnerGroups")
+    private Set<Company> partners = new HashSet<>();
 }

@@ -14,11 +14,10 @@ CREATE TABLE company_partner_groups (
     FOREIGN KEY (partner_group_id) REFERENCES partner_groups(id) ON DELETE CASCADE
 );
 
-CREATE TABLE partner_group_companies (
-    partner_group_id BIGINT NOT NULL,
-    company_id BIGINT NOT NULL,
-    PRIMARY KEY (partner_group_id, company_id),
-    FOREIGN KEY (partner_group_id) REFERENCES partner_groups(id),
-    FOREIGN KEY (company_id) REFERENCES companies(id)
-);
-
+--CREATE TABLE partner_group_companies (
+--    partner_group_id BIGINT NOT NULL,
+--    company_id BIGINT NOT NULL,
+--    PRIMARY KEY (partner_group_id, company_id),
+--    FOREIGN KEY (partner_group_id) REFERENCES partner_groups(id),
+--    FOREIGN KEY (company_id) REFERENCES companies(id)
+--);
