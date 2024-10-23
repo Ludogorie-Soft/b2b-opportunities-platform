@@ -37,8 +37,6 @@ services:
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
       JWT_SECRET_KEY: ${JWT_SECRET_KEY}
-      SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD}
-      SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
       STORAGE_HOST: http://minio:9000
@@ -46,6 +44,7 @@ services:
       STORAGE_PASSWORD: ${STORAGE_PASSWORD}
       STORAGE_BUCKET_NAME: ${STORAGE_BUCKET_NAME}
       FRONTEND_HOST: http://localhost:8083 # This is a string that is used to redirect users to the frontend.
+      EMAIL_SERVICE_URL: http://notifications:8085/api/email/send
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8082/actuator/health" ]
       interval: 10s
@@ -85,6 +84,14 @@ services:
       mc alias set myminio http://$${MINIO_SERVER_HOST}:9000 $${MINIO_SERVER_ACCESS_KEY} $${MINIO_SERVER_SECRET_KEY};
       mc anonymous set download myminio/company-assets;
       "
+    networks:
+      - b2b-network
+
+  notifications:
+    image: ludogoriesoft/b2b-notifications:v1
+    environment:
+      SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD}
+      SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME}
     networks:
       - b2b-network
 
