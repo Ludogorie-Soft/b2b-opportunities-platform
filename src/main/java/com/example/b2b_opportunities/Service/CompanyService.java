@@ -513,7 +513,16 @@ public class CompanyService {
     public PartnerGroupResponseDto createPartnerGroup(Authentication authentication, String partnershipName) {
         User user = adminService.getCurrentUserOrThrow(authentication);
         Company company = getUserCompanyOrThrow(user); //check if user belongs to a company
-        PartnerGroup partnerGroup = partnerGroupRepository.save(PartnerGroup.builder().name(partnershipName).partners(new HashSet<>()).build());
+
+        if (company.getPartnerGroups().stream().map(PartnerGroup::getName).toList().contains(partnershipName)) {
+            throw new AlreadyExistsException("Partner group: '" + partnershipName + "' already exists.");
+        }
+
+        PartnerGroup partnerGroup = partnerGroupRepository.save(PartnerGroup.builder()
+                .name(partnershipName)
+                .company(company)
+                .build());
+
         company.getPartnerGroups().add(partnerGroup);
         companyRepository.save(company);
         return PartnerGroupMapper.toPartnerGroupResponseDto(partnerGroup);

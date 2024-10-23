@@ -102,11 +102,6 @@ public class Company {
 
     Set<Long> projectIdsNotified;
 
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(
-            name = "company_partner_groups",
-            joinColumns = @JoinColumn(name = "company_id"),
-            inverseJoinColumns = @JoinColumn(name = "partner_group_id")
-    )
+    @OneToMany(mappedBy = "company")
     private Set<PartnerGroup> partnerGroups;
 }

@@ -96,8 +96,7 @@ public class MailService {
                 .subject(subject)
                 .build();
 
-        String response = restTemplate.postForObject(emailServiceUrl, er, String.class);
-        System.out.println(response);
+        restTemplate.postForObject(emailServiceUrl, er, String.class);
     }
 
     private String generateConfirmationLink(User user, HttpServletRequest request) {
