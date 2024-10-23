@@ -574,4 +574,18 @@ public class CompanyService {
             throw new InvalidRequestException("Company with ID: " + company.getId() + " is not part of this Partner group");
         }
     }
+
+    public void deletePartnerGroup(Authentication authentication, Long partnerGroupId) {
+        User user = adminService.getCurrentUserOrThrow(authentication);
+        Company company = getUserCompanyOrThrow(user);
+        Set<PartnerGroup> partnerGroups = company.getPartnerGroups();
+        PartnerGroup partnerGroupToBeRemoved = partnerGroupRepository.findById(partnerGroupId)
+                .orElseThrow(() -> new NotFoundException("Partner group with ID: " + partnerGroupId + " not found"));
+        if (partnerGroups.contains(partnerGroupToBeRemoved)) {
+            partnerGroups.remove(partnerGroupToBeRemoved);
+            partnerGroupRepository.delete(partnerGroupToBeRemoved);
+        } else {
+            throw new PermissionDeniedException("This Partner group does not belong to this company");
+        }
+    }
 }

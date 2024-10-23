@@ -85,6 +85,12 @@ public class CompanyController {
         return companyService.createPartnerGroup(authentication, partnershipName);
     }
 
+    @DeleteMapping("/partners")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deletePartnerGroup(Authentication authentication, @RequestParam("partnerGroupId") Long partnerGroupId){
+        companyService.deletePartnerGroup(authentication, partnerGroupId);
+    }
+
     @PutMapping("/partners/{partnerGroupId}/companies/{companyId}")
     @ResponseStatus(HttpStatus.OK)
     public PartnerGroupResponseDto addCompanyToPartners(Authentication authentication,
