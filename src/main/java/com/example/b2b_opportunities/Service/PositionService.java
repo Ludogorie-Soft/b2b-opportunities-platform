@@ -6,6 +6,7 @@ import com.example.b2b_opportunities.Dto.Request.RequiredSkillsDto;
 import com.example.b2b_opportunities.Dto.Response.PositionResponseDto;
 import com.example.b2b_opportunities.Entity.Company;
 import com.example.b2b_opportunities.Entity.Experience;
+import com.example.b2b_opportunities.Entity.Location;
 import com.example.b2b_opportunities.Entity.Position;
 import com.example.b2b_opportunities.Entity.Project;
 import com.example.b2b_opportunities.Entity.RequiredSkill;
@@ -19,6 +20,7 @@ import com.example.b2b_opportunities.Mapper.ExperienceMapper;
 import com.example.b2b_opportunities.Mapper.PositionMapper;
 import com.example.b2b_opportunities.Mapper.RateMapper;
 import com.example.b2b_opportunities.Repository.ExperienceRepository;
+import com.example.b2b_opportunities.Repository.LocationRepository;
 import com.example.b2b_opportunities.Repository.PositionRepository;
 import com.example.b2b_opportunities.Repository.PositionRoleRepository;
 import com.example.b2b_opportunities.Repository.ProjectRepository;
@@ -51,6 +53,7 @@ public class PositionService {
     private final ExperienceRepository experienceRepository;
     private final WorkModeRepository workModeRepository;
     private final AdminService adminService;
+    private final LocationRepository locationRepository;
 
     public PositionResponseDto createPosition(PositionRequestDto dto, Authentication authentication) {
         validateUserAndCompany(authentication);
@@ -62,6 +65,9 @@ public class PositionService {
         setPositionFields(position, dto);
         updateProjectDateUpdated(position);
         activateProjectIfInactive(position.getProject());
+        if (dto.getLocation() != null) {
+            position.setLocation(getLocationIfExists(dto.getLocation()));
+        }
 
         return PositionMapper.toResponseDto(positionRepository.save(position));
     }
@@ -103,11 +109,11 @@ public class PositionService {
 
     public List<PositionResponseDto> getPositions() {
         List<Position> positions = positionRepository.findAll();
-        List<PositionResponseDto> positionResponseDtoList = new ArrayList<>();
-        for (Position position : positions) {
-            positionResponseDtoList.add(PositionMapper.toResponseDto(position));
-        }
-        return positionResponseDtoList;
+        return PositionMapper.toResponseDtoList(positions);
+    }
+
+    private Location getLocationIfExists(Long id){
+        return locationRepository.findById(id).orElseThrow(() -> new NotFoundException("Location with ID: " + id + " not found"));
     }
 
     private void updateProjectDateUpdated(Position position) {

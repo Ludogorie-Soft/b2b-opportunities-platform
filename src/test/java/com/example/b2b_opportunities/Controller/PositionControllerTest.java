@@ -7,12 +7,14 @@ import com.example.b2b_opportunities.Dto.Request.RequiredSkillsDto;
 import com.example.b2b_opportunities.Dto.Response.PositionResponseDto;
 import com.example.b2b_opportunities.Entity.Company;
 import com.example.b2b_opportunities.Entity.CompanyType;
+import com.example.b2b_opportunities.Entity.Location;
 import com.example.b2b_opportunities.Entity.Position;
 import com.example.b2b_opportunities.Entity.PositionRole;
 import com.example.b2b_opportunities.Entity.Project;
 import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Repository.CompanyRepository;
 import com.example.b2b_opportunities.Repository.CompanyTypeRepository;
+import com.example.b2b_opportunities.Repository.LocationRepository;
 import com.example.b2b_opportunities.Repository.PositionRepository;
 import com.example.b2b_opportunities.Repository.PositionRoleRepository;
 import com.example.b2b_opportunities.Repository.ProjectRepository;
@@ -22,6 +24,7 @@ import com.example.b2b_opportunities.Repository.WorkModeRepository;
 import com.example.b2b_opportunities.Static.EmailVerification;
 import com.example.b2b_opportunities.Static.ProjectStatus;
 import com.example.b2b_opportunities.UserDetailsImpl;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -104,6 +107,9 @@ class PositionControllerTest {
     private WorkModeRepository workModeRepository;
 
     @Autowired
+    private LocationRepository locationRepository;
+
+    @Autowired
     private MockMvc mockMvc;
 
     private PositionRequestDto requestDto;
@@ -112,6 +118,12 @@ class PositionControllerTest {
     private Project project;
     private PositionRole positionRole = new PositionRole();
     private CompanyType companyType;
+    private Location location;
+
+    @AfterEach
+    void afterEach() {
+        locationRepository.deleteAll();
+    }
 
     @BeforeEach
     void init() {
@@ -185,6 +197,11 @@ class PositionControllerTest {
         requestDto.setSeniority(3L);
         requestDto.setWorkMode(List.of(1L, 2L));
 
+        location = Location.builder().name("Sofia").build();
+        location = locationRepository.save(location);
+
+        requestDto.setLocation(location.getId());
+
         // Create a valid RateRequestDto
         RateRequestDto rateRequestDto = new RateRequestDto();
         rateRequestDto.setCurrency("USD");
@@ -204,7 +221,6 @@ class PositionControllerTest {
 
         requestDto.setOptionalSkills(List.of(6L, 7L));
         requestDto.setMinYearsExperience(2);
-        requestDto.setLocation(8L);
         requestDto.setHoursPerWeek(40);
         requestDto.setResponsibilities(List.of("Develop software", "Review code"));
         requestDto.setHiringProcess("Interview -> Coding Test -> Offer");
@@ -221,7 +237,8 @@ class PositionControllerTest {
                         .content(asJsonString(requestDto)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.description").value("Position for software engineer"))
-                .andExpect(jsonPath("$.isActive").value(true));
+                .andExpect(jsonPath("$.isActive").value(true))
+                .andExpect(jsonPath("$.location").value(location.getId()));
 
         List<Position> positions = positionRepository.findAll();
         assertThat(positions).hasSize(1);

@@ -41,10 +41,19 @@ public class PositionMapper {
                 .requiredSkills(RequiredSkillMapper.toRequiredSkillResponseDtoList(position.getRequiredSkills()))
                 .optionalSkills(optionalSkillIds)
                 .minYearsExperience(position.getMinYearsExperience())
+                .location(position.getLocation().getId())
                 .hoursPerWeek(position.getHoursPerWeek())
                 .responsibilities(position.getResponsibilities())
                 .hiringProcess(position.getHiringProcess())
                 .description(position.getDescription())
                 .build();
+    }
+
+    public static List<PositionResponseDto> toResponseDtoList(List<Position> positions){
+        List<PositionResponseDto> positionResponseDtoList = new ArrayList<>();
+        for (Position position : positions) {
+            positionResponseDtoList.add(PositionMapper.toResponseDto(position));
+        }
+        return positionResponseDtoList;
     }
 }

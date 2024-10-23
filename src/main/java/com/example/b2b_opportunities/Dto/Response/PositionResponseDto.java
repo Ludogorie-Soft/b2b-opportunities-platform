@@ -26,7 +26,7 @@ public class PositionResponseDto {
     private List<RequiredSkillResponseDto> requiredSkills;
     private List<Long> optionalSkills;
     private Integer minYearsExperience;
-    private String location;
+    private Long location;
     private int hoursPerWeek;
     private List<String> responsibilities;
     private String hiringProcess;
