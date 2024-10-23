@@ -554,4 +554,24 @@ public class CompanyService {
         Set<PartnerGroup> partnerGroups = company.getPartnerGroups();
         return partnerGroups.stream().map(PartnerGroupMapper::toPartnerGroupResponseDto).collect(Collectors.toList());
     }
+
+    public PartnerGroupResponseDto removeCompanyFromPartners(Authentication authentication, Long partnerGroupId, Long companyId) {
+        User user = adminService.getCurrentUserOrThrow(authentication);
+        Company company = getUserCompanyOrThrow(user);
+        Set<PartnerGroup> partnerGroups = company.getPartnerGroups();
+        PartnerGroup partnerGroup = partnerGroups.stream()
+                .filter(pg -> pg.getId().equals(partnerGroupId))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Partner group with ID: " + partnerGroupId + " not found for this company."));
+        Company companyToBeRemoved = companyRepository.findById(companyId).orElseThrow(() -> new NotFoundException("Company with ID: " + companyId + " not found"));
+        checkIfCompanyIsInPartnerGroup(partnerGroup, companyToBeRemoved);
+        partnerGroup.getPartners().remove(companyToBeRemoved);
+        return PartnerGroupMapper.toPartnerGroupResponseDto(partnerGroupRepository.save(partnerGroup));
+    }
+
+    private void checkIfCompanyIsInPartnerGroup(PartnerGroup partnerGroup, Company company) {
+        if (!partnerGroup.getPartners().contains(company)) {
+            throw new InvalidRequestException("Company with ID: " + company.getId() + " is not part of this Partner group");
+        }
+    }
 }

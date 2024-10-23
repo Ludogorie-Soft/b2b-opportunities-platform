@@ -75,24 +75,32 @@ public class CompanyController {
 
     @GetMapping("/partners/")
     @ResponseStatus(HttpStatus.OK)
-    public List<PartnerGroupResponseDto> getPartnerGroups(Authentication authentication){
+    public List<PartnerGroupResponseDto> getPartnerGroups(Authentication authentication) {
         return companyService.getPartnerGroups(authentication);
     }
 
-    @PostMapping("/partners/create")
+    @PostMapping("/partners/")
     @ResponseStatus(HttpStatus.CREATED)
     public PartnerGroupResponseDto createPartnerGroup(Authentication authentication, @RequestParam("name") String partnershipName) {
         return companyService.createPartnerGroup(authentication, partnershipName);
     }
 
-    @PostMapping("/partners/add")
+    @PutMapping("/partners/{partnerGroupId}/companies/{companyId}")
     @ResponseStatus(HttpStatus.OK)
     public PartnerGroupResponseDto addCompanyToPartners(Authentication authentication,
-                                                        @RequestParam("partnerGroupId") Long partnerGroupId,
-                                                        @RequestParam("companyId") Long companyId) {
+                                                        @PathVariable("partnerGroupId") Long partnerGroupId,
+                                                        @PathVariable("companyId") Long companyId) {
         return companyService.addCompanyToPartners(authentication, partnerGroupId, companyId);
     }
-    //TODO - remove company from a partner group / remove partner group
+
+    @DeleteMapping("/partners/{partnerGroupId}/companies/{companyId}")
+    @ResponseStatus(HttpStatus.OK)
+    public PartnerGroupResponseDto removeCompanyFromPartners(Authentication authentication,
+                                                             @PathVariable("partnerGroupId") Long partnerGroupId,
+                                                             @PathVariable("companyId") Long companyId) {
+        return companyService.removeCompanyFromPartners(authentication, partnerGroupId, companyId);
+    }
+
     @GetMapping("/{id}/with-users")
     @ResponseStatus(HttpStatus.OK)
     public CompaniesAndUsersResponseDto getCompanyAndUsers(@PathVariable("id") Long companyId) {
