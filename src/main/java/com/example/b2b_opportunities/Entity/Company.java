@@ -2,6 +2,7 @@ package com.example.b2b_opportunities.Entity;
 
 import com.example.b2b_opportunities.Static.EmailVerification;
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -26,6 +27,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.validator.constraints.URL;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -99,4 +101,7 @@ public class Company {
     }
 
     Set<Long> projectIdsNotified;
+
+    @OneToMany(mappedBy = "company")
+    private Set<PartnerGroup> partnerGroups;
 }
