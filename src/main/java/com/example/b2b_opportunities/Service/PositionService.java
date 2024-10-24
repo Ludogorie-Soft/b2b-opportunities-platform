@@ -7,6 +7,7 @@ import com.example.b2b_opportunities.Dto.Response.PositionResponseDto;
 import com.example.b2b_opportunities.Entity.Company;
 import com.example.b2b_opportunities.Entity.Experience;
 import com.example.b2b_opportunities.Entity.Location;
+import com.example.b2b_opportunities.Entity.Pattern;
 import com.example.b2b_opportunities.Entity.Position;
 import com.example.b2b_opportunities.Entity.Project;
 import com.example.b2b_opportunities.Entity.RequiredSkill;
@@ -21,6 +22,7 @@ import com.example.b2b_opportunities.Mapper.PositionMapper;
 import com.example.b2b_opportunities.Mapper.RateMapper;
 import com.example.b2b_opportunities.Repository.ExperienceRepository;
 import com.example.b2b_opportunities.Repository.LocationRepository;
+import com.example.b2b_opportunities.Repository.PatternRepository;
 import com.example.b2b_opportunities.Repository.PositionRepository;
 import com.example.b2b_opportunities.Repository.PositionRoleRepository;
 import com.example.b2b_opportunities.Repository.ProjectRepository;
@@ -54,6 +56,7 @@ public class PositionService {
     private final WorkModeRepository workModeRepository;
     private final AdminService adminService;
     private final LocationRepository locationRepository;
+    private final PatternRepository patternRepository;
 
     public PositionResponseDto createPosition(PositionRequestDto dto, Authentication authentication) {
         validateUserAndCompany(authentication);
@@ -62,6 +65,7 @@ public class PositionService {
         Position position = PositionMapper.toPosition(dto);
 
         setProjectOrThrow(position, dto.getProjectId());
+        setPatternOrThrow(position, dto.getPatternId());
         setPositionFields(position, dto);
         updateProjectDateUpdated(position);
         activateProjectIfInactive(position.getProject());
@@ -123,7 +127,7 @@ public class PositionService {
     }
 
     private void setPositionFields(Position position, PositionRequestDto dto) {
-        setPositionRoleOrThrow(position, dto.getRole());
+//        setPositionRoleOrThrow(position, dto.getRole());
         setSeniorityOrThrow(position, dto.getSeniority());
         setWorkModeOrThrow(position, dto.getWorkMode());
         setRate(position, dto.getRate());
@@ -167,9 +171,13 @@ public class PositionService {
         position.setProject(project);
     }
 
-    private void setPositionRoleOrThrow(Position position, Long positionRoleId) {
-        position.setRole(positionRoleRepository.findById(positionRoleId)
-                .orElseThrow(() -> new NotFoundException("Role with ID: " + positionRoleId + " was not found")));
+//    private void setPositionRoleOrThrow(Position position, Long positionRoleId) {
+//        position.setRole(positionRoleRepository.findById(positionRoleId)
+//                .orElseThrow(() -> new NotFoundException("Role with ID: " + positionRoleId + " was not found")));
+//    }
+    private void setPatternOrThrow(Position position, Long patternId) {
+        Pattern pattern = patternRepository.findById(patternId).orElseThrow(() -> new NotFoundException("Pattern with ID: " + patternId + " was not found"));
+        position.setPattern(pattern);
     }
 
     private void setSeniorityOrThrow(Position position, Long seniorityId) {
