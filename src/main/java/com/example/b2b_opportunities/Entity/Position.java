@@ -88,4 +88,8 @@ public class Position {
 
     @Column(columnDefinition = "TEXT")
     private String description;
+
+    @ManyToOne
+    @JoinColumn(name = "status_id")
+    private PositionStatus status;
 }

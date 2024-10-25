@@ -1,21 +1,14 @@
 package com.example.b2b_opportunities.Controller;
 
 import com.example.b2b_opportunities.Dto.Request.PositionRequestDto;
+import com.example.b2b_opportunities.Dto.Request.ProjectStatusUpdateRequestDto;
 import com.example.b2b_opportunities.Dto.Response.PositionResponseDto;
 import com.example.b2b_opportunities.Service.PositionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -53,5 +46,15 @@ public class PositionController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deletePosition(@PathVariable("id") Long id, Authentication authentication) {
         positionService.deletePosition(id, authentication);
+    }
+
+    @PatchMapping("/{id}/status")
+    @ResponseStatus(HttpStatus.OK)
+    public void editPositionStatus(
+            @PathVariable("id") Long id,
+            @Valid @RequestBody ProjectStatusUpdateRequestDto statusUpdateRequestDto,
+            Authentication authentication
+    ) {
+        positionService.editPositionStatus(id, statusUpdateRequestDto.getStatus(), authentication);
     }
 }

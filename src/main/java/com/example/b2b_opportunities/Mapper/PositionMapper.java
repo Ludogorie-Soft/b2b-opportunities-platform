@@ -45,6 +45,7 @@ public class PositionMapper {
                 .responsibilities(position.getResponsibilities())
                 .hiringProcess(position.getHiringProcess())
                 .description(position.getDescription())
+                .status(position.getStatus().getName())
                 .build();
     }
 }

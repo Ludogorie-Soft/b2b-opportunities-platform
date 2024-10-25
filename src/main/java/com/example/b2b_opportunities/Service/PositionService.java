@@ -4,28 +4,14 @@ import com.example.b2b_opportunities.Dto.Request.PositionRequestDto;
 import com.example.b2b_opportunities.Dto.Request.RateRequestDto;
 import com.example.b2b_opportunities.Dto.Request.RequiredSkillsDto;
 import com.example.b2b_opportunities.Dto.Response.PositionResponseDto;
-import com.example.b2b_opportunities.Entity.Company;
-import com.example.b2b_opportunities.Entity.Experience;
-import com.example.b2b_opportunities.Entity.Position;
-import com.example.b2b_opportunities.Entity.Project;
-import com.example.b2b_opportunities.Entity.RequiredSkill;
-import com.example.b2b_opportunities.Entity.Skill;
-import com.example.b2b_opportunities.Entity.User;
-import com.example.b2b_opportunities.Entity.WorkMode;
+import com.example.b2b_opportunities.Entity.*;
 import com.example.b2b_opportunities.Exception.AuthenticationFailedException;
 import com.example.b2b_opportunities.Exception.common.InvalidRequestException;
 import com.example.b2b_opportunities.Exception.common.NotFoundException;
 import com.example.b2b_opportunities.Mapper.ExperienceMapper;
 import com.example.b2b_opportunities.Mapper.PositionMapper;
 import com.example.b2b_opportunities.Mapper.RateMapper;
-import com.example.b2b_opportunities.Repository.ExperienceRepository;
-import com.example.b2b_opportunities.Repository.PositionRepository;
-import com.example.b2b_opportunities.Repository.PositionRoleRepository;
-import com.example.b2b_opportunities.Repository.ProjectRepository;
-import com.example.b2b_opportunities.Repository.RateRepository;
-import com.example.b2b_opportunities.Repository.SeniorityRepository;
-import com.example.b2b_opportunities.Repository.SkillRepository;
-import com.example.b2b_opportunities.Repository.WorkModeRepository;
+import com.example.b2b_opportunities.Repository.*;
 import com.example.b2b_opportunities.Static.ProjectStatus;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -33,10 +19,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -50,6 +33,7 @@ public class PositionService {
     private final RateRepository rateRepository;
     private final ExperienceRepository experienceRepository;
     private final WorkModeRepository workModeRepository;
+    private final PositionStatusRepository positionStatusRepository;
     private final AdminService adminService;
 
     public PositionResponseDto createPosition(PositionRequestDto dto, Authentication authentication) {
@@ -62,6 +46,7 @@ public class PositionService {
         setPositionFields(position, dto);
         updateProjectDateUpdated(position);
         activateProjectIfInactive(position.getProject());
+        setPositionDefaultStatus(position);
 
         return PositionMapper.toResponseDto(positionRepository.save(position));
     }
@@ -166,6 +151,11 @@ public class PositionService {
                 .orElseThrow(() -> new NotFoundException("Role with ID: " + positionRoleId + " was not found")));
     }
 
+    private void setPositionStatusOrThrow(Position position, Long positionStatusId) {
+        position.setStatus(positionStatusRepository.findById(positionStatusId)
+                .orElseThrow(() -> new NotFoundException("Status with ID: " + positionStatusId + " was not found")));
+    }
+
     private void setSeniorityOrThrow(Position position, Long seniorityId) {
         position.setSeniority(seniorityRepository.findById(seniorityId)
                 .orElseThrow(() -> new NotFoundException("Seniority with ID: " + seniorityId + " was not found")));
@@ -255,5 +245,21 @@ public class PositionService {
             project.setProjectStatus(ProjectStatus.INACTIVE);
             projectRepository.save(project);
         }
+    }
+
+    private void setPositionDefaultStatus(Position position) {
+        position.setIsActive(true);
+
+        position.setStatus(positionStatusRepository.findByName("Opened"));
+    }
+
+    public void editPositionStatus(Long id, PositionStatus positionStatus, Authentication authentication) {
+        validateUserAndCompany(authentication);
+        Position position = getPositionOrThrow(id);
+        setPositionStatusOrThrow(position, positionStatus.getId());
+
+        updateProjectDateUpdated(position);
+
+        positionRepository.save(position);
     }
 }
