@@ -233,9 +233,9 @@ public class PositionService {
             RequiredSkill requiredSkillResult = new RequiredSkill();
             requiredSkillResult.setPosition(position);
             requiredSkillResult.setSkill(skill);
-            if (requiredSkill.getExperienceRequestDto() != null) {
+            if (requiredSkill.getExperience() != null) {
                 Experience experience = experienceRepository.save(ExperienceMapper
-                        .toExperience(requiredSkill.getExperienceRequestDto()));
+                        .toExperience(requiredSkill.getExperience()));
                 requiredSkillResult.setExperience(experience);
             }
             requiredSkillList.add(requiredSkillResult);

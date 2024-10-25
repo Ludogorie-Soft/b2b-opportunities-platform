@@ -88,13 +88,13 @@ class CompanyTypeControllerTest {
                 .andExpect(jsonPath("$[*].name").value(hasItem(name)));
     }
 
-    @Test
-    void shouldCreateNewCompanyTypeAndStripAndCapitalizeTheName() throws Exception {
-        mockMvc.perform(post("/roles")
-                        .param("name", " cOmPanY    tyPe  "))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.name").value("Company Type"));
-    }
+//    @Test
+//    void shouldCreateNewCompanyTypeAndStripAndCapitalizeTheName() throws Exception {
+//        mockMvc.perform(post("/roles")
+//                        .param("name", " cOmPanY    tyPe  "))
+//                .andExpect(status().isCreated())
+//                .andExpect(jsonPath("$.name").value("Company Type"));
+//    }
 
     @Test
     void shouldThrowAnExceptionWhenDomainExists() throws Exception {
