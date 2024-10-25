@@ -32,12 +32,12 @@ import java.util.Set;
 public class ProjectService {
     private final ProjectRepository projectRepository;
     private final CompanyRepository companyRepository;
-    private final AdminService adminService;
+    private final UserService userService;
     private final MailService mailService;
     private final PartnerGroupRepository partnerGroupRepository;
 
     public ProjectResponseDto get(Authentication authentication, Long id) {
-        User user = adminService.getCurrentUserOrThrow(authentication);
+        User user = userService.getCurrentUserOrThrow(authentication);
         Company company = getCompanyIfExists(user.getCompany().getId());
         Project project = getProjectIfExists(id);
         validateProjectIsAvailableToCompany(project, company);
@@ -45,7 +45,7 @@ public class ProjectService {
     }
 
     public List<ProjectResponseDto> getAvailableProjects(Authentication authentication) {
-        User user = adminService.getCurrentUserOrThrow(authentication);
+        User user = userService.getCurrentUserOrThrow(authentication);
         Company company = getCompanyIfExists(user.getCompany().getId());
 
         //all public && active projects
@@ -73,7 +73,7 @@ public class ProjectService {
     }
 
     public ProjectResponseDto create(Authentication authentication, ProjectRequestDto dto) {
-        User user = adminService.getCurrentUserOrThrow(authentication);
+        User user = userService.getCurrentUserOrThrow(authentication);
         Company company = getCompanyIfExists(user.getCompany().getId());
         Project project = new Project();
         project.setDatePosted(LocalDateTime.now());
@@ -88,7 +88,7 @@ public class ProjectService {
     }
 
     public List<PositionResponseDto> getPositionsByProject(Authentication authentication, Long id) {
-        User user = adminService.getCurrentUserOrThrow(authentication);
+        User user = userService.getCurrentUserOrThrow(authentication);
         Company userCompany = getCompanyIfExists(user.getCompany().getId());
 
         Project project = getProjectIfExists(id);
@@ -191,7 +191,7 @@ public class ProjectService {
     }
 
     private void validateProjectBelongsToUser(Authentication authentication, Project project) {
-        User user = adminService.getCurrentUserOrThrow(authentication);
+        User user = userService.getCurrentUserOrThrow(authentication);
         if (!Objects.equals(user.getCompany().getId(), project.getCompany().getId())) {
             throw new PermissionDeniedException("Project belongs to another company");
         }

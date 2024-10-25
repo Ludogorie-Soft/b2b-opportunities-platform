@@ -15,9 +15,6 @@ import com.example.b2b_opportunities.Entity.CompanyType;
 import com.example.b2b_opportunities.Entity.Domain;
 import com.example.b2b_opportunities.Entity.Filter;
 import com.example.b2b_opportunities.Entity.PartnerGroup;
-import com.example.b2b_opportunities.Entity.Position;
-import com.example.b2b_opportunities.Entity.Project;
-import com.example.b2b_opportunities.Entity.RequiredSkill;
 import com.example.b2b_opportunities.Entity.Skill;
 import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Exception.common.AlreadyExistsException;
@@ -34,19 +31,16 @@ import com.example.b2b_opportunities.Repository.CompanyTypeRepository;
 import com.example.b2b_opportunities.Repository.DomainRepository;
 import com.example.b2b_opportunities.Repository.FilterRepository;
 import com.example.b2b_opportunities.Repository.PartnerGroupRepository;
-import com.example.b2b_opportunities.Repository.ProjectRepository;
 import com.example.b2b_opportunities.Repository.UserRepository;
 import com.example.b2b_opportunities.Static.EmailVerification;
 import com.example.b2b_opportunities.Utils.StringUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -66,16 +60,15 @@ public class CompanyService {
     private final DomainRepository domainRepository;
     private final PatternService patternService;
     private final MailService mailService;
-    private final AdminService adminService;
+    private final UserService userService;
     private final UserRepository userRepository;
     private final FilterRepository filterRepository;
-    private final ProjectRepository projectRepository;
     private final PartnerGroupRepository partnerGroupRepository;
 
     public CompanyResponseDto createCompany(Authentication authentication,
                                             CompanyRequestDto companyRequestDto,
                                             HttpServletRequest request) {
-        User currentUser = adminService.getCurrentUserOrThrow(authentication);
+        User currentUser = userService.getCurrentUserOrThrow(authentication);
         validateUserIsNotAssociatedWithAnotherCompany(currentUser);
 
         validateCompanyRequestInput(companyRequestDto);
@@ -114,7 +107,7 @@ public class CompanyService {
     public CompanyResponseDto editCompany(Authentication authentication,
                                           CompanyRequestDto companyRequestDto,
                                           HttpServletRequest request) {
-        User currentUser = adminService.getCurrentUserOrThrow(authentication);
+        User currentUser = userService.getCurrentUserOrThrow(authentication);
         Company userCompany = getUserCompanyOrThrow(currentUser);
 
         updateCompanyName(userCompany, companyRequestDto);
@@ -132,7 +125,7 @@ public class CompanyService {
     public CompanyResponseDto setCompanyImages(Authentication authentication,
                                                MultipartFile image,
                                                MultipartFile banner) {
-        User currentUser = adminService.getCurrentUserOrThrow(authentication);
+        User currentUser = userService.getCurrentUserOrThrow(authentication);
         Company company = getUserCompanyOrThrow(currentUser);
 
         updateCompanyImage(company.getId(), image, "image");
@@ -156,7 +149,7 @@ public class CompanyService {
     }
 
     public List<CompanyFilterResponseDto> getCompanyFilters(Authentication authentication) {
-        User currentUser = adminService.getCurrentUserOrThrow(authentication);
+        User currentUser = userService.getCurrentUserOrThrow(authentication);
         Company userCompany = getUserCompanyOrThrow(currentUser);
 
         Set<Filter> filters = userCompany.getFilters();
@@ -164,7 +157,7 @@ public class CompanyService {
     }
 
     public CompanyFilterResponseDto getCompanyFilter(Long id, Authentication authentication) {
-        User currentUser = adminService.getCurrentUserOrThrow(authentication);
+        User currentUser = userService.getCurrentUserOrThrow(authentication);
         Company company = getUserCompanyOrThrow(currentUser);
         validateFilterIsRelatedToTheCompany(id, company);
 
@@ -172,7 +165,7 @@ public class CompanyService {
     }
 
     public CompanyFilterResponseDto editCompanyFilter(Long id, CompanyFilterEditDto dto, Authentication authentication) {
-        User currentUser = adminService.getCurrentUserOrThrow(authentication);
+        User currentUser = userService.getCurrentUserOrThrow(authentication);
         Company company = getUserCompanyOrThrow(currentUser);
         validateFilterIsRelatedToTheCompany(id, company);
 
@@ -182,7 +175,7 @@ public class CompanyService {
     }
 
     public void deleteCompanyFilter(Long id, Authentication authentication) {
-        User currentUser = adminService.getCurrentUserOrThrow(authentication);
+        User currentUser = userService.getCurrentUserOrThrow(authentication);
         Company company = getUserCompanyOrThrow(currentUser);
         validateFilterIsRelatedToTheCompany(id, company);
 
@@ -190,7 +183,7 @@ public class CompanyService {
     }
 
     public CompanyFilterResponseDto addCompanyFilter(Authentication authentication, @Valid CompanyFilterRequestDto dto) {
-        User currentUser = adminService.getCurrentUserOrThrow(authentication);
+        User currentUser = userService.getCurrentUserOrThrow(authentication);
         Company userCompany = getUserCompanyOrThrow(currentUser);
 
         Filter filter = mapToFilter(dto, userCompany);
@@ -203,119 +196,88 @@ public class CompanyService {
         return FilterMapper.toDto(filter);
     }
 
-    @Scheduled(cron = "0 0 9 * * MON")
-    public void sendEmailEveryMonday() {
-        List<Project> projectsLastThreeDays = getProjectsUpdatedInPastDays(3);
-        sendEmailToEveryCompany(projectsLastThreeDays);
+    public List<PartnerGroupResponseDto> getPartnerGroups(Authentication authentication) {
+        User user = userService.getCurrentUserOrThrow(authentication);
+        Company company = getUserCompanyOrThrow(user);
+        Set<PartnerGroup> partnerGroups = company.getPartnerGroups();
+        return partnerGroups.stream().map(PartnerGroupMapper::toPartnerGroupResponseDto).collect(Collectors.toList());
     }
 
-    @Scheduled(cron = "0 0 9 * * 2-5")
-    public void sendEmailTuesdayToFriday() {
-        List<Project> projectsLastOneDay = getProjectsUpdatedInPastDays(1);
-        sendEmailToEveryCompany(projectsLastOneDay);
+    public PartnerGroupResponseDto removeCompanyFromPartners(Authentication authentication, Long partnerGroupId, Long companyId) {
+        User user = userService.getCurrentUserOrThrow(authentication);
+        Company company = getUserCompanyOrThrow(user);
+        Set<PartnerGroup> partnerGroups = company.getPartnerGroups();
+        PartnerGroup partnerGroup = partnerGroups.stream()
+                .filter(pg -> pg.getId().equals(partnerGroupId))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Partner group with ID: " + partnerGroupId + " not found for this company."));
+        Company companyToBeRemoved = companyRepository.findById(companyId).orElseThrow(() -> new NotFoundException("Company with ID: " + companyId + " not found"));
+        checkIfCompanyIsInPartnerGroup(partnerGroup, companyToBeRemoved);
+        partnerGroup.getPartners().remove(companyToBeRemoved);
+        return PartnerGroupMapper.toPartnerGroupResponseDto(partnerGroupRepository.save(partnerGroup));
     }
 
-    private void sendEmailToEveryCompany(List<Project> projectsToCheck) {
-        List<Company> companies = companyRepository.findAll();
-
-        for (Company c : companies) {
-            Set<Skill> skills = getAllEnabledCompanyFilterSkills(c);
-            Set<Project> projectsThatMatchAtLeastOneSkill = getMatchingProjects(skills, projectsToCheck);
-
-            boolean hasChanged = false;
-            Set<Project> newProjects = new HashSet<>();
-            Set<Project> modifiedProjects = new HashSet<>();
-            for (Project p : projectsThatMatchAtLeastOneSkill) {
-                if (!c.getProjectIdsNotified().contains(p.getId())) {
-                    newProjects.add(p);
-                    c.getProjectIdsNotified().add(p.getId());
-                    hasChanged = true;
-                } else {
-                    modifiedProjects.add(p);
-                }
-            }
-
-            if (hasChanged) {
-                companyRepository.save(c);
-            }
-
-            if (!newProjects.isEmpty() || !modifiedProjects.isEmpty()) {
-                String emailContent = generateEmailContent(newProjects, modifiedProjects);
-                String receiver = c.getEmail();
-                String title = "B2B Don't miss on new projects";
-                // TODO: send email
-            }
+    public void deletePartnerGroup(Authentication authentication, Long partnerGroupId) {
+        User user = userService.getCurrentUserOrThrow(authentication);
+        Company company = getUserCompanyOrThrow(user);
+        Set<PartnerGroup> partnerGroups = company.getPartnerGroups();
+        PartnerGroup partnerGroupToBeRemoved = partnerGroupRepository.findById(partnerGroupId)
+                .orElseThrow(() -> new NotFoundException("Partner group with ID: " + partnerGroupId + " not found"));
+        if (partnerGroups.contains(partnerGroupToBeRemoved)) {
+            partnerGroups.remove(partnerGroupToBeRemoved);
+            partnerGroupRepository.delete(partnerGroupToBeRemoved);
+        } else {
+            throw new PermissionDeniedException("This Partner group does not belong to this company");
         }
     }
 
-    private String generateEmailContent(Set<Project> newProjects, Set<Project> modifiedProjects) {
-        StringBuilder result = new StringBuilder();
-        result.append("Hello,\n\n");
+    public List<CompanyPublicResponseDto> getAcceptedCompaniesPublicData() {
+        List<Company> verifiedCompanies = companyRepository.findCompaniesByEmailVerificationAccepted();
+        List<CompanyPublicResponseDto> companiesPublicDataNoImg = toCompanyPublicResponseDtoList(verifiedCompanies);
 
-        if (!newProjects.isEmpty()) {
-            result.append("There are new projects available for you that match some of your skills:\n");
+        List<CompanyPublicResponseDto> result = new ArrayList<>();
 
-            for (Project project : newProjects) {
-                result.append("Project ID: ").append(project.getId()).append("\n");
-                // TODO - return front end address to the projects
-            }
-
-            result.append("\n");
+        for (CompanyPublicResponseDto c : companiesPublicDataNoImg) {
+            c.setImage(imageService.returnUrlIfPictureExists(c.getId(), "image"));
+            result.add(c);
         }
 
-        if (!modifiedProjects.isEmpty()) {
-            if (!newProjects.isEmpty()) {
-                result.append("You might also want to checkout some of the projects that got modified recently:\n");
-            } else {
-                result.append("There are some projects that got modified recently:\n");
-            }
-
-            for (Project project : modifiedProjects) {
-                result.append("Modified Project ID: ").append(project.getId()).append("\n");
-            }
-        }
-
-        result.append("\nThank you for your attention!");
-
-        return result.toString();
+        return result;
     }
 
-    private Set<Project> getMatchingProjects(Set<Skill> skills, List<Project> projectsToCheck) {
-        Set<Project> matchingProjects = new HashSet<>();
-        for (Skill skill : skills) {
-            Project p = getProjectIfContainsSkill(skill, projectsToCheck);
-            if (p != null) {
-                matchingProjects.add(p);
-            }
+    public PartnerGroupResponseDto createPartnerGroup(Authentication authentication, String partnershipName) {
+        User user = userService.getCurrentUserOrThrow(authentication);
+        Company company = getUserCompanyOrThrow(user); //check if user belongs to a company
+
+        if (company.getPartnerGroups().stream().map(PartnerGroup::getName).toList().contains(partnershipName)) {
+            throw new AlreadyExistsException("Partner group: '" + partnershipName + "' already exists.");
         }
-        return matchingProjects;
+
+        PartnerGroup partnerGroup = partnerGroupRepository.save(PartnerGroup.builder()
+                .name(partnershipName)
+                .company(company)
+                .build());
+
+        company.getPartnerGroups().add(partnerGroup);
+        companyRepository.save(company);
+        return PartnerGroupMapper.toPartnerGroupResponseDto(partnerGroup);
     }
 
-    private Set<Skill> getAllEnabledCompanyFilterSkills(Company company) {
-        Set<Skill> skills = new HashSet<>();
-        for (Filter filter : company.getFilters()) {
-            if (filter.getIsEnabled()) {
-                skills.addAll(filter.getSkills());
-            }
-        }
-        return skills;
-    }
+    public PartnerGroupResponseDto addCompanyToPartners(Authentication authentication, Long partnerGroupId, Long partnerCompanyId) {
+        User user = userService.getCurrentUserOrThrow(authentication);
+        Company userCompany = getUserCompanyOrThrow(user);
+        if (userCompany.getId().equals(partnerCompanyId))
+            throw new InvalidRequestException("You can't add your company to a partner group");
 
-    private Project getProjectIfContainsSkill(Skill skill, List<Project> projectsToCheck) {
-        for (Project p : projectsToCheck) {
-            for (Position position : p.getPositions()) {
-                List<Skill> skills = position.getRequiredSkills().stream().map(RequiredSkill::getSkill).toList();
-                if (skills.contains(skill) || position.getOptionalSkills().contains(skill)) {
-                    return p;
-                }
-            }
-        }
-        return null;
-    }
-
-    private List<Project> getProjectsUpdatedInPastDays(int days) {
-        LocalDateTime dateThreshold = LocalDateTime.now().minusDays(days);
-        return projectRepository.findAllByDateUpdatedAfter(dateThreshold);
+        Company potentialPartnerCompany = companyRepository.findById(partnerCompanyId)
+                .orElseThrow(() -> new NotFoundException("Company with ID: " + partnerCompanyId + " not found"));
+        PartnerGroup partnerGroup = partnerGroupRepository.findById(partnerGroupId)
+                .orElseThrow(() -> new NotFoundException("Partner group with ID: " + partnerGroupId + " not found"));
+        validatePartnerGroupBelongsToCompany(partnerGroup, userCompany);
+        checkIfPartnersAlready(potentialPartnerCompany, partnerGroup);
+        partnerGroup.getPartners().add(potentialPartnerCompany);
+        partnerGroupRepository.save(partnerGroup);
+        return PartnerGroupMapper.toPartnerGroupResponseDto(partnerGroup);
     }
 
     private Filter getFilterIfExists(Long id) {
@@ -341,7 +303,7 @@ public class CompanyService {
     }
 
     private void delete(Authentication authentication, String imageOrBanner) {
-        User currentUser = adminService.getCurrentUserOrThrow(authentication);
+        User currentUser = userService.getCurrentUserOrThrow(authentication);
         Company company = getUserCompanyOrThrow(currentUser);
         if (imageService.doesImageExist(company.getId(), imageOrBanner)) {
             imageService.deleteBanner(company.getId());
@@ -496,55 +458,6 @@ public class CompanyService {
         }
     }
 
-    public List<CompanyPublicResponseDto> getAcceptedCompaniesPublicData() {
-        List<Company> verifiedCompanies = companyRepository.findCompaniesByEmailVerificationAccepted();
-        List<CompanyPublicResponseDto> companiesPublicDataNoImg = toCompanyPublicResponseDtoList(verifiedCompanies);
-
-        List<CompanyPublicResponseDto> result = new ArrayList<>();
-
-        for (CompanyPublicResponseDto c : companiesPublicDataNoImg) {
-            c.setImage(imageService.returnUrlIfPictureExists(c.getId(), "image"));
-            result.add(c);
-        }
-
-        return result;
-    }
-
-    public PartnerGroupResponseDto createPartnerGroup(Authentication authentication, String partnershipName) {
-        User user = adminService.getCurrentUserOrThrow(authentication);
-        Company company = getUserCompanyOrThrow(user); //check if user belongs to a company
-
-        if (company.getPartnerGroups().stream().map(PartnerGroup::getName).toList().contains(partnershipName)) {
-            throw new AlreadyExistsException("Partner group: '" + partnershipName + "' already exists.");
-        }
-
-        PartnerGroup partnerGroup = partnerGroupRepository.save(PartnerGroup.builder()
-                .name(partnershipName)
-                .company(company)
-                .build());
-
-        company.getPartnerGroups().add(partnerGroup);
-        companyRepository.save(company);
-        return PartnerGroupMapper.toPartnerGroupResponseDto(partnerGroup);
-    }
-
-    public PartnerGroupResponseDto addCompanyToPartners(Authentication authentication, Long partnerGroupId, Long partnerCompanyId) {
-        User user = adminService.getCurrentUserOrThrow(authentication);
-        Company userCompany = getUserCompanyOrThrow(user);
-        if (userCompany.getId().equals(partnerCompanyId))
-            throw new InvalidRequestException("You can't add your company to a partner group");
-
-        Company potentialPartnerCompany = companyRepository.findById(partnerCompanyId)
-                .orElseThrow(() -> new NotFoundException("Company with ID: " + partnerCompanyId + " not found"));
-        PartnerGroup partnerGroup = partnerGroupRepository.findById(partnerGroupId)
-                .orElseThrow(() -> new NotFoundException("Partner group with ID: " + partnerGroupId + " not found"));
-        validatePartnerGroupBelongsToCompany(partnerGroup, userCompany);
-        checkIfPartnersAlready(potentialPartnerCompany, partnerGroup);
-        partnerGroup.getPartners().add(potentialPartnerCompany);
-        partnerGroupRepository.save(partnerGroup);
-        return PartnerGroupMapper.toPartnerGroupResponseDto(partnerGroup);
-    }
-
     private void validatePartnerGroupBelongsToCompany(PartnerGroup partnerGroup, Company company) {
         if (!company.getPartnerGroups().contains(partnerGroup)) {
             throw new PermissionDeniedException("Partner group does not belong to this company");
@@ -557,44 +470,9 @@ public class CompanyService {
         }
     }
 
-    public List<PartnerGroupResponseDto> getPartnerGroups(Authentication authentication) {
-        User user = adminService.getCurrentUserOrThrow(authentication);
-        Company company = getUserCompanyOrThrow(user);
-        Set<PartnerGroup> partnerGroups = company.getPartnerGroups();
-        return partnerGroups.stream().map(PartnerGroupMapper::toPartnerGroupResponseDto).collect(Collectors.toList());
-    }
-
-    public PartnerGroupResponseDto removeCompanyFromPartners(Authentication authentication, Long partnerGroupId, Long companyId) {
-        User user = adminService.getCurrentUserOrThrow(authentication);
-        Company company = getUserCompanyOrThrow(user);
-        Set<PartnerGroup> partnerGroups = company.getPartnerGroups();
-        PartnerGroup partnerGroup = partnerGroups.stream()
-                .filter(pg -> pg.getId().equals(partnerGroupId))
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Partner group with ID: " + partnerGroupId + " not found for this company."));
-        Company companyToBeRemoved = companyRepository.findById(companyId).orElseThrow(() -> new NotFoundException("Company with ID: " + companyId + " not found"));
-        checkIfCompanyIsInPartnerGroup(partnerGroup, companyToBeRemoved);
-        partnerGroup.getPartners().remove(companyToBeRemoved);
-        return PartnerGroupMapper.toPartnerGroupResponseDto(partnerGroupRepository.save(partnerGroup));
-    }
-
     private void checkIfCompanyIsInPartnerGroup(PartnerGroup partnerGroup, Company company) {
         if (!partnerGroup.getPartners().contains(company)) {
             throw new InvalidRequestException("Company with ID: " + company.getId() + " is not part of this Partner group");
-        }
-    }
-
-    public void deletePartnerGroup(Authentication authentication, Long partnerGroupId) {
-        User user = adminService.getCurrentUserOrThrow(authentication);
-        Company company = getUserCompanyOrThrow(user);
-        Set<PartnerGroup> partnerGroups = company.getPartnerGroups();
-        PartnerGroup partnerGroupToBeRemoved = partnerGroupRepository.findById(partnerGroupId)
-                .orElseThrow(() -> new NotFoundException("Partner group with ID: " + partnerGroupId + " not found"));
-        if (partnerGroups.contains(partnerGroupToBeRemoved)) {
-            partnerGroups.remove(partnerGroupToBeRemoved);
-            partnerGroupRepository.delete(partnerGroupToBeRemoved);
-        } else {
-            throw new PermissionDeniedException("This Partner group does not belong to this company");
         }
     }
 }

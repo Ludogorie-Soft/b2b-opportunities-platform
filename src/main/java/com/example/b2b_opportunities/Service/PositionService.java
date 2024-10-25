@@ -14,7 +14,6 @@ import com.example.b2b_opportunities.Entity.RequiredSkill;
 import com.example.b2b_opportunities.Entity.Skill;
 import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Entity.WorkMode;
-import com.example.b2b_opportunities.Exception.AuthenticationFailedException;
 import com.example.b2b_opportunities.Exception.common.InvalidRequestException;
 import com.example.b2b_opportunities.Exception.common.NotFoundException;
 import com.example.b2b_opportunities.Mapper.ExperienceMapper;
@@ -54,13 +53,13 @@ public class PositionService {
     private final RateRepository rateRepository;
     private final ExperienceRepository experienceRepository;
     private final WorkModeRepository workModeRepository;
-    private final AdminService adminService;
+    private final UserService userService;
     private final LocationRepository locationRepository;
     private final PatternRepository patternRepository;
     private final RequiredSkillRepository requiredSkillRepository;
 
     public PositionResponseDto createPosition(PositionRequestDto dto, Authentication authentication) {
-        validateUserAndCompany(authentication);
+        userService.validateUserAndCompany(authentication);
         validateProjectAndUserAreRelated(dto.getProjectId(), authentication);
 
         Position position = PositionMapper.toPosition(dto);
@@ -78,7 +77,7 @@ public class PositionService {
     }
 
     public PositionResponseDto editPosition(Long id, PositionRequestDto dto, Authentication authentication) {
-        validateUserAndCompany(authentication);
+        userService.validateUserAndCompany(authentication);
         Position position = getPositionOrThrow(id);
 
         validateProjectAndUserAreRelated(position.getProject().getId(), authentication);
@@ -138,29 +137,10 @@ public class PositionService {
         setOptionalSkills(position, dto.getOptionalSkills());
     }
 
-    private void validateUserAndCompany(Authentication authentication) {
-        User currentUser = getUserOrThrow(authentication);
-        getUserCompanyOrThrow(currentUser);
-    }
-
-    private User getUserOrThrow(Authentication authentication) {
-        if (authentication == null) {
-            throw new AuthenticationFailedException("User not authenticated");
-        }
-        return adminService.getCurrentUserOrThrow(authentication);
-    }
-
-    private Company getUserCompanyOrThrow(User user) {
-        Company company = user.getCompany();
-        if (company == null) {
-            throw new NotFoundException("No company is associated with user " + user.getUsername());
-        }
-        return company;
-    }
 
     private void validateProjectAndUserAreRelated(Long projectId, Authentication authentication) {
-        User user = getUserOrThrow(authentication);
-        Company company = getUserCompanyOrThrow(user);
+        User user = userService.getCurrentUserOrThrow(authentication);
+        Company company = userService.getUserCompanyOrThrow(user);
         Set<Long> projectIds = company.getProjects().stream()
                 .map(Project::getId)
                 .collect(Collectors.toSet());
@@ -237,7 +217,7 @@ public class PositionService {
         return requiredSkillList;
     }
 
-    private RequiredSkill getRequiredSkill(RequiredSkillsDto requiredSkill, Position position){
+    private RequiredSkill getRequiredSkill(RequiredSkillsDto requiredSkill, Position position) {
         Skill skill = getSkillOrThrow(requiredSkill.getSkillId());
 
         RequiredSkill requiredSkillResult = new RequiredSkill();
@@ -250,7 +230,7 @@ public class PositionService {
         return requiredSkillResult;
     }
 
-    private Skill getSkillOrThrow(Long id){
+    private Skill getSkillOrThrow(Long id) {
         return skillRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Skill with ID: " + id + " was not found"));
     }
