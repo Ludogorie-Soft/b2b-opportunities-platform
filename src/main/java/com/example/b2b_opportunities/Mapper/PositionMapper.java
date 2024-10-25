@@ -8,7 +8,9 @@ import com.example.b2b_opportunities.Entity.WorkMode;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Component
 public class PositionMapper {
@@ -24,7 +26,8 @@ public class PositionMapper {
     }
 
     public static PositionResponseDto toResponseDto(Position position) {
-        List<String> workModeList = new ArrayList<>(position.getWorkModes().stream().map(WorkMode::getName).toList());
+        Set<Long> workModeList = new HashSet<>(position.getWorkModes().stream().map(WorkMode::getId).toList());
+
         List<Long> optionalSkillIds = new ArrayList<>();
         if (position.getOptionalSkills() != null) {
             optionalSkillIds = position.getOptionalSkills().stream().map(Skill::getId).toList();

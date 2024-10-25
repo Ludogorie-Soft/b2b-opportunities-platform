@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.List;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -18,11 +19,11 @@ import java.util.List;
 public class PositionResponseDto {
     private Long id;
     private Long projectId;
-//    private Long role;
+    //    private Long role;
     private Long patternId;
     private Boolean isActive;
     private Short seniority;
-    private List<String> workMode;
+    private Set<Long> workMode;
     private RateResponseDto rate;
     private List<RequiredSkillResponseDto> requiredSkills;
     private List<Long> optionalSkills;

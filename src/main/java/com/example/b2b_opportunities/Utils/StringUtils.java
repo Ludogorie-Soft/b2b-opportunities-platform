@@ -3,6 +3,10 @@ package com.example.b2b_opportunities.Utils;
 import com.example.b2b_opportunities.Exception.common.InvalidRequestException;
 
 public class StringUtils {
+    public static String stripCapitalizeAndValidateNotEmpty(String name) {
+        return stripCapitalizeAndValidateNotEmpty(name, name);
+    }
+
     public static String stripCapitalizeAndValidateNotEmpty(String name, String context) {
         validateNameNotBlank(name, context);
         return capitalizeWords(name.strip());
