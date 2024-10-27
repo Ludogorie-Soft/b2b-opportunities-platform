@@ -53,3 +53,6 @@ databaseChangeLog:
   - include:
       file: 18-modify-workmode-table.sql
       relativeToChangelogFile: true
+  - include:
+      file: 20-fill-positions-table.sql
+      relativeToChangelogFile: true
