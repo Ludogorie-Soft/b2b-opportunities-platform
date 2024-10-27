@@ -259,17 +259,21 @@ public class PositionService {
         }
     }
 
-    public void editPositionStatus(Long id, Long statusId, Authentication authentication) {
+    public void editPositionStatus(Long positionId, Long statusId, String customCloseReason, Authentication authentication) {
         validateUserAndCompany(authentication);
-
-        Position position = getPositionOrThrow(id);
-
+        Position position = getPositionOrThrow(positionId);
         validateProjectAndUserAreRelated(position.getProject().getId(), authentication);
 
         setPositionStatusOrThrow(position, statusId);
 
+        if (statusId.equals(5L) && (customCloseReason == null || customCloseReason.isEmpty() || customCloseReason.isBlank())) {
+            throw new InvalidRequestException("Custom close reason must be entered");
+        }
+        position.setCustomCloseReason(customCloseReason);
+
         if (statusId == 1L) {
             activateProjectIfInactive(position.getProject());
+            position.setCustomCloseReason(null);
         } else {
             deactivateProjectIfNoActivePositions(position.getProject());
         }

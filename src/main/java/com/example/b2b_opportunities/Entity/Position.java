@@ -90,4 +90,6 @@ public class Position {
     @ManyToOne
     @JoinColumn(name = "status_id")
     private PositionStatus status;
+
+    private String customCloseReason;
 }

@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -59,10 +60,11 @@ public class PositionController {
     @PatchMapping("/{id}/status")
     @ResponseStatus(HttpStatus.OK)
     public void editPositionStatus(
-            @PathVariable("id") Long id,
-            @Valid @RequestBody Long statusId,
+            @PathVariable("id") Long positionId,
+            @RequestParam Long statusId,
+            @RequestParam(required = false) String customCloseReason,
             Authentication authentication
     ) {
-        positionService.editPositionStatus(id, statusId, authentication);
+        positionService.editPositionStatus(positionId, statusId, customCloseReason, authentication);
     }
 }

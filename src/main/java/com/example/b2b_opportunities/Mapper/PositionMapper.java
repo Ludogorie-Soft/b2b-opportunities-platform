@@ -44,6 +44,7 @@ public class PositionMapper {
                 .hiringProcess(position.getHiringProcess())
                 .description(position.getDescription())
                 .statusId(position.getStatus().getId())
+                .customCloseReason(position.getCustomCloseReason())
                 .build();
     }
 }

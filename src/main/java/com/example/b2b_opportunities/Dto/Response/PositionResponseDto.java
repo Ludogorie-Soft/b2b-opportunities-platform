@@ -31,4 +31,5 @@ public class PositionResponseDto {
     private String hiringProcess;
     private String description;
     private Long statusId;
+    private String customCloseReason;
 }
