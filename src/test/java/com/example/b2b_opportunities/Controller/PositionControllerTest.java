@@ -116,7 +116,6 @@ class PositionControllerTest {
     private Authentication authentication;
     private User user2;
     private Project project;
-    //    private PositionRole positionRole = new PositionRole();
     private Pattern pattern;
     private CompanyType companyType;
     private Location location;

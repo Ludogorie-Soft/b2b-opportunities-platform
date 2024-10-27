@@ -16,8 +16,6 @@ public class PositionRequestDto {
     @NotNull
     private Long projectId;
 
-//    @NotNull
-//    private Long role;
     @NotNull
     private Long patternId;
 
