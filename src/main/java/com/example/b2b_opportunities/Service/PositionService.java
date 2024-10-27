@@ -125,7 +125,6 @@ public class PositionService {
     }
 
     private void setPositionFields(Position position, PositionRequestDto dto) {
-//        setPositionRoleOrThrow(position, dto.getRole());
         setSeniorityOrThrow(position, dto.getSeniority());
         setWorkModeOrThrow(position, dto.getWorkMode());
         setRate(position, dto.getRate());
