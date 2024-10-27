@@ -9,7 +9,6 @@ import com.example.b2b_opportunities.Entity.Experience;
 import com.example.b2b_opportunities.Entity.Location;
 import com.example.b2b_opportunities.Entity.Pattern;
 import com.example.b2b_opportunities.Entity.Position;
-import com.example.b2b_opportunities.Entity.PositionStatus;
 import com.example.b2b_opportunities.Entity.Project;
 import com.example.b2b_opportunities.Entity.RequiredSkill;
 import com.example.b2b_opportunities.Entity.Skill;
@@ -151,10 +150,6 @@ public class PositionService {
         position.setProject(project);
     }
 
-    //    private void setPositionRoleOrThrow(Position position, Long positionRoleId) {
-//        position.setRole(positionRoleRepository.findById(positionRoleId)
-//                .orElseThrow(() -> new NotFoundException("Role with ID: " + positionRoleId + " was not found")));
-//    }
     private void setPatternOrThrow(Position position, Long patternId) {
         Pattern pattern = patternRepository.findById(patternId).orElseThrow(() -> new NotFoundException("Pattern with ID: " + patternId + " was not found"));
         position.setPattern(pattern);
@@ -273,7 +268,7 @@ public class PositionService {
     }
 
     public void editPositionStatus(Long positionId, Long statusId, String customCloseReason, Authentication authentication) {
-        validateUserAndCompany(authentication);
+        userService.validateUserAndCompany(authentication);
         Position position = getPositionOrThrow(positionId);
         validateProjectAndUserAreRelated(position.getProject().getId(), authentication);
 
