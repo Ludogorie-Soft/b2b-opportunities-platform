@@ -14,7 +14,6 @@ import java.util.List;
 public class PositionMapper {
     public static Position toPosition(PositionRequestDto positionRequestDto) {
         return Position.builder()
-                .isActive(positionRequestDto.getIsActive())
                 .minYearsExperience(positionRequestDto.getMinYearsExperience())
                 .hoursPerWeek(positionRequestDto.getHoursPerWeek())
                 .responsibilities(positionRequestDto.getResponsibilities())
@@ -34,7 +33,6 @@ public class PositionMapper {
                 .id(position.getId())
                 .projectId(position.getProject().getId())
                 .role(position.getRole().getId())
-                .isActive(position.getIsActive())
                 .seniority(position.getSeniority().getLevel())
                 .workMode(workModeList)
                 .rate(RateMapper.toRateResponseDto(position.getRate()))

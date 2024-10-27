@@ -43,8 +43,6 @@ public class Position {
     @JoinColumn(name = "role_id")
     private PositionRole role;
 
-    private Boolean isActive;
-
     @ManyToOne
     @JoinColumn(name = "seniority_id")
     private Seniority seniority;

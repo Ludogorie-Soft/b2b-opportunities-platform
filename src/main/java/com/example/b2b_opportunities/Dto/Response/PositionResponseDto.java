@@ -19,7 +19,6 @@ public class PositionResponseDto {
     private Long id;
     private Long projectId;
     private Long role;
-    private Boolean isActive;
     private Short seniority;
     private List<String> workMode;
     private RateResponseDto rate;

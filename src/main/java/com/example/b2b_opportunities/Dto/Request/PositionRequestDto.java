@@ -1,6 +1,5 @@
 package com.example.b2b_opportunities.Dto.Request;
 
-import com.example.b2b_opportunities.Entity.PositionStatus;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -19,9 +18,6 @@ public class PositionRequestDto {
 
     @NotNull
     private Long role;
-
-    @NotNull
-    private Boolean isActive;
 
     @NotNull
     private Long seniority;
@@ -55,5 +51,4 @@ public class PositionRequestDto {
     @NotBlank
     private String description;
 
-    private PositionStatus status;
 }

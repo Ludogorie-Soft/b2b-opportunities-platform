@@ -12,3 +12,6 @@ ALTER TABLE positions ADD COLUMN status_id BIGINT;
 
 ALTER TABLE positions
 ADD CONSTRAINT fk_status FOREIGN KEY (status_id) REFERENCES position_status(id);
+
+ALTER TABLE positions
+DROP COLUMN is_active;

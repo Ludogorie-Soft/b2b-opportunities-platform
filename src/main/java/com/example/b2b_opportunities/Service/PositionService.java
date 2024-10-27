@@ -65,7 +65,7 @@ public class PositionService {
         setPositionFields(position, dto);
         updateProjectDateUpdated(position);
         activateProjectIfInactive(position.getProject());
-        setPositionDefaultStatus(position);
+        position.setStatus(positionStatusRepository.findById(1L).orElseThrow());
 
         return PositionMapper.toResponseDto(positionRepository.save(position));
     }
@@ -75,13 +75,6 @@ public class PositionService {
         Position position = getPositionOrThrow(id);
 
         validateProjectAndUserAreRelated(position.getProject().getId(), authentication);
-        position.setIsActive(dto.getIsActive());
-
-        if (dto.getIsActive().equals(true)) {
-            activateProjectIfInactive(position.getProject());
-        } else {
-            deactivateProjectIfNoActivePositions(position.getProject());
-        }
 
         position.setMinYearsExperience(dto.getMinYearsExperience());
         position.setHoursPerWeek(dto.getHoursPerWeek());
@@ -255,7 +248,7 @@ public class PositionService {
         List<Position> positions = project.getPositions();
         boolean hasActivePosition = false;
         for (Position position : positions) {
-            if (position.getIsActive()) {
+            if (position.getStatus().getId() == 1L) {
                 hasActivePosition = true;
                 break;
             }
@@ -266,16 +259,20 @@ public class PositionService {
         }
     }
 
-    private void setPositionDefaultStatus(Position position) {
-        position.setIsActive(true);
-
-        position.setStatus(positionStatusRepository.findByName("Opened"));
-    }
-
-    public void editPositionStatus(Long id, PositionStatus positionStatus, Authentication authentication) {
+    public void editPositionStatus(Long id, Long statusId, Authentication authentication) {
         validateUserAndCompany(authentication);
+
         Position position = getPositionOrThrow(id);
-        setPositionStatusOrThrow(position, positionStatus.getId());
+
+        validateProjectAndUserAreRelated(position.getProject().getId(), authentication);
+
+        setPositionStatusOrThrow(position, statusId);
+
+        if (statusId == 1L) {
+            activateProjectIfInactive(position.getProject());
+        } else {
+            deactivateProjectIfNoActivePositions(position.getProject());
+        }
 
         updateProjectDateUpdated(position);
 

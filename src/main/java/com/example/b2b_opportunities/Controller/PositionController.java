@@ -1,7 +1,6 @@
 package com.example.b2b_opportunities.Controller;
 
 import com.example.b2b_opportunities.Dto.Request.PositionRequestDto;
-import com.example.b2b_opportunities.Dto.Request.ProjectStatusUpdateRequestDto;
 import com.example.b2b_opportunities.Dto.Response.PositionResponseDto;
 import com.example.b2b_opportunities.Service.PositionService;
 import jakarta.validation.Valid;
@@ -61,9 +60,9 @@ public class PositionController {
     @ResponseStatus(HttpStatus.OK)
     public void editPositionStatus(
             @PathVariable("id") Long id,
-            @Valid @RequestBody ProjectStatusUpdateRequestDto statusUpdateRequestDto,
+            @Valid @RequestBody Long statusId,
             Authentication authentication
     ) {
-        positionService.editPositionStatus(id, statusUpdateRequestDto.getStatus(), authentication);
+        positionService.editPositionStatus(id, statusId, authentication);
     }
 }
