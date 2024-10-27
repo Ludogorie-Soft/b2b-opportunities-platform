@@ -16,7 +16,6 @@ import java.util.Set;
 public class PositionMapper {
     public static Position toPosition(PositionRequestDto positionRequestDto) {
         return Position.builder()
-                .isActive(positionRequestDto.getIsActive())
                 .minYearsExperience(positionRequestDto.getMinYearsExperience())
                 .hoursPerWeek(positionRequestDto.getHoursPerWeek())
                 .responsibilities(positionRequestDto.getResponsibilities())
@@ -36,9 +35,7 @@ public class PositionMapper {
         return PositionResponseDto.builder()
                 .id(position.getId())
                 .projectId(position.getProject().getId())
-//                .role(position.getRole().getId())
                 .patternId(position.getPattern().getId())
-                .isActive(position.getIsActive())
                 .seniority(position.getSeniority().getLevel())
                 .workMode(workModeList)
                 .rate(RateMapper.toRateResponseDto(position.getRate()))
@@ -50,6 +47,8 @@ public class PositionMapper {
                 .responsibilities(position.getResponsibilities())
                 .hiringProcess(position.getHiringProcess())
                 .description(position.getDescription())
+                .statusId(position.getStatus().getId())
+                .customCloseReason(position.getCustomCloseReason())
                 .build();
     }
 

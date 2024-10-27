@@ -19,9 +19,7 @@ import java.util.Set;
 public class PositionResponseDto {
     private Long id;
     private Long projectId;
-    //    private Long role;
     private Long patternId;
-    private Boolean isActive;
     private Short seniority;
     private Set<Long> workMode;
     private RateResponseDto rate;
@@ -33,4 +31,6 @@ public class PositionResponseDto {
     private List<String> responsibilities;
     private String hiringProcess;
     private String description;
+    private Long statusId;
+    private String customCloseReason;
 }

@@ -22,9 +22,6 @@ public class PositionRequestDto {
     private Long patternId;
 
     @NotNull
-    private Boolean isActive;
-
-    @NotNull
     private Long seniority;
 
     @NotNull
@@ -55,4 +52,5 @@ public class PositionRequestDto {
 
     @NotBlank
     private String description;
+
 }

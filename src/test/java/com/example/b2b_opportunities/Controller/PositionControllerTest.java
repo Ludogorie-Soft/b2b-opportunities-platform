@@ -97,9 +97,6 @@ class PositionControllerTest {
     @Autowired
     private CompanyTypeRepository companyTypeRepository;
 
-//    @Autowired
-//    private PositionRoleRepository positionRoleRepository;
-
     @Autowired
     private PatternRepository patternRepository;
 
@@ -198,9 +195,7 @@ class PositionControllerTest {
         // Create a sample PositionRequestDto with valid data
         requestDto = new PositionRequestDto();
         requestDto.setProjectId(project.getId());
-//        requestDto.setRole(positionRole.getId());
         requestDto.setPatternId(pattern.getId());
-        requestDto.setIsActive(true);
         requestDto.setSeniority(3L);
         requestDto.setWorkMode(List.of(1L, 2L));
 
@@ -244,9 +239,9 @@ class PositionControllerTest {
                         .content(asJsonString(requestDto)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.description").value("Position for software engineer"))
-                .andExpect(jsonPath("$.isActive").value(true))
+                .andExpect(jsonPath("$.statusId").value(1))
                 .andExpect(jsonPath("$.location").value(location.getId()));
-
+      
         List<Position> positions = positionRepository.findAll();
         assertThat(positions).hasSize(1);
         assertThat(positions.getFirst().getDescription()).isEqualTo("Position for software engineer");
@@ -292,8 +287,7 @@ class PositionControllerTest {
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$.length()").value(2))
                 .andExpect(jsonPath("$[*].projectId").value(hasItem(project.getId().intValue())))
-//                .andExpect(jsonPath("$[*].role").value(hasItem(positionRole.getId().intValue())))
-                .andExpect(jsonPath("$[*].isActive").value(hasItem(true)))
+                .andExpect(jsonPath("$[*].patternId").value(hasItem(pattern.getId().intValue())))
                 .andExpect(jsonPath("$[*].seniority").value(hasItem(3)))
                 .andExpect(jsonPath("$[0].workMode").value(containsInAnyOrder(1, 2)))
                 .andExpect(jsonPath("$[0].rate").value(hasEntry("min", 50)))
@@ -317,8 +311,7 @@ class PositionControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(id))
                 .andExpect(jsonPath("$.projectId").value(project.getId().intValue()))
-//                .andExpect(jsonPath("$.role").value(positionRole.getId().intValue()))
-                .andExpect(jsonPath("$.isActive").value(true))
+                .andExpect(jsonPath("$.statusId").value(1))
                 .andExpect(jsonPath("$.seniority").value(3))
                 .andExpect(jsonPath("$.workMode").value(containsInAnyOrder(1, 2)))
                 .andExpect(jsonPath("$.rate").value(hasEntry("min", 50)))
@@ -350,8 +343,7 @@ class PositionControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(id))
                 .andExpect(jsonPath("$.projectId").value(project.getId().intValue()))
-//                .andExpect(jsonPath("$.role").value(positionRole.getId().intValue()))
-                .andExpect(jsonPath("$.isActive").value(true))
+                .andExpect(jsonPath("$.statusId").value(1))
                 .andExpect(jsonPath("$.seniority").value(3))
                 .andExpect(jsonPath("$.workMode").value(containsInAnyOrder(1, 2)))
                 .andExpect(jsonPath("$.rate").value(hasEntry("min", 50)))
@@ -458,8 +450,7 @@ class PositionControllerTest {
                         .content(asJsonString(requestDto)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.projectId").value(project.getId().intValue()))
-//                .andExpect(jsonPath("$.role").value(positionRole.getId().intValue()))
-                .andExpect(jsonPath("$.isActive").value(true))
+                .andExpect(jsonPath("$.statusId").value(1))
                 .andExpect(jsonPath("$.seniority").value(3))
                 .andExpect(jsonPath("$.workMode").value(containsInAnyOrder(1, 2)))
                 .andExpect(jsonPath("$.rate").value(hasEntry("min", 50)))

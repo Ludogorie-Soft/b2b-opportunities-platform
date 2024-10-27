@@ -47,8 +47,6 @@ public class Position {
     @JoinColumn(name = "pattern_id")
     private Pattern pattern;
 
-    private Boolean isActive;
-
     @ManyToOne
     @JoinColumn(name = "seniority_id")
     private Seniority seniority;
@@ -92,4 +90,10 @@ public class Position {
 
     @Column(columnDefinition = "TEXT")
     private String description;
+
+    @ManyToOne
+    @JoinColumn(name = "status_id")
+    private PositionStatus status;
+
+    private String customCloseReason;
 }

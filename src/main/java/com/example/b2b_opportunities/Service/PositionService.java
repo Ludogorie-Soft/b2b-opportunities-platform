@@ -23,6 +23,7 @@ import com.example.b2b_opportunities.Repository.ExperienceRepository;
 import com.example.b2b_opportunities.Repository.LocationRepository;
 import com.example.b2b_opportunities.Repository.PatternRepository;
 import com.example.b2b_opportunities.Repository.PositionRepository;
+import com.example.b2b_opportunities.Repository.PositionStatusRepository;
 import com.example.b2b_opportunities.Repository.ProjectRepository;
 import com.example.b2b_opportunities.Repository.RateRepository;
 import com.example.b2b_opportunities.Repository.RequiredSkillRepository;
@@ -47,12 +48,12 @@ import java.util.stream.Collectors;
 public class PositionService {
     private final ProjectRepository projectRepository;
     private final SeniorityRepository seniorityRepository;
-    //    private final PositionRoleRepository positionRoleRepository;
     private final SkillRepository skillRepository;
     private final PositionRepository positionRepository;
     private final RateRepository rateRepository;
     private final ExperienceRepository experienceRepository;
     private final WorkModeRepository workModeRepository;
+    private final PositionStatusRepository positionStatusRepository;
     private final UserService userService;
     private final LocationRepository locationRepository;
     private final PatternRepository patternRepository;
@@ -69,10 +70,12 @@ public class PositionService {
         setPositionFields(position, dto);
         updateProjectDateUpdated(position);
         activateProjectIfInactive(position.getProject());
+        position.setStatus(positionStatusRepository.findById(1L).orElseThrow());
+
         if (dto.getLocation() != null) {
             position.setLocation(getLocationIfExists(dto.getLocation()));
         }
-
+      
         return PositionMapper.toResponseDto(positionRepository.save(position));
     }
 
@@ -81,13 +84,6 @@ public class PositionService {
         Position position = getPositionOrThrow(id);
 
         validateProjectAndUserAreRelated(position.getProject().getId(), authentication);
-        position.setIsActive(dto.getIsActive());
-
-        if (dto.getIsActive().equals(true)) {
-            activateProjectIfInactive(position.getProject());
-        } else {
-            deactivateProjectIfNoActivePositions(position.getProject());
-        }
 
         position.setMinYearsExperience(dto.getMinYearsExperience());
         position.setHoursPerWeek(dto.getHoursPerWeek());
@@ -154,13 +150,14 @@ public class PositionService {
         position.setProject(project);
     }
 
-    //    private void setPositionRoleOrThrow(Position position, Long positionRoleId) {
-//        position.setRole(positionRoleRepository.findById(positionRoleId)
-//                .orElseThrow(() -> new NotFoundException("Role with ID: " + positionRoleId + " was not found")));
-//    }
     private void setPatternOrThrow(Position position, Long patternId) {
         Pattern pattern = patternRepository.findById(patternId).orElseThrow(() -> new NotFoundException("Pattern with ID: " + patternId + " was not found"));
         position.setPattern(pattern);
+    }
+
+    private void setPositionStatusOrThrow(Position position, Long positionStatusId) {
+        position.setStatus(positionStatusRepository.findById(positionStatusId)
+                .orElseThrow(() -> new NotFoundException("Status with ID: " + positionStatusId + " was not found")));
     }
 
     private void setSeniorityOrThrow(Position position, Long seniorityId) {
@@ -259,7 +256,7 @@ public class PositionService {
         List<Position> positions = project.getPositions();
         boolean hasActivePosition = false;
         for (Position position : positions) {
-            if (position.getIsActive()) {
+            if (position.getStatus().getId() == 1L) {
                 hasActivePosition = true;
                 break;
             }
@@ -268,5 +265,29 @@ public class PositionService {
             project.setProjectStatus(ProjectStatus.INACTIVE);
             projectRepository.save(project);
         }
+    }
+
+    public void editPositionStatus(Long positionId, Long statusId, String customCloseReason, Authentication authentication) {
+        userService.validateUserAndCompany(authentication);
+        Position position = getPositionOrThrow(positionId);
+        validateProjectAndUserAreRelated(position.getProject().getId(), authentication);
+
+        setPositionStatusOrThrow(position, statusId);
+
+        if (statusId.equals(5L) && (customCloseReason == null || customCloseReason.isEmpty() || customCloseReason.isBlank())) {
+            throw new InvalidRequestException("Custom close reason must be entered");
+        }
+        position.setCustomCloseReason(customCloseReason);
+
+        if (statusId == 1L) {
+            activateProjectIfInactive(position.getProject());
+            position.setCustomCloseReason(null);
+        } else {
+            deactivateProjectIfNoActivePositions(position.getProject());
+        }
+
+        updateProjectDateUpdated(position);
+
+        positionRepository.save(position);
     }
 }
