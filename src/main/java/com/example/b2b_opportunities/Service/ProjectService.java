@@ -41,7 +41,7 @@ public class ProjectService {
         Company company = getCompanyIfExists(user.getCompany().getId());
         Project project = getProjectIfExists(id);
         validateProjectIsAvailableToCompany(project, company);
-        return ProjectMapper.toDto(getProjectIfExists(id));
+        return ProjectMapper.toDto(project);
     }
 
     public List<ProjectResponseDto> getAvailableProjects(Authentication authentication) {
@@ -59,11 +59,6 @@ public class ProjectService {
         combinedProjects.addAll(publicProjects);
         combinedProjects.addAll(partnerProjects);
         return combinedProjects;
-    }
-
-    private List<ProjectResponseDto> getPartnerProjects(Company company) {
-        List<Project> partnerProjects = projectRepository.findPartnerOnlyProjectsByCompanyInPartnerGroupsAndStatus(company.getId(), ProjectStatus.ACTIVE);
-        return ProjectMapper.toDtoList(partnerProjects);
     }
 
     public ProjectResponseDto update(Long id, ProjectRequestDto dto, Authentication authentication) {
@@ -101,17 +96,6 @@ public class ProjectService {
         return PositionMapper.toResponseDtoList(project.getPositions());
     }
 
-    private void validateProjectIsAvailableToCompany(Project project, Company userCompany) {
-        if (project.isPartnerOnly()) {
-            boolean isCompanyInGroup = project.getPartnerGroupList().stream()
-                    .anyMatch(partnerGroup -> partnerGroup.getPartners().contains(userCompany));
-
-            if (!isCompanyInGroup) {
-                throw new PermissionDeniedException("This project is only shared with partners");
-            }
-        }
-    }
-
     public ProjectResponseDto reactivateProject(Long projectId, Authentication authentication) {
         Project project = getProjectIfExists(projectId);
         validateProjectBelongsToUser(authentication, project);
@@ -135,6 +119,22 @@ public class ProjectService {
         for (Project project : expiredProjects) {
             project.setProjectStatus(ProjectStatus.INACTIVE);
             projectRepository.save(project);
+        }
+    }
+
+    private List<ProjectResponseDto> getPartnerProjects(Company company) {
+        List<Project> partnerProjects = projectRepository.findPartnerOnlyProjectsByCompanyInPartnerGroupsAndStatus(company.getId(), ProjectStatus.ACTIVE);
+        return ProjectMapper.toDtoList(partnerProjects);
+    }
+
+    private void validateProjectIsAvailableToCompany(Project project, Company userCompany) {
+        if (project.isPartnerOnly()) {
+            boolean isCompanyInGroup = project.getPartnerGroupList().stream()
+                    .anyMatch(partnerGroup -> partnerGroup.getPartners().contains(userCompany));
+
+            if (!isCompanyInGroup) {
+                throw new PermissionDeniedException("This project is only shared with partners");
+            }
         }
     }
 

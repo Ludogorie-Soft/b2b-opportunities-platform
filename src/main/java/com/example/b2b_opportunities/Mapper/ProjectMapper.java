@@ -24,9 +24,12 @@ public class ProjectMapper {
 
     public static List<ProjectResponseDto> toDtoList(List<Project> projects) {
         List<ProjectResponseDto> projectResponseDtos = new ArrayList<>();
-        for (Project p : projects) {
-            projectResponseDtos.add(toDto(p));
+        if (projects != null && !projects.isEmpty()) {
+            for (Project p : projects) {
+                projectResponseDtos.add(toDto(p));
+            }
+            return projectResponseDtos;
         }
-        return projectResponseDtos;
+        return null;
     }
 }
