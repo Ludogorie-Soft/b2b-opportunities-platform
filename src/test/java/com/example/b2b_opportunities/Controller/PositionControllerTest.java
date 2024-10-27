@@ -239,7 +239,7 @@ class PositionControllerTest {
                         .content(asJsonString(requestDto)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.description").value("Position for software engineer"))
-                .andExpect(jsonPath("$.statusId").value(1));
+                .andExpect(jsonPath("$.statusId").value(1))
                 .andExpect(jsonPath("$.location").value(location.getId()));
       
         List<Position> positions = positionRepository.findAll();
