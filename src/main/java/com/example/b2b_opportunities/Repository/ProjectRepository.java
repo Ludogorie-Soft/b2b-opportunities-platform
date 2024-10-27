@@ -15,12 +15,21 @@ import java.util.List;
 
 public interface ProjectRepository extends JpaRepository<Project, Long> {
     List<Project> findAllByDateUpdatedAfter(LocalDateTime dateTime);
-
-    List<Project> findByProjectStatus(ProjectStatus projectStatus);
   
     @Query(value = "SELECT * FROM projects p WHERE p.date_posted = CURRENT_DATE - INTERVAL '19 days'", nativeQuery = true)
     List<Project> findProjectsExpiringInTwoDays();
 
     @Query(value = "SELECT * FROM projects p WHERE p.date_posted <= CURRENT_DATE - INTERVAL :daysToSubtract DAY", nativeQuery = true)
     List<Project> findProjectsOlderThan(@Param("daysToSubtract") int daysToSubtract);
+
+    List<Project> findByProjectStatusAndIsPartnerOnlyFalse(ProjectStatus projectStatus);
+
+    @Query("SELECT DISTINCT p FROM Project p " +
+            "JOIN p.partnerGroupList pg " +
+            "JOIN pg.partners c " +
+            "WHERE p.isPartnerOnly = true " +
+            "AND c.id = :companyId " +
+            "AND p.projectStatus = :projectStatus")
+    List<Project> findPartnerOnlyProjectsByCompanyInPartnerGroupsAndStatus(@Param("companyId") Long companyId,
+                                                                           @Param("projectStatus") ProjectStatus projectStatus);
 }

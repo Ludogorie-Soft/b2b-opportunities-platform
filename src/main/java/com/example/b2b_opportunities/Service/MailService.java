@@ -29,6 +29,7 @@ public class MailService {
         confirmationTokenRepository.save(confirmationToken);
         return token;
     }
+
     public void sendConfirmationMail(User user, HttpServletRequest request) {
         String emailContent = "<html>" +
                 "<body>" +
@@ -74,6 +75,7 @@ public class MailService {
         String subject = "Company mail confirmation - B2B Opportunities";
         sendEmail(company.getEmail(), emailContent, subject);
     }
+
     public void sendProjectExpiringMail(Project project) {
         String emailContent = "<html>" +
                 "<body>" +
@@ -88,16 +90,15 @@ public class MailService {
         String subject = "B2B Reminder: Your Project is Expiring in 2 Days – Reactivate Now!";
         sendEmail(project.getCompany().getEmail(), emailContent, subject);
     }
-  
-    private void sendEmail(String receiver, String content, String subject) {
+
+    public void sendEmail(String receiver, String content, String subject) {
         EmailRequest er = EmailRequest.builder()
                 .receiver(receiver)
                 .content(content)
                 .subject(subject)
                 .build();
 
-        String response = restTemplate.postForObject(emailServiceUrl, er, String.class);
-        System.out.println(response);
+        restTemplate.postForObject(emailServiceUrl, er, String.class);
     }
 
     private String generateConfirmationLink(User user, HttpServletRequest request) {

@@ -1,7 +1,7 @@
-CREATE TABLE position_roles (
-    id BIGSERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL UNIQUE
-);
+--CREATE TABLE position_roles (
+--    id BIGSERIAL PRIMARY KEY,
+--    name VARCHAR(255) NOT NULL UNIQUE
+--);
 
 CREATE TABLE rates (
     id BIGSERIAL PRIMARY KEY,
@@ -19,7 +19,8 @@ CREATE TABLE locations (
 CREATE TABLE positions (
     id BIGSERIAL PRIMARY KEY,
     project_id BIGINT REFERENCES projects(id) ON DELETE SET NULL,
-    role_id BIGINT REFERENCES position_roles(id) ON DELETE CASCADE,
+--    role_id BIGINT REFERENCES position_roles(id) ON DELETE CASCADE,
+    pattern_id BIGINT REFERENCES patterns(id) ON DELETE CASCADE,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     seniority_id BIGINT REFERENCES seniorities(id) ON DELETE SET NULL,
     rate_id BIGINT REFERENCES rates(id) ON DELETE SET NULL,

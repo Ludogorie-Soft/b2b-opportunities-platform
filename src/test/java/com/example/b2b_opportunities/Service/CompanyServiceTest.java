@@ -8,8 +8,8 @@ import com.example.b2b_opportunities.Entity.CompanyType;
 import com.example.b2b_opportunities.Entity.Domain;
 import com.example.b2b_opportunities.Entity.Skill;
 import com.example.b2b_opportunities.Entity.User;
-import com.example.b2b_opportunities.Exception.common.AlreadyExistsException;
 import com.example.b2b_opportunities.Exception.AuthenticationFailedException;
+import com.example.b2b_opportunities.Exception.common.AlreadyExistsException;
 import com.example.b2b_opportunities.Exception.common.NotFoundException;
 import com.example.b2b_opportunities.Mapper.UserMapper;
 import com.example.b2b_opportunities.Repository.CompanyRepository;
@@ -48,7 +48,7 @@ import static org.mockito.Mockito.when;
 public class CompanyServiceTest {
 
     @Mock
-    private AdminService adminService;
+    private UserService userService;
 
     @Mock
     private MailService mailService;
@@ -115,7 +115,7 @@ public class CompanyServiceTest {
     public void testCreateCompany_ThrowsAuthenticationFailedException() {
         Authentication authentication = null;
 
-        when(adminService.getCurrentUserOrThrow(authentication))
+        when(userService.getCurrentUserOrThrow(authentication))
                 .thenThrow(new AuthenticationFailedException("User not authenticated"));
 
         assertThrows(AuthenticationFailedException.class, () -> {
@@ -130,7 +130,7 @@ public class CompanyServiceTest {
         currentUser.setCompany(existingCompany);
 
         when(authentication.isAuthenticated()).thenReturn(true);
-        when(adminService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
 
         assertThrows(AlreadyExistsException.class, () -> companyService.createCompany(authentication, companyRequestDto, request));
     }
@@ -146,7 +146,7 @@ public class CompanyServiceTest {
         currentUser.setCompany(null);
 
         when(authentication.isAuthenticated()).thenReturn(true);
-        when(adminService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
         when(companyRepository.save(any(Company.class))).thenReturn(company);
 
         doNothing().when(mailService).sendCompanyEmailConfirmation(any(Company.class), any(String.class), any(HttpServletRequest.class));
@@ -316,7 +316,7 @@ public class CompanyServiceTest {
         userCompany.setDomain(domain);
         userCompany.setSkills(skillSet);
 
-        when(adminService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
         when(companyRepository.findById(currentUser.getId())).thenReturn(Optional.of(userCompany));
 
         when(companyRepository.save(any(Company.class))).thenReturn(userCompany);
@@ -342,7 +342,7 @@ public class CompanyServiceTest {
     public void testEditCompany_UserHasNoCompany() {
         User currentUser = new User();
 
-        when(adminService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
         when(companyRepository.findById(currentUser.getId())).thenReturn(Optional.empty());
 
         assertThrows(NotFoundException.class, () -> {

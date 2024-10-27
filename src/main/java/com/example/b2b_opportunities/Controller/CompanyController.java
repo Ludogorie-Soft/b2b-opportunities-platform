@@ -7,6 +7,7 @@ import com.example.b2b_opportunities.Dto.Response.CompaniesAndUsersResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyFilterResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyPublicResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyResponseDto;
+import com.example.b2b_opportunities.Dto.Response.PartnerGroupResponseDto;
 import com.example.b2b_opportunities.Dto.Response.ProjectResponseDto;
 import com.example.b2b_opportunities.Exception.common.NotFoundException;
 import com.example.b2b_opportunities.Mapper.CompanyMapper;
@@ -70,6 +71,40 @@ public class CompanyController {
                                             @RequestBody @Valid CompanyRequestDto companyRequestDto,
                                             HttpServletRequest request) {
         return companyService.createCompany(authentication, companyRequestDto, request);
+    }
+
+    @GetMapping("/partners")
+    @ResponseStatus(HttpStatus.OK)
+    public List<PartnerGroupResponseDto> getPartnerGroups(Authentication authentication) {
+        return companyService.getPartnerGroups(authentication);
+    }
+
+    @PostMapping("/partners")
+    @ResponseStatus(HttpStatus.CREATED)
+    public PartnerGroupResponseDto createPartnerGroup(Authentication authentication, @RequestParam("name") String partnershipName) {
+        return companyService.createPartnerGroup(authentication, partnershipName);
+    }
+
+    @DeleteMapping("/partners")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deletePartnerGroup(Authentication authentication, @RequestParam("partnerGroupId") Long partnerGroupId){
+        companyService.deletePartnerGroup(authentication, partnerGroupId);
+    }
+
+    @PutMapping("/partners/{partnerGroupId}/companies/{companyId}")
+    @ResponseStatus(HttpStatus.OK)
+    public PartnerGroupResponseDto addCompanyToPartners(Authentication authentication,
+                                                        @PathVariable("partnerGroupId") Long partnerGroupId,
+                                                        @PathVariable("companyId") Long companyId) {
+        return companyService.addCompanyToPartners(authentication, partnerGroupId, companyId);
+    }
+
+    @DeleteMapping("/partners/{partnerGroupId}/companies/{companyId}")
+    @ResponseStatus(HttpStatus.OK)
+    public PartnerGroupResponseDto removeCompanyFromPartners(Authentication authentication,
+                                                             @PathVariable("partnerGroupId") Long partnerGroupId,
+                                                             @PathVariable("companyId") Long companyId) {
+        return companyService.removeCompanyFromPartners(authentication, partnerGroupId, companyId);
     }
 
     @GetMapping("/{id}/with-users")
@@ -145,4 +180,5 @@ public class CompanyController {
     public void deleteCompanyFilter(@PathVariable("id") Long id, Authentication authentication) {
         companyService.deleteCompanyFilter(id, authentication);
     }
+
 }

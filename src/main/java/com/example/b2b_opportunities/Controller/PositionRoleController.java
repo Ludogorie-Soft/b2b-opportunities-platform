@@ -19,55 +19,55 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.Objects;
 
-@RestController
-@RequestMapping("/roles")
-@RequiredArgsConstructor
-public class PositionRoleController {
-    private final PositionRoleRepository positionRoleRepository;
-    private final DomainController domainController;
-
-    @GetMapping
-    @ResponseStatus(HttpStatus.OK)
-    public List<PositionRole> getAll() {
-        return positionRoleRepository.findAll();
-    }
-
-    @GetMapping("/{id}")
-    @ResponseStatus(HttpStatus.OK)
-    public PositionRole get(@PathVariable Long id) {
-        return findPositionRoleByIdOrThrow(id);
-    }
-
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public PositionRole add(@RequestParam("name") String name) {
-        name = StringUtils.stripCapitalizeAndValidateNotEmpty(name, "Role");
-        validateNameDoesNotExist(name);
-        return positionRoleRepository.save(PositionRole.builder().name(name).build());
-    }
-
-    @PutMapping("/{id}")
-    @ResponseStatus(HttpStatus.OK)
-    public PositionRole edit(@PathVariable("id") Long id, @RequestParam("newName") String newName) {
-        PositionRole positionRole = findPositionRoleByIdOrThrow(id);
-
-        newName = StringUtils.stripCapitalizeAndValidateNotEmpty(newName, "Role");
-        if (Objects.equals(positionRole.getName(), newName)) {
-            return positionRole;
-        }
-        validateNameDoesNotExist(newName);
-
-        positionRole.setName(newName);
-        return positionRoleRepository.save(positionRole);
-    }
-
-    private PositionRole findPositionRoleByIdOrThrow(Long id) {
-        return positionRoleRepository.findById(id).orElseThrow(() -> new NotFoundException("Role with ID: " + id + " not found"));
-    }
-
-    private void validateNameDoesNotExist(String name) {
-        if (positionRoleRepository.findByName(name).isPresent()) {
-            throw new AlreadyExistsException("Role with name: '" + name + "' already exists");
-        }
-    }
-}
+//@RestController
+//@RequestMapping("/roles")
+//@RequiredArgsConstructor
+//public class PositionRoleController {
+//    private final PositionRoleRepository positionRoleRepository;
+//    private final DomainController domainController;
+//
+//    @GetMapping
+//    @ResponseStatus(HttpStatus.OK)
+//    public List<PositionRole> getAll() {
+//        return positionRoleRepository.findAll();
+//    }
+//
+//    @GetMapping("/{id}")
+//    @ResponseStatus(HttpStatus.OK)
+//    public PositionRole get(@PathVariable Long id) {
+//        return findPositionRoleByIdOrThrow(id);
+//    }
+//
+//    @PostMapping
+//    @ResponseStatus(HttpStatus.CREATED)
+//    public PositionRole add(@RequestParam("name") String name) {
+//        name = StringUtils.stripCapitalizeAndValidateNotEmpty(name, "Role");
+//        validateNameDoesNotExist(name);
+//        return positionRoleRepository.save(PositionRole.builder().name(name).build());
+//    }
+//
+//    @PutMapping("/{id}")
+//    @ResponseStatus(HttpStatus.OK)
+//    public PositionRole edit(@PathVariable("id") Long id, @RequestParam("newName") String newName) {
+//        PositionRole positionRole = findPositionRoleByIdOrThrow(id);
+//
+//        newName = StringUtils.stripCapitalizeAndValidateNotEmpty(newName, "Role");
+//        if (Objects.equals(positionRole.getName(), newName)) {
+//            return positionRole;
+//        }
+//        validateNameDoesNotExist(newName);
+//
+//        positionRole.setName(newName);
+//        return positionRoleRepository.save(positionRole);
+//    }
+//
+//    private PositionRole findPositionRoleByIdOrThrow(Long id) {
+//        return positionRoleRepository.findById(id).orElseThrow(() -> new NotFoundException("Role with ID: " + id + " not found"));
+//    }
+//
+//    private void validateNameDoesNotExist(String name) {
+//        if (positionRoleRepository.findByName(name).isPresent()) {
+//            throw new AlreadyExistsException("Role with name: '" + name + "' already exists");
+//        }
+//    }
+//}

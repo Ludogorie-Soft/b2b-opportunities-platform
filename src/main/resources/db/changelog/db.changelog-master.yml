@@ -48,5 +48,11 @@ databaseChangeLog:
       file: 16-create-company-project-notified-table.sql
       relativeToChangelogFile: true
   - include:
+      file: 17-create-partners-table.sql
+      relativeToChangelogFile: true
+  - include:
+      file: 18-modify-workmode-table.sql
+      relativeToChangelogFile: true
+  - include:
       file: 19-create-and-fill-position-status-table.sql
       relativeToChangelogFile: true

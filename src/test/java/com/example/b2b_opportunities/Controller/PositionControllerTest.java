@@ -7,14 +7,16 @@ import com.example.b2b_opportunities.Dto.Request.RequiredSkillsDto;
 import com.example.b2b_opportunities.Dto.Response.PositionResponseDto;
 import com.example.b2b_opportunities.Entity.Company;
 import com.example.b2b_opportunities.Entity.CompanyType;
+import com.example.b2b_opportunities.Entity.Location;
+import com.example.b2b_opportunities.Entity.Pattern;
 import com.example.b2b_opportunities.Entity.Position;
-import com.example.b2b_opportunities.Entity.PositionRole;
 import com.example.b2b_opportunities.Entity.Project;
 import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Repository.CompanyRepository;
 import com.example.b2b_opportunities.Repository.CompanyTypeRepository;
+import com.example.b2b_opportunities.Repository.LocationRepository;
+import com.example.b2b_opportunities.Repository.PatternRepository;
 import com.example.b2b_opportunities.Repository.PositionRepository;
-import com.example.b2b_opportunities.Repository.PositionRoleRepository;
 import com.example.b2b_opportunities.Repository.ProjectRepository;
 import com.example.b2b_opportunities.Repository.RoleRepository;
 import com.example.b2b_opportunities.Repository.UserRepository;
@@ -22,6 +24,7 @@ import com.example.b2b_opportunities.Repository.WorkModeRepository;
 import com.example.b2b_opportunities.Static.EmailVerification;
 import com.example.b2b_opportunities.Static.ProjectStatus;
 import com.example.b2b_opportunities.UserDetailsImpl;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -95,7 +98,7 @@ class PositionControllerTest {
     private CompanyTypeRepository companyTypeRepository;
 
     @Autowired
-    private PositionRoleRepository positionRoleRepository;
+    private PatternRepository patternRepository;
 
     @Autowired
     private RoleRepository roleRepository;
@@ -104,14 +107,24 @@ class PositionControllerTest {
     private WorkModeRepository workModeRepository;
 
     @Autowired
+    private LocationRepository locationRepository;
+
+    @Autowired
     private MockMvc mockMvc;
 
     private PositionRequestDto requestDto;
     private Authentication authentication;
     private User user2;
     private Project project;
-    private PositionRole positionRole = new PositionRole();
+    //    private PositionRole positionRole = new PositionRole();
+    private Pattern pattern;
     private CompanyType companyType;
+    private Location location;
+
+    @AfterEach
+    void afterEach() {
+        locationRepository.deleteAll();
+    }
 
     @BeforeEach
     void init() {
@@ -174,15 +187,22 @@ class PositionControllerTest {
         companyRepository.save(company);
         companyRepository.flush();
 
-        positionRole = PositionRole.builder().name("Test position role").build();
-        positionRole = positionRoleRepository.save(positionRole);
+//        positionRole = PositionRole.builder().name("Test position role").build();
+//        positionRole = positionRoleRepository.save(positionRole);
+
+        pattern = patternRepository.findById(1L).orElseThrow();
 
         // Create a sample PositionRequestDto with valid data
         requestDto = new PositionRequestDto();
         requestDto.setProjectId(project.getId());
-        requestDto.setRole(positionRole.getId());
+        requestDto.setPatternId(pattern.getId());
         requestDto.setSeniority(3L);
         requestDto.setWorkMode(List.of(1L, 2L));
+
+        location = Location.builder().name("Sofia").build();
+        location = locationRepository.save(location);
+
+        requestDto.setLocation(location.getId());
 
         // Create a valid RateRequestDto
         RateRequestDto rateRequestDto = new RateRequestDto();
@@ -198,12 +218,11 @@ class PositionControllerTest {
         ExperienceRequestDto experienceRequestDto = new ExperienceRequestDto();
         experienceRequestDto.setMonths(6);
         experienceRequestDto.setYears(2);
-        requiredSkillsDto.setExperienceRequestDto(experienceRequestDto);
+        requiredSkillsDto.setExperience(experienceRequestDto);
         requestDto.setRequiredSkills(List.of(requiredSkillsDto));
 
         requestDto.setOptionalSkills(List.of(6L, 7L));
         requestDto.setMinYearsExperience(2);
-        requestDto.setLocation(8L);
         requestDto.setHoursPerWeek(40);
         requestDto.setResponsibilities(List.of("Develop software", "Review code"));
         requestDto.setHiringProcess("Interview -> Coding Test -> Offer");
@@ -221,7 +240,8 @@ class PositionControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.description").value("Position for software engineer"))
                 .andExpect(jsonPath("$.statusId").value(1));
-
+                .andExpect(jsonPath("$.location").value(location.getId()));
+      
         List<Position> positions = positionRepository.findAll();
         assertThat(positions).hasSize(1);
         assertThat(positions.getFirst().getDescription()).isEqualTo("Position for software engineer");
@@ -267,9 +287,9 @@ class PositionControllerTest {
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$.length()").value(2))
                 .andExpect(jsonPath("$[*].projectId").value(hasItem(project.getId().intValue())))
-                .andExpect(jsonPath("$[*].role").value(hasItem(positionRole.getId().intValue())))
+                .andExpect(jsonPath("$[*].patternId").value(hasItem(pattern.getId().intValue())))
                 .andExpect(jsonPath("$[*].seniority").value(hasItem(3)))
-                .andExpect(jsonPath("$[0].workMode").value(containsInAnyOrder("HYBRID", "OFFICE")))
+                .andExpect(jsonPath("$[0].workMode").value(containsInAnyOrder(1, 2)))
                 .andExpect(jsonPath("$[0].rate").value(hasEntry("min", 50)))
                 .andExpect(jsonPath("$[0].rate").value(hasEntry("max", 100)))
                 .andExpect(jsonPath("$[0].rate").value(hasEntry("currency", "USD")))
@@ -291,10 +311,9 @@ class PositionControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(id))
                 .andExpect(jsonPath("$.projectId").value(project.getId().intValue()))
-                .andExpect(jsonPath("$.role").value(positionRole.getId().intValue()))
                 .andExpect(jsonPath("$.statusId").value(1))
                 .andExpect(jsonPath("$.seniority").value(3))
-                .andExpect(jsonPath("$.workMode").value(containsInAnyOrder("HYBRID", "OFFICE")))
+                .andExpect(jsonPath("$.workMode").value(containsInAnyOrder(1, 2)))
                 .andExpect(jsonPath("$.rate").value(hasEntry("min", 50)))
                 .andExpect(jsonPath("$.rate").value(hasEntry("max", 100)))
                 .andExpect(jsonPath("$.rate").value(hasEntry("currency", "USD")))
@@ -324,10 +343,9 @@ class PositionControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(id))
                 .andExpect(jsonPath("$.projectId").value(project.getId().intValue()))
-                .andExpect(jsonPath("$.role").value(positionRole.getId().intValue()))
                 .andExpect(jsonPath("$.statusId").value(1))
                 .andExpect(jsonPath("$.seniority").value(3))
-                .andExpect(jsonPath("$.workMode").value(containsInAnyOrder("HYBRID", "OFFICE")))
+                .andExpect(jsonPath("$.workMode").value(containsInAnyOrder(1, 2)))
                 .andExpect(jsonPath("$.rate").value(hasEntry("min", 50)))
                 .andExpect(jsonPath("$.rate").value(hasEntry("max", 100)))
                 .andExpect(jsonPath("$.rate").value(hasEntry("currency", "USD")))
@@ -344,7 +362,7 @@ class PositionControllerTest {
         companyTypeRepository.deleteAll();
         companyRepository.deleteAll();
         positionRepository.deleteAll();
-        positionRoleRepository.deleteAll();
+//        positionRoleRepository.deleteAll();
     }
 
     @Test
@@ -432,10 +450,9 @@ class PositionControllerTest {
                         .content(asJsonString(requestDto)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.projectId").value(project.getId().intValue()))
-                .andExpect(jsonPath("$.role").value(positionRole.getId().intValue()))
                 .andExpect(jsonPath("$.statusId").value(1))
                 .andExpect(jsonPath("$.seniority").value(3))
-                .andExpect(jsonPath("$.workMode").value(containsInAnyOrder("HYBRID", "OFFICE")))
+                .andExpect(jsonPath("$.workMode").value(containsInAnyOrder(1, 2)))
                 .andExpect(jsonPath("$.rate").value(hasEntry("min", 50)))
                 .andExpect(jsonPath("$.rate").value(hasEntry("max", 100)))
                 .andExpect(jsonPath("$.rate").value(hasEntry("currency", "USD")))
