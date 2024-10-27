@@ -30,5 +30,5 @@ public class PositionResponseDto {
     private List<String> responsibilities;
     private String hiringProcess;
     private String description;
-    private String status;
+    private Long statusId;
 }

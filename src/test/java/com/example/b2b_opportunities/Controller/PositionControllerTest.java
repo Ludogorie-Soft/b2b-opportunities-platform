@@ -220,7 +220,7 @@ class PositionControllerTest {
                         .content(asJsonString(requestDto)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.description").value("Position for software engineer"))
-                .andExpect(jsonPath("$.status").value("Opened"));
+                .andExpect(jsonPath("$.statusId").value(1));
 
         List<Position> positions = positionRepository.findAll();
         assertThat(positions).hasSize(1);
@@ -292,7 +292,7 @@ class PositionControllerTest {
                 .andExpect(jsonPath("$.id").value(id))
                 .andExpect(jsonPath("$.projectId").value(project.getId().intValue()))
                 .andExpect(jsonPath("$.role").value(positionRole.getId().intValue()))
-                .andExpect(jsonPath("$.status").value("Opened"))
+                .andExpect(jsonPath("$.statusId").value(1))
                 .andExpect(jsonPath("$.seniority").value(3))
                 .andExpect(jsonPath("$.workMode").value(containsInAnyOrder("HYBRID", "OFFICE")))
                 .andExpect(jsonPath("$.rate").value(hasEntry("min", 50)))
@@ -325,7 +325,7 @@ class PositionControllerTest {
                 .andExpect(jsonPath("$.id").value(id))
                 .andExpect(jsonPath("$.projectId").value(project.getId().intValue()))
                 .andExpect(jsonPath("$.role").value(positionRole.getId().intValue()))
-                .andExpect(jsonPath("$.status").value("Opened"))
+                .andExpect(jsonPath("$.statusId").value(1))
                 .andExpect(jsonPath("$.seniority").value(3))
                 .andExpect(jsonPath("$.workMode").value(containsInAnyOrder("HYBRID", "OFFICE")))
                 .andExpect(jsonPath("$.rate").value(hasEntry("min", 50)))
@@ -433,7 +433,7 @@ class PositionControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.projectId").value(project.getId().intValue()))
                 .andExpect(jsonPath("$.role").value(positionRole.getId().intValue()))
-                .andExpect(jsonPath("$.status").value("Opened"))
+                .andExpect(jsonPath("$.statusId").value(1))
                 .andExpect(jsonPath("$.seniority").value(3))
                 .andExpect(jsonPath("$.workMode").value(containsInAnyOrder("HYBRID", "OFFICE")))
                 .andExpect(jsonPath("$.rate").value(hasEntry("min", 50)))
