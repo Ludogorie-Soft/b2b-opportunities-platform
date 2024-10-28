@@ -8,6 +8,8 @@ INSERT INTO rates(id, min, max, currency) VALUES
 (7, 23, 30, 'EUR'),
 (8, 42, 54, 'EUR');
 
+SELECT setval('rates_id_seq', (SELECT COALESCE(MAX(id), 0) + 1 FROM rates));
+
 INSERT INTO locations(name) VALUES
 ('Plovdiv'),
 ('Varna'),

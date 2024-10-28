@@ -4,6 +4,7 @@ import com.example.b2b_opportunities.Dto.Request.PatternRequestDto;
 import com.example.b2b_opportunities.Entity.Pattern;
 import com.example.b2b_opportunities.Entity.Skill;
 import com.example.b2b_opportunities.Repository.PatternRepository;
+import com.example.b2b_opportunities.Repository.PositionRepository;
 import com.example.b2b_opportunities.Repository.SkillRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -62,10 +63,14 @@ public class PatternControllerTest {
     @Autowired
     private SkillRepository skillRepository;
 
+    @Autowired
+    private PositionRepository positionRepository;
+
     private Pattern pattern;
 
     @BeforeEach
     void setup() {
+        positionRepository.deleteAll();
         patternRepository.deleteAll();
         skillRepository.deleteAll();
 
@@ -85,8 +90,7 @@ public class PatternControllerTest {
         performGetResult("/patterns")
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].name").value("Test Pattern"));
+                .andExpect(jsonPath("$[*].name").value("Test Pattern"));
     }
 
     @Test

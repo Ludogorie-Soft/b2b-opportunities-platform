@@ -1,6 +1,8 @@
 package com.example.b2b_opportunities.Controller;
 
+import com.example.b2b_opportunities.Entity.RequiredSkill;
 import com.example.b2b_opportunities.Entity.Skill;
+import com.example.b2b_opportunities.Repository.RequiredSkillRepository;
 import com.example.b2b_opportunities.Repository.SkillRepository;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
@@ -49,6 +51,9 @@ public class SkillControllerTest {
     private SkillRepository skillRepository;
 
     @Autowired
+    private RequiredSkillRepository requiredSkillRepository;
+
+    @Autowired
     private MockMvc mockMvc;
 
     @BeforeEach
@@ -58,6 +63,9 @@ public class SkillControllerTest {
 
     @Test
     void shouldReturnASkillAsPartOfTheList() throws Exception {
+        requiredSkillRepository.deleteAll();
+        skillRepository.deleteAll();
+
         Skill skill = new Skill();
         skill.setName("testSkill");
         skill.setAssignable(false);
@@ -73,6 +81,9 @@ public class SkillControllerTest {
 
     @Test
     void shouldReturnANewSavedSkill() throws Exception {
+        requiredSkillRepository.deleteAll();
+        skillRepository.deleteAll();
+
         Skill skill = new Skill();
         skill.setName("testSkill");
         skill.setAssignable(false);

@@ -204,7 +204,7 @@ class PositionControllerTest {
         requestDto.setSeniority(3L);
         requestDto.setWorkMode(List.of(1L, 2L));
 
-        location = Location.builder().name("Sofia").build();
+        location = Location.builder().name("testCity").build();
         location = locationRepository.save(location);
 
         requestDto.setLocation(location.getId());
@@ -239,6 +239,7 @@ class PositionControllerTest {
 
     @Test
     void shouldCreatePositionSuccessfully() throws Exception {
+        positionRepository.deleteAll();
         // Authorize with correct user
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
