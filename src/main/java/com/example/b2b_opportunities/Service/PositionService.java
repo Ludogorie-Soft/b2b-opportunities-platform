@@ -123,12 +123,12 @@ public class PositionService {
 
         setPositionStatusOrThrow(position, statusId);
 
-        if (statusId.equals(5L) && (customCloseReason == null || customCloseReason.isEmpty() || customCloseReason.isBlank())) {
-            throw new InvalidRequestException("Custom close reason must be entered");
-        }
-        position.setCustomCloseReason(customCloseReason);
-
-        if (!statusId.equals(5L)) {
+        if (statusId.equals(5L)) {
+            if (customCloseReason == null || customCloseReason.isEmpty()) {
+                throw new InvalidRequestException("Custom close reason must be entered");
+            }
+            position.setCustomCloseReason(customCloseReason);
+        } else {
             position.setCustomCloseReason(null);
         }
 
