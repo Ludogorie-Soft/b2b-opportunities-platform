@@ -11,6 +11,7 @@ import com.example.b2b_opportunities.Entity.Location;
 import com.example.b2b_opportunities.Entity.Pattern;
 import com.example.b2b_opportunities.Entity.Position;
 import com.example.b2b_opportunities.Entity.Project;
+import com.example.b2b_opportunities.Entity.Skill;
 import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Repository.CompanyRepository;
 import com.example.b2b_opportunities.Repository.CompanyTypeRepository;
@@ -19,6 +20,7 @@ import com.example.b2b_opportunities.Repository.PatternRepository;
 import com.example.b2b_opportunities.Repository.PositionRepository;
 import com.example.b2b_opportunities.Repository.ProjectRepository;
 import com.example.b2b_opportunities.Repository.RoleRepository;
+import com.example.b2b_opportunities.Repository.SkillRepository;
 import com.example.b2b_opportunities.Repository.UserRepository;
 import com.example.b2b_opportunities.Repository.WorkModeRepository;
 import com.example.b2b_opportunities.Static.EmailVerification;
@@ -104,6 +106,9 @@ class PositionControllerTest {
     private RoleRepository roleRepository;
 
     @Autowired
+    private SkillRepository skillRepository;
+
+    @Autowired
     private WorkModeRepository workModeRepository;
 
     @Autowired
@@ -119,6 +124,7 @@ class PositionControllerTest {
     private Pattern pattern;
     private CompanyType companyType;
     private Location location;
+    private Skill testSkill;
 
     @AfterEach
     void afterEach() {
@@ -210,9 +216,12 @@ class PositionControllerTest {
         rateRequestDto.setMax(100);
         requestDto.setRate(rateRequestDto);
 
+        testSkill = skillRepository.save(Skill.builder().name("testSkill").assignable(true).build());
+
         // Create a valid RequiredSkillsDto
         RequiredSkillsDto requiredSkillsDto = new RequiredSkillsDto();
-        requiredSkillsDto.setSkillId(4L);
+        requiredSkillsDto.setSkillId(testSkill.getId());
+
         // Create a valid ExperienceRequestDto for Skills(not required)
         ExperienceRequestDto experienceRequestDto = new ExperienceRequestDto();
         experienceRequestDto.setMonths(6);
@@ -292,7 +301,7 @@ class PositionControllerTest {
                 .andExpect(jsonPath("$[0].rate").value(hasEntry("min", 50)))
                 .andExpect(jsonPath("$[0].rate").value(hasEntry("max", 100)))
                 .andExpect(jsonPath("$[0].rate").value(hasEntry("currency", "USD")))
-                .andExpect(jsonPath("$[0].requiredSkills[0].skillId").value(4))
+                .andExpect(jsonPath("$[0].requiredSkills[0].skillId").value(testSkill.getId()))
                 .andExpect(jsonPath("$[0].requiredSkills[0].experience.months").value(6))
                 .andExpect(jsonPath("$[0].requiredSkills[0].experience.years").value(2))
                 .andExpect(jsonPath("$[0].minYearsExperience").value(2))
@@ -316,7 +325,7 @@ class PositionControllerTest {
                 .andExpect(jsonPath("$.rate").value(hasEntry("min", 50)))
                 .andExpect(jsonPath("$.rate").value(hasEntry("max", 100)))
                 .andExpect(jsonPath("$.rate").value(hasEntry("currency", "USD")))
-                .andExpect(jsonPath("$.requiredSkills[0].skillId").value(4))
+                .andExpect(jsonPath("$.requiredSkills[0].skillId").value(testSkill.getId()))
                 .andExpect(jsonPath("$.requiredSkills[0].experience.months").value(6))
                 .andExpect(jsonPath("$.requiredSkills[0].experience.years").value(2))
                 .andExpect(jsonPath("$.minYearsExperience").value(2))
@@ -348,7 +357,7 @@ class PositionControllerTest {
                 .andExpect(jsonPath("$.rate").value(hasEntry("min", 50)))
                 .andExpect(jsonPath("$.rate").value(hasEntry("max", 100)))
                 .andExpect(jsonPath("$.rate").value(hasEntry("currency", "USD")))
-                .andExpect(jsonPath("$.requiredSkills[0].skillId").value(4))
+                .andExpect(jsonPath("$.requiredSkills[0].skillId").value(testSkill.getId()))
                 .andExpect(jsonPath("$.requiredSkills[0].experience.months").value(6))
                 .andExpect(jsonPath("$.requiredSkills[0].experience.years").value(2))
                 .andExpect(jsonPath("$.minYearsExperience").value(2))
@@ -455,7 +464,7 @@ class PositionControllerTest {
                 .andExpect(jsonPath("$.rate").value(hasEntry("min", 50)))
                 .andExpect(jsonPath("$.rate").value(hasEntry("max", 100)))
                 .andExpect(jsonPath("$.rate").value(hasEntry("currency", "USD")))
-                .andExpect(jsonPath("$.requiredSkills[0].skillId").value(4))
+                .andExpect(jsonPath("$.requiredSkills[0].skillId").value(testSkill.getId()))
                 .andExpect(jsonPath("$.requiredSkills[0].experience.months").value(6))
                 .andExpect(jsonPath("$.requiredSkills[0].experience.years").value(2))
                 .andExpect(jsonPath("$.minYearsExperience").value(2))
