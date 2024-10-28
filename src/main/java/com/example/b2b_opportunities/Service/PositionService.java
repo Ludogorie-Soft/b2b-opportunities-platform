@@ -75,7 +75,7 @@ public class PositionService {
         if (dto.getLocation() != null) {
             position.setLocation(getLocationIfExists(dto.getLocation()));
         }
-      
+
         return PositionMapper.toResponseDto(positionRepository.save(position));
     }
 
@@ -278,9 +278,12 @@ public class PositionService {
         }
         position.setCustomCloseReason(customCloseReason);
 
+        if (!statusId.equals(5L)) {
+            position.setCustomCloseReason(null);
+        }
+
         if (statusId == 1L) {
             activateProjectIfInactive(position.getProject());
-            position.setCustomCloseReason(null);
         } else {
             deactivateProjectIfNoActivePositions(position.getProject());
         }

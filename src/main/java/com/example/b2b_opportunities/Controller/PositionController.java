@@ -9,7 +9,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -57,7 +56,7 @@ public class PositionController {
         positionService.deletePosition(id, authentication);
     }
 
-    @PatchMapping("/{id}/status")
+    @PutMapping("/{id}/status")
     @ResponseStatus(HttpStatus.OK)
     public void editPositionStatus(
             @PathVariable("id") Long positionId,
