@@ -67,6 +67,8 @@ public class PositionService {
 
         setProjectOrThrow(position, dto.getProjectId());
         setPatternOrThrow(position, dto.getPatternId());
+
+        checkForNonAssignableSkills(dto.getRequiredSkills());
         setPositionFields(position, dto);
         updateProjectDateUpdated(position);
         activateProjectIfInactive(position.getProject());
@@ -75,7 +77,6 @@ public class PositionService {
         if (dto.getLocation() != null) {
             position.setLocation(getLocationIfExists(dto.getLocation()));
         }
-
         return PositionMapper.toResponseDto(positionRepository.save(position));
     }
 
@@ -91,6 +92,7 @@ public class PositionService {
         position.setHiringProcess(dto.getHiringProcess());
         position.setDescription(dto.getDescription());
 
+        checkForNonAssignableSkills(dto.getRequiredSkills());
         deleteAllRequiredSkillsForPositionIfAny(position);
         setPositionFields(position, dto);
 
@@ -114,6 +116,33 @@ public class PositionService {
         return PositionMapper.toResponseDtoList(positions);
     }
 
+    public void editPositionStatus(Long positionId, Long statusId, String customCloseReason, Authentication authentication) {
+        userService.validateUserAndCompany(authentication);
+        Position position = getPositionOrThrow(positionId);
+        validateProjectAndUserAreRelated(position.getProject().getId(), authentication);
+
+        setPositionStatusOrThrow(position, statusId);
+
+        if (statusId.equals(5L) && (customCloseReason == null || customCloseReason.isEmpty() || customCloseReason.isBlank())) {
+            throw new InvalidRequestException("Custom close reason must be entered");
+        }
+        position.setCustomCloseReason(customCloseReason);
+
+        if (!statusId.equals(5L)) {
+            position.setCustomCloseReason(null);
+        }
+
+        if (statusId == 1L) {
+            activateProjectIfInactive(position.getProject());
+        } else {
+            deactivateProjectIfNoActivePositions(position.getProject());
+        }
+
+        updateProjectDateUpdated(position);
+
+        positionRepository.save(position);
+    }
+
     private Location getLocationIfExists(Long id) {
         return locationRepository.findById(id).orElseThrow(() -> new NotFoundException("Location with ID: " + id + " not found"));
     }
@@ -131,7 +160,6 @@ public class PositionService {
         setRequiredSkillsForPosition(position, dto.getRequiredSkills());
         setOptionalSkills(position, dto.getOptionalSkills());
     }
-
 
     private void validateProjectAndUserAreRelated(Long projectId, Authentication authentication) {
         User user = userService.getCurrentUserOrThrow(authentication);
@@ -195,6 +223,17 @@ public class PositionService {
             throw new NotFoundException("RequiredSkillsDto is null or empty");
         }
         position.setRequiredSkills(getRequiredSkillsList(dto, position));
+    }
+
+    private void checkForNonAssignableSkills(List<RequiredSkillsDto> dto) {
+        List<Long> skillIdList = dto.stream().map(RequiredSkillsDto::getSkillId).toList();
+        for (Long skillId : skillIdList) {
+            Skill skill = skillRepository.findById(skillId)
+                    .orElseThrow(() -> new NotFoundException("Skill with ID: " + skillId + " not found"));
+            if (!skill.getAssignable()) {
+                throw new InvalidRequestException("Skill with ID: " + skillId + " is not assignable");
+            }
+        }
     }
 
     private void setOptionalSkills(Position position, List<Long> skills) {
@@ -264,32 +303,5 @@ public class PositionService {
             project.setProjectStatus(ProjectStatus.INACTIVE);
             projectRepository.save(project);
         }
-    }
-
-    public void editPositionStatus(Long positionId, Long statusId, String customCloseReason, Authentication authentication) {
-        userService.validateUserAndCompany(authentication);
-        Position position = getPositionOrThrow(positionId);
-        validateProjectAndUserAreRelated(position.getProject().getId(), authentication);
-
-        setPositionStatusOrThrow(position, statusId);
-
-        if (statusId.equals(5L) && (customCloseReason == null || customCloseReason.isEmpty() || customCloseReason.isBlank())) {
-            throw new InvalidRequestException("Custom close reason must be entered");
-        }
-        position.setCustomCloseReason(customCloseReason);
-
-        if (!statusId.equals(5L)) {
-            position.setCustomCloseReason(null);
-        }
-
-        if (statusId == 1L) {
-            activateProjectIfInactive(position.getProject());
-        } else {
-            deactivateProjectIfNoActivePositions(position.getProject());
-        }
-
-        updateProjectDateUpdated(position);
-
-        positionRepository.save(position);
     }
 }
