@@ -1,12 +1,27 @@
-INSERT INTO rates(id, min, max, currency) VALUES
-(1, 20, 33, 'EUR'),
-(2, 33, 53, 'EUR'),
-(3, 20, NULL, 'EUR'),
-(4, 40, 63, 'EUR'),
-(5, 16, 20, 'EUR'),
-(6, 26, 32, 'EUR'),
-(7, 23, 30, 'EUR'),
-(8, 42, 54, 'EUR');
+CREATE TABLE currencies (
+id BIGSERIAL PRIMARY KEY,
+name VARCHAR(10)
+);
+
+INSERT INTO currencies(name) VALUES
+('BGN'),
+('EUR');
+
+ALTER TABLE rates RENAME COLUMN currency TO currency_id;
+ALTER TABLE rates ALTER COLUMN currency_id TYPE BIGINT USING currency_id::BIGINT;
+ALTER TABLE rates
+ADD CONSTRAINT fk_currency
+FOREIGN KEY (currency_id) REFERENCES currencies(id) ON DELETE SET NULL;
+
+INSERT INTO rates(id, min, max, currency_id) VALUES
+(1, 20, 33, 2),
+(2, 33, 53, 2),
+(3, 20, NULL, 2),
+(4, 40, 63, 2),
+(5, 16, 20, 2),
+(6, 26, 32, 2),
+(7, 23, 30, 2),
+(8, 42, 54, 2);
 
 SELECT setval('rates_id_seq', (SELECT COALESCE(MAX(id), 0) + 1 FROM rates));
 

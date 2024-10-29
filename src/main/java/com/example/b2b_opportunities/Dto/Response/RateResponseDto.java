@@ -16,5 +16,5 @@ import lombok.Setter;
 public class RateResponseDto {
     private Integer min;
     private Integer max;
-    private String currency;
+    private Long currencyId;
 }
