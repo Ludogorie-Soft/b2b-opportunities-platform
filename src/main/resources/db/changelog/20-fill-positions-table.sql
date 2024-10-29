@@ -5,7 +5,8 @@ name VARCHAR(10)
 
 INSERT INTO currencies(name) VALUES
 ('BGN'),
-('EUR');
+('EUR'),
+('USD');
 
 ALTER TABLE rates RENAME COLUMN currency TO currency_id;
 ALTER TABLE rates ALTER COLUMN currency_id TYPE BIGINT USING currency_id::BIGINT;
