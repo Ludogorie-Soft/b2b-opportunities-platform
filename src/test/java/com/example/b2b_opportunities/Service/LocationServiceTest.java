@@ -32,7 +32,7 @@ class LocationServiceTest {
     @Test
     void shouldReturnLocationWhenExists() {
         Long id = 1L;
-        String locationName = "ploVdiv";
+        String locationName = "testCity3";
         Location location = new Location();
         location.setId(id);
         location.setName(locationName);
@@ -86,7 +86,7 @@ class LocationServiceTest {
 
         Location location = new Location();
         location.setId(id);
-        location.setName("Sofia");
+        location.setName("testCity3");
 
         when(locationRepository.findById(id)).thenReturn(Optional.of(location));
 
@@ -100,11 +100,11 @@ class LocationServiceTest {
     @Test
     void shouldUpdateLocationWhenNameIsDifferent() {
         Long id = 1L;
-        String newName = "Varna";
+        String newName = "Testcity2";
 
         Location location = new Location();
         location.setId(id);
-        location.setName("Sofia");
+        location.setName("Testcity3");
 
         when(locationRepository.findById(id)).thenReturn(Optional.of(location));
         when(locationRepository.save(any(Location.class))).thenReturn(location);

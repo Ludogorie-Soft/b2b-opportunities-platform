@@ -10,6 +10,7 @@ import com.example.b2b_opportunities.Entity.Location;
 import com.example.b2b_opportunities.Entity.Pattern;
 import com.example.b2b_opportunities.Entity.Position;
 import com.example.b2b_opportunities.Entity.Project;
+import com.example.b2b_opportunities.Entity.Rate;
 import com.example.b2b_opportunities.Entity.RequiredSkill;
 import com.example.b2b_opportunities.Entity.Skill;
 import com.example.b2b_opportunities.Entity.User;
@@ -58,6 +59,7 @@ public class PositionService {
     private final LocationRepository locationRepository;
     private final PatternRepository patternRepository;
     private final RequiredSkillRepository requiredSkillRepository;
+    private final CurrencyService currencyService;
 
     public PositionResponseDto createPosition(PositionRequestDto dto, Authentication authentication) {
         userService.validateUserAndCompany(authentication);
@@ -215,8 +217,11 @@ public class PositionService {
         if (rateRequestDto.getMin() > rateRequestDto.getMax()) {
             throw new InvalidRequestException("Min rate cannot exceed max rate");
         }
-        position.setRate(rateRepository.save(RateMapper.toRate(rateRequestDto)));
+        Rate rate = RateMapper.toRate(rateRequestDto);
+        rate.setCurrency(currencyService.getById(rateRequestDto.getCurrencyId()));
+        position.setRate(rateRepository.save(rate));
     }
+
 
     private void setRequiredSkillsForPosition(Position position, List<RequiredSkillsDto> dto) {
         if (dto == null || dto.isEmpty()) {

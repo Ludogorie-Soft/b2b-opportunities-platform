@@ -55,7 +55,7 @@ class LocationControllerTest {
 
     @Test
     void shouldReturnLocationThatExist() throws Exception {
-        String name = "Sofia";
+        String name = "testCity";
         Location l = locationRepository.save(Location.builder().name(name).build());
         locationRepository.flush();
         mockMvc.perform(get("/locations/" + l.getId()))
@@ -80,6 +80,7 @@ class LocationControllerTest {
 
     @Test
     void shouldReturnEmptyList() throws Exception {
+        locationRepository.deleteAll();
         mockMvc.perform(get("/locations"))
                 .andExpect(status().isOk())
                 .andExpect(content().json("[]"));
@@ -87,22 +88,23 @@ class LocationControllerTest {
 
     @Test
     void shouldReturnTwoItems() throws Exception {
-        locationRepository.save(Location.builder().name("Sofia").build());
-        locationRepository.save(Location.builder().name("Varna").build());
+        locationRepository.deleteAll();
+        locationRepository.save(Location.builder().name("testCity1").build());
+        locationRepository.save(Location.builder().name("testCity2").build());
         locationRepository.flush();
         mockMvc.perform(get("/locations"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].name").value("Sofia"))
-                .andExpect(jsonPath("$[1].name").value("Varna"));
+                .andExpect(jsonPath("$[0].name").value("testCity1"))
+                .andExpect(jsonPath("$[1].name").value("testCity2"));
     }
 
     @Test
     void shouldCreateNewLocation() throws Exception {
         mockMvc.perform(post("/locations")
-                        .param("name", "Plovdiv"))
+                        .param("name", "testCity3"))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.name").value("Plovdiv"));
+                .andExpect(jsonPath("$.name").value("Testcity3"));
     }
 
     @Test
@@ -133,7 +135,7 @@ class LocationControllerTest {
 
     @Test
     void shouldUpdateExistingLocationAndCapitalizeAndStripSpacesForAllWordsInLocation() throws Exception {
-        Location l = locationRepository.save(Location.builder().name("Sofia").build());
+        Location l = locationRepository.save(Location.builder().name("testCity3").build());
         locationRepository.flush();
         mockMvc.perform(put("/locations/" + l.getId())
                         .param("newName", "  vEliKo    TarNovo  "))
@@ -155,7 +157,7 @@ class LocationControllerTest {
     void ShouldThrowAnErrorIfNewNameAlreadyExists() throws Exception {
         String locationName = "Veliko Tarnovo";
         locationRepository.save(Location.builder().name(locationName).build());
-        Location l = locationRepository.save(Location.builder().name("Sofia").build());
+        Location l = locationRepository.save(Location.builder().name("testCity3").build());
         locationRepository.flush();
 
         String expectedMessage = "Location with name: '" + locationName + "' already exists";
@@ -177,7 +179,7 @@ class LocationControllerTest {
         String expectedMessage = "Location with ID: " + id + " not found";
 
         mockMvc.perform(put("/locations/" + id)
-                        .param("newName", "Sofia"))
+                        .param("newName", "testCity3"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.path").value("/locations/" + id))
                 .andExpect(jsonPath("$.error").value("Not Found"))
@@ -188,7 +190,7 @@ class LocationControllerTest {
 
     @Test
     void shouldDeleteItem() throws Exception {
-        Location l = locationRepository.save(Location.builder().name("Sofia").build());
+        Location l = locationRepository.save(Location.builder().name("testCity3").build());
         locationRepository.flush();
 
         mockMvc.perform(delete("/locations/" + l.getId()))
