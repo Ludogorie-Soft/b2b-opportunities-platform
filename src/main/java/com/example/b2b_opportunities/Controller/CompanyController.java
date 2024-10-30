@@ -148,7 +148,7 @@ public class CompanyController {
         companyService.deleteCompanyImage(authentication);
     }
 
-    @PostMapping("/filters/add")
+    @PostMapping("/filters")
     @ResponseStatus(HttpStatus.CREATED)
     public CompanyFilterResponseDto addCompanyFilter(Authentication authentication,
                                                      @RequestBody @Valid CompanyFilterRequestDto dto) {

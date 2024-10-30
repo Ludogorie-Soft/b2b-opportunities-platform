@@ -90,7 +90,7 @@ public class ProjectService {
         validateProjectIsAvailableToCompany(project, userCompany);
 
         if (project.getPositions() == null || project.getPositions().isEmpty()) {
-            throw new NotFoundException("No positions found for Project with ID: " + id);
+            return new ArrayList<>();
         }
 
         return PositionMapper.toResponseDtoList(project.getPositions());
@@ -124,6 +124,9 @@ public class ProjectService {
 
     private List<ProjectResponseDto> getPartnerProjects(Company company) {
         List<Project> partnerProjects = projectRepository.findPartnerOnlyProjectsByCompanyInPartnerGroupsAndStatus(company.getId(), ProjectStatus.ACTIVE);
+        if (partnerProjects.isEmpty()) {
+            return new ArrayList<>();
+        }
         return ProjectMapper.toDtoList(partnerProjects);
     }
 
@@ -151,6 +154,9 @@ public class ProjectService {
             List<PartnerGroup> projectPartnerGroups = getPartnerGroupsOrThrow(dto.getPartnerGroupIds());
             validatePartnerGroupsBelongToCompany(project.getCompany(), projectPartnerGroups);
             project.setPartnerGroupList(projectPartnerGroups);
+        } else {
+            project.setPartnerOnly(false);
+            project.setPartnerGroupList(null);
         }
         return ProjectMapper.toDto(projectRepository.save(project));
     }
