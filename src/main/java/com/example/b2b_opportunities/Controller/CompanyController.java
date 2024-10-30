@@ -3,6 +3,7 @@ package com.example.b2b_opportunities.Controller;
 import com.example.b2b_opportunities.Dto.Request.CompanyFilterEditDto;
 import com.example.b2b_opportunities.Dto.Request.CompanyFilterRequestDto;
 import com.example.b2b_opportunities.Dto.Request.CompanyRequestDto;
+import com.example.b2b_opportunities.Dto.Request.PartnerGroupRequestDto;
 import com.example.b2b_opportunities.Dto.Response.CompaniesAndUsersResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyFilterResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyPublicResponseDto;
@@ -81,22 +82,22 @@ public class CompanyController {
 
     @PostMapping("/partners")
     @ResponseStatus(HttpStatus.CREATED)
-    public PartnerGroupResponseDto createPartnerGroup(Authentication authentication, @RequestParam("name") String partnershipName) {
-        return companyService.createPartnerGroup(authentication, partnershipName);
+    public PartnerGroupResponseDto createPartnerGroup(Authentication authentication, @RequestBody PartnerGroupRequestDto dto) {
+        return companyService.createPartnerGroup(authentication, dto);
     }
 
     @DeleteMapping("/partners")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deletePartnerGroup(Authentication authentication, @RequestParam("partnerGroupId") Long partnerGroupId){
+    public void deletePartnerGroup(Authentication authentication, @RequestParam("partnerGroupId") Long partnerGroupId) {
         companyService.deletePartnerGroup(authentication, partnerGroupId);
     }
 
-    @PutMapping("/partners/{partnerGroupId}/companies/{companyId}")
+    @PutMapping("/partners/{partnerGroupId}")
     @ResponseStatus(HttpStatus.OK)
-    public PartnerGroupResponseDto addCompanyToPartners(Authentication authentication,
-                                                        @PathVariable("partnerGroupId") Long partnerGroupId,
-                                                        @PathVariable("companyId") Long companyId) {
-        return companyService.addCompanyToPartners(authentication, partnerGroupId, companyId);
+    public PartnerGroupResponseDto editPartnerGroup(Authentication authentication,
+                                                    @PathVariable Long partnerGroupId,
+                                                    @RequestBody PartnerGroupRequestDto dto) {
+        return companyService.editPartnerGroup(authentication, partnerGroupId, dto);
     }
 
     @DeleteMapping("/partners/{partnerGroupId}/companies/{companyId}")
