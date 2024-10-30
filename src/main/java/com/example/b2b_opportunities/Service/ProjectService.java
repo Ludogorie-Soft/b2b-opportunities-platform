@@ -90,7 +90,7 @@ public class ProjectService {
         validateProjectIsAvailableToCompany(project, userCompany);
 
         if (project.getPositions() == null || project.getPositions().isEmpty()) {
-            throw new NotFoundException("No positions found for Project with ID: " + id);
+            return new ArrayList<>();
         }
 
         return PositionMapper.toResponseDtoList(project.getPositions());
