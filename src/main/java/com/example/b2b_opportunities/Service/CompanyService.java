@@ -297,7 +297,7 @@ public class CompanyService {
 
     private Filter mapToFilter(CompanyFilterRequestDto dto, Company company) {
         Filter filter = FilterMapper.toEntity(dto);  // set name + IsEnabled
-        filter.setSkills(new HashSet<>(patternService.getAllAssignableSkillsIfSkillIdsExist(dto.getSkillIds().stream().toList()))); // TODO: list to set
+        filter.setSkills(new HashSet<>(patternService.getAllAssignableSkillsIfSkillIdsExist(dto.getSkills().stream().toList()))); // TODO: list to set
         filter.setCompany(company);
         return filter;
     }

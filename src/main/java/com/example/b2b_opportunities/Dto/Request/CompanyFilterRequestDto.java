@@ -14,5 +14,5 @@ public class CompanyFilterRequestDto {
     private String name;
 
     @NotEmpty
-    private Set<Long> skillIds;
+    private Set<Long> skills;
 }
