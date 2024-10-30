@@ -240,8 +240,7 @@ public class AuthControllerTest {
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(loginDtoJson))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrlPattern("**/company/profile"));
+                .andExpect(status().isOk());
 
         userRepository.delete(user);
     }

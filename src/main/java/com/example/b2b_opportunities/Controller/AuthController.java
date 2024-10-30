@@ -56,7 +56,7 @@ public class AuthController {
     @PostMapping("/login")
     public void login(@RequestBody LoginDto loginDto, HttpServletRequest request, HttpServletResponse response) throws IOException {
         authenticationService.login(loginDto, request, response);
-        response.sendRedirect(frontEndAddress + "/company/profile");
+//        response.sendRedirect(frontEndAddress + "/company/profile");
     }
 
     @GetMapping("/oauth2/success")
