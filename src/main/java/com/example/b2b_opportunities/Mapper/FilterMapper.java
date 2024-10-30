@@ -4,6 +4,7 @@ import com.example.b2b_opportunities.Dto.Request.CompanyFilterEditDto;
 import com.example.b2b_opportunities.Dto.Request.CompanyFilterRequestDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyFilterResponseDto;
 import com.example.b2b_opportunities.Entity.Filter;
+import com.example.b2b_opportunities.Entity.Skill;
 
 import java.util.HashSet;
 import java.util.List;
@@ -16,8 +17,7 @@ public class FilterMapper {
                 .id(filter.getId())
                 .name(filter.getName())
                 .isEnabled(filter.getIsEnabled())
-                // TODO: use SET instead of List for all skills
-                .skills(new HashSet<>(SkillMapper.toSkillResponseNoParentsDtoList(filter.getSkills().stream().toList())))
+                .skills(new HashSet<>(filter.getSkills().stream().map(Skill::getId).toList()))
                 .build();
     }
 
@@ -27,7 +27,7 @@ public class FilterMapper {
                 .collect(Collectors.toList());
     }
 
-    public static Filter toEntity (CompanyFilterRequestDto dto){
+    public static Filter toEntity(CompanyFilterRequestDto dto) {
         Boolean enabled = true; // Enabled when creating new DTO
 
         if (dto instanceof CompanyFilterEditDto) {
