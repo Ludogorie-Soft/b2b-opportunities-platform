@@ -214,7 +214,7 @@ public class PositionService {
     }
 
     private void setRate(Position position, RateRequestDto rateRequestDto) {
-        if (rateRequestDto.getMin() > rateRequestDto.getMax()) {
+        if (rateRequestDto.getMax() != null && rateRequestDto.getMin() > rateRequestDto.getMax()) {
             throw new InvalidRequestException("Min rate cannot exceed max rate");
         }
         Rate rate = RateMapper.toRate(rateRequestDto);

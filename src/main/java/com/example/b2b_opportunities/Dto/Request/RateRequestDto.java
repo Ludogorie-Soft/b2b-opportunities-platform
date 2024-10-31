@@ -11,7 +11,7 @@ public class RateRequestDto {
     @NotNull
     @Min(0)
     private Integer min;
-    @NotNull
+
     @Min(0)
     private Integer max;
     @NotNull
