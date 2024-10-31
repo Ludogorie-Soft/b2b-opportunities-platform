@@ -3,6 +3,7 @@ package com.example.b2b_opportunities.Service;
 import com.example.b2b_opportunities.Dto.Request.CompanyFilterEditDto;
 import com.example.b2b_opportunities.Dto.Request.CompanyFilterRequestDto;
 import com.example.b2b_opportunities.Dto.Request.CompanyRequestDto;
+import com.example.b2b_opportunities.Dto.Request.PartnerGroupRequestDto;
 import com.example.b2b_opportunities.Dto.Response.CompaniesAndUsersResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyFilterResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyPublicResponseDto;
@@ -221,8 +222,7 @@ public class CompanyService {
         User user = userService.getCurrentUserOrThrow(authentication);
         Company company = getUserCompanyOrThrow(user);
         Set<PartnerGroup> partnerGroups = company.getPartnerGroups();
-        PartnerGroup partnerGroupToBeRemoved = partnerGroupRepository.findById(partnerGroupId)
-                .orElseThrow(() -> new NotFoundException("Partner group with ID: " + partnerGroupId + " not found"));
+        PartnerGroup partnerGroupToBeRemoved = getPartnerGroupOrThrow(partnerGroupId);
         if (partnerGroups.contains(partnerGroupToBeRemoved)) {
             partnerGroups.remove(partnerGroupToBeRemoved);
             partnerGroupRepository.delete(partnerGroupToBeRemoved);
@@ -245,17 +245,21 @@ public class CompanyService {
         return result;
     }
 
-    public PartnerGroupResponseDto createPartnerGroup(Authentication authentication, String partnershipName) {
+    public PartnerGroupResponseDto createPartnerGroup(Authentication authentication, PartnerGroupRequestDto dto) {
         User user = userService.getCurrentUserOrThrow(authentication);
         Company company = getUserCompanyOrThrow(user); //check if user belongs to a company
 
-        if (company.getPartnerGroups().stream().map(PartnerGroup::getName).toList().contains(partnershipName)) {
-            throw new AlreadyExistsException("Partner group: '" + partnershipName + "' already exists.");
+        if (company.getPartnerGroups().stream().map(PartnerGroup::getName).toList().contains(dto.getName())) {
+            throw new AlreadyExistsException("Partner group: '" + dto.getName() + "' already exists.");
         }
 
+        Set<Company> companies = fetchCompaniesByIds(dto.getCompanyIds());
+        validateUserCompanyNotInPartnerGroup(dto, company);
+
         PartnerGroup partnerGroup = partnerGroupRepository.save(PartnerGroup.builder()
-                .name(partnershipName)
+                .name(dto.getName())
                 .company(company)
+                .partners(companies)
                 .build());
 
         company.getPartnerGroups().add(partnerGroup);
@@ -263,21 +267,26 @@ public class CompanyService {
         return PartnerGroupMapper.toPartnerGroupResponseDto(partnerGroup);
     }
 
-    public PartnerGroupResponseDto addCompanyToPartners(Authentication authentication, Long partnerGroupId, Long partnerCompanyId) {
+    public PartnerGroupResponseDto editPartnerGroup(Authentication authentication, Long partnerGroupId, PartnerGroupRequestDto dto) {
         User user = userService.getCurrentUserOrThrow(authentication);
         Company userCompany = getUserCompanyOrThrow(user);
-        if (userCompany.getId().equals(partnerCompanyId))
-            throw new InvalidRequestException("You can't add your company to a partner group");
+        PartnerGroup partnerGroup = getPartnerGroupOrThrow(partnerGroupId);
+        validatePartnerGroupBelongsToUserCompany(userCompany, partnerGroup);
 
-        Company potentialPartnerCompany = companyRepository.findById(partnerCompanyId)
-                .orElseThrow(() -> new NotFoundException("Company with ID: " + partnerCompanyId + " not found"));
-        PartnerGroup partnerGroup = partnerGroupRepository.findById(partnerGroupId)
-                .orElseThrow(() -> new NotFoundException("Partner group with ID: " + partnerGroupId + " not found"));
-        validatePartnerGroupBelongsToCompany(partnerGroup, userCompany);
-        checkIfPartnersAlready(potentialPartnerCompany, partnerGroup);
-        partnerGroup.getPartners().add(potentialPartnerCompany);
+        Set<Company> partners = fetchCompaniesByIds(dto.getCompanyIds());
+        validateUserCompanyNotInPartnerGroup(dto, userCompany);
+
+        partnerGroup.setName(dto.getName());
+        partnerGroup.setPartners(partners);
+
         partnerGroupRepository.save(partnerGroup);
         return PartnerGroupMapper.toPartnerGroupResponseDto(partnerGroup);
+    }
+
+    private void validatePartnerGroupBelongsToUserCompany(Company company, PartnerGroup partnerGroup) {
+        if (partnerGroup.getCompany() != company) {
+            throw new PermissionDeniedException("This partner group does not belong to this company");
+        }
     }
 
     private Filter getFilterIfExists(Long id) {
@@ -458,21 +467,27 @@ public class CompanyService {
         }
     }
 
-    private void validatePartnerGroupBelongsToCompany(PartnerGroup partnerGroup, Company company) {
-        if (!company.getPartnerGroups().contains(partnerGroup)) {
-            throw new PermissionDeniedException("Partner group does not belong to this company");
-        }
-    }
-
-    private void checkIfPartnersAlready(Company partnerCompany, PartnerGroup partnerGroup) {
-        if (partnerGroup.getPartners().contains(partnerCompany)) {
-            throw new AlreadyExistsException("This company is already in this partner group");
-        }
-    }
-
     private void checkIfCompanyIsInPartnerGroup(PartnerGroup partnerGroup, Company company) {
         if (!partnerGroup.getPartners().contains(company)) {
             throw new InvalidRequestException("Company with ID: " + company.getId() + " is not part of this Partner group");
         }
     }
+
+    private PartnerGroup getPartnerGroupOrThrow(Long partnerGroupId) {
+        return partnerGroupRepository.findById(partnerGroupId)
+                .orElseThrow(() -> new NotFoundException("Partner group with ID: " + partnerGroupId + " not found"));
+    }
+
+    private void validateUserCompanyNotInPartnerGroup(PartnerGroupRequestDto dto, Company userCompany) {
+        if (dto.getCompanyIds().contains(userCompany.getId())) {
+            throw new InvalidRequestException("You can't add your company to a partner group");
+        }
+    }
+
+    private Set<Company> fetchCompaniesByIds(Set<Long> companyIds) {
+        return companyIds.stream().map(id -> companyRepository.findById(id)
+                        .orElseThrow(() -> new NotFoundException("Company with ID: " + id + " not found")))
+                .collect(Collectors.toSet());
+    }
+
 }
