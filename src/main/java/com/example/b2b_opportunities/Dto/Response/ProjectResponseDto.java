@@ -9,6 +9,7 @@ import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -31,4 +32,5 @@ public class ProjectResponseDto {
     private String Description;
     private String status;
     private boolean isPartnerOnly;
+    private List<Long> partnerGroupIds;
 }

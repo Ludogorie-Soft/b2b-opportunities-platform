@@ -131,6 +131,10 @@ public class ProjectService {
     }
 
     private void validateProjectIsAvailableToCompany(Project project, Company userCompany) {
+        if (project.getCompany().getId().equals(userCompany.getId())) {
+            return;
+        }
+
         if (project.isPartnerOnly()) {
             boolean isCompanyInGroup = project.getPartnerGroupList().stream()
                     .anyMatch(partnerGroup -> partnerGroup.getPartners().contains(userCompany));

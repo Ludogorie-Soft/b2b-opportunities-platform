@@ -1,10 +1,12 @@
 package com.example.b2b_opportunities.Mapper;
 
 import com.example.b2b_opportunities.Dto.Response.ProjectResponseDto;
+import com.example.b2b_opportunities.Entity.PartnerGroup;
 import com.example.b2b_opportunities.Entity.Project;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class ProjectMapper {
     public static ProjectResponseDto toDto(Project project) {
@@ -19,6 +21,9 @@ public class ProjectMapper {
                 .Description(project.getDescription())
                 .status(project.getProjectStatus().toString())
                 .isPartnerOnly(project.isPartnerOnly())
+                .partnerGroupIds(project.isPartnerOnly() ?
+                        project.getPartnerGroupList().stream().map(PartnerGroup::getId)
+                                .collect(Collectors.toList()) : null)
                 .build();
     }
 

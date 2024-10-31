@@ -25,10 +25,10 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
     List<Project> findByProjectStatusAndIsPartnerOnlyFalse(ProjectStatus projectStatus);
 
     @Query("SELECT DISTINCT p FROM Project p " +
-            "JOIN p.partnerGroupList pg " +
-            "JOIN pg.partners c " +
+            "LEFT JOIN p.partnerGroupList pg " +
+            "LEFT JOIN pg.partners c " +
             "WHERE p.isPartnerOnly = true " +
-            "AND c.id = :companyId " +
+            "AND (c.id = :companyId OR p.company.id = :companyId) " +
             "AND p.projectStatus = :projectStatus")
     List<Project> findPartnerOnlyProjectsByCompanyInPartnerGroupsAndStatus(@Param("companyId") Long companyId,
                                                                            @Param("projectStatus") ProjectStatus projectStatus);
