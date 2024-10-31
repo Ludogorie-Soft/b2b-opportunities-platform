@@ -17,5 +17,5 @@ public class ProjectRequestDto {
 
     private String Description;
     private boolean isPartnerOnly;
-    private List<Long> partnerGroupIds; //if isPartnerOnly = true
+    private List<Long> partnerGroups; //if isPartnerOnly = true
 }

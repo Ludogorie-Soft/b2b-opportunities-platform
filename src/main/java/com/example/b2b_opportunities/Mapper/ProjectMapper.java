@@ -21,7 +21,7 @@ public class ProjectMapper {
                 .Description(project.getDescription())
                 .status(project.getProjectStatus().toString())
                 .isPartnerOnly(project.isPartnerOnly())
-                .partnerGroupIds(project.isPartnerOnly() ?
+                .partnerGroups(project.isPartnerOnly() ?
                         project.getPartnerGroupList().stream().map(PartnerGroup::getId)
                                 .collect(Collectors.toList()) : null)
                 .build();

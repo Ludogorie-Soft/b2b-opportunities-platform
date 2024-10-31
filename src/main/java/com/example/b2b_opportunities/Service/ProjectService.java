@@ -155,7 +155,7 @@ public class ProjectService {
         project.setProjectStatus(ProjectStatus.ACTIVE);
         if (dto.isPartnerOnly()) {
             project.setPartnerOnly(true);
-            List<PartnerGroup> projectPartnerGroups = getPartnerGroupsOrThrow(dto.getPartnerGroupIds());
+            List<PartnerGroup> projectPartnerGroups = getPartnerGroupsOrThrow(dto.getPartnerGroups());
             validatePartnerGroupsBelongToCompany(project.getCompany(), projectPartnerGroups);
             project.setPartnerGroupList(projectPartnerGroups);
         } else {

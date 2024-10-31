@@ -256,7 +256,7 @@ public class ProjectServiceTest {
         ProjectRequestDto dto = new ProjectRequestDto();
         dto.setName("Partner Project Update");
         dto.setPartnerOnly(true);
-        dto.setPartnerGroupIds(List.of(1L));
+        dto.setPartnerGroups(List.of(1L));
 
         PartnerGroup partnerGroup = new PartnerGroup();
         partnerGroup.setId(1L);
@@ -269,7 +269,7 @@ public class ProjectServiceTest {
         when(userService.getCurrentUserOrThrow(authentication)).thenReturn(user);
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
         when(projectRepository.save(any(Project.class))).thenReturn(project);
-        when(partnerGroupRepository.findAllById(dto.getPartnerGroupIds())).thenReturn(List.of(partnerGroup));
+        when(partnerGroupRepository.findAllById(dto.getPartnerGroups())).thenReturn(List.of(partnerGroup));
 
         try (MockedStatic<ProjectMapper> mockedMapper = mockStatic(ProjectMapper.class)) {
             mockedMapper.when(() -> ProjectMapper.toDto(any(Project.class))).thenReturn(projectResponseDto);
@@ -326,7 +326,7 @@ public class ProjectServiceTest {
         ProjectRequestDto dto = new ProjectRequestDto();
         dto.setName("Partner Project");
         dto.setPartnerOnly(true);
-        dto.setPartnerGroupIds(List.of(1L));
+        dto.setPartnerGroups(List.of(1L));
 
         PartnerGroup partnerGroup = new PartnerGroup();
         partnerGroup.setId(1L);
@@ -337,7 +337,7 @@ public class ProjectServiceTest {
 
         when(userService.getCurrentUserOrThrow(authentication)).thenReturn(user);
         when(companyRepository.findById(user.getCompany().getId())).thenReturn(Optional.of(company));
-        when(partnerGroupRepository.findAllById(dto.getPartnerGroupIds())).thenReturn(List.of(partnerGroup));
+        when(partnerGroupRepository.findAllById(dto.getPartnerGroups())).thenReturn(List.of(partnerGroup));
         when(projectRepository.save(any(Project.class))).thenReturn(project);
 
         try (MockedStatic<ProjectMapper> mockedMapper = mockStatic(ProjectMapper.class)) {
@@ -357,7 +357,7 @@ public class ProjectServiceTest {
         ProjectRequestDto dto = new ProjectRequestDto();
         dto.setName("Unauthorized Partner Project");
         dto.setPartnerOnly(true);
-        dto.setPartnerGroupIds(List.of(1L));
+        dto.setPartnerGroups(List.of(1L));
 
         PartnerGroup validPartnerGroup = new PartnerGroup();
         validPartnerGroup.setId(2L);
@@ -371,7 +371,7 @@ public class ProjectServiceTest {
 
         when(userService.getCurrentUserOrThrow(authentication)).thenReturn(user);
         when(companyRepository.findById(user.getCompany().getId())).thenReturn(Optional.of(company));
-        when(partnerGroupRepository.findAllById(dto.getPartnerGroupIds())).thenReturn(List.of(invalidPartnerGroup));
+        when(partnerGroupRepository.findAllById(dto.getPartnerGroups())).thenReturn(List.of(invalidPartnerGroup));
 
         assertThrows(PermissionDeniedException.class, () -> projectService.create(authentication, dto));
     }

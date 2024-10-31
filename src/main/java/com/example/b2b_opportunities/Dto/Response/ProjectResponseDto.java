@@ -32,5 +32,5 @@ public class ProjectResponseDto {
     private String Description;
     private String status;
     private boolean isPartnerOnly;
-    private List<Long> partnerGroupIds;
+    private List<Long> partnerGroups;
 }
