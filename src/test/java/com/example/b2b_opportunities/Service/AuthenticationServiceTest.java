@@ -34,6 +34,7 @@ import org.springframework.security.oauth2.client.authentication.OAuth2Authentic
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.validation.BindingResult;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
@@ -151,7 +152,7 @@ class AuthenticationServiceTest {
     }
 
     @Test
-    void testRegisterWithValidInput() {
+    void testRegisterWithValidInput() throws IOException {
         UserRequestDto userRequestDto = new UserRequestDto("testuser", "test", "test", "test@test.com", "password", "password");
 
         when(bindingResult.hasErrors()).thenReturn(false);
@@ -161,9 +162,8 @@ class AuthenticationServiceTest {
         User user = new User();
         when(userRepository.save(any(User.class))).thenReturn(user);
 
-        ResponseEntity<UserResponseDto> response = authenticationService.register(userRequestDto, bindingResult, request);
+        authenticationService.register(userRequestDto, bindingResult, request);
 
-        assertEquals(HttpStatus.CREATED, response.getStatusCode());
         verify(mailService, times(1)).sendConfirmationMail(any(User.class), eq(request));
     }
 

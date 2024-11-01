@@ -81,7 +81,7 @@ public class AuthenticationService {
         response.addCookie(cookie);
     }
 
-    public ResponseEntity<UserResponseDto> register(UserRequestDto userRequestDto, BindingResult bindingResult, HttpServletRequest request) {
+    public void register(UserRequestDto userRequestDto, BindingResult bindingResult, HttpServletRequest request) {
         if (bindingResult.hasErrors()) {
             throw new ValidationException(bindingResult);
         }
@@ -91,7 +91,6 @@ public class AuthenticationService {
         User user = UserMapper.toEntity(userRequestDto);
         userRepository.save(user);
         mailService.sendConfirmationMail(user, request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(UserMapper.toResponseDto(user));
     }
 
     public List<UserResponseDto> getAllUsers() {
