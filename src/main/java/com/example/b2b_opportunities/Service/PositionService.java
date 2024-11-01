@@ -9,6 +9,7 @@ import com.example.b2b_opportunities.Entity.Experience;
 import com.example.b2b_opportunities.Entity.Location;
 import com.example.b2b_opportunities.Entity.Pattern;
 import com.example.b2b_opportunities.Entity.Position;
+import com.example.b2b_opportunities.Entity.PositionStatus;
 import com.example.b2b_opportunities.Entity.Project;
 import com.example.b2b_opportunities.Entity.Rate;
 import com.example.b2b_opportunities.Entity.RequiredSkill;
@@ -93,6 +94,7 @@ public class PositionService {
         position.setResponsibilities(dto.getResponsibilities());
         position.setHiringProcess(dto.getHiringProcess());
         position.setDescription(dto.getDescription());
+        position.setStatus(positionStatusRepository.findById(dto.getStatusId()).orElseThrow());
 
         checkForNonAssignableSkills(dto.getRequiredSkills());
         deleteAllRequiredSkillsForPositionIfAny(position);
