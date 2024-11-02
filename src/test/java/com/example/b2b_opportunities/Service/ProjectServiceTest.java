@@ -139,7 +139,9 @@ public class ProjectServiceTest {
         when(companyRepository.findById(user.getCompany().getId())).thenReturn(Optional.of(company));
 
         project.setPartnerOnly(true);
-
+        Company projectCompany = new Company();
+        projectCompany.setId(99999999L);
+        project.setCompany(projectCompany);
         PartnerGroup partnerGroup = new PartnerGroup();
         Company partnerCompany = new Company();
         partnerCompany.setId(3L);
