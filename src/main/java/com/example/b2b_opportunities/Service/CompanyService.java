@@ -4,19 +4,29 @@ import com.example.b2b_opportunities.Dto.Request.CompanyFilterEditDto;
 import com.example.b2b_opportunities.Dto.Request.CompanyFilterRequestDto;
 import com.example.b2b_opportunities.Dto.Request.CompanyRequestDto;
 import com.example.b2b_opportunities.Dto.Request.PartnerGroupRequestDto;
+import com.example.b2b_opportunities.Dto.Request.SkillExperienceRequestDto;
+import com.example.b2b_opportunities.Dto.Request.TalentExperienceRequestDto;
+import com.example.b2b_opportunities.Dto.Request.TalentRequestDto;
 import com.example.b2b_opportunities.Dto.Response.CompaniesAndUsersResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyFilterResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyPublicResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyResponseDto;
 import com.example.b2b_opportunities.Dto.Response.PartnerGroupResponseDto;
 import com.example.b2b_opportunities.Dto.Response.ProjectResponseDto;
+import com.example.b2b_opportunities.Dto.Response.TalentResponseDto;
 import com.example.b2b_opportunities.Dto.Response.UserResponseDto;
 import com.example.b2b_opportunities.Entity.Company;
 import com.example.b2b_opportunities.Entity.CompanyType;
 import com.example.b2b_opportunities.Entity.Domain;
+import com.example.b2b_opportunities.Entity.Experience;
 import com.example.b2b_opportunities.Entity.Filter;
 import com.example.b2b_opportunities.Entity.PartnerGroup;
+import com.example.b2b_opportunities.Entity.Pattern;
+import com.example.b2b_opportunities.Entity.Seniority;
 import com.example.b2b_opportunities.Entity.Skill;
+import com.example.b2b_opportunities.Entity.SkillExperience;
+import com.example.b2b_opportunities.Entity.Talent;
+import com.example.b2b_opportunities.Entity.TalentExperience;
 import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Exception.common.AlreadyExistsException;
 import com.example.b2b_opportunities.Exception.common.InvalidRequestException;
@@ -26,12 +36,19 @@ import com.example.b2b_opportunities.Mapper.CompanyMapper;
 import com.example.b2b_opportunities.Mapper.FilterMapper;
 import com.example.b2b_opportunities.Mapper.PartnerGroupMapper;
 import com.example.b2b_opportunities.Mapper.ProjectMapper;
+import com.example.b2b_opportunities.Mapper.TalentMapper;
 import com.example.b2b_opportunities.Mapper.UserMapper;
 import com.example.b2b_opportunities.Repository.CompanyRepository;
 import com.example.b2b_opportunities.Repository.CompanyTypeRepository;
 import com.example.b2b_opportunities.Repository.DomainRepository;
+import com.example.b2b_opportunities.Repository.ExperienceRepository;
 import com.example.b2b_opportunities.Repository.FilterRepository;
 import com.example.b2b_opportunities.Repository.PartnerGroupRepository;
+import com.example.b2b_opportunities.Repository.PatternRepository;
+import com.example.b2b_opportunities.Repository.SeniorityRepository;
+import com.example.b2b_opportunities.Repository.SkillRepository;
+import com.example.b2b_opportunities.Repository.TalentExperienceRepository;
+import com.example.b2b_opportunities.Repository.TalentRepository;
 import com.example.b2b_opportunities.Repository.UserRepository;
 import com.example.b2b_opportunities.Static.EmailVerification;
 import com.example.b2b_opportunities.Utils.StringUtils;
@@ -65,6 +82,12 @@ public class CompanyService {
     private final UserRepository userRepository;
     private final FilterRepository filterRepository;
     private final PartnerGroupRepository partnerGroupRepository;
+    private final SkillRepository skillRepository;
+    private final PatternRepository patternRepository;
+    private final SeniorityRepository seniorityRepository;
+    private final TalentRepository talentRepository;
+    private final ExperienceRepository experienceRepository;
+    private final TalentExperienceRepository talentExperienceRepository;
 
     public CompanyResponseDto createCompany(Authentication authentication,
                                             CompanyRequestDto companyRequestDto,
@@ -490,5 +513,107 @@ public class CompanyService {
                 .collect(Collectors.toSet());
     }
 
+    public TalentResponseDto createTalent(Authentication authentication, TalentRequestDto talentRequestDto) {
+        Company company = getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
+        Talent talent = TalentMapper.toEntity(talentRequestDto);
+        talent.setCompany(company);
 
+        talentRepository.save(talent);
+
+        setTalentExperience(talentRequestDto.getTalentExperienceRequestDto(), talent);
+        return TalentMapper.toResponseDto(talentRepository.save(talent));
+    }
+
+    private void setTalentExperience(TalentExperienceRequestDto dto, Talent talent) {
+        TalentExperience talentExperience = new TalentExperience();
+        talentExperience.setTalent(talent);
+
+        talentExperience.setPattern(getPatternOrThrow(dto.getPatternId()));
+        talentExperience.setSeniority(getSeniorityOrThrow(dto.getSeniorityId()));
+
+        List<SkillExperience> skillExperienceList = new ArrayList<>();
+        List<Experience> totalExperience = new ArrayList<>();
+        for (SkillExperienceRequestDto dtoItem : dto.getSkillExperienceRequestDtoList()) {
+            Skill skill = getSkillOrThrow(dtoItem.getSkillId());
+            if (!skill.getAssignable()) {
+
+                //We can't set a talent to the TalentExperience(TE) unless its created first
+                //And because we create it before setting the TE, we should delete the talent if a skill is not assignable
+                talentRepository.delete(talent);
+                throw new InvalidRequestException("Skill with ID: " + skill.getId() + " is not assignable");
+            }
+
+            Experience experience = experienceRepository.save(createExperience(dtoItem.getMonths(), dtoItem.getYears()));
+
+            //to calculate the total experience
+            totalExperience.add(experience);
+
+            //Set the skill and experience fields
+            SkillExperience skillExperience = SkillExperience.builder()
+                    .talentExperience(talentExperience)
+                    .skill(skill)
+                    .experience(experience)
+                    .build();
+
+            //add each skill & experience pair to the list that will be set for the talent
+            skillExperienceList.add(skillExperience);
+        }
+        talentExperience.setSkillExperienceList(skillExperienceList);
+        talentExperience.setTotalTime(calculateTotalTime(totalExperience));
+
+        talent.getExperienceList().add(talentExperience);
+        talentExperienceRepository.save(talentExperience);
+    }
+
+    private int calculateTotalTime(List<Experience> totalExperience) {
+        int totalTime = 0;
+        for (Experience e : totalExperience) {
+            if (e.getMonths() != null) {
+                totalTime += e.getMonths();
+            }
+            if (e.getYears() != null) {
+                totalTime += getMonths(e.getYears());
+            }
+        }
+        return totalTime;
+    }
+
+    private int getMonths(Integer years) {
+        int months = 0;
+        while (years > 0) {
+            months += 12;
+            years--;
+        }
+        return months;
+    }
+
+    private Experience createExperience(Integer months, Integer years) {
+        if (months == null && years == null) {
+            throw new InvalidRequestException("Months or years should be entered");
+        }
+        return Experience.builder()
+                .years(years)
+                .months(months)
+                .build();
+    }
+
+    private Skill getSkillOrThrow(Long skillId) {
+        return skillRepository.findById(skillId)
+                .orElseThrow(() -> new NotFoundException("Skill with ID: " + skillId + " not found"));
+    }
+
+    private Pattern getPatternOrThrow(Long patternId) {
+        return patternRepository.findById(patternId)
+                .orElseThrow(() -> new NotFoundException("Pattern with ID: " + patternId + " not found"));
+    }
+
+    private Seniority getSeniorityOrThrow(Long seniorityId) {
+        return seniorityRepository.findById(seniorityId)
+                .orElseThrow(() -> new NotFoundException("Seniority with ID: " + seniorityId + " not found"));
+    }
+
+    public TalentResponseDto getTalentById(Long talentId) {
+        return TalentMapper.toResponseDto(talentRepository.findById(talentId)
+                .orElseThrow(() -> new NotFoundException("Talent with ID: " + talentId + " not found")));
+    }
 }

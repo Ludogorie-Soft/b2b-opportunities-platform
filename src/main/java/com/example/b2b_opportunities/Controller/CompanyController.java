@@ -4,12 +4,14 @@ import com.example.b2b_opportunities.Dto.Request.CompanyFilterEditDto;
 import com.example.b2b_opportunities.Dto.Request.CompanyFilterRequestDto;
 import com.example.b2b_opportunities.Dto.Request.CompanyRequestDto;
 import com.example.b2b_opportunities.Dto.Request.PartnerGroupRequestDto;
+import com.example.b2b_opportunities.Dto.Request.TalentRequestDto;
 import com.example.b2b_opportunities.Dto.Response.CompaniesAndUsersResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyFilterResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyPublicResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyResponseDto;
 import com.example.b2b_opportunities.Dto.Response.PartnerGroupResponseDto;
 import com.example.b2b_opportunities.Dto.Response.ProjectResponseDto;
+import com.example.b2b_opportunities.Dto.Response.TalentResponseDto;
 import com.example.b2b_opportunities.Exception.common.NotFoundException;
 import com.example.b2b_opportunities.Mapper.CompanyMapper;
 import com.example.b2b_opportunities.Repository.CompanyRepository;
@@ -182,4 +184,15 @@ public class CompanyController {
         companyService.deleteCompanyFilter(id, authentication);
     }
 
+    @PostMapping("/talents")
+    @ResponseStatus(HttpStatus.CREATED)
+    public TalentResponseDto createTalent(Authentication authentication, @RequestBody @Valid TalentRequestDto talentRequestDto) {
+        return companyService.createTalent(authentication, talentRequestDto);
+    }
+
+    @GetMapping("/talents/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public TalentResponseDto getById(@PathVariable("id") Long id){
+        return companyService.getTalentById(id);
+    }
 }

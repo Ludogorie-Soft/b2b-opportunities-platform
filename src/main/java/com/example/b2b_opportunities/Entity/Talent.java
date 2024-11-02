@@ -16,6 +16,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -38,7 +39,9 @@ public class Talent {
     private String description;
 
     @OneToMany(mappedBy = "talent", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<TalentExperience> experienceList;
+    @Builder.Default
+    private List<TalentExperience> experienceList = new ArrayList<>();
+
     private boolean isActive;
     private String residence;
 }

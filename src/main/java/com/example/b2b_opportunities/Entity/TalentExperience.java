@@ -15,6 +15,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -33,14 +34,17 @@ public class TalentExperience {
     @JoinColumn(name = "talent_id")
     private Talent talent;
 
-    @OneToMany(mappedBy = "talentExperience", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<SkillExperience> skillExperienceList;
-
-    private int totalTime; // should be auto-calculated
     @ManyToOne
     @JoinColumn(name = "pattern_id")
     private Pattern pattern;
+
     @ManyToOne
     @JoinColumn(name = "seniority_id")
     private Seniority seniority;
+
+    @OneToMany(mappedBy = "talentExperience", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<SkillExperience> skillExperienceList = new ArrayList<>();
+
+    private int totalTime; // should be auto-calculated
 }
