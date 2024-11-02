@@ -1,5 +1,6 @@
 package com.example.b2b_opportunities.Entity;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -7,11 +8,14 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.util.List;
 
 @Getter
 @Setter
@@ -24,9 +28,19 @@ public class TalentExperience {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     private Long id;
-    @ManyToOne
-    @JoinColumn(name = "skill_id")
-    private Skill skill;
-    private int totalTime;
 
+    @ManyToOne
+    @JoinColumn(name = "talent_id")
+    private Talent talent;
+
+    @OneToMany(mappedBy = "talentExperience", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<SkillExperience> skillExperienceList;
+
+    private int totalTime; // should be auto-calculated
+    @ManyToOne
+    @JoinColumn(name = "pattern_id")
+    private Pattern pattern;
+    @ManyToOne
+    @JoinColumn(name = "seniority_id")
+    private Seniority seniority;
 }
