@@ -190,9 +190,21 @@ public class CompanyController {
         return companyService.createTalent(authentication, talentRequestDto);
     }
 
+    @GetMapping("/talents")
+    @ResponseStatus(HttpStatus.OK)
+    public List<TalentResponseDto> getAllTalents(Authentication authentication){
+        return companyService.getAllTalents(authentication);
+    }
+
     @GetMapping("/talents/{id}")
     @ResponseStatus(HttpStatus.OK)
     public TalentResponseDto getById(@PathVariable("id") Long id){
         return companyService.getTalentById(id);
+    }
+
+    @GetMapping("/my-talents")
+    @ResponseStatus(HttpStatus.OK)
+    public List<TalentResponseDto> getMyTalents(Authentication authentication){
+        return companyService.getMyTalents(authentication);
     }
 }

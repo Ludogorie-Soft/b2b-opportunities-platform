@@ -306,6 +306,35 @@ public class CompanyService {
         return PartnerGroupMapper.toPartnerGroupResponseDto(partnerGroup);
     }
 
+    public TalentResponseDto createTalent(Authentication authentication, TalentRequestDto talentRequestDto) {
+        Company company = getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
+        Talent talent = TalentMapper.toEntity(talentRequestDto);
+        talent.setCompany(company);
+
+        talentRepository.save(talent);
+
+        setTalentExperience(talentRequestDto.getTalentExperienceRequestDto(), talent);
+        return TalentMapper.toResponseDto(talent);
+    }
+
+    public List<TalentResponseDto> getAllTalents(Authentication authentication) {
+        //TODO - do we want only logged-in users to have access to the talents?
+        userService.getCurrentUserOrThrow(authentication);
+        List<Talent> talents = talentRepository.findAll();
+        return talents.stream().map(TalentMapper::toResponseDto).toList();
+    }
+
+    public TalentResponseDto getTalentById(Long talentId) {
+        return TalentMapper.toResponseDto(talentRepository.findById(talentId)
+                .orElseThrow(() -> new NotFoundException("Talent with ID: " + talentId + " not found")));
+    }
+
+    public List<TalentResponseDto> getMyTalents(Authentication authentication) {
+        Company company = getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
+        List<Talent> myTalents = talentRepository.findByCompanyId(company.getId());
+        return myTalents.stream().map(TalentMapper::toResponseDto).toList();
+    }
+
     private void validatePartnerGroupBelongsToUserCompany(Company company, PartnerGroup partnerGroup) {
         if (partnerGroup.getCompany() != company) {
             throw new PermissionDeniedException("This partner group does not belong to this company");
@@ -513,78 +542,74 @@ public class CompanyService {
                 .collect(Collectors.toSet());
     }
 
-    public TalentResponseDto createTalent(Authentication authentication, TalentRequestDto talentRequestDto) {
-        Company company = getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
-        Talent talent = TalentMapper.toEntity(talentRequestDto);
-        talent.setCompany(company);
-
-        talentRepository.save(talent);
-
-        setTalentExperience(talentRequestDto.getTalentExperienceRequestDto(), talent);
-        return TalentMapper.toResponseDto(talentRepository.save(talent));
+    private void setTalentExperience(TalentExperienceRequestDto dto, Talent talent) {
+        TalentExperience talentExperience = createTalentExperience(dto, talent);
+        List<SkillExperience> skillExperienceList = processSkillExperiences(dto.getSkillExperienceRequestDtoList(), talentExperience);
+        talentExperience.setSkillExperienceList(skillExperienceList);
+        talent.getExperienceList().add(talentExperience);
+        talentExperienceRepository.save(talentExperience); // Save talent experience
     }
 
-    private void setTalentExperience(TalentExperienceRequestDto dto, Talent talent) {
+    private TalentExperience createTalentExperience(TalentExperienceRequestDto dto, Talent talent) {
         TalentExperience talentExperience = new TalentExperience();
         talentExperience.setTalent(talent);
-
         talentExperience.setPattern(getPatternOrThrow(dto.getPatternId()));
         talentExperience.setSeniority(getSeniorityOrThrow(dto.getSeniorityId()));
+        return talentExperience;
+    }
 
+    private List<SkillExperience> processSkillExperiences(List<SkillExperienceRequestDto> skillExperienceRequests, TalentExperience talentExperience) {
         List<SkillExperience> skillExperienceList = new ArrayList<>();
-        List<Experience> totalExperience = new ArrayList<>();
-        for (SkillExperienceRequestDto dtoItem : dto.getSkillExperienceRequestDtoList()) {
-            Skill skill = getSkillOrThrow(dtoItem.getSkillId());
-            if (!skill.getAssignable()) {
-
-                //We can't set a talent to the TalentExperience(TE) unless its created first
-                //And because we create it before setting the TE, we should delete the talent if a skill is not assignable
-                talentRepository.delete(talent);
-                throw new InvalidRequestException("Skill with ID: " + skill.getId() + " is not assignable");
-            }
-
-            Experience experience = experienceRepository.save(createExperience(dtoItem.getMonths(), dtoItem.getYears()));
-
-            //to calculate the total experience
-            totalExperience.add(experience);
-
-            //Set the skill and experience fields
-            SkillExperience skillExperience = SkillExperience.builder()
-                    .talentExperience(talentExperience)
-                    .skill(skill)
-                    .experience(experience)
-                    .build();
-
-            //add each skill & experience pair to the list that will be set for the talent
-            skillExperienceList.add(skillExperience);
-        }
-        talentExperience.setSkillExperienceList(skillExperienceList);
-        talentExperience.setTotalTime(calculateTotalTime(totalExperience));
-
-        talent.getExperienceList().add(talentExperience);
-        talentExperienceRepository.save(talentExperience);
-    }
-
-    private int calculateTotalTime(List<Experience> totalExperience) {
         int totalTime = 0;
-        for (Experience e : totalExperience) {
-            if (e.getMonths() != null) {
-                totalTime += e.getMonths();
+
+        for (SkillExperienceRequestDto dtoItem : skillExperienceRequests) {
+            Skill skill = getSkillOrThrow(dtoItem.getSkillId());
+            if (isSkillIsAlreadyInList(skillExperienceList, skill)) {
+                continue;
             }
-            if (e.getYears() != null) {
-                totalTime += getMonths(e.getYears());
-            }
+            validateSkill(skill);
+            Experience experience = createAndSaveExperience(dtoItem);
+            totalTime += calculateExperienceTime(experience);
+            skillExperienceList.add(createSkillExperience(talentExperience, skill, experience));
         }
-        return totalTime;
+
+        talentExperience.setTotalTime(totalTime);
+        return skillExperienceList;
     }
 
-    private int getMonths(Integer years) {
-        int months = 0;
-        while (years > 0) {
-            months += 12;
-            years--;
+    private boolean isSkillIsAlreadyInList(List<SkillExperience> skillExperienceList, Skill skill) {
+        for (SkillExperience se : skillExperienceList) {
+            if (se.getSkill().getId().equals(skill.getId())) {
+                return true;
+            }
         }
-        return months;
+        return false;
+    }
+
+    private void validateSkill(Skill skill) {
+        if (!skill.getAssignable()) {
+            throw new InvalidRequestException("Skill with ID: " + skill.getId() + " is not assignable");
+        }
+    }
+
+    private Experience createAndSaveExperience(SkillExperienceRequestDto dtoItem) {
+        Experience experience = createExperience(dtoItem.getMonths(), dtoItem.getYears());
+        return experienceRepository.save(experience);
+    }
+
+    private SkillExperience createSkillExperience(TalentExperience talentExperience, Skill skill, Experience experience) {
+        return SkillExperience.builder()
+                .talentExperience(talentExperience)
+                .skill(skill)
+                .experience(experience)
+                .build();
+    }
+
+    private int calculateExperienceTime(Experience experience) {
+        int totalTime = 0;
+        totalTime += experience.getMonths() != null ? experience.getMonths() : 0;
+        totalTime += experience.getYears() != null ? experience.getYears() * 12 : 0;
+        return totalTime;
     }
 
     private Experience createExperience(Integer months, Integer years) {
@@ -610,10 +635,5 @@ public class CompanyService {
     private Seniority getSeniorityOrThrow(Long seniorityId) {
         return seniorityRepository.findById(seniorityId)
                 .orElseThrow(() -> new NotFoundException("Seniority with ID: " + seniorityId + " not found"));
-    }
-
-    public TalentResponseDto getTalentById(Long talentId) {
-        return TalentMapper.toResponseDto(talentRepository.findById(talentId)
-                .orElseThrow(() -> new NotFoundException("Talent with ID: " + talentId + " not found")));
     }
 }
