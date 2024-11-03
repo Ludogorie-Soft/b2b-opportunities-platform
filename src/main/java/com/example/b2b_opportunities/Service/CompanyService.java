@@ -46,6 +46,7 @@ import com.example.b2b_opportunities.Repository.FilterRepository;
 import com.example.b2b_opportunities.Repository.PartnerGroupRepository;
 import com.example.b2b_opportunities.Repository.PatternRepository;
 import com.example.b2b_opportunities.Repository.SeniorityRepository;
+import com.example.b2b_opportunities.Repository.SkillExperienceRepository;
 import com.example.b2b_opportunities.Repository.SkillRepository;
 import com.example.b2b_opportunities.Repository.TalentExperienceRepository;
 import com.example.b2b_opportunities.Repository.TalentRepository;
@@ -90,7 +91,7 @@ public class CompanyService {
     private final TalentRepository talentRepository;
     private final ExperienceRepository experienceRepository;
     private final TalentExperienceRepository talentExperienceRepository;
-
+    private final SkillExperienceRepository skillExperienceRepository;
     public CompanyResponseDto createCompany(Authentication authentication,
                                             CompanyRequestDto companyRequestDto,
                                             HttpServletRequest request) {
@@ -315,7 +316,7 @@ public class CompanyService {
         validateSkills(talentRequestDto);
         talentRepository.save(talent);
 
-        setTalentExperience(talentRequestDto.getTalentExperienceRequestDto(), talent);
+        setTalentExperience(talentRequestDto.getExperience(), talent);
         return TalentMapper.toResponseDto(talent);
     }
 
@@ -325,11 +326,23 @@ public class CompanyService {
         validateTalentBelongsToCompany(company, talent);
         validateSkills(talentRequestDto);
 
-        talent.getExperienceList().clear();
-        talentRepository.save(talent);
-        talentExperienceRepository.deleteAllByTalentId(talentId);
+        TalentExperience existingTalentExperience = talent.getTalentExperience();
+        List<SkillExperience> existingSkills = existingTalentExperience != null
+                ? existingTalentExperience.getSkillExperienceList()
+                : List.of();
 
-        setTalentExperience(talentRequestDto.getTalentExperienceRequestDto(), talent);
+        if(hasSkillsChanged(existingSkills, talentRequestDto.getExperience().getSkills())){
+            talent.setTalentExperience(null);
+            talentRepository.save(talent);
+
+            skillExperienceRepository.deleteAll(existingSkills);
+
+            if (existingTalentExperience != null) {
+                talentExperienceRepository.delete(existingTalentExperience);
+            }
+            setTalentExperience(talentRequestDto.getExperience(), talent);
+        }
+
         updateTalentStatusAndInfo(talentRequestDto, talent);
         return TalentMapper.toResponseDto(talentRepository.save(talent));
     }
@@ -357,6 +370,19 @@ public class CompanyService {
         Talent talent = getTalentOrThrow(id);
         validateTalentBelongsToCompany(company, talent);
         talentRepository.delete(talent);
+    }
+
+    private boolean hasSkillsChanged(List<SkillExperience> existingSkills, List<SkillExperienceRequestDto> newSkillsDtoList) {
+        Set<String> existingSkillsSet = existingSkills.stream()
+                .map(skillExp -> skillExp.getSkill().getId() + "-" +
+                        skillExp.getExperience().getYears() + "-" +
+                        skillExp.getExperience().getMonths())
+                .collect(Collectors.toSet());
+
+        Set<String> newSkillsSet = newSkillsDtoList.stream()
+                .map(dto -> dto.getSkillId() + "-" + dto.getYears() + "-" + dto.getMonths())
+                .collect(Collectors.toSet());
+        return !existingSkillsSet.equals(newSkillsSet);
     }
 
     private void updateTalentStatusAndInfo(TalentRequestDto dto, Talent talent) {
@@ -580,9 +606,9 @@ public class CompanyService {
 
     private void setTalentExperience(TalentExperienceRequestDto dto, Talent talent) {
         TalentExperience talentExperience = createTalentExperience(dto, talent);
-        List<SkillExperience> skillExperienceList = processSkillExperiences(dto.getSkillExperienceRequestDtoList(), talentExperience);
+        List<SkillExperience> skillExperienceList = processSkillExperiences(dto.getSkills(), talentExperience);
         talentExperience.setSkillExperienceList(skillExperienceList);
-        talent.getExperienceList().add(talentExperience);
+        talent.setTalentExperience(talentExperience);
         talentExperienceRepository.save(talentExperience);
     }
 
@@ -622,7 +648,7 @@ public class CompanyService {
     }
 
     private void validateSkills(TalentRequestDto talentRequestDto) {
-        List<SkillExperienceRequestDto> skillExperienceList = talentRequestDto.getTalentExperienceRequestDto().getSkillExperienceRequestDtoList();
+        List<SkillExperienceRequestDto> skillExperienceList = talentRequestDto.getExperience().getSkills();
         List<Long> skillIds = skillExperienceList.stream().map(SkillExperienceRequestDto::getSkillId).toList();
         List<Long> nonAssignableSkillIds = skillIds.stream()
                 .map(skillRepository::findById)

@@ -8,7 +8,7 @@ import java.util.List;
 @Getter
 @Setter
 public class TalentExperienceRequestDto {
-    private List<SkillExperienceRequestDto> skillExperienceRequestDtoList;
+    private List<SkillExperienceRequestDto> skills;
     //auto-calculated totalTime
     private Long patternId;
     private Long seniorityId;

@@ -14,6 +14,9 @@ CREATE TABLE talent_experience (
     talent_id BIGINT REFERENCES talents(id)
 );
 
+ALTER TABLE talents
+ADD COLUMN talent_experience_id BIGINT REFERENCES talent_experience(id);
+
 CREATE TABLE skill_experience (
     id BIGSERIAL PRIMARY KEY,
     talent_experience_id BIGINT REFERENCES talent_experience(id),

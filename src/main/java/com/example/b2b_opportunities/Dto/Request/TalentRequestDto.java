@@ -6,7 +6,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class TalentRequestDto {
-    private TalentExperienceRequestDto talentExperienceRequestDto;
+    private TalentExperienceRequestDto experience;
     private String description;
     private boolean isActive;
     private String residence;

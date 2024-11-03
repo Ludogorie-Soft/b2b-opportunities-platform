@@ -29,22 +29,17 @@ public class TalentMapper {
                 .description(talent.getDescription())
                 .isActive(talent.isActive())
                 .residence(talent.getResidence())
-                .talentExperienceResponseDtoList(toTalentExperienceResponseDtoList(talent.getExperienceList()))
+                .experience(toTalentExperienceResponseDto(talent.getTalentExperience()))
                 .build();
     }
 
-    public static List<TalentExperienceResponseDto> toTalentExperienceResponseDtoList(List<TalentExperience> talentExperienceList) {
-        List<TalentExperienceResponseDto> responseDtoList = new ArrayList<>();
-        for (TalentExperience te : talentExperienceList) {
-            TalentExperienceResponseDto responseDto = TalentExperienceResponseDto.builder()
-                    .skillExperienceResponseDtoList(toSkillExperienceResponseDtoList(te.getSkillExperienceList()))
-                    .totalTime(te.getTotalTime())
-                    .patternId(te.getPattern().getId())
-                    .seniorityId(te.getSeniority().getId())
-                    .build();
-            responseDtoList.add(responseDto);
-        }
-        return responseDtoList;
+    public static TalentExperienceResponseDto toTalentExperienceResponseDto(TalentExperience talentExperience) {
+        return TalentExperienceResponseDto.builder()
+                .skills(toSkillExperienceResponseDtoList(talentExperience.getSkillExperienceList()))
+                .totalTime(talentExperience.getTotalTime())
+                .patternId(talentExperience.getPattern().getId())
+                .seniorityId(talentExperience.getSeniority().getId())
+                .build();
     }
 
     public static List<SkillExperienceResponseDto> toSkillExperienceResponseDtoList(List<SkillExperience> skillExperienceList) {

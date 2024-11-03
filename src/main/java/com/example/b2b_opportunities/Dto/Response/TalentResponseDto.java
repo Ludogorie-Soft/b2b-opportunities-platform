@@ -7,8 +7,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.List;
-
 @Getter
 @Setter
 @Builder
@@ -21,5 +19,5 @@ public class TalentResponseDto {
     private String description;
     private boolean isActive;
     private String residence;
-    private List<TalentExperienceResponseDto> talentExperienceResponseDtoList;
+    private TalentExperienceResponseDto experience;
 }
