@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface TalentExperienceRepository extends JpaRepository<TalentExperience, Long> {
+    void deleteAllByTalentId(Long talentId);
 }

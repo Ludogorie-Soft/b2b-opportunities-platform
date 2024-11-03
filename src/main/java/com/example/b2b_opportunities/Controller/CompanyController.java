@@ -186,31 +186,40 @@ public class CompanyController {
 
     @PostMapping("/talents")
     @ResponseStatus(HttpStatus.CREATED)
-    public TalentResponseDto createTalent(Authentication authentication, @RequestBody @Valid TalentRequestDto talentRequestDto) {
+    public TalentResponseDto createTalent(Authentication authentication,
+                                          @RequestBody @Valid TalentRequestDto talentRequestDto) {
         return companyService.createTalent(authentication, talentRequestDto);
+    }
+
+    @PutMapping("/talents/{id}")
+    @ResponseStatus(HttpStatus.CREATED)
+    public TalentResponseDto updateTalent(Authentication authentication,
+                                          @PathVariable("id") Long talentId,
+                                          @RequestBody @Valid TalentRequestDto talentRequestDto) {
+        return companyService.updateTalent(authentication, talentId, talentRequestDto);
     }
 
     @GetMapping("/talents")
     @ResponseStatus(HttpStatus.OK)
-    public List<TalentResponseDto> getAllTalents(Authentication authentication){
+    public List<TalentResponseDto> getAllTalents(Authentication authentication) {
         return companyService.getAllTalents(authentication);
     }
 
     @GetMapping("/talents/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public TalentResponseDto getById(@PathVariable("id") Long id){
+    public TalentResponseDto getById(@PathVariable("id") Long id) {
         return companyService.getTalentById(id);
     }
 
     @GetMapping("/my-talents")
     @ResponseStatus(HttpStatus.OK)
-    public List<TalentResponseDto> getMyTalents(Authentication authentication){
+    public List<TalentResponseDto> getMyTalents(Authentication authentication) {
         return companyService.getMyTalents(authentication);
     }
 
     @DeleteMapping("/talents/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteTalent(Authentication authentication, @PathVariable("id") Long id){
+    public void deleteTalent(Authentication authentication, @PathVariable("id") Long id) {
         companyService.deleteTalent(authentication, id);
     }
 }

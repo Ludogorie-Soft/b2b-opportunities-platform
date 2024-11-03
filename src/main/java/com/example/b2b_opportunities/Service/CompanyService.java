@@ -319,6 +319,21 @@ public class CompanyService {
         return TalentMapper.toResponseDto(talent);
     }
 
+    public TalentResponseDto updateTalent(Authentication authentication, Long talentId, TalentRequestDto talentRequestDto) {
+        Company company = getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
+        Talent talent = getTalentOrThrow(talentId);
+        validateTalentBelongsToCompany(company, talent);
+        validateSkills(talentRequestDto);
+
+        talent.getExperienceList().clear();
+        talentRepository.save(talent);
+        talentExperienceRepository.deleteAllByTalentId(talentId);
+
+        setTalentExperience(talentRequestDto.getTalentExperienceRequestDto(), talent);
+        updateTalentStatusAndInfo(talentRequestDto, talent);
+        return TalentMapper.toResponseDto(talentRepository.save(talent));
+    }
+
     public List<TalentResponseDto> getAllTalents(Authentication authentication) {
         //TODO - do we want only logged-in users to have access to the talents?
         userService.getCurrentUserOrThrow(authentication);
@@ -340,10 +355,20 @@ public class CompanyService {
     public void deleteTalent(Authentication authentication, Long id) {
         Company company = getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
         Talent talent = getTalentOrThrow(id);
+        validateTalentBelongsToCompany(company, talent);
+        talentRepository.delete(talent);
+    }
+
+    private void updateTalentStatusAndInfo(TalentRequestDto dto, Talent talent) {
+        talent.setDescription(dto.getDescription());
+        talent.setResidence(dto.getResidence());
+        talent.setActive(dto.isActive());
+    }
+
+    private void validateTalentBelongsToCompany(Company company, Talent talent) {
         if (!Objects.equals(talent.getCompany().getId(), company.getId())) {
             throw new PermissionDeniedException("This talent does not belong to your company");
         }
-        talentRepository.delete(talent);
     }
 
     private void validatePartnerGroupBelongsToUserCompany(Company company, PartnerGroup partnerGroup) {
@@ -558,7 +583,7 @@ public class CompanyService {
         List<SkillExperience> skillExperienceList = processSkillExperiences(dto.getSkillExperienceRequestDtoList(), talentExperience);
         talentExperience.setSkillExperienceList(skillExperienceList);
         talent.getExperienceList().add(talentExperience);
-        talentExperienceRepository.save(talentExperience); // Save talent experience
+        talentExperienceRepository.save(talentExperience);
     }
 
     private TalentExperience createTalentExperience(TalentExperienceRequestDto dto, Talent talent) {
@@ -631,8 +656,8 @@ public class CompanyService {
     }
 
     private Experience createExperience(Integer months, Integer years) {
-        if (months == null && years == null) {
-            throw new InvalidRequestException("Months or years should be entered");
+        if (months == null && years == null || months != null && months == 0 && years != null && years == 0 || months == null && years == 0 || months != null && months == 0 && years == null) {
+            throw new InvalidRequestException("At least one of 'months' or 'years' must be non-zero and non-null.");
         }
         return Experience.builder()
                 .years(years)
