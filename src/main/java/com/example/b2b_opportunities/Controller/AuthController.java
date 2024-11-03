@@ -37,9 +37,12 @@ public class AuthController {
     private String frontEndAddress;
 
     @PostMapping("/register")
-    @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<UserResponseDto> register(@RequestBody @Valid UserRequestDto userRequestDto, BindingResult bindingResult, HttpServletRequest request) {
-        return authenticationService.register(userRequestDto, bindingResult, request);
+    public void register(@RequestBody @Valid UserRequestDto userRequestDto,
+                         BindingResult bindingResult,
+                         HttpServletRequest request,
+                         HttpServletResponse response) throws IOException {
+        authenticationService.register(userRequestDto, bindingResult, request);
+        response.sendRedirect("http://localhost:5173/signup?confirmEmail=true");
     }
 
     @GetMapping("/register/confirm")

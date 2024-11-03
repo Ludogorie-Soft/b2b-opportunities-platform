@@ -118,11 +118,8 @@ public class AuthControllerTest {
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(userRequestJson))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.username", is("test-user")))
-                .andExpect(jsonPath("$.firstName", is("Test")))
-                .andExpect(jsonPath("$.lastName", is("User")))
-                .andExpect(jsonPath("$.email", is("testuser@example.com")));
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrlPattern("**/signup?confirmEmail=true"));
 
         assertTrue(authenticationService.isUsernameInDB("test-user"));
     }
@@ -135,7 +132,8 @@ public class AuthControllerTest {
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(userRequestJson))
-                .andExpect(status().isCreated());
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrlPattern("**/signup?confirmEmail=true"));
 
         UserRequestDto userRequestDto2 = userRequestDto;
         userRequestDto2.setUsername("new-user-name");
@@ -162,7 +160,8 @@ public class AuthControllerTest {
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(userRequestJson))
-                .andExpect(status().isCreated());
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrlPattern("**/signup?confirmEmail=true"));
 
         UserRequestDto userRequestDto2 = userRequestDto;
         userRequestDto2.setEmail("new-free-email@abv.bg");
@@ -189,7 +188,8 @@ public class AuthControllerTest {
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(userRequestJson))
-                .andExpect(status().isCreated());
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrlPattern("**/signup?confirmEmail=true"));
 
         UserRequestDto userRequestDto2 = userRequestDto;
         userRequestDto2.setEmail("new-free-email@abv.bg");
