@@ -62,6 +62,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -310,7 +312,7 @@ public class CompanyService {
         Company company = getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
         Talent talent = TalentMapper.toEntity(talentRequestDto);
         talent.setCompany(company);
-
+        validateSkills(talentRequestDto);
         talentRepository.save(talent);
 
         setTalentExperience(talentRequestDto.getTalentExperienceRequestDto(), talent);
@@ -333,6 +335,15 @@ public class CompanyService {
         Company company = getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
         List<Talent> myTalents = talentRepository.findByCompanyId(company.getId());
         return myTalents.stream().map(TalentMapper::toResponseDto).toList();
+    }
+
+    public void deleteTalent(Authentication authentication, Long id) {
+        Company company = getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
+        Talent talent = getTalentOrThrow(id);
+        if (!Objects.equals(talent.getCompany().getId(), company.getId())) {
+            throw new PermissionDeniedException("This talent does not belong to your company");
+        }
+        talentRepository.delete(talent);
     }
 
     private void validatePartnerGroupBelongsToUserCompany(Company company, PartnerGroup partnerGroup) {
@@ -567,7 +578,6 @@ public class CompanyService {
             if (isSkillIsAlreadyInList(skillExperienceList, skill)) {
                 continue;
             }
-            validateSkill(skill);
             Experience experience = createAndSaveExperience(dtoItem);
             totalTime += calculateExperienceTime(experience);
             skillExperienceList.add(createSkillExperience(talentExperience, skill, experience));
@@ -586,9 +596,17 @@ public class CompanyService {
         return false;
     }
 
-    private void validateSkill(Skill skill) {
-        if (!skill.getAssignable()) {
-            throw new InvalidRequestException("Skill with ID: " + skill.getId() + " is not assignable");
+    private void validateSkills(TalentRequestDto talentRequestDto) {
+        List<SkillExperienceRequestDto> skillExperienceList = talentRequestDto.getTalentExperienceRequestDto().getSkillExperienceRequestDtoList();
+        List<Long> skillIds = skillExperienceList.stream().map(SkillExperienceRequestDto::getSkillId).toList();
+        List<Long> nonAssignableSkillIds = skillIds.stream()
+                .map(skillRepository::findById)
+                .map(Optional::orElseThrow)
+                .filter(skill -> !skill.getAssignable())
+                .map(Skill::getId)
+                .toList();
+        if (!nonAssignableSkillIds.isEmpty()) {
+            throw new InvalidRequestException("The following skills are not assignable: " + nonAssignableSkillIds);
         }
     }
 
@@ -636,4 +654,10 @@ public class CompanyService {
         return seniorityRepository.findById(seniorityId)
                 .orElseThrow(() -> new NotFoundException("Seniority with ID: " + seniorityId + " not found"));
     }
+
+    private Talent getTalentOrThrow(Long talentId) {
+        return talentRepository.findById(talentId)
+                .orElseThrow(() -> new NotFoundException("Talent with ID: " + talentId + " not found"));
+    }
+
 }

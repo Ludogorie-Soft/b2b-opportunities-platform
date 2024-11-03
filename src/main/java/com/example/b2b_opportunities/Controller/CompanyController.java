@@ -207,4 +207,10 @@ public class CompanyController {
     public List<TalentResponseDto> getMyTalents(Authentication authentication){
         return companyService.getMyTalents(authentication);
     }
+
+    @DeleteMapping("/talents/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteTalent(Authentication authentication, @PathVariable("id") Long id){
+        companyService.deleteTalent(authentication, id);
+    }
 }
