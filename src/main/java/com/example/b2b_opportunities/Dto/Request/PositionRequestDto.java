@@ -51,5 +51,4 @@ public class PositionRequestDto {
     @NotBlank
     private String description;
 
-    private Long statusId;
 }

@@ -93,7 +93,6 @@ public class PositionService {
         position.setResponsibilities(dto.getResponsibilities());
         position.setHiringProcess(dto.getHiringProcess());
         position.setDescription(dto.getDescription());
-        setPositionStatusOrThrow(position, dto.getStatusId());
 
         checkForNonAssignableSkills(dto.getRequiredSkills());
         deleteAllRequiredSkillsForPositionIfAny(position);
