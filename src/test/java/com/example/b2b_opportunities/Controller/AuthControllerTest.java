@@ -50,6 +50,7 @@ import static org.mockito.Mockito.doNothing;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrlPattern;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -118,8 +119,11 @@ public class AuthControllerTest {
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(userRequestJson))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrlPattern("**/signup?confirmEmail=true"));
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.username", is("test-user")))
+                .andExpect(jsonPath("$.firstName", is("Test")))
+                .andExpect(jsonPath("$.lastName", is("User")))
+                .andExpect(jsonPath("$.email", is("testuser@example.com")));
 
         assertTrue(authenticationService.isUsernameInDB("test-user"));
     }
@@ -132,8 +136,7 @@ public class AuthControllerTest {
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(userRequestJson))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrlPattern("**/signup?confirmEmail=true"));
+                .andExpect(status().isCreated());
 
         UserRequestDto userRequestDto2 = userRequestDto;
         userRequestDto2.setUsername("new-user-name");
@@ -160,8 +163,7 @@ public class AuthControllerTest {
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(userRequestJson))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrlPattern("**/signup?confirmEmail=true"));
+                .andExpect(status().isCreated());
 
         UserRequestDto userRequestDto2 = userRequestDto;
         userRequestDto2.setEmail("new-free-email@abv.bg");
@@ -188,8 +190,7 @@ public class AuthControllerTest {
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(userRequestJson))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrlPattern("**/signup?confirmEmail=true"));
+                .andExpect(status().isCreated());
 
         UserRequestDto userRequestDto2 = userRequestDto;
         userRequestDto2.setEmail("new-free-email@abv.bg");
@@ -278,8 +279,8 @@ public class AuthControllerTest {
 
         mockMvc.perform(get("/api/auth/register/confirm")
                         .param("token", token))
-                .andExpect(status().isOk())
-                .andExpect(content().string("Account activated successfully"));
+                .andExpect(status().isFound()) // Change this line to expect 302
+                .andExpect(header().string("Location", "http://localhost:5173/signup?confirmEmail=true"));
 
         User confirmedUser = userRepository.findByEmail(userRequestDto.getEmail().toLowerCase())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));

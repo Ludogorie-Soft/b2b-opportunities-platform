@@ -162,8 +162,9 @@ class AuthenticationServiceTest {
         User user = new User();
         when(userRepository.save(any(User.class))).thenReturn(user);
 
-        authenticationService.register(userRequestDto, bindingResult, request);
+        ResponseEntity<UserResponseDto> response = authenticationService.register(userRequestDto, bindingResult, request);
 
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
         verify(mailService, times(1)).sendConfirmationMail(any(User.class), eq(request));
     }
 
@@ -230,7 +231,7 @@ class AuthenticationServiceTest {
                 .thenReturn(new User());
 
         InvalidRequestException exception = assertThrows(InvalidRequestException.class, () -> {
-            authenticationService.confirmEmail(token);
+            authenticationService.confirmEmail(token, response);
         });
 
         assertEquals("Expired token", exception.getMessage());
@@ -249,9 +250,9 @@ class AuthenticationServiceTest {
         when(confirmationToken.getUser())
                 .thenReturn(user);
 
-        String result = authenticationService.confirmEmail(token);
+        authenticationService.confirmEmail(token, response);
 
-        assertEquals("Account activated successfully", result);
+//        assertEquals("Account activated successfully", result);
         assertTrue(user.isEnabled());
         verify(userRepository, times(1)).save(user);
     }

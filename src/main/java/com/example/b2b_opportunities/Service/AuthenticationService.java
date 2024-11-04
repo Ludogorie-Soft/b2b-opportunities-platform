@@ -81,7 +81,7 @@ public class AuthenticationService {
         response.addCookie(cookie);
     }
 
-    public void register(UserRequestDto userRequestDto, BindingResult bindingResult, HttpServletRequest request) {
+    public ResponseEntity<UserResponseDto> register(UserRequestDto userRequestDto, BindingResult bindingResult, HttpServletRequest request) {
         if (bindingResult.hasErrors()) {
             throw new ValidationException(bindingResult);
         }
@@ -91,6 +91,8 @@ public class AuthenticationService {
         User user = UserMapper.toEntity(userRequestDto);
         userRepository.save(user);
         mailService.sendConfirmationMail(user, request);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(UserMapper.toResponseDto(user));
     }
 
     public List<UserResponseDto> getAllUsers() {
@@ -149,15 +151,15 @@ public class AuthenticationService {
         return optionalConfirmationToken.get();
     }
 
-    public String confirmEmail(String token) {
+    public void confirmEmail(String token, HttpServletResponse response) {
         ConfirmationToken confirmationToken = validateAndReturnToken(token);
         User user = confirmationToken.getUser();
-        if (user.isEnabled()) {
-            return "Account already activated";
-        }
+//        if (user.isEnabled()) {
+//            return "Account already activated";
+//        }
         user.setEnabled(true);
         userRepository.save(user);
-        return "Account activated successfully";
+//        return "Account activated successfully";
     }
 
     public void logout(HttpServletRequest request, HttpServletResponse response) {
