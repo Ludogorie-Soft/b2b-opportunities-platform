@@ -60,5 +60,5 @@ databaseChangeLog:
       file: 20-fill-positions-table.sql
       relativeToChangelogFile: true
   - include:
-      file: 21-create-talents-table.sql
+      file: 22-create-talents-table.sql
       relativeToChangelogFile: true
