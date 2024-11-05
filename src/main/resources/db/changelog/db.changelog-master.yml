@@ -59,3 +59,6 @@ databaseChangeLog:
   - include:
       file: 20-fill-positions-table.sql
       relativeToChangelogFile: true
+  - include:
+      file: 21-modify-partners-table.sql
+      relativeToChangelogFile: true
