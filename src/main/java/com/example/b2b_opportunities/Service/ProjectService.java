@@ -72,6 +72,7 @@ public class ProjectService {
         Company company = getCompanyIfExists(user.getCompany().getId());
         Project project = new Project();
         project.setDatePosted(LocalDateTime.now());
+        project.setExpiryDate(LocalDateTime.now().plusDays(21));
         project.setCompany(company);
         return createOrUpdate(dto, project);
     }
@@ -103,8 +104,7 @@ public class ProjectService {
             throw new AlreadyExistsException("This project is active already");
         }
         project.setProjectStatus(ProjectStatus.ACTIVE);
-        // so that the project can be auto-deactivated again in 3 weeks after reactivation
-        project.setDatePosted(LocalDateTime.now());
+        project.setExpiryDate(LocalDateTime.now().plusDays(21));
         return ProjectMapper.toDto(projectRepository.save(project));
     }
 
@@ -115,7 +115,7 @@ public class ProjectService {
         for (Project project : expiringProjects) {
             mailService.sendProjectExpiringMail(project);
         }
-        List<Project> expiredProjects = projectRepository.findProjectsOlderThan(21);
+        List<Project> expiredProjects = projectRepository.findExpiredAndActiveProjects();
         for (Project project : expiredProjects) {
             project.setProjectStatus(ProjectStatus.INACTIVE);
             projectRepository.save(project);
