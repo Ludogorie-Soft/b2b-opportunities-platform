@@ -46,5 +46,5 @@ public class TalentExperience {
     @Builder.Default
     private List<SkillExperience> skillExperienceList = new ArrayList<>();
 
-    private int totalTime; // should be auto-calculated
+    private Integer totalTime;
 }

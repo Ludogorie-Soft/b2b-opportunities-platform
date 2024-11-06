@@ -7,6 +7,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
+
 @Getter
 @Setter
 @Builder
@@ -15,9 +17,10 @@ import lombok.Setter;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class TalentResponseDto {
     private Long id;
+    private boolean isActive;
     private Long companyId;
     private String description;
-    private boolean isActive;
-    private String residence;
+    private List<Long> workModes;
+    private List<Long> locations;
     private TalentExperienceResponseDto experience;
 }

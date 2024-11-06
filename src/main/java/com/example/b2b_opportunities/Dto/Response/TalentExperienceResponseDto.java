@@ -15,7 +15,7 @@ import java.util.List;
 @NoArgsConstructor
 public class TalentExperienceResponseDto {
     private List<SkillExperienceResponseDto> skills;
-    private int totalTime; //in months
+    private int totalTime;
     private Long patternId;
     private Long seniorityId;
 }

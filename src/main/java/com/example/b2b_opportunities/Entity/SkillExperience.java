@@ -24,14 +24,13 @@ public class SkillExperience {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     private Long id;
+
     @ManyToOne
     @JoinColumn(name = "talent_experience_id", nullable = false)
     private TalentExperience talentExperience;
     @ManyToOne
     @JoinColumn(name = "skill_id")
     private Skill skill;
-    @ManyToOne
-    @JoinColumn(name = "experience_id")
-    private Experience experience;
 
+    private Integer experience; //in months
 }

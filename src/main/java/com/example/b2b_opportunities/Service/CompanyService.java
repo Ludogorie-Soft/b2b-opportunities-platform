@@ -18,8 +18,8 @@ import com.example.b2b_opportunities.Dto.Response.UserResponseDto;
 import com.example.b2b_opportunities.Entity.Company;
 import com.example.b2b_opportunities.Entity.CompanyType;
 import com.example.b2b_opportunities.Entity.Domain;
-import com.example.b2b_opportunities.Entity.Experience;
 import com.example.b2b_opportunities.Entity.Filter;
+import com.example.b2b_opportunities.Entity.Location;
 import com.example.b2b_opportunities.Entity.PartnerGroup;
 import com.example.b2b_opportunities.Entity.Pattern;
 import com.example.b2b_opportunities.Entity.Seniority;
@@ -28,6 +28,7 @@ import com.example.b2b_opportunities.Entity.SkillExperience;
 import com.example.b2b_opportunities.Entity.Talent;
 import com.example.b2b_opportunities.Entity.TalentExperience;
 import com.example.b2b_opportunities.Entity.User;
+import com.example.b2b_opportunities.Entity.WorkMode;
 import com.example.b2b_opportunities.Exception.common.AlreadyExistsException;
 import com.example.b2b_opportunities.Exception.common.InvalidRequestException;
 import com.example.b2b_opportunities.Exception.common.NotFoundException;
@@ -43,6 +44,7 @@ import com.example.b2b_opportunities.Repository.CompanyTypeRepository;
 import com.example.b2b_opportunities.Repository.DomainRepository;
 import com.example.b2b_opportunities.Repository.ExperienceRepository;
 import com.example.b2b_opportunities.Repository.FilterRepository;
+import com.example.b2b_opportunities.Repository.LocationRepository;
 import com.example.b2b_opportunities.Repository.PartnerGroupRepository;
 import com.example.b2b_opportunities.Repository.PatternRepository;
 import com.example.b2b_opportunities.Repository.SeniorityRepository;
@@ -51,6 +53,7 @@ import com.example.b2b_opportunities.Repository.SkillRepository;
 import com.example.b2b_opportunities.Repository.TalentExperienceRepository;
 import com.example.b2b_opportunities.Repository.TalentRepository;
 import com.example.b2b_opportunities.Repository.UserRepository;
+import com.example.b2b_opportunities.Repository.WorkModeRepository;
 import com.example.b2b_opportunities.Static.EmailVerification;
 import com.example.b2b_opportunities.Utils.StringUtils;
 import jakarta.servlet.http.HttpServletRequest;
@@ -92,6 +95,9 @@ public class CompanyService {
     private final ExperienceRepository experienceRepository;
     private final TalentExperienceRepository talentExperienceRepository;
     private final SkillExperienceRepository skillExperienceRepository;
+    private final LocationRepository locationRepository;
+    private final WorkModeRepository workModeRepository;
+
     public CompanyResponseDto createCompany(Authentication authentication,
                                             CompanyRequestDto companyRequestDto,
                                             HttpServletRequest request) {
@@ -313,6 +319,8 @@ public class CompanyService {
         Company company = getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
         Talent talent = TalentMapper.toEntity(talentRequestDto);
         talent.setCompany(company);
+        setTalentLocations(talent, talentRequestDto.getLocations());
+        setTalentWorkModes(talent, talentRequestDto.getWorkModes());
         validateSkills(talentRequestDto);
         talentRepository.save(talent);
 
@@ -331,7 +339,7 @@ public class CompanyService {
                 ? existingTalentExperience.getSkillExperienceList()
                 : List.of();
 
-        if(hasSkillsChanged(existingSkills, talentRequestDto.getExperience().getSkills())){
+        if (hasSkillsChanged(existingSkills, talentRequestDto.getExperience().getSkills())) {
             talent.setTalentExperience(null);
             talentRepository.save(talent);
 
@@ -375,20 +383,52 @@ public class CompanyService {
     private boolean hasSkillsChanged(List<SkillExperience> existingSkills, List<SkillExperienceRequestDto> newSkillsDtoList) {
         Set<String> existingSkillsSet = existingSkills.stream()
                 .map(skillExp -> skillExp.getSkill().getId() + "-" +
-                        skillExp.getExperience().getYears() + "-" +
-                        skillExp.getExperience().getMonths())
+                        skillExp.getExperience())
                 .collect(Collectors.toSet());
 
         Set<String> newSkillsSet = newSkillsDtoList.stream()
-                .map(dto -> dto.getSkillId() + "-" + dto.getYears() + "-" + dto.getMonths())
+                .map(dto -> dto.getSkillId() + "-" + dto.getExperience())
                 .collect(Collectors.toSet());
         return !existingSkillsSet.equals(newSkillsSet);
     }
 
     private void updateTalentStatusAndInfo(TalentRequestDto dto, Talent talent) {
         talent.setDescription(dto.getDescription());
-        talent.setResidence(dto.getResidence());
+        setTalentLocations(talent, dto.getLocations());
+        setTalentWorkModes(talent, dto.getWorkModes());
+        talent.getTalentExperience().setPattern(getPatternOrThrow(dto.getExperience().getPatternId()));
+        talent.getTalentExperience().setSeniority(getSeniorityOrThrow(dto.getExperience().getSeniorityId()));
+        talent.getTalentExperience().setTotalTime(dto.getExperience().getTotalTime() != null ? dto.getExperience().getTotalTime() : 0);
         talent.setActive(dto.isActive());
+    }
+
+
+    private void setTalentLocations(Talent talent, List<Long> locationIds) {
+        if (locationIds == null || locationIds.isEmpty()) {
+            talent.setLocations(new HashSet<>());
+        } else {
+            Set<Location> locations = new HashSet<>();
+            for (Long locationId : locationIds) {
+                Location l = locationRepository.findById(locationId)
+                        .orElseThrow(() -> new NotFoundException("Location with ID: " + locationId + " not found"));
+                locations.add(l);
+            }
+            talent.setLocations(locations);
+        }
+    }
+
+    private void setTalentWorkModes(Talent talent, List<Long> workModeIds) {
+        if (workModeIds == null || workModeIds.isEmpty()) {
+            talent.setWorkModes(new HashSet<>());
+        } else {
+            Set<WorkMode> workModes = new HashSet<>();
+            for (Long workModeId : workModeIds) {
+                WorkMode wm = workModeRepository.findById(workModeId)
+                        .orElseThrow(() -> new NotFoundException("Work mode with ID: " + workModeId + " not found"));
+                workModes.add(wm);
+            }
+            talent.setWorkModes(workModes);
+        }
     }
 
     private void validateTalentBelongsToCompany(Company company, Talent talent) {
@@ -486,7 +526,6 @@ public class CompanyService {
 
     private Set<Skill> getSkillsOrThrow(CompanyRequestDto dto) {
         List<Skill> skills = patternService.getAllSkillsIfSkillIdsExist(dto.getSkills()); // Throws
-        // TODO - change LIST to SET
         return new HashSet<>(skills);
     }
 
@@ -615,6 +654,7 @@ public class CompanyService {
     private TalentExperience createTalentExperience(TalentExperienceRequestDto dto, Talent talent) {
         TalentExperience talentExperience = new TalentExperience();
         talentExperience.setTalent(talent);
+        talentExperience.setTotalTime(dto.getTotalTime() != null ? dto.getTotalTime() : 0);
         talentExperience.setPattern(getPatternOrThrow(dto.getPatternId()));
         talentExperience.setSeniority(getSeniorityOrThrow(dto.getSeniorityId()));
         return talentExperience;
@@ -622,20 +662,18 @@ public class CompanyService {
 
     private List<SkillExperience> processSkillExperiences(List<SkillExperienceRequestDto> skillExperienceRequests, TalentExperience talentExperience) {
         List<SkillExperience> skillExperienceList = new ArrayList<>();
-        int totalTime = 0;
-
-        for (SkillExperienceRequestDto dtoItem : skillExperienceRequests) {
-            Skill skill = getSkillOrThrow(dtoItem.getSkillId());
-            if (isSkillIsAlreadyInList(skillExperienceList, skill)) {
-                continue;
+        if (skillExperienceRequests != null) {
+            for (SkillExperienceRequestDto dtoItem : skillExperienceRequests) {
+                Skill skill = getSkillOrThrow(dtoItem.getSkillId());
+                if (isSkillIsAlreadyInList(skillExperienceList, skill)) {
+                    continue;
+                }
+                skillExperienceList.add(createSkillExperience(talentExperience, skill, dtoItem.getExperience()));
             }
-            Experience experience = createAndSaveExperience(dtoItem);
-            totalTime += calculateExperienceTime(experience);
-            skillExperienceList.add(createSkillExperience(talentExperience, skill, experience));
+            return skillExperienceList;
+        } else {
+            return new ArrayList<>();
         }
-
-        talentExperience.setTotalTime(totalTime);
-        return skillExperienceList;
     }
 
     private boolean isSkillIsAlreadyInList(List<SkillExperience> skillExperienceList, Skill skill) {
@@ -648,46 +686,26 @@ public class CompanyService {
     }
 
     private void validateSkills(TalentRequestDto talentRequestDto) {
-        List<SkillExperienceRequestDto> skillExperienceList = talentRequestDto.getExperience().getSkills();
-        List<Long> skillIds = skillExperienceList.stream().map(SkillExperienceRequestDto::getSkillId).toList();
-        List<Long> nonAssignableSkillIds = skillIds.stream()
-                .map(skillRepository::findById)
-                .map(Optional::orElseThrow)
-                .filter(skill -> !skill.getAssignable())
-                .map(Skill::getId)
-                .toList();
-        if (!nonAssignableSkillIds.isEmpty()) {
-            throw new InvalidRequestException("The following skills are not assignable: " + nonAssignableSkillIds);
+        if (talentRequestDto.getExperience().getSkills() != null) {
+            List<SkillExperienceRequestDto> skillExperienceList = talentRequestDto.getExperience().getSkills();
+            List<Long> skillIds = skillExperienceList.stream().map(SkillExperienceRequestDto::getSkillId).toList();
+            List<Long> nonAssignableSkillIds = skillIds.stream()
+                    .map(skillRepository::findById)
+                    .map(Optional::orElseThrow)
+                    .filter(skill -> !skill.getAssignable())
+                    .map(Skill::getId)
+                    .toList();
+            if (!nonAssignableSkillIds.isEmpty()) {
+                throw new InvalidRequestException("The following skills are not assignable: " + nonAssignableSkillIds);
+            }
         }
     }
 
-    private Experience createAndSaveExperience(SkillExperienceRequestDto dtoItem) {
-        Experience experience = createExperience(dtoItem.getMonths(), dtoItem.getYears());
-        return experienceRepository.save(experience);
-    }
-
-    private SkillExperience createSkillExperience(TalentExperience talentExperience, Skill skill, Experience experience) {
+    private SkillExperience createSkillExperience(TalentExperience talentExperience, Skill skill, Integer experience) {
         return SkillExperience.builder()
                 .talentExperience(talentExperience)
                 .skill(skill)
                 .experience(experience)
-                .build();
-    }
-
-    private int calculateExperienceTime(Experience experience) {
-        int totalTime = 0;
-        totalTime += experience.getMonths() != null ? experience.getMonths() : 0;
-        totalTime += experience.getYears() != null ? experience.getYears() * 12 : 0;
-        return totalTime;
-    }
-
-    private Experience createExperience(Integer months, Integer years) {
-        if (months == null && years == null || months != null && months == 0 && years != null && years == 0 || months == null && years == 0 || months != null && months == 0 && years == null) {
-            throw new InvalidRequestException("At least one of 'months' or 'years' must be non-zero and non-null.");
-        }
-        return Experience.builder()
-                .years(years)
-                .months(months)
                 .build();
     }
 

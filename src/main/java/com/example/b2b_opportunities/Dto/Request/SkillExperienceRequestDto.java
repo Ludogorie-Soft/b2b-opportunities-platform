@@ -1,5 +1,6 @@
 package com.example.b2b_opportunities.Dto.Request;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -7,6 +8,5 @@ import lombok.Setter;
 @Setter
 public class SkillExperienceRequestDto {
     private Long skillId;
-    private Integer years;
-    private Integer months;
+    private Integer experience;
 }
