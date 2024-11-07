@@ -65,8 +65,8 @@ public class CompanyController {
     @GetMapping("{id}/projects")
     @ResponseStatus(HttpStatus.OK)
     public List<ProjectResponseDto> getCompanyProjects(@PathVariable("id") Long id) {
+        //TODO - we need to show projects if they are public or available to the logged user
         return companyService.getCompanyProjects(id);
-        // TODO: this needs to use Authentication instead of ID
     }
 
     @PostMapping
@@ -203,15 +203,13 @@ public class CompanyController {
     @GetMapping("/talents")
     @ResponseStatus(HttpStatus.OK)
     public List<TalentResponseDto> getAllTalents(Authentication authentication) {
-        //TODO: should be changed to retrieve only public talents (and shared with the logged-in account/company)
         return companyService.getAllTalents(authentication);
     }
 
     @GetMapping("/talents/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public TalentResponseDto getById(@PathVariable("id") Long id) {
-        //TODO: a condition should be added - if visible to user, then get info
-        return companyService.getTalentById(id);
+    public TalentResponseDto getById(Authentication authentication, @PathVariable("id") Long id) {
+        return companyService.getTalentById(authentication, id);
     }
 
     @GetMapping("/my-talents")

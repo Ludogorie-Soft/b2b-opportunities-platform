@@ -357,15 +357,23 @@ public class CompanyService {
     }
 
     public List<TalentResponseDto> getAllTalents(Authentication authentication) {
-        //TODO - do we want only logged-in users to have access to the talents?
-        userService.getCurrentUserOrThrow(authentication);
-        List<Talent> talents = talentRepository.findAll();
-        return talents.stream().map(TalentMapper::toResponseDto).toList();
+        Company company = getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
+        List<Talent> publicTalents = talentRepository.findAllPublicTalents();
+        List<Talent> talentSharedWithCurrentCompany = talentRepository.findTalentsSharedWithUserCompany(company.getId());
+        Set<Talent> combinedSet = new HashSet<>(publicTalents);
+        combinedSet.addAll(talentSharedWithCurrentCompany);
+        return combinedSet.stream().map(TalentMapper::toResponseDto).toList();
     }
 
-    public TalentResponseDto getTalentById(Long talentId) {
-        return TalentMapper.toResponseDto(talentRepository.findById(talentId)
-                .orElseThrow(() -> new NotFoundException("Talent with ID: " + talentId + " not found")));
+    public TalentResponseDto getTalentById(Authentication authentication, Long talentId) {
+        Talent talent = talentRepository.findById(talentId)
+                .orElseThrow(() -> new NotFoundException("Talent with ID: " + talentId + " not found"));
+
+        if (!talent.getCompany().isTalentsSharedPublicly()) {
+            Company company = getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
+            validateTalentIsAvailableToCompany(company, talent);
+        }
+        return TalentMapper.toResponseDto(talent);
     }
 
     public List<TalentResponseDto> getMyTalents(Authentication authentication) {
@@ -398,6 +406,16 @@ public class CompanyService {
             company.setTalentAccessGroups(new HashSet<>());
         }
         companyRepository.save(company);
+    }
+
+    private void validateTalentIsAvailableToCompany(Company company, Talent talent) {
+        boolean talentAvailable = talent.getCompany().getId().equals(company.getId()) ||
+                talent.getCompany().getPartnerGroups().stream()
+                        .flatMap(pg -> pg.getPartners().stream())
+                        .anyMatch(c -> c.getId().equals(company.getId()));
+        if (!talentAvailable) {
+            throw new PermissionDeniedException("You have no access to this talent");
+        }
     }
 
     private boolean hasSkillsChanged(List<SkillExperience> existingSkills, List<SkillExperienceRequestDto> newSkillsDtoList) {
