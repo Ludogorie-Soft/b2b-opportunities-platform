@@ -14,6 +14,7 @@ public class ProjectMapper {
                 .id(project.getId())
                 .companyId(project.getCompany().getId())
                 .datePosted(project.getDatePosted())
+                .expiryDate(project.getExpiryDate())
                 .name(project.getName())
                 .startDate(project.getStartDate())
                 .endDate(project.getEndDate())

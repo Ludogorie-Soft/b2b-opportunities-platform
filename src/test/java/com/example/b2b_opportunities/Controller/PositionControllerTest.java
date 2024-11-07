@@ -242,6 +242,7 @@ class PositionControllerTest {
         requestDto.setResponsibilities(List.of("Develop software", "Review code"));
         requestDto.setHiringProcess("Interview -> Coding Test -> Offer");
         requestDto.setDescription("Position for software engineer");
+        requestDto.setStatusId(1L);
     }
 
     @Test
