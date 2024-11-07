@@ -104,4 +104,14 @@ public class Company {
 
     @OneToMany(mappedBy = "company")
     private Set<PartnerGroup> partnerGroups;
+
+    private boolean talentsSharedPublicly;
+
+    @ManyToMany
+    @JoinTable(
+            name = "company_talent_access_groups",
+            joinColumns = @JoinColumn(name = "company_id"),
+            inverseJoinColumns = @JoinColumn(name = "partner_group_id")
+    )
+    private Set<PartnerGroup> talentAccessGroups;
 }

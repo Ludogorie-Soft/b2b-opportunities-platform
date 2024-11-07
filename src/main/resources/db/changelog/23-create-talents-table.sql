@@ -46,3 +46,13 @@ CREATE TABLE skill_experience (
     CONSTRAINT fk_skill FOREIGN KEY (skill_id) REFERENCES skills(id)
 );
 
+ALTER TABLE companies
+ADD COLUMN talents_shared_publicly BOOLEAN DEFAULT FALSE;
+
+CREATE TABLE company_talent_access_groups (
+    company_id BIGINT NOT NULL,
+    partner_group_id BIGINT NOT NULL,
+    PRIMARY KEY (company_id, partner_group_id),
+    CONSTRAINT fk_company_talent_access FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
+    CONSTRAINT fk_partner_group_access FOREIGN KEY (partner_group_id) REFERENCES partner_groups(id) ON DELETE CASCADE
+);

@@ -6,6 +6,7 @@ import com.example.b2b_opportunities.Dto.Request.CompanyRequestDto;
 import com.example.b2b_opportunities.Dto.Request.PartnerGroupRequestDto;
 import com.example.b2b_opportunities.Dto.Request.SkillExperienceRequestDto;
 import com.example.b2b_opportunities.Dto.Request.TalentExperienceRequestDto;
+import com.example.b2b_opportunities.Dto.Request.TalentPublicityRequestDto;
 import com.example.b2b_opportunities.Dto.Request.TalentRequestDto;
 import com.example.b2b_opportunities.Dto.Response.CompaniesAndUsersResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyFilterResponseDto;
@@ -378,6 +379,25 @@ public class CompanyService {
         Talent talent = getTalentOrThrow(id);
         validateTalentBelongsToCompany(company, talent);
         talentRepository.delete(talent);
+    }
+
+    public void setTalentVisibility(Authentication authentication, TalentPublicityRequestDto requestDto) {
+        Company company = getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
+        if (requestDto.isPublic()) {
+            Set<PartnerGroup> partnerGroupSet = new HashSet<>();
+            for (Long id : requestDto.getPartnerGroupIds()) {
+                PartnerGroup pg = partnerGroupRepository.findById(id)
+                        .orElseThrow(() -> new NotFoundException("Partner group with ID: " + id + " not found"));
+                validatePartnerGroupBelongsToUserCompany(company, pg);
+                partnerGroupSet.add(pg);
+            }
+            company.setTalentsSharedPublicly(true);
+            company.setTalentAccessGroups(partnerGroupSet);
+        } else {
+            company.setTalentsSharedPublicly(false);
+            company.setTalentAccessGroups(new HashSet<>());
+        }
+        companyRepository.save(company);
     }
 
     private boolean hasSkillsChanged(List<SkillExperience> existingSkills, List<SkillExperienceRequestDto> newSkillsDtoList) {

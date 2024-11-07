@@ -4,6 +4,7 @@ import com.example.b2b_opportunities.Dto.Request.CompanyFilterEditDto;
 import com.example.b2b_opportunities.Dto.Request.CompanyFilterRequestDto;
 import com.example.b2b_opportunities.Dto.Request.CompanyRequestDto;
 import com.example.b2b_opportunities.Dto.Request.PartnerGroupRequestDto;
+import com.example.b2b_opportunities.Dto.Request.TalentPublicityRequestDto;
 import com.example.b2b_opportunities.Dto.Request.TalentRequestDto;
 import com.example.b2b_opportunities.Dto.Response.CompaniesAndUsersResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyFilterResponseDto;
@@ -202,12 +203,14 @@ public class CompanyController {
     @GetMapping("/talents")
     @ResponseStatus(HttpStatus.OK)
     public List<TalentResponseDto> getAllTalents(Authentication authentication) {
+        //TODO: should be changed to retrieve only public talents (and shared with the logged-in account/company)
         return companyService.getAllTalents(authentication);
     }
 
     @GetMapping("/talents/{id}")
     @ResponseStatus(HttpStatus.OK)
     public TalentResponseDto getById(@PathVariable("id") Long id) {
+        //TODO: a condition should be added - if visible to user, then get info
         return companyService.getTalentById(id);
     }
 
@@ -215,6 +218,12 @@ public class CompanyController {
     @ResponseStatus(HttpStatus.OK)
     public List<TalentResponseDto> getMyTalents(Authentication authentication) {
         return companyService.getMyTalents(authentication);
+    }
+
+    @PutMapping("/my-talents/publicity")
+    @ResponseStatus(HttpStatus.OK)
+    public void setTalentVisibility(Authentication authentication, @RequestBody TalentPublicityRequestDto talentPublicityRequestDto) {
+        companyService.setTalentVisibility(authentication, talentPublicityRequestDto);
     }
 
     @DeleteMapping("/talents/{id}")
