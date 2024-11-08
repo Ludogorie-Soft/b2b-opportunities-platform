@@ -4,7 +4,7 @@ CREATE TABLE talents (
     company_id BIGINT,
     description TEXT,
     talent_experience_id BIGINT,
-    CONSTRAINT fk_company FOREIGN KEY (company_id) REFERENCES companies(id)
+    CONSTRAINT fk_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
 );
 
 CREATE TABLE talent_work_modes (
@@ -30,12 +30,12 @@ CREATE TABLE talent_experience (
     seniority_id BIGINT,
     total_time INT,
     CONSTRAINT fk_talent_experience_talent FOREIGN KEY (talent_id) REFERENCES talents(id) ON DELETE SET NULL,
-    CONSTRAINT fk_pattern FOREIGN KEY (pattern_id) REFERENCES patterns(id),
-    CONSTRAINT fk_seniority FOREIGN KEY (seniority_id) REFERENCES seniorities(id)
+    CONSTRAINT fk_pattern FOREIGN KEY (pattern_id) REFERENCES patterns(id) ON DELETE CASCADE,
+    CONSTRAINT fk_seniority FOREIGN KEY (seniority_id) REFERENCES seniorities(id) ON DELETE SET NULL
 );
 
 ALTER TABLE talents
-ADD CONSTRAINT fk_talent_experience FOREIGN KEY (talent_experience_id) REFERENCES talent_experience(id);
+ADD CONSTRAINT fk_talent_experience FOREIGN KEY (talent_experience_id) REFERENCES talent_experience(id) ON DELETE CASCADE;
 
 CREATE TABLE skill_experience (
     id BIGSERIAL PRIMARY KEY,
@@ -43,11 +43,11 @@ CREATE TABLE skill_experience (
     skill_id BIGINT,
     experience INT,
     CONSTRAINT fk_skill_experience FOREIGN KEY (talent_experience_id) REFERENCES talent_experience(id) ON DELETE CASCADE,
-    CONSTRAINT fk_skill FOREIGN KEY (skill_id) REFERENCES skills(id)
+    CONSTRAINT fk_skill FOREIGN KEY (skill_id) REFERENCES skills(id) ON DELETE CASCADE
 );
 
 ALTER TABLE companies
-ADD COLUMN talents_shared_publicly BOOLEAN DEFAULT FALSE;
+ADD COLUMN talents_shared_publicly BOOLEAN DEFAULT TRUE;
 
 CREATE TABLE company_talent_access_groups (
     company_id BIGINT NOT NULL,

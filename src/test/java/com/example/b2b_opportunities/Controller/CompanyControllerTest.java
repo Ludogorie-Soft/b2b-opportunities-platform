@@ -207,7 +207,7 @@ class CompanyControllerTest {
     void getCompaniesShouldReturnListOfCompanies() throws Exception {
         mockMvc.perform(get("/companies"))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$", hasSize(2))) // Check that 2 companies are returned
                 .andExpect(jsonPath("$[0].name").value("Company A"))
                 .andExpect(jsonPath("$[1].name").value("Company B"));
@@ -220,7 +220,7 @@ class CompanyControllerTest {
         mockMvc.perform(get("/companies")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$", hasSize(0)));
     }
 
@@ -229,7 +229,7 @@ class CompanyControllerTest {
         mockMvc.perform(get("/companies/" + company1.getId())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.name").value("Company A"))
                 .andExpect(jsonPath("$.email").value("company_a@abvz.com"));
     }
@@ -239,7 +239,7 @@ class CompanyControllerTest {
         mockMvc.perform(get("/companies/9999999")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").value("Company with ID: 9999999 not found"));
     }
 
@@ -256,7 +256,7 @@ class CompanyControllerTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(companyRequestDtoJson))
                     .andExpect(status().isCreated())
-                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$.name").value("New Company"))
                     .andExpect(jsonPath("$.email").value("johndoe@abv.bgg"))
                     .andExpect(jsonPath("$.website").value("http://test.com"))
@@ -283,7 +283,7 @@ class CompanyControllerTest {
         mockMvc.perform(get("/companies/" + company1.getId() + "/with-users")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.company.name").value("Company A"))
                 .andExpect(jsonPath("$.company.email").value("company_a@abvz.com"))
                 .andExpect(jsonPath("$.users[*].username").value("company_user"));
@@ -294,7 +294,7 @@ class CompanyControllerTest {
         mockMvc.perform(get("/companies/" + 99999999 + "/with-users")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.error").value("Not Found"))
                 .andExpect(jsonPath("$.message").value("Company with ID: 99999999 not found"));
     }
@@ -309,7 +309,7 @@ class CompanyControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(companyRequestDtoJson))
                 .andExpect(status().isConflict())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.error").value("Conflict"))
                 .andExpect(jsonPath("$.message").value("Name already registered"));
     }
@@ -335,7 +335,7 @@ class CompanyControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .param("token", "invalid-token"))
                 .andExpect(status().isNotFound())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.error").value("Not Found"))
                 .andExpect(jsonPath("$.message").value("Invalid or already used token"));
     }
@@ -361,7 +361,7 @@ class CompanyControllerTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(editedCompanyJson))
                     .andExpect(status().isOk())
-                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$.name").value("Company C"));
 
             mockedEmailUtils.verify(() -> EmailUtils.validateEmail(company1.getEmail()));
