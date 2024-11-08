@@ -91,6 +91,7 @@ public class AuthenticationService {
         User user = UserMapper.toEntity(userRequestDto);
         userRepository.save(user);
         mailService.sendConfirmationMail(user, request);
+
         return ResponseEntity.status(HttpStatus.CREATED).body(UserMapper.toResponseDto(user));
     }
 
@@ -150,15 +151,15 @@ public class AuthenticationService {
         return optionalConfirmationToken.get();
     }
 
-    public String confirmEmail(String token) {
+    public void confirmEmail(String token, HttpServletResponse response) {
         ConfirmationToken confirmationToken = validateAndReturnToken(token);
         User user = confirmationToken.getUser();
-        if (user.isEnabled()) {
-            return "Account already activated";
-        }
+//        if (user.isEnabled()) {
+//            return "Account already activated";
+//        }
         user.setEnabled(true);
         userRepository.save(user);
-        return "Account activated successfully";
+//        return "Account activated successfully";
     }
 
     public void logout(HttpServletRequest request, HttpServletResponse response) {

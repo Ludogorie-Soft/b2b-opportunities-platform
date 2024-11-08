@@ -497,7 +497,7 @@ public class ProjectServiceTest {
     @Test
     public void shouldNotPerformAnyActionWhenNoExpiringOrExpiredProjects() {
         when(projectRepository.findProjectsExpiringInTwoDays()).thenReturn(Collections.emptyList());
-        when(projectRepository.findProjectsOlderThan(21)).thenReturn(Collections.emptyList());
+        when(projectRepository.findExpiredAndActiveProjects()).thenReturn(Collections.emptyList());
 
         projectService.processExpiringProjects();
 
@@ -513,7 +513,7 @@ public class ProjectServiceTest {
 
         List<Project> expiringProjects = Collections.singletonList(expiringProject);
         when(projectRepository.findProjectsExpiringInTwoDays()).thenReturn(expiringProjects);
-        when(projectRepository.findProjectsOlderThan(21)).thenReturn(Collections.emptyList());
+        when(projectRepository.findExpiredAndActiveProjects()).thenReturn(Collections.emptyList());
 
         projectService.processExpiringProjects();
 
@@ -529,7 +529,7 @@ public class ProjectServiceTest {
 
         List<Project> expiredProjects = Collections.singletonList(expiredProject);
         when(projectRepository.findProjectsExpiringInTwoDays()).thenReturn(Collections.emptyList());
-        when(projectRepository.findProjectsOlderThan(21)).thenReturn(expiredProjects);
+        when(projectRepository.findExpiredAndActiveProjects()).thenReturn(expiredProjects);
 
         projectService.processExpiringProjects();
 
@@ -552,7 +552,7 @@ public class ProjectServiceTest {
         List<Project> expiredProjects = Collections.singletonList(expiredProject);
 
         when(projectRepository.findProjectsExpiringInTwoDays()).thenReturn(expiringProjects);
-        when(projectRepository.findProjectsOlderThan(21)).thenReturn(expiredProjects);
+        when(projectRepository.findExpiredAndActiveProjects()).thenReturn(expiredProjects);
 
         projectService.processExpiringProjects();
 

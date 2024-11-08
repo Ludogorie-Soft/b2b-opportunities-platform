@@ -50,6 +50,7 @@ import static org.mockito.Mockito.doNothing;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrlPattern;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -278,8 +279,8 @@ public class AuthControllerTest {
 
         mockMvc.perform(get("/api/auth/register/confirm")
                         .param("token", token))
-                .andExpect(status().isOk())
-                .andExpect(content().string("Account activated successfully"));
+                .andExpect(status().isFound()) // Change this line to expect 302
+                .andExpect(header().string("Location", "http://localhost:5173/signup?confirmEmail=true"));
 
         User confirmedUser = userRepository.findByEmail(userRequestDto.getEmail().toLowerCase())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
