@@ -62,3 +62,21 @@ databaseChangeLog:
   - include:
       file: 23-create-talents-table.sql
       relativeToChangelogFile: true
+  - include:
+      file: 24-populate-talents.sql
+      relativeToChangelogFile: true
+  - include:
+      file: 25-populate-talent-work-modes.sql
+      relativeToChangelogFile: true
+  - include:
+      file: 26-populate-talent-locations.sql
+      relativeToChangelogFile: true
+  - include:
+      file: 27-populate-talent-experience.sql
+      relativeToChangelogFile: true
+  - include:
+      file: 28-populate-talent-skill-experience.sql
+      relativeToChangelogFile: true
+  - include:
+      file: 29-set-talent-experience-to-talent.sql
+      relativeToChangelogFile: true
