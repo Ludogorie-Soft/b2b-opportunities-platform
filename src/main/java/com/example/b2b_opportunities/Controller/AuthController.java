@@ -38,13 +38,17 @@ public class AuthController {
 
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<UserResponseDto> register(@RequestBody @Valid UserRequestDto userRequestDto, BindingResult bindingResult, HttpServletRequest request) {
+    public ResponseEntity<UserResponseDto> register(@RequestBody @Valid UserRequestDto userRequestDto,
+                                                    BindingResult bindingResult,
+                                                    HttpServletRequest request) {
         return authenticationService.register(userRequestDto, bindingResult, request);
+//        response.sendRedirect("http://localhost:5173/signup?confirmEmail=true");
     }
 
     @GetMapping("/register/confirm")
-    public String confirmEmail(@RequestParam("token") String token) {
-        return authenticationService.confirmEmail(token);
+    public void confirmEmail(@RequestParam("token") String token, HttpServletResponse response) throws IOException {
+        authenticationService.confirmEmail(token, response);
+        response.sendRedirect("http://localhost:5173/signup?confirmEmail=true");
     }
 
     @GetMapping("/register/resend-confirmation")

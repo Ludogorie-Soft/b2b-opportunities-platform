@@ -23,6 +23,7 @@ public class ProjectResponseDto {
     private Long companyId;
 
     private LocalDateTime datePosted;
+    private LocalDateTime expiryDate;
     private String name;
 
     private LocalDate startDate;

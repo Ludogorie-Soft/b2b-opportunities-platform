@@ -44,6 +44,7 @@ public class Project {
 
     private LocalDateTime datePosted;
     private LocalDateTime dateUpdated;
+    private LocalDateTime expiryDate;
 
     @NotEmpty
     private String name;

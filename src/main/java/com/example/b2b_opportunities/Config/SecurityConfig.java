@@ -54,7 +54,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:8083", "http://localhost:5173"));
+        configuration.setAllowedOrigins(List.of("http://localhost:8083", "http://localhost:5173", "https://localhost:8082", "https://uat.d1ij20tphiry77.amplifyapp.com", "https://b2bapp.algorithmity.com"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));
         configuration.setExposedHeaders(List.of("Authorization"));

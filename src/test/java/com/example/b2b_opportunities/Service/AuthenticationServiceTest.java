@@ -34,6 +34,7 @@ import org.springframework.security.oauth2.client.authentication.OAuth2Authentic
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.validation.BindingResult;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
@@ -151,7 +152,7 @@ class AuthenticationServiceTest {
     }
 
     @Test
-    void testRegisterWithValidInput() {
+    void testRegisterWithValidInput() throws IOException {
         UserRequestDto userRequestDto = new UserRequestDto("testuser", "test", "test", "test@test.com", "password", "password");
 
         when(bindingResult.hasErrors()).thenReturn(false);
@@ -230,7 +231,7 @@ class AuthenticationServiceTest {
                 .thenReturn(new User());
 
         InvalidRequestException exception = assertThrows(InvalidRequestException.class, () -> {
-            authenticationService.confirmEmail(token);
+            authenticationService.confirmEmail(token, response);
         });
 
         assertEquals("Expired token", exception.getMessage());
@@ -249,9 +250,9 @@ class AuthenticationServiceTest {
         when(confirmationToken.getUser())
                 .thenReturn(user);
 
-        String result = authenticationService.confirmEmail(token);
+        authenticationService.confirmEmail(token, response);
 
-        assertEquals("Account activated successfully", result);
+//        assertEquals("Account activated successfully", result);
         assertTrue(user.isEnabled());
         verify(userRepository, times(1)).save(user);
     }
