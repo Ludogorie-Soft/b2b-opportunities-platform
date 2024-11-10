@@ -65,7 +65,7 @@ public class CompanyController {
     @GetMapping("{id}/projects")
     @ResponseStatus(HttpStatus.OK)
     public List<ProjectResponseDto> getCompanyProjects(@PathVariable("id") Long id) {
-        //TODO - we need to show projects if they are public or available to the logged user
+        //TODO - we need to show projects if they are public or available to the logged user + ACTIVE status
         return companyService.getCompanyProjects(id);
     }
 
