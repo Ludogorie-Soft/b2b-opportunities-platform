@@ -56,6 +56,7 @@ public class CompanyMapper {
                 .companyType(company.getCompanyType())
                 .domain(company.getDomain())
                 .emailVerification(company.getEmailVerification().toString())
+                .isApproved(company.isApproved())
                 .website(company.getWebsite())
                 .linkedIn(company.getLinkedIn())
                 .description(description)

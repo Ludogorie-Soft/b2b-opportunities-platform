@@ -66,8 +66,6 @@ public class User {
 
     private String provider;
 
-    private boolean isApproved;
-
     public void setUsername(String username) {
         // TODO: Length requirement if not null?
         this.username = username.strip();

@@ -1,6 +1,6 @@
 package com.example.b2b_opportunities.Controller;
 
-import com.example.b2b_opportunities.Dto.Response.UserResponseDto;
+import com.example.b2b_opportunities.Dto.Response.CompanyResponseDto;
 import com.example.b2b_opportunities.Service.AdminService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -22,13 +22,13 @@ public class AdminController {
 
     @PostMapping("/approve/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public UserResponseDto approveUser(@PathVariable("id") Long id) {
+    public CompanyResponseDto approveCompany(@PathVariable("id") Long id) {
         return adminService.approve(id);
     }
 
     @GetMapping("/get-non-approved")
     @ResponseStatus(HttpStatus.OK)
-    public List<UserResponseDto> getAllNonApprovedUsers() {
-        return adminService.getAllNonApprovedUsers();
+    public List<CompanyResponseDto> getAllNonApprovedCompanies() {
+        return adminService.getAllNonApprovedCompanies();
     }
 }

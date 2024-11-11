@@ -79,7 +79,6 @@ class UserControllerTest {
                 .lastName("testLastname")
                 .password("testPassword")
                 .email("abvbg@abvto.bg")
-                .isApproved(true)
                 .isEnabled(true)
                 .role(role).build();
 
@@ -132,7 +131,6 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.firstName", is("testFirstName")))
                 .andExpect(jsonPath("$.lastName", is("testLastname")))
                 .andExpect(jsonPath("$.email", is("abvbg@abvto.bg")))
-                .andExpect(jsonPath("$.approved", is(true)))
                 .andExpect(jsonPath("$.enabled", is(true)));
     }
 
@@ -165,7 +163,6 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.firstName", is("testFirstName")))
                 .andExpect(jsonPath("$.lastName", is("testLastname")))
                 .andExpect(jsonPath("$.email", is("abvbg@abvto.bg")))
-                .andExpect(jsonPath("$.approved", is(true)))
                 .andExpect(jsonPath("$.enabled", is(true)));
     }
 
