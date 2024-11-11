@@ -434,6 +434,11 @@ public class CompanyService {
                 talent.getCompany().getPartnerGroups().stream()
                         .flatMap(pg -> pg.getPartners().stream())
                         .anyMatch(c -> c.getId().equals(company.getId()));
+
+        if (!talent.getCompany().getId().equals(company.getId()) && !talent.isActive()) {
+            throw new PermissionDeniedException("You have no access to this talent because it is not active.");
+        }
+
         if (!talentAvailable) {
             throw new PermissionDeniedException("You have no access to this talent");
         }
