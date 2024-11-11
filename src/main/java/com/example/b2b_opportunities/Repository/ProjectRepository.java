@@ -14,6 +14,30 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface ProjectRepository extends JpaRepository<Project, Long> {
+    @Query("SELECT p FROM Project p WHERE p.projectStatus = :status AND p.isPartnerOnly = false AND p.company.id = :companyId")
+    List<Project> findActiveNonPartnerOnlyProjectsByCompanyId(
+            @Param("status") ProjectStatus status,
+            @Param("companyId") Long companyId
+    );
+
+    @Query("""
+                SELECT p FROM Project p
+                WHERE p.projectStatus = :status 
+                AND p.isPartnerOnly = true 
+                AND p.company.id = :projectOwnerCompanyId 
+                AND EXISTS (
+                      SELECT pg FROM PartnerGroup pg 
+                      JOIN pg.partners partnerCompany
+                      WHERE pg.company.id = :projectOwnerCompanyId
+                      AND partnerCompany.id = :requestingCompanyId
+                )
+            """)
+    List<Project> findActivePartnerOnlyProjectsSharedWithCompany(
+            @Param("status") ProjectStatus status,
+            @Param("projectOwnerCompanyId") Long projectOwnerCompanyId,
+            @Param("requestingCompanyId") Long requestingCompanyId
+    );
+
     List<Project> findAllByDateUpdatedAfter(LocalDateTime dateTime);
 
     @Query(value = "SELECT * FROM projects p WHERE p.expiry_date = CURRENT_DATE + INTERVAL '2 days'", nativeQuery = true)
