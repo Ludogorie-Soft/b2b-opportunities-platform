@@ -379,8 +379,8 @@ public class CompanyService {
 
     public List<TalentResponseDto> getAllTalents(Authentication authentication) {
         Company company = getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
-        List<Talent> publicTalents = talentRepository.findAllPublicTalents();
-        List<Talent> talentSharedWithCurrentCompany = talentRepository.findTalentsSharedWithUserCompany(company.getId());
+        List<Talent> publicTalents = talentRepository.findAllActivePublicTalents();
+        List<Talent> talentSharedWithCurrentCompany = talentRepository.findActiveTalentsSharedWithUserCompany(company.getId());
         Set<Talent> combinedSet = new HashSet<>(publicTalents);
         combinedSet.addAll(talentSharedWithCurrentCompany);
         return combinedSet.stream().map(TalentMapper::toResponseDto).toList();
