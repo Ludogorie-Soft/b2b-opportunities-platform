@@ -41,6 +41,8 @@ public class ProjectService {
         Company company = getCompanyIfExists(user.getCompany().getId());
         Project project = getProjectIfExists(id);
         validateProjectIsAvailableToCompany(project, company);
+        //TODO - check if project is active (has ProjectStatus.ACTIVE)
+        //TODO - also check if its posted by approved company
         return ProjectMapper.toDto(project);
     }
 

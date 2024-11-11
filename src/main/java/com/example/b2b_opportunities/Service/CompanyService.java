@@ -4,20 +4,32 @@ import com.example.b2b_opportunities.Dto.Request.CompanyFilterEditDto;
 import com.example.b2b_opportunities.Dto.Request.CompanyFilterRequestDto;
 import com.example.b2b_opportunities.Dto.Request.CompanyRequestDto;
 import com.example.b2b_opportunities.Dto.Request.PartnerGroupRequestDto;
+import com.example.b2b_opportunities.Dto.Request.SkillExperienceRequestDto;
+import com.example.b2b_opportunities.Dto.Request.TalentExperienceRequestDto;
+import com.example.b2b_opportunities.Dto.Request.TalentPublicityRequestDto;
+import com.example.b2b_opportunities.Dto.Request.TalentRequestDto;
 import com.example.b2b_opportunities.Dto.Response.CompaniesAndUsersResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyFilterResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyPublicResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyResponseDto;
 import com.example.b2b_opportunities.Dto.Response.PartnerGroupResponseDto;
 import com.example.b2b_opportunities.Dto.Response.ProjectResponseDto;
+import com.example.b2b_opportunities.Dto.Response.TalentResponseDto;
 import com.example.b2b_opportunities.Dto.Response.UserResponseDto;
 import com.example.b2b_opportunities.Entity.Company;
 import com.example.b2b_opportunities.Entity.CompanyType;
 import com.example.b2b_opportunities.Entity.Domain;
 import com.example.b2b_opportunities.Entity.Filter;
+import com.example.b2b_opportunities.Entity.Location;
 import com.example.b2b_opportunities.Entity.PartnerGroup;
+import com.example.b2b_opportunities.Entity.Pattern;
+import com.example.b2b_opportunities.Entity.Seniority;
 import com.example.b2b_opportunities.Entity.Skill;
+import com.example.b2b_opportunities.Entity.SkillExperience;
+import com.example.b2b_opportunities.Entity.Talent;
+import com.example.b2b_opportunities.Entity.TalentExperience;
 import com.example.b2b_opportunities.Entity.User;
+import com.example.b2b_opportunities.Entity.WorkMode;
 import com.example.b2b_opportunities.Exception.common.AlreadyExistsException;
 import com.example.b2b_opportunities.Exception.common.InvalidRequestException;
 import com.example.b2b_opportunities.Exception.common.NotFoundException;
@@ -26,13 +38,23 @@ import com.example.b2b_opportunities.Mapper.CompanyMapper;
 import com.example.b2b_opportunities.Mapper.FilterMapper;
 import com.example.b2b_opportunities.Mapper.PartnerGroupMapper;
 import com.example.b2b_opportunities.Mapper.ProjectMapper;
+import com.example.b2b_opportunities.Mapper.TalentMapper;
 import com.example.b2b_opportunities.Mapper.UserMapper;
 import com.example.b2b_opportunities.Repository.CompanyRepository;
 import com.example.b2b_opportunities.Repository.CompanyTypeRepository;
 import com.example.b2b_opportunities.Repository.DomainRepository;
+import com.example.b2b_opportunities.Repository.ExperienceRepository;
 import com.example.b2b_opportunities.Repository.FilterRepository;
+import com.example.b2b_opportunities.Repository.LocationRepository;
 import com.example.b2b_opportunities.Repository.PartnerGroupRepository;
+import com.example.b2b_opportunities.Repository.PatternRepository;
+import com.example.b2b_opportunities.Repository.SeniorityRepository;
+import com.example.b2b_opportunities.Repository.SkillExperienceRepository;
+import com.example.b2b_opportunities.Repository.SkillRepository;
+import com.example.b2b_opportunities.Repository.TalentExperienceRepository;
+import com.example.b2b_opportunities.Repository.TalentRepository;
 import com.example.b2b_opportunities.Repository.UserRepository;
+import com.example.b2b_opportunities.Repository.WorkModeRepository;
 import com.example.b2b_opportunities.Static.EmailVerification;
 import com.example.b2b_opportunities.Utils.StringUtils;
 import jakarta.servlet.http.HttpServletRequest;
@@ -45,6 +67,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -65,6 +89,15 @@ public class CompanyService {
     private final UserRepository userRepository;
     private final FilterRepository filterRepository;
     private final PartnerGroupRepository partnerGroupRepository;
+    private final SkillRepository skillRepository;
+    private final PatternRepository patternRepository;
+    private final SeniorityRepository seniorityRepository;
+    private final TalentRepository talentRepository;
+    private final ExperienceRepository experienceRepository;
+    private final TalentExperienceRepository talentExperienceRepository;
+    private final SkillExperienceRepository skillExperienceRepository;
+    private final LocationRepository locationRepository;
+    private final WorkModeRepository workModeRepository;
 
     public CompanyResponseDto createCompany(Authentication authentication,
                                             CompanyRequestDto companyRequestDto,
@@ -283,6 +316,165 @@ public class CompanyService {
         return PartnerGroupMapper.toPartnerGroupResponseDto(partnerGroup);
     }
 
+    public TalentResponseDto createTalent(Authentication authentication, TalentRequestDto talentRequestDto) {
+        Company company = getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
+        Talent talent = TalentMapper.toEntity(talentRequestDto);
+        talent.setCompany(company);
+        setTalentLocations(talent, talentRequestDto.getLocations());
+        setTalentWorkModes(talent, talentRequestDto.getWorkModes());
+        validateSkills(talentRequestDto);
+        talentRepository.save(talent);
+
+        setTalentExperience(talentRequestDto.getExperience(), talent);
+        return TalentMapper.toResponseDto(talent);
+    }
+
+    public TalentResponseDto updateTalent(Authentication authentication, Long talentId, TalentRequestDto talentRequestDto) {
+        Company company = getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
+        Talent talent = getTalentOrThrow(talentId);
+        validateTalentBelongsToCompany(company, talent);
+        validateSkills(talentRequestDto);
+
+        TalentExperience existingTalentExperience = talent.getTalentExperience();
+        List<SkillExperience> existingSkills = existingTalentExperience != null
+                ? existingTalentExperience.getSkillExperienceList()
+                : List.of();
+
+        if (hasSkillsChanged(existingSkills, talentRequestDto.getExperience().getSkills())) {
+            talent.setTalentExperience(null);
+            talentRepository.save(talent);
+
+            skillExperienceRepository.deleteAll(existingSkills);
+
+            if (existingTalentExperience != null) {
+                talentExperienceRepository.delete(existingTalentExperience);
+            }
+            setTalentExperience(talentRequestDto.getExperience(), talent);
+        }
+
+        updateTalentStatusAndInfo(talentRequestDto, talent);
+        return TalentMapper.toResponseDto(talentRepository.save(talent));
+    }
+
+    public List<TalentResponseDto> getAllTalents(Authentication authentication) {
+        Company company = getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
+        List<Talent> publicTalents = talentRepository.findAllPublicTalents();
+        List<Talent> talentSharedWithCurrentCompany = talentRepository.findTalentsSharedWithUserCompany(company.getId());
+        Set<Talent> combinedSet = new HashSet<>(publicTalents);
+        combinedSet.addAll(talentSharedWithCurrentCompany);
+        return combinedSet.stream().map(TalentMapper::toResponseDto).toList();
+    }
+
+    public TalentResponseDto getTalentById(Authentication authentication, Long talentId) {
+        Talent talent = talentRepository.findById(talentId)
+                .orElseThrow(() -> new NotFoundException("Talent with ID: " + talentId + " not found"));
+
+        if (!talent.getCompany().isTalentsSharedPublicly()) {
+            Company company = getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
+            validateTalentIsAvailableToCompany(company, talent);
+        }
+        return TalentMapper.toResponseDto(talent);
+    }
+
+    public List<TalentResponseDto> getMyTalents(Authentication authentication) {
+        Company company = getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
+        List<Talent> myTalents = talentRepository.findByCompanyId(company.getId());
+        return myTalents.stream().map(TalentMapper::toResponseDto).toList();
+    }
+
+    public void deleteTalent(Authentication authentication, Long id) {
+        Company company = getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
+        Talent talent = getTalentOrThrow(id);
+        validateTalentBelongsToCompany(company, talent);
+        talentRepository.delete(talent);
+    }
+
+    public void setTalentVisibility(Authentication authentication, TalentPublicityRequestDto requestDto) {
+        Company company = getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
+        if (requestDto.isPublic()) {
+            Set<PartnerGroup> partnerGroupSet = new HashSet<>();
+            for (Long id : requestDto.getPartnerGroupIds()) {
+                PartnerGroup pg = partnerGroupRepository.findById(id)
+                        .orElseThrow(() -> new NotFoundException("Partner group with ID: " + id + " not found"));
+                validatePartnerGroupBelongsToUserCompany(company, pg);
+                partnerGroupSet.add(pg);
+            }
+            company.setTalentsSharedPublicly(true);
+            company.setTalentAccessGroups(partnerGroupSet);
+        } else {
+            company.setTalentsSharedPublicly(false);
+            company.setTalentAccessGroups(new HashSet<>());
+        }
+        companyRepository.save(company);
+    }
+
+    private void validateTalentIsAvailableToCompany(Company company, Talent talent) {
+        boolean talentAvailable = talent.getCompany().getId().equals(company.getId()) ||
+                talent.getCompany().getPartnerGroups().stream()
+                        .flatMap(pg -> pg.getPartners().stream())
+                        .anyMatch(c -> c.getId().equals(company.getId()));
+        if (!talentAvailable) {
+            throw new PermissionDeniedException("You have no access to this talent");
+        }
+    }
+
+    private boolean hasSkillsChanged(List<SkillExperience> existingSkills, List<SkillExperienceRequestDto> newSkillsDtoList) {
+        Set<String> existingSkillsSet = existingSkills.stream()
+                .map(skillExp -> skillExp.getSkill().getId() + "-" +
+                        skillExp.getExperience())
+                .collect(Collectors.toSet());
+
+        Set<String> newSkillsSet = newSkillsDtoList.stream()
+                .map(dto -> dto.getSkillId() + "-" + dto.getExperience())
+                .collect(Collectors.toSet());
+        return !existingSkillsSet.equals(newSkillsSet);
+    }
+
+    private void updateTalentStatusAndInfo(TalentRequestDto dto, Talent talent) {
+        talent.setDescription(dto.getDescription());
+        setTalentLocations(talent, dto.getLocations());
+        setTalentWorkModes(talent, dto.getWorkModes());
+        talent.getTalentExperience().setPattern(getPatternOrThrow(dto.getExperience().getPatternId()));
+        talent.getTalentExperience().setSeniority(getSeniorityOrThrow(dto.getExperience().getSeniorityId()));
+        talent.getTalentExperience().setTotalTime(dto.getExperience().getTotalTime() != null ? dto.getExperience().getTotalTime() : 0);
+        talent.setActive(dto.isActive());
+    }
+
+
+    private void setTalentLocations(Talent talent, List<Long> locationIds) {
+        if (locationIds == null || locationIds.isEmpty()) {
+            talent.setLocations(new HashSet<>());
+        } else {
+            Set<Location> locations = new HashSet<>();
+            for (Long locationId : locationIds) {
+                Location l = locationRepository.findById(locationId)
+                        .orElseThrow(() -> new NotFoundException("Location with ID: " + locationId + " not found"));
+                locations.add(l);
+            }
+            talent.setLocations(locations);
+        }
+    }
+
+    private void setTalentWorkModes(Talent talent, List<Long> workModeIds) {
+        if (workModeIds == null || workModeIds.isEmpty()) {
+            talent.setWorkModes(new HashSet<>());
+        } else {
+            Set<WorkMode> workModes = new HashSet<>();
+            for (Long workModeId : workModeIds) {
+                WorkMode wm = workModeRepository.findById(workModeId)
+                        .orElseThrow(() -> new NotFoundException("Work mode with ID: " + workModeId + " not found"));
+                workModes.add(wm);
+            }
+            talent.setWorkModes(workModes);
+        }
+    }
+
+    private void validateTalentBelongsToCompany(Company company, Talent talent) {
+        if (!Objects.equals(talent.getCompany().getId(), company.getId())) {
+            throw new PermissionDeniedException("This talent does not belong to your company");
+        }
+    }
+
     private void validatePartnerGroupBelongsToUserCompany(Company company, PartnerGroup partnerGroup) {
         if (partnerGroup.getCompany() != company) {
             throw new PermissionDeniedException("This partner group does not belong to this company");
@@ -372,7 +564,6 @@ public class CompanyService {
 
     private Set<Skill> getSkillsOrThrow(CompanyRequestDto dto) {
         List<Skill> skills = patternService.getAllSkillsIfSkillIdsExist(dto.getSkills()); // Throws
-        // TODO - change LIST to SET
         return new HashSet<>(skills);
     }
 
@@ -488,6 +679,92 @@ public class CompanyService {
         return companyIds.stream().map(id -> companyRepository.findById(id)
                         .orElseThrow(() -> new NotFoundException("Company with ID: " + id + " not found")))
                 .collect(Collectors.toSet());
+    }
+
+    private void setTalentExperience(TalentExperienceRequestDto dto, Talent talent) {
+        TalentExperience talentExperience = createTalentExperience(dto, talent);
+        List<SkillExperience> skillExperienceList = processSkillExperiences(dto.getSkills(), talentExperience);
+        talentExperience.setSkillExperienceList(skillExperienceList);
+        talent.setTalentExperience(talentExperience);
+        talentExperienceRepository.save(talentExperience);
+    }
+
+    private TalentExperience createTalentExperience(TalentExperienceRequestDto dto, Talent talent) {
+        TalentExperience talentExperience = new TalentExperience();
+        talentExperience.setTalent(talent);
+        talentExperience.setTotalTime(dto.getTotalTime() != null ? dto.getTotalTime() : 0);
+        talentExperience.setPattern(getPatternOrThrow(dto.getPatternId()));
+        talentExperience.setSeniority(getSeniorityOrThrow(dto.getSeniorityId()));
+        return talentExperience;
+    }
+
+    private List<SkillExperience> processSkillExperiences(List<SkillExperienceRequestDto> skillExperienceRequests, TalentExperience talentExperience) {
+        List<SkillExperience> skillExperienceList = new ArrayList<>();
+        if (skillExperienceRequests != null) {
+            for (SkillExperienceRequestDto dtoItem : skillExperienceRequests) {
+                Skill skill = getSkillOrThrow(dtoItem.getSkillId());
+                if (isSkillIsAlreadyInList(skillExperienceList, skill)) {
+                    continue;
+                }
+                skillExperienceList.add(createSkillExperience(talentExperience, skill, dtoItem.getExperience()));
+            }
+            return skillExperienceList;
+        } else {
+            return new ArrayList<>();
+        }
+    }
+
+    private boolean isSkillIsAlreadyInList(List<SkillExperience> skillExperienceList, Skill skill) {
+        for (SkillExperience se : skillExperienceList) {
+            if (se.getSkill().getId().equals(skill.getId())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void validateSkills(TalentRequestDto talentRequestDto) {
+        if (talentRequestDto.getExperience().getSkills() != null) {
+            List<SkillExperienceRequestDto> skillExperienceList = talentRequestDto.getExperience().getSkills();
+            List<Long> skillIds = skillExperienceList.stream().map(SkillExperienceRequestDto::getSkillId).toList();
+            List<Long> nonAssignableSkillIds = skillIds.stream()
+                    .map(skillRepository::findById)
+                    .map(Optional::orElseThrow)
+                    .filter(skill -> !skill.getAssignable())
+                    .map(Skill::getId)
+                    .toList();
+            if (!nonAssignableSkillIds.isEmpty()) {
+                throw new InvalidRequestException("The following skills are not assignable: " + nonAssignableSkillIds);
+            }
+        }
+    }
+
+    private SkillExperience createSkillExperience(TalentExperience talentExperience, Skill skill, Integer experience) {
+        return SkillExperience.builder()
+                .talentExperience(talentExperience)
+                .skill(skill)
+                .experience(experience)
+                .build();
+    }
+
+    private Skill getSkillOrThrow(Long skillId) {
+        return skillRepository.findById(skillId)
+                .orElseThrow(() -> new NotFoundException("Skill with ID: " + skillId + " not found"));
+    }
+
+    private Pattern getPatternOrThrow(Long patternId) {
+        return patternRepository.findById(patternId)
+                .orElseThrow(() -> new NotFoundException("Pattern with ID: " + patternId + " not found"));
+    }
+
+    private Seniority getSeniorityOrThrow(Long seniorityId) {
+        return seniorityRepository.findById(seniorityId)
+                .orElseThrow(() -> new NotFoundException("Seniority with ID: " + seniorityId + " not found"));
+    }
+
+    private Talent getTalentOrThrow(Long talentId) {
+        return talentRepository.findById(talentId)
+                .orElseThrow(() -> new NotFoundException("Talent with ID: " + talentId + " not found"));
     }
 
 }

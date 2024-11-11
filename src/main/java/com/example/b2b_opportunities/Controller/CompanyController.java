@@ -4,12 +4,15 @@ import com.example.b2b_opportunities.Dto.Request.CompanyFilterEditDto;
 import com.example.b2b_opportunities.Dto.Request.CompanyFilterRequestDto;
 import com.example.b2b_opportunities.Dto.Request.CompanyRequestDto;
 import com.example.b2b_opportunities.Dto.Request.PartnerGroupRequestDto;
+import com.example.b2b_opportunities.Dto.Request.TalentPublicityRequestDto;
+import com.example.b2b_opportunities.Dto.Request.TalentRequestDto;
 import com.example.b2b_opportunities.Dto.Response.CompaniesAndUsersResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyFilterResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyPublicResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyResponseDto;
 import com.example.b2b_opportunities.Dto.Response.PartnerGroupResponseDto;
 import com.example.b2b_opportunities.Dto.Response.ProjectResponseDto;
+import com.example.b2b_opportunities.Dto.Response.TalentResponseDto;
 import com.example.b2b_opportunities.Exception.common.NotFoundException;
 import com.example.b2b_opportunities.Mapper.CompanyMapper;
 import com.example.b2b_opportunities.Repository.CompanyRepository;
@@ -62,8 +65,8 @@ public class CompanyController {
     @GetMapping("{id}/projects")
     @ResponseStatus(HttpStatus.OK)
     public List<ProjectResponseDto> getCompanyProjects(@PathVariable("id") Long id) {
+        //TODO - we need to show projects if they are public or available to the logged user + ACTIVE status
         return companyService.getCompanyProjects(id);
-        // TODO: this needs to use Authentication instead of ID
     }
 
     @PostMapping
@@ -182,4 +185,48 @@ public class CompanyController {
         companyService.deleteCompanyFilter(id, authentication);
     }
 
+    @PostMapping("/talents")
+    @ResponseStatus(HttpStatus.CREATED)
+    public TalentResponseDto createTalent(Authentication authentication,
+                                          @RequestBody @Valid TalentRequestDto talentRequestDto) {
+        return companyService.createTalent(authentication, talentRequestDto);
+    }
+
+    @PutMapping("/talents/{id}")
+    @ResponseStatus(HttpStatus.CREATED)
+    public TalentResponseDto updateTalent(Authentication authentication,
+                                          @PathVariable("id") Long talentId,
+                                          @RequestBody @Valid TalentRequestDto talentRequestDto) {
+        return companyService.updateTalent(authentication, talentId, talentRequestDto);
+    }
+
+    @GetMapping("/talents")
+    @ResponseStatus(HttpStatus.OK)
+    public List<TalentResponseDto> getAllTalents(Authentication authentication) {
+        return companyService.getAllTalents(authentication);
+    }
+
+    @GetMapping("/talents/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public TalentResponseDto getById(Authentication authentication, @PathVariable("id") Long id) {
+        return companyService.getTalentById(authentication, id);
+    }
+
+    @GetMapping("/my-talents")
+    @ResponseStatus(HttpStatus.OK)
+    public List<TalentResponseDto> getMyTalents(Authentication authentication) {
+        return companyService.getMyTalents(authentication);
+    }
+
+    @PutMapping("/my-talents/publicity")
+    @ResponseStatus(HttpStatus.OK)
+    public void setTalentVisibility(Authentication authentication, @RequestBody TalentPublicityRequestDto talentPublicityRequestDto) {
+        companyService.setTalentVisibility(authentication, talentPublicityRequestDto);
+    }
+
+    @DeleteMapping("/talents/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteTalent(Authentication authentication, @PathVariable("id") Long id) {
+        companyService.deleteTalent(authentication, id);
+    }
 }
