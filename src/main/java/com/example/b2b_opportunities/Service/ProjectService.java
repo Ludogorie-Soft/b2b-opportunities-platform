@@ -41,7 +41,6 @@ public class ProjectService {
         Company company = getCompanyIfExists(user.getCompany().getId());
         Project project = getProjectIfExists(id);
         validateProjectIsAvailableToCompany(project, company);
-        //TODO - check if project is active (has ProjectStatus.ACTIVE)
         //TODO - also check if its posted by approved company
         return ProjectMapper.toDto(project);
     }
@@ -50,16 +49,19 @@ public class ProjectService {
         User user = userService.getCurrentUserOrThrow(authentication);
         Company company = getCompanyIfExists(user.getCompany().getId());
 
-        //all public && active projects
         List<ProjectResponseDto> publicProjects = ProjectMapper.toDtoList(projectRepository
-                .findByProjectStatusAndIsPartnerOnlyFalse(ProjectStatus.ACTIVE));
+                .findByProjectStatusAndIsPartnerOnlyFalseAndCompanyIsApprovedTrue(ProjectStatus.ACTIVE));
 
-        //all projects available for current user company
         List<ProjectResponseDto> partnerProjects = getPartnerProjects(company);
-
         List<ProjectResponseDto> combinedProjects = new ArrayList<>();
-        combinedProjects.addAll(publicProjects);
-        combinedProjects.addAll(partnerProjects);
+
+        if (publicProjects != null && !publicProjects.isEmpty()) {
+            combinedProjects.addAll(publicProjects);
+        }
+        if (partnerProjects != null && !partnerProjects.isEmpty()) {
+            combinedProjects.addAll(partnerProjects);
+        }
+
         return combinedProjects;
     }
 
@@ -140,12 +142,14 @@ public class ProjectService {
         if (project.isPartnerOnly()) {
             boolean isCompanyInGroup = project.getPartnerGroupList().stream()
                     .anyMatch(partnerGroup -> partnerGroup.getPartners().contains(userCompany));
-
             if (!isCompanyInGroup) {
                 throw new PermissionDeniedException("This project is only shared with partners");
             }
             if (project.getProjectStatus().equals(ProjectStatus.INACTIVE)) {
                 throw new PermissionDeniedException("This project is inactive");
+            }
+            if (!project.getCompany().isApproved()) {
+                throw new NotFoundException("The company has not yet been approved to post public projects");
             }
         }
     }
