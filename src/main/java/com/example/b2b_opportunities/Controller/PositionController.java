@@ -26,7 +26,7 @@ import java.util.List;
 public class PositionController {
     private final PositionService positionService;
 
-    @PostMapping()
+    @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public PositionResponseDto createPosition(@RequestBody @Valid PositionRequestDto dto, Authentication authentication) {
         return positionService.createPosition(dto, authentication);
@@ -34,8 +34,8 @@ public class PositionController {
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public List<PositionResponseDto> getPositions() {
-        return positionService.getPositions();
+    public List<PositionResponseDto> getPositions(Authentication authentication) {
+        return positionService.getPositions(authentication);
     }
 
     @GetMapping("/{id}")

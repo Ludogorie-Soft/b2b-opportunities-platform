@@ -111,10 +111,13 @@ public class PositionService {
     }
 
     public PositionResponseDto getPosition(Long id) {
+        //TODO - must be returned if available
         return PositionMapper.toResponseDto(getPositionOrThrow(id));
     }
 
-    public List<PositionResponseDto> getPositions() {
+    public List<PositionResponseDto> getPositions(Authentication authentication) {
+        Company userCompany = userService.getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
+        //TODO - must return only available positions
         List<Position> positions = positionRepository.findAll();
         return PositionMapper.toResponseDtoList(positions);
     }
