@@ -188,6 +188,9 @@ public class CompanyService {
             //if logged user is checking his projects - return all of them
             return ProjectMapper.toDtoSet(new HashSet<>(company.getProjects()));
         }
+        if (!company.isApproved()) {
+            throw new NotFoundException("This company has not yet been approved to post public projects");
+        }
         //show public active projects
         List<Project> activeAndNonPartnerOnlyProjects = projectRepository
                 .findActiveNonPartnerOnlyProjectsByCompanyId(ProjectStatus.ACTIVE, companyId);
