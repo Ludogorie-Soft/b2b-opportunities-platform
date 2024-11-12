@@ -144,6 +144,9 @@ public class ProjectService {
             if (!isCompanyInGroup) {
                 throw new PermissionDeniedException("This project is only shared with partners");
             }
+            if (project.getProjectStatus().equals(ProjectStatus.INACTIVE)) {
+                throw new PermissionDeniedException("This project is inactive");
+            }
         }
     }
 
