@@ -11,7 +11,7 @@ public class EmailUtils {
 
 
     public static void validateEmail(String email) {
-        if (!isValidEmail(email) || !isValidDomain(email))
+        if (!isValidEmail(email))
             throw new InvalidRequestException("Invalid email format or domain.");
     }
 
@@ -20,15 +20,5 @@ public class EmailUtils {
             return false;
         }
         return EMAIL_PATTERN.matcher(email).matches();
-    }
-
-    private static boolean isValidDomain(String email) {
-        String domain = email.substring(email.indexOf('@') + 1);
-        try {
-            InetAddress.getByName(domain); // Checks if the domain is resolvable
-            return true;
-        } catch (UnknownHostException e) {
-            return false;
-        }
     }
 }
