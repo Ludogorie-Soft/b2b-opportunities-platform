@@ -8,17 +8,15 @@ import org.springframework.stereotype.Component;
 @Component
 public class ExperienceMapper {
 
-    public static Experience toExperience (ExperienceRequestDto dto){
+    public static Experience toExperience(ExperienceRequestDto dto) {
         return Experience.builder()
                 .months(dto.getMonths())
-                .years(dto.getYears())
                 .build();
     }
 
-    public static ExperienceResponseDto toExperienceResponseDto(Experience experience){
+    public static ExperienceResponseDto toExperienceResponseDto(Experience experience) {
         return ExperienceResponseDto.builder()
                 .months(experience.getMonths())
-                .years(experience.getYears())
                 .build();
     }
 }

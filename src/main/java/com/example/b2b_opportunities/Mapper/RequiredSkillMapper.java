@@ -18,13 +18,9 @@ public class RequiredSkillMapper {
             // Set Experience
             if (s.getExperience() != null) {
                 ExperienceResponseDto experienceResponseDto = new ExperienceResponseDto();
-                Integer years = s.getExperience().getYears();
                 Integer months = s.getExperience().getMonths();
-                if (years != null || months != null) {
-                    if (years != null) experienceResponseDto.setYears(years);
                     if (months != null) experienceResponseDto.setMonths(months);
                     dto.setExperience(experienceResponseDto);
-                }
             }
             return dto;
         }).collect(Collectors.toList());

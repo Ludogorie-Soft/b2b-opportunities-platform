@@ -43,7 +43,7 @@ databaseChangeLog:
       relativeToChangelogFile: true
   - include:
       file: 15-modify-projects-table.sql
-      relativeToChangelogFile: true      
+      relativeToChangelogFile: true
   - include:
       file: 16-create-company-project-notified-table.sql
       relativeToChangelogFile: true
@@ -94,4 +94,7 @@ databaseChangeLog:
       relativeToChangelogFile: true
   - include:
       file: 32-insert-talent-min-and-max-rates.sql
+      relativeToChangelogFile: true
+  - include:
+      file: 33-remove-years-column-from-experience.sql
       relativeToChangelogFile: true

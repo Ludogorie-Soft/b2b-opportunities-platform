@@ -15,5 +15,4 @@ import lombok.Setter;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ExperienceResponseDto {
     private Integer months;
-    private Integer years;
 }
