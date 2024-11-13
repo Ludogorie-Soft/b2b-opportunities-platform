@@ -62,7 +62,8 @@ public class ProjectServiceTest {
     @Mock
     private CompanyRepository companyRepository;
 
-    @Mock EmailSchedulerService emailSchedulerService;
+    @InjectMocks
+    private EmailSchedulerService emailSchedulerService;
 
     @Mock
     private ProjectMapper projectMapper;
