@@ -36,11 +36,55 @@ public class EmailSchedulerService {
         sendEmailToEveryCompany(projectsLastOneDay);
     }
 
+    /**
+     * This method will only send emails to companies that don't have any skills set and Default filter is Enabled.
+     * This will remind them to set their skills or to create filters
+     */
+    @Scheduled(cron = "0 0 9 * * MON")
+    public void sendWeeklyEmailsWhenCompanyHasNoSkillsAndNoCustomFilters() {
+        List<Project> projectsLastWeek = getProjectsUpdatedInPastDays(7);
+        String title = "B2B Important: Set Your Company Skills to Receive Relevant Project Updates";
+        String emailContent = "Hello,\n\n" +
+                "We noticed that you haven’t set any skills for your company profile yet. " +
+                "This week alone, there were " + projectsLastWeek.size() + " new projects posted that may be relevant to you.\n\n" +
+                "To ensure you receive notifications tailored to your interests, please update your company profile by adding relevant skills. " +
+                "This way, you’ll only be notified about projects that align with your expertise.\n\n" +
+                "Alternatively, you can create custom filters to further refine the types of projects you receive notifications about.\n\n" +
+                "If you wish to stop receiving these updates altogether, simply disable the \"Default\" filter in your profile settings.\n\n" +
+                "Thank you for staying with us, and we look forward to helping you find the right opportunities!\n\n" +
+                "Best regards,\n B2B Opportunities";
+
+        List<Company> companies = companyRepository.findCompaniesWithSingleDefaultEnabledFilterAndNoCompanySkills();
+        for (Company c : companies) {
+            mailService.sendEmail(c.getEmail(), emailContent, title);
+        }
+    }
+
     private void sendEmailToEveryCompany(List<Project> projectsToCheck) {
         List<Company> companies = companyRepository.findAll();
 
         for (Company c : companies) {
             Set<Skill> skills = getAllEnabledCompanyFilterSkills(c);
+            if (skills.isEmpty()) {
+                // If the company has no Filters (or those don't have any skills),
+                // and the 'Default' filter is Enabled - use the company skills (if any).
+                // If the Default Filter has any skills added to it, it will be treated as 'Custom' filter
+                // and the skills will be taken from getAllEnabledCompanyFilterSkills.
+                Filter defaultFilter = c.getFilters().stream()
+                        .filter(f -> f.getName().equalsIgnoreCase("Default") && f.getIsEnabled())
+                        .findFirst()
+                        .orElse(null);
+
+                if (defaultFilter != null) {
+                    skills = c.getSkills();
+                }
+            }
+            if (skills.isEmpty()) {
+                // No need to continue. There is another scheduler that handles this:
+                // sendWeeklyEmailsWhenCompanyHasNoSkillsAndNoCustomFilters
+                return;
+            }
+
             Set<Project> projectsThatMatchAtLeastOneSkill = getMatchingProjects(skills, projectsToCheck);
 
             boolean hasChanged = false;

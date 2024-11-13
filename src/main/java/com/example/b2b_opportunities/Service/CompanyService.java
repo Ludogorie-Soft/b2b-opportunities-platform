@@ -112,10 +112,25 @@ public class CompanyService {
         setCompanyEmailVerificationStatusAndSendEmail(company, currentUser, companyRequestDto, request);
 
         company = companyRepository.save(company);
+        createDefaultFilterIfCompanyHasNoSkills(company);
         currentUser.setCompany(company);
         userRepository.saveAndFlush(currentUser);
 
         return generateCompanyResponseDto(company);
+    }
+
+    private void createDefaultFilterIfCompanyHasNoSkills(Company company) {
+        Set<Skill> skills = company.getSkills();
+        if (skills.isEmpty()) {
+            Filter filter = Filter.builder()
+                    .name("Default")
+                    .isEnabled(true)
+                    .company(company)
+                    .build();
+            filterRepository.save(filter);
+            company.setFilters(new HashSet<>(Set.of(filter)));
+            companyRepository.save(company);
+        }
     }
 
     public CompaniesAndUsersResponseDto getCompanyAndUsers(Long companyId) {
@@ -205,7 +220,23 @@ public class CompanyService {
 
         Filter filter = mapToFilter(dto, company);
         filter.setId(id);
+        if (!filter.getSkills().isEmpty()) {
+            // Only if the filter has at least one skill.
+            disableDefaultFilterIfExistsAndHasNoSkills(company);
+        }
         return FilterMapper.toDto(filterRepository.save(filter));
+    }
+
+    private void disableDefaultFilterIfExistsAndHasNoSkills(Company c) {
+        Filter defaultFilter = c.getFilters().stream()
+                .filter(f -> f.getName().equalsIgnoreCase("Default") && f.getIsEnabled() && f.getSkills().isEmpty())
+                .findFirst()
+                .orElse(null);
+        // Disable only if the 'Default' filter exists, is Enabled and has No skills (which makes it custom)
+        if (defaultFilter != null) {
+            defaultFilter.setIsEnabled(false);
+            filterRepository.save(defaultFilter);
+        }
     }
 
     public void deleteCompanyFilter(Long id, Authentication authentication) {
@@ -226,6 +257,11 @@ public class CompanyService {
 
         userCompany.getFilters().add(filter);
         companyRepository.save(userCompany);
+
+        if (!filter.getSkills().isEmpty()) {
+            // Only if the filter has at least one skill.
+            disableDefaultFilterIfExistsAndHasNoSkills(userCompany);
+        }
 
         return FilterMapper.toDto(filter);
     }
