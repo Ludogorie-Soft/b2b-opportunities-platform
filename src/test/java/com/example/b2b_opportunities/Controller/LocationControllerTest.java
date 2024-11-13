@@ -110,21 +110,21 @@ class LocationControllerTest {
     @Test
     void shouldCreateNewLocationAndCapitalizeAndStripSpacesForAllWordsInLocation() throws Exception {
         mockMvc.perform(post("/locations")
-                        .param("name", "  vEliKo    TarNovo  "))
+                        .param("name", "  vEliKo    TarNovo Test "))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.name").value("Veliko Tarnovo"));
+                .andExpect(jsonPath("$.name").value("Veliko Tarnovo Test"));
     }
 
     @Test
     void shouldThrowAnErrorIfLocationAlreadyExists() throws Exception {
-        String locationName = "Veliko Tarnovo";
+        String locationName = "Veliko Tarnovo Test";
         locationRepository.save(Location.builder().name(locationName).build());
         locationRepository.flush();
 
         String expectedMessage = "Location with name: '" + locationName + "' already exists";
 
         mockMvc.perform(post("/locations")
-                        .param("name", "  vEliKo    TarNovo  "))
+                        .param("name", "  vEliKo    TarNovo TeSt "))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.path").value("/locations"))
                 .andExpect(jsonPath("$.error").value("Conflict"))
@@ -138,24 +138,24 @@ class LocationControllerTest {
         Location l = locationRepository.save(Location.builder().name("testCity3").build());
         locationRepository.flush();
         mockMvc.perform(put("/locations/" + l.getId())
-                        .param("newName", "  vEliKo    TarNovo  "))
+                        .param("newName", "  vEliKo    TarNovo TesT "))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Veliko Tarnovo"));
+                .andExpect(jsonPath("$.name").value("Veliko Tarnovo Test"));
     }
 
     @Test
     void shouldReturnSameNameIfNewNameIsSameAsOldName() throws Exception {
-        String locationName = "Veliko Tarnovo";
+        String locationName = "Veliko Tarnovo Test";
         Location l = locationRepository.save(Location.builder().name(locationName).build());
         locationRepository.flush();
         mockMvc.perform(put("/locations/" + l.getId())
-                        .param("newName", "  vEliKo    TarNovo  "))
-                .andExpect(jsonPath("$.name").value("Veliko Tarnovo"));
+                        .param("newName", "  vEliKo    TarNovo  tEst"))
+                .andExpect(jsonPath("$.name").value(locationName));
     }
 
     @Test
     void ShouldThrowAnErrorIfNewNameAlreadyExists() throws Exception {
-        String locationName = "Veliko Tarnovo";
+        String locationName = "Veliko Tarnovo Test";
         locationRepository.save(Location.builder().name(locationName).build());
         Location l = locationRepository.save(Location.builder().name("testCity3").build());
         locationRepository.flush();
@@ -163,7 +163,7 @@ class LocationControllerTest {
         String expectedMessage = "Location with name: '" + locationName + "' already exists";
 
         mockMvc.perform(put("/locations/" + l.getId())
-                        .param("newName", "  vEliKo    TarNovo  "))
+                        .param("newName", "  vEliKo    TarNovo  tEst"))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.path").value("/locations/" + l.getId().intValue()))
                 .andExpect(jsonPath("$.error").value("Conflict"))
