@@ -189,7 +189,7 @@ public class CompanyService {
             return ProjectMapper.toDtoSet(new HashSet<>(company.getProjects()));
         }
         if (!company.isApproved()) {
-            throw new NotFoundException("This company has not yet been approved to post public projects");
+            return new HashSet<>();
         }
         //show public active projects
         List<Project> activeAndNonPartnerOnlyProjects = projectRepository
@@ -439,7 +439,7 @@ public class CompanyService {
                         .anyMatch(c -> c.getId().equals(company.getId()));
 
         if (!talent.getCompany().getId().equals(company.getId()) && !talent.isActive()) {
-            throw new PermissionDeniedException("You have no access to this talent because it is not active.");
+            throw new PermissionDeniedException("Talent is not active.");
         }
 
         if (!talentAvailable) {
