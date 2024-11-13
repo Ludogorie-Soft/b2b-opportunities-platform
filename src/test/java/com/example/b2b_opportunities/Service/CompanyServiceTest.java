@@ -15,6 +15,7 @@ import com.example.b2b_opportunities.Mapper.UserMapper;
 import com.example.b2b_opportunities.Repository.CompanyRepository;
 import com.example.b2b_opportunities.Repository.CompanyTypeRepository;
 import com.example.b2b_opportunities.Repository.DomainRepository;
+import com.example.b2b_opportunities.Repository.FilterRepository;
 import com.example.b2b_opportunities.Repository.UserRepository;
 import com.example.b2b_opportunities.Static.EmailVerification;
 import jakarta.servlet.http.HttpServletRequest;
@@ -67,6 +68,10 @@ public class CompanyServiceTest {
 
     @Mock
     private PatternService patternService;
+
+    @Mock
+    private FilterRepository filterRepository;
+
     @Mock
     private CompanyTypeRepository companyTypeRepository;
 
@@ -83,6 +88,7 @@ public class CompanyServiceTest {
     private CompanyService companyService;
 
     private CompanyRequestDto companyRequestDto;
+
     private User currentUser;
 
     @BeforeEach
@@ -153,7 +159,7 @@ public class CompanyServiceTest {
 
         CompanyResponseDto responseDto = companyService.createCompany(authentication, companyRequestDto, request);
 
-        verify(companyRepository, times(2)).save(any(Company.class));
+        verify(companyRepository, times(3)).save(any(Company.class));
         assertNotNull(responseDto);
     }
 

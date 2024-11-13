@@ -24,4 +24,14 @@ public interface CompanyRepository extends JpaRepository<Company, Long> {
 
     @Query(value = "SELECT * FROM companies c WHERE c.email_verification = 'ACCEPTED'", nativeQuery = true)
     List<Company> findCompaniesByEmailVerificationAccepted();
+
+    @Query("SELECT c FROM Company c " +
+            "JOIN c.filters f " +
+            "WHERE LOWER(f.name) = 'default' " +
+            "AND f.isEnabled = true " +
+            "AND SIZE(c.skills) = 0 " +
+            "GROUP BY c.id " +
+            "HAVING COUNT(c.filters) = 1")
+    List<Company> findCompaniesWithSingleDefaultEnabledFilterAndNoCompanySkills();
+
 }
