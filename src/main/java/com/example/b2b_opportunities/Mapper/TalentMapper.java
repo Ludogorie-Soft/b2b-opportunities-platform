@@ -28,6 +28,8 @@ public class TalentMapper {
         return TalentResponseDto.builder()
                 .id(talent.getId())
                 .isActive(talent.isActive())
+                .maxRate(talent.getMaxRate())
+                .minRate(talent.getMinRate())
                 .companyId(talent.getCompany().getId())
                 .description(talent.getDescription())
                 .workModes(getWorkModeIds(talent.getWorkModes()))

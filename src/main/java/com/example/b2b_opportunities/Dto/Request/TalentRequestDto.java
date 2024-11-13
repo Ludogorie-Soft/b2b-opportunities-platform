@@ -15,4 +15,6 @@ public class TalentRequestDto {
     private List<Long> workModes; //can be null
     private List<Long> locations; //can be null
     private TalentExperienceRequestDto experience;
+    private Integer minRate;
+    private Integer maxRate;
 }

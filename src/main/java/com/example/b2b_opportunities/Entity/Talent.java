@@ -38,6 +38,8 @@ public class Talent {
     private Company company;
 
     private String description;
+    private Integer minRate;
+    private Integer maxRate;
 
     @ManyToMany
     @JoinTable(name = "talent_work_modes",

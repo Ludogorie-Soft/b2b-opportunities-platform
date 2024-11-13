@@ -376,6 +376,7 @@ public class CompanyService {
         talent.setCompany(company);
         setTalentLocations(talent, talentRequestDto.getLocations());
         setTalentWorkModes(talent, talentRequestDto.getWorkModes());
+        setTalentRates(talent, talentRequestDto);
         validateSkills(talentRequestDto);
         talentRepository.save(talent);
 
@@ -383,12 +384,13 @@ public class CompanyService {
         return TalentMapper.toResponseDto(talent);
     }
 
-    public TalentResponseDto updateTalent(Authentication authentication, Long talentId, TalentRequestDto talentRequestDto) {
+    public TalentResponseDto updateTalent(Authentication authentication, Long talentId, TalentRequestDto
+            talentRequestDto) {
         Company company = getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
         Talent talent = getTalentOrThrow(talentId);
         validateTalentBelongsToCompany(company, talent);
         validateSkills(talentRequestDto);
-
+        setTalentRates(talent, talentRequestDto);
         TalentExperience existingTalentExperience = talent.getTalentExperience();
         List<SkillExperience> existingSkills = existingTalentExperience != null
                 ? existingTalentExperience.getSkillExperienceList()
@@ -422,10 +424,12 @@ public class CompanyService {
     public TalentResponseDto getTalentById(Authentication authentication, Long talentId) {
         Talent talent = talentRepository.findById(talentId)
                 .orElseThrow(() -> new NotFoundException("Talent with ID: " + talentId + " not found"));
-
+        Company userCompany = getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
         if (!talent.getCompany().isTalentsSharedPublicly()) {
-            Company company = getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
-            validateTalentIsAvailableToCompany(company, talent);
+            validateTalentIsAvailableToCompany(userCompany, talent);
+        }
+        if (!talent.isActive() && !Objects.equals(talent.getCompany().getId(), userCompany.getId())) {
+            throw new PermissionDeniedException("Talent is inactive");
         }
         return TalentMapper.toResponseDto(talent);
     }
@@ -462,6 +466,19 @@ public class CompanyService {
         companyRepository.save(company);
     }
 
+    private void setTalentRates(Talent talent, TalentRequestDto talentRequestDto) {
+        Integer min = talentRequestDto.getMinRate();
+        Integer max = talentRequestDto.getMaxRate();
+        if (min == null || min <= 0) {
+            throw new InvalidRequestException("Min rate must be greater than 0");
+        }
+        if (max != null && min > max) {
+            throw new InvalidRequestException("Min rate cannot exceed max rate");
+        }
+        talent.setMinRate(min);
+        talent.setMaxRate(max);
+    }
+
     private void validateTalentIsAvailableToCompany(Company company, Talent talent) {
         boolean talentAvailable = talent.getCompany().getId().equals(company.getId()) ||
                 talent.getCompany().getPartnerGroups().stream()
@@ -477,7 +494,8 @@ public class CompanyService {
         }
     }
 
-    private boolean hasSkillsChanged(List<SkillExperience> existingSkills, List<SkillExperienceRequestDto> newSkillsDtoList) {
+    private boolean hasSkillsChanged
+            (List<SkillExperience> existingSkills, List<SkillExperienceRequestDto> newSkillsDtoList) {
         Set<String> existingSkillsSet = existingSkills.stream()
                 .map(skillExp -> skillExp.getSkill().getId() + "-" +
                         skillExp.getExperience())
