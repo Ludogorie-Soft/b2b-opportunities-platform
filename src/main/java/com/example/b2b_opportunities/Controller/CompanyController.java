@@ -59,8 +59,7 @@ public class CompanyController {
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     public CompanyResponseDto getCompany(@PathVariable("id") Long id) {
-        return CompanyMapper.toCompanyResponseDto(companyRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Company with ID: " + id + " not found")));
+        return companyService.getCompany(id);
     }
 
     @GetMapping("{id}/projects")

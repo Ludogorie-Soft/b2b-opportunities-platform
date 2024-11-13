@@ -123,6 +123,12 @@ public class CompanyService {
         return generateCompanyResponseDto(company);
     }
 
+    public CompanyResponseDto getCompany(Long companyId){
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new NotFoundException("Company with ID: " + companyId + " not found"));
+        return generateCompanyResponseDto(company);
+    }
+
     private void createDefaultFilterIfCompanyHasNoSkills(Company company) {
         Set<Skill> skills = company.getSkills();
         if (skills.isEmpty()) {
