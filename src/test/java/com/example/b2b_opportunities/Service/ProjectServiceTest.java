@@ -61,6 +61,9 @@ public class ProjectServiceTest {
 
     @Mock
     private CompanyRepository companyRepository;
+
+    @Mock EmailSchedulerService emailSchedulerService;
+
     @Mock
     private ProjectMapper projectMapper;
 
@@ -499,7 +502,7 @@ public class ProjectServiceTest {
         when(projectRepository.findProjectsExpiringInTwoDays()).thenReturn(Collections.emptyList());
         when(projectRepository.findExpiredAndActiveProjects()).thenReturn(Collections.emptyList());
 
-        projectService.processExpiringProjects();
+        emailSchedulerService.processExpiringProjects();
 
         verify(mailService, never()).sendProjectExpiringMail(any(Project.class));
         verify(projectRepository, never()).save(any(Project.class));
@@ -515,7 +518,7 @@ public class ProjectServiceTest {
         when(projectRepository.findProjectsExpiringInTwoDays()).thenReturn(expiringProjects);
         when(projectRepository.findExpiredAndActiveProjects()).thenReturn(Collections.emptyList());
 
-        projectService.processExpiringProjects();
+        emailSchedulerService.processExpiringProjects();
 
         verify(mailService, times(1)).sendProjectExpiringMail(expiringProject);
         verify(projectRepository, never()).save(any(Project.class));
@@ -531,7 +534,7 @@ public class ProjectServiceTest {
         when(projectRepository.findProjectsExpiringInTwoDays()).thenReturn(Collections.emptyList());
         when(projectRepository.findExpiredAndActiveProjects()).thenReturn(expiredProjects);
 
-        projectService.processExpiringProjects();
+        emailSchedulerService.processExpiringProjects();
 
         verify(mailService, never()).sendProjectExpiringMail(any(Project.class));
         verify(projectRepository, times(1)).save(expiredProject);
@@ -554,7 +557,7 @@ public class ProjectServiceTest {
         when(projectRepository.findProjectsExpiringInTwoDays()).thenReturn(expiringProjects);
         when(projectRepository.findExpiredAndActiveProjects()).thenReturn(expiredProjects);
 
-        projectService.processExpiringProjects();
+        emailSchedulerService.processExpiringProjects();
 
         verify(mailService, times(1)).sendProjectExpiringMail(expiringProject);
         verify(projectRepository, times(1)).save(expiredProject);

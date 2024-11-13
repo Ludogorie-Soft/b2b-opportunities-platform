@@ -112,19 +112,7 @@ public class ProjectService {
         return ProjectMapper.toDto(projectRepository.save(project));
     }
 
-    //Once per day at 13:00
-    @Scheduled(cron = "0 0 13 * * *")
-    public void processExpiringProjects() {
-        List<Project> expiringProjects = projectRepository.findProjectsExpiringInTwoDays();
-        for (Project project : expiringProjects) {
-            mailService.sendProjectExpiringMail(project);
-        }
-        List<Project> expiredProjects = projectRepository.findExpiredAndActiveProjects();
-        for (Project project : expiredProjects) {
-            project.setProjectStatus(ProjectStatus.INACTIVE);
-            projectRepository.save(project);
-        }
-    }
+
 
     public void validateProjectIsAvailableToCompany(Project project, Company userCompany) {
         if (project.getCompany().getId().equals(userCompany.getId())) {

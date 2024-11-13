@@ -8,6 +8,7 @@ import com.example.b2b_opportunities.Entity.RequiredSkill;
 import com.example.b2b_opportunities.Entity.Skill;
 import com.example.b2b_opportunities.Repository.CompanyRepository;
 import com.example.b2b_opportunities.Repository.ProjectRepository;
+import com.example.b2b_opportunities.Static.ProjectStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -57,6 +58,20 @@ public class EmailSchedulerService {
         List<Company> companies = companyRepository.findCompaniesWithSingleDefaultEnabledFilterAndNoCompanySkills();
         for (Company c : companies) {
             mailService.sendEmail(c.getEmail(), emailContent, title);
+        }
+    }
+
+    //Once per day at 13:00
+    @Scheduled(cron = "0 0 13 * * *")
+    public void processExpiringProjects() {
+        List<Project> expiringProjects = projectRepository.findProjectsExpiringInTwoDays();
+        for (Project project : expiringProjects) {
+            mailService.sendProjectExpiringMail(project);
+        }
+        List<Project> expiredProjects = projectRepository.findExpiredAndActiveProjects();
+        for (Project project : expiredProjects) {
+            project.setProjectStatus(ProjectStatus.INACTIVE);
+            projectRepository.save(project);
         }
     }
 
