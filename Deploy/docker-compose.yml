@@ -11,7 +11,7 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_TABLE_NAME}
     volumes:
-      - ./db:/var/lib/postgresql/data
+      - b2b_db_data:/var/lib/postgresql/data
       - ./icons:/icons
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}" ]
@@ -22,38 +22,42 @@ services:
     networks:
       - b2b-network
       
-  backend:
-    build:
-      context: ..
-      dockerfile: Deploy/Dockerfile
-    ports:
-      - "8082:8082"
-    depends_on:
-      db:
-        condition: service_healthy
-      minio:
-        condition: service_healthy
-    environment:
-      POSTGRES_HOST: db
-      DB_TABLE_NAME: ${DB_TABLE_NAME}
-      DB_USERNAME: ${DB_USERNAME}
-      DB_PASSWORD: ${DB_PASSWORD}
-      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
-      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
-      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
-      STORAGE_HOST: http://minio:9000
-      STORAGE_USER: ${STORAGE_USER}
-      STORAGE_PASSWORD: ${STORAGE_PASSWORD}
-      STORAGE_BUCKET_NAME: ${STORAGE_BUCKET_NAME}
-      FRONTEND_HOST: http://localhost:8083 # This is a string that is used to redirect users to the frontend.
-      EMAIL_SERVICE_URL: http://notifications:8085/api/email/send
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8082/actuator/health" ]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-    networks:
-      - b2b-network
+#  backend:
+#    build:
+#      context: ..
+#      dockerfile: Deploy/Dockerfile
+#    ports:
+#      - "8082:8082"
+#    depends_on:
+#      db:
+#        condition: service_healthy
+#      minio:
+#        condition: service_healthy
+#    environment:
+#      POSTGRES_HOST: db
+#      DB_TABLE_NAME: ${DB_TABLE_NAME}
+#      DB_USERNAME: ${DB_USERNAME}
+#      DB_PASSWORD: ${DB_PASSWORD}
+#      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+#      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+#      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+#      STORAGE_HOST: http://minio:9000
+#      STORAGE_USER: ${STORAGE_USER}
+#      STORAGE_PASSWORD: ${STORAGE_PASSWORD}
+#      STORAGE_BUCKET_NAME: ${STORAGE_BUCKET_NAME}
+#      FRONTEND_HOST: http://localhost:8083 # This is a string that is used to redirect users to the frontend.
+#      EMAIL_SERVICE_URL: http://notifications:8085/api/email/send
+#      CRON_EVERY_MONDAY_AT_9: ${CRON_EVERY_MONDAY_AT_9}
+#      CRON_TUESDAY_TO_FRIDAY_AT_9: ${CRON_TUESDAY_TO_FRIDAY_AT_9}
+#      CRON_COMPANIES_NO_SKILLS_AND_NO_CUSTOM_FILTERS: ${CRON_COMPANIES_NO_SKILLS_AND_NO_CUSTOM_FILTERS}
+#      CRON_PROCESS_EXPIRING_PROJECTS: ${CRON_PROCESS_EXPIRING_PROJECTS}
+#    healthcheck:
+#      test: [ "CMD", "curl", "-f", "http://localhost:8082/actuator/health" ]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 10
+#    networks:
+#      - b2b-network
 
   minio:
     image: 'bitnami/minio:latest'
@@ -61,7 +65,7 @@ services:
       - '9000:9000'
       - '9001:9001'
     volumes:
-      - ./storage:/bitnami/minio/data
+      - b2b_minio_data:/bitnami/minio/data
     environment:
       MINIO_ROOT_USER: ${STORAGE_USER}
       MINIO_ROOT_PASSWORD: ${STORAGE_PASSWORD}
@@ -103,3 +107,6 @@ services:
 networks:
   b2b-network:
     driver: bridge
+volumes:
+  b2b_minio_data:
+  b2b_db_data:
