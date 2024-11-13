@@ -38,6 +38,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/companies")
@@ -64,9 +65,8 @@ public class CompanyController {
 
     @GetMapping("{id}/projects")
     @ResponseStatus(HttpStatus.OK)
-    public List<ProjectResponseDto> getCompanyProjects(@PathVariable("id") Long id) {
-        //TODO - we need to show projects if they are public or available to the logged user + ACTIVE status
-        return companyService.getCompanyProjects(id);
+    public Set<ProjectResponseDto> getCompanyProjects(Authentication authentication, @PathVariable("id") Long id) {
+        return companyService.getCompanyProjects(authentication, id);
     }
 
     @PostMapping

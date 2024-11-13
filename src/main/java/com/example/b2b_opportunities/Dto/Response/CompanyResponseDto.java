@@ -24,6 +24,7 @@ public class CompanyResponseDto {
     private CompanyType companyType;
     private Domain domain;
     private String emailVerification;
+    private boolean isApproved;
     private String website;
     private String linkedIn;
     private String image;

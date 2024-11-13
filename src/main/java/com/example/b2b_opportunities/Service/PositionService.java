@@ -60,6 +60,7 @@ public class PositionService {
     private final PatternRepository patternRepository;
     private final RequiredSkillRepository requiredSkillRepository;
     private final CurrencyService currencyService;
+    private final ProjectService projectService;
 
     public PositionResponseDto createPosition(PositionRequestDto dto, Authentication authentication) {
         userService.validateUserAndCompany(authentication);
@@ -110,13 +111,21 @@ public class PositionService {
         positionRepository.delete(position);
     }
 
-    public PositionResponseDto getPosition(Long id) {
-        return PositionMapper.toResponseDto(getPositionOrThrow(id));
+    public PositionResponseDto getPosition(Authentication authentication, Long id) {
+        Position position = getPositionOrThrow(id);
+        Project project = position.getProject();
+        Company company = userService.getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
+        projectService.validateProjectIsAvailableToCompany(project, company);
+        return PositionMapper.toResponseDto(position);
     }
 
-    public List<PositionResponseDto> getPositions() {
-        List<Position> positions = positionRepository.findAll();
-        return PositionMapper.toResponseDtoList(positions);
+    public Set<PositionResponseDto> getPositions(Authentication authentication) {
+        Company userCompany = userService.getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
+
+        Set<Position> combinedSet = new HashSet<>(positionRepository.findByProjectIsPartnerOnlyFalseAndProjectProjectStatus(ProjectStatus.ACTIVE));
+        combinedSet.addAll(positionRepository.findPartnerOnlyPositionsByCompanyInPartnerGroupsAndStatus(userCompany.getId(), ProjectStatus.ACTIVE));
+
+        return PositionMapper.toResponseDtoSet(combinedSet);
     }
 
     public void editPositionStatus(Long positionId, Long statusId, String customCloseReason, Authentication authentication) {

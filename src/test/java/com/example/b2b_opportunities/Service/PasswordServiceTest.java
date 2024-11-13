@@ -51,7 +51,6 @@ class PasswordServiceTest {
                 .lastName("test")
                 .email("test@abv.bg")
                 .username("test")
-                .isApproved(true)
                 .isEnabled(true)
                 .provider(null)
                 .build();

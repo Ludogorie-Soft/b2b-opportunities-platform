@@ -168,7 +168,7 @@ public class ProjectServiceTest {
         when(userService.getCurrentUserOrThrow(authentication)).thenReturn(user);
         when(companyRepository.findById(company.getId())).thenReturn(Optional.of(company));
 
-        when(projectRepository.findByProjectStatusAndIsPartnerOnlyFalse(ProjectStatus.ACTIVE))
+        when(projectRepository.findByProjectStatusAndIsPartnerOnlyFalseAndCompanyIsApprovedTrue(ProjectStatus.ACTIVE))
                 .thenReturn(Collections.singletonList(publicProject));
         when(projectRepository.findPartnerOnlyProjectsByCompanyInPartnerGroupsAndStatus(company.getId(), ProjectStatus.ACTIVE))
                 .thenReturn(Collections.singletonList(partnerProject));

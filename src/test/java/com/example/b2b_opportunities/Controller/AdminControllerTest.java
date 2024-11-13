@@ -1,7 +1,10 @@
 package com.example.b2b_opportunities.Controller;
 
-import com.example.b2b_opportunities.Entity.User;
-import com.example.b2b_opportunities.Repository.UserRepository;
+import com.example.b2b_opportunities.Entity.Company;
+import com.example.b2b_opportunities.Entity.CompanyType;
+import com.example.b2b_opportunities.Repository.CompanyRepository;
+import com.example.b2b_opportunities.Repository.CompanyTypeRepository;
+import com.example.b2b_opportunities.Static.EmailVerification;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +21,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
 import java.nio.file.Paths;
+import java.util.HashSet;
 import java.util.List;
 
 import static org.hamcrest.Matchers.is;
@@ -48,72 +52,84 @@ public class AdminControllerTest {
     }
 
     @Autowired
-    private UserRepository userRepository;
-
+    private CompanyRepository companyRepository;
+    @Autowired
+    private CompanyTypeRepository companyTypeRepository;
     @Autowired
     private MockMvc mockMvc;
 
-    private User user = User.builder()
-            .firstName("test")
-            .lastName("test")
-            .email("test@abv.bg")
-            .username("test")
+    private CompanyType companyType = CompanyType.builder()
+            .name("test")
+            .build();
+    private Company company = Company.builder()
+            .companyType(companyType)
+            .name("test")
+            .email("test@test.test")
             .isApproved(false)
+            .emailVerification(EmailVerification.ACCEPTED)
+            .skills(new HashSet<>())
             .build();
 
     @Test
-    public void shouldApproveUserThatIsNotApproved() throws Exception {
-        user = userRepository.save(user);
+    public void shouldApproveCompanyThatIsNotApproved() throws Exception {
+        companyTypeRepository.save(companyType);
+        company = companyRepository.save(company);
 
-        mockMvc.perform(post("/admin/approve/" + user.getId()))
+        mockMvc.perform(post("/admin/approve/" + company.getId()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.username", is("test")))
+                .andExpect(jsonPath("$.name", is("test")))
                 .andExpect(jsonPath("$.approved", is(true)));
     }
 
     @Test
-    public void shouldApproveUser() throws Exception {
-        user.setApproved(true);
-        user = userRepository.save(user);
+    public void shouldApproveCompany() throws Exception {
+        companyTypeRepository.save(companyType);
+        company.setApproved(true);
+        company = companyRepository.save(company);
 
-        mockMvc.perform(post("/admin/approve/" + user.getId()))
+        mockMvc.perform(post("/admin/approve/" + company.getId()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.username", is("test")))
+                .andExpect(jsonPath("$.name", is("test")))
                 .andExpect(jsonPath("$.approved", is(true)));
     }
 
     @Test
-    public void shouldGetTwoNotApprovedUsers() throws Exception {
-        User user1 = User.builder()
-                .firstName("User1")
-                .lastName("Test1")
-                .email("user1@abv.bg")
-                .username("user1")
+    public void shouldGetTwoNotApprovedCompanies() throws Exception {
+        companyRepository.deleteAll();
+        companyTypeRepository.save(companyType);
+        Company company1 = Company.builder()
+                .companyType(companyType)
+                .name("test")
+                .email("test1@test.test")
                 .isApproved(false)
+                .emailVerification(EmailVerification.ACCEPTED)
+                .skills(new HashSet<>())
                 .build();
 
-        User user2 = User.builder()
-                .firstName("User2")
-                .lastName("Test2")
-                .email("user2@abv.bg")
-                .username("user2")
-                .isApproved(true)  // Approved - to make sure it's not being count
+        Company company2 = Company.builder()
+                .companyType(companyType)
+                .name("test")
+                .email("test2@test.test")
+                .isApproved(true) // Approved - to make sure it's not being count
+                .emailVerification(EmailVerification.ACCEPTED)
+                .skills(new HashSet<>())
                 .build();
 
-        User user3 = User.builder()
-                .firstName("User3")
-                .lastName("Test3")
-                .email("user3@abv.bg")
-                .username("user3")
+        Company company3 = Company.builder()
+                .companyType(companyType)
+                .name("test")
+                .email("test3@test.test")
                 .isApproved(false)
+                .emailVerification(EmailVerification.ACCEPTED)
+                .skills(new HashSet<>())
                 .build();
 
-        userRepository.saveAll(List.of(user1, user2, user3));
+        companyRepository.saveAll(List.of(company1, company2, company3));
 
         mockMvc.perform(get("/admin/get-non-approved"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].email").value("user1@abv.bg"))
-                .andExpect(jsonPath("$[1].email").value("user3@abv.bg"));
+                .andExpect(jsonPath("$[0].email").value("test1@test.test"))
+                .andExpect(jsonPath("$[1].email").value("test3@test.test"));
     }
 }

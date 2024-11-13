@@ -23,6 +23,7 @@ import com.example.b2b_opportunities.Entity.Filter;
 import com.example.b2b_opportunities.Entity.Location;
 import com.example.b2b_opportunities.Entity.PartnerGroup;
 import com.example.b2b_opportunities.Entity.Pattern;
+import com.example.b2b_opportunities.Entity.Project;
 import com.example.b2b_opportunities.Entity.Seniority;
 import com.example.b2b_opportunities.Entity.Skill;
 import com.example.b2b_opportunities.Entity.SkillExperience;
@@ -48,6 +49,7 @@ import com.example.b2b_opportunities.Repository.FilterRepository;
 import com.example.b2b_opportunities.Repository.LocationRepository;
 import com.example.b2b_opportunities.Repository.PartnerGroupRepository;
 import com.example.b2b_opportunities.Repository.PatternRepository;
+import com.example.b2b_opportunities.Repository.ProjectRepository;
 import com.example.b2b_opportunities.Repository.SeniorityRepository;
 import com.example.b2b_opportunities.Repository.SkillExperienceRepository;
 import com.example.b2b_opportunities.Repository.SkillRepository;
@@ -56,6 +58,7 @@ import com.example.b2b_opportunities.Repository.TalentRepository;
 import com.example.b2b_opportunities.Repository.UserRepository;
 import com.example.b2b_opportunities.Repository.WorkModeRepository;
 import com.example.b2b_opportunities.Static.EmailVerification;
+import com.example.b2b_opportunities.Static.ProjectStatus;
 import com.example.b2b_opportunities.Utils.StringUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -98,6 +101,7 @@ public class CompanyService {
     private final SkillExperienceRepository skillExperienceRepository;
     private final LocationRepository locationRepository;
     private final WorkModeRepository workModeRepository;
+    private final ProjectRepository projectRepository;
 
     public CompanyResponseDto createCompany(Authentication authentication,
                                             CompanyRequestDto companyRequestDto,
@@ -191,10 +195,30 @@ public class CompanyService {
         delete(authentication, "image");
     }
 
-    public List<ProjectResponseDto> getCompanyProjects(Long companyId) {
+    public Set<ProjectResponseDto> getCompanyProjects(Authentication authentication, Long companyId) {
         Company company = companyRepository.findById(companyId)
                 .orElseThrow(() -> new NotFoundException("Company with ID: " + companyId + " not found"));
-        return ProjectMapper.toDtoList(company.getProjects());
+        Company userCompany = getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
+        if (userCompany.getId().equals(companyId)) {
+            //if logged user is checking his projects - return all of them
+            return ProjectMapper.toDtoSet(new HashSet<>(company.getProjects()));
+        }
+        if (!company.isApproved()) {
+            return new HashSet<>();
+        }
+        //show public active projects
+        List<Project> activeAndNonPartnerOnlyProjects = projectRepository
+                .findActiveNonPartnerOnlyProjectsByCompanyId(ProjectStatus.ACTIVE, companyId);
+
+        //show partner only active projects
+        List<Project> activePartnerOnlyVisibleToCurrentUserCompanyProjects = projectRepository.
+                findActivePartnerOnlyProjectsSharedWithCompany(ProjectStatus.ACTIVE, company.getId(), userCompany.getId());
+
+        Set<Project> projectSet = new HashSet<>();
+        projectSet.addAll(activeAndNonPartnerOnlyProjects);
+        projectSet.addAll(activePartnerOnlyVisibleToCurrentUserCompanyProjects);
+
+        return ProjectMapper.toDtoSet(projectSet);
     }
 
     public List<CompanyFilterResponseDto> getCompanyFilters(Authentication authentication) {
@@ -382,8 +406,8 @@ public class CompanyService {
 
     public List<TalentResponseDto> getAllTalents(Authentication authentication) {
         Company company = getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
-        List<Talent> publicTalents = talentRepository.findAllPublicTalents();
-        List<Talent> talentSharedWithCurrentCompany = talentRepository.findTalentsSharedWithUserCompany(company.getId());
+        List<Talent> publicTalents = talentRepository.findAllActivePublicTalents();
+        List<Talent> talentSharedWithCurrentCompany = talentRepository.findActiveTalentsSharedWithUserCompany(company.getId());
         Set<Talent> combinedSet = new HashSet<>(publicTalents);
         combinedSet.addAll(talentSharedWithCurrentCompany);
         return combinedSet.stream().map(TalentMapper::toResponseDto).toList();
@@ -437,6 +461,11 @@ public class CompanyService {
                 talent.getCompany().getPartnerGroups().stream()
                         .flatMap(pg -> pg.getPartners().stream())
                         .anyMatch(c -> c.getId().equals(company.getId()));
+
+        if (!talent.getCompany().getId().equals(company.getId()) && !talent.isActive()) {
+            throw new PermissionDeniedException("Talent is not active.");
+        }
+
         if (!talentAvailable) {
             throw new PermissionDeniedException("You have no access to this talent");
         }

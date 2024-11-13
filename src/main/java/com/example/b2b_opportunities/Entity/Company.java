@@ -62,6 +62,8 @@ public class Company {
     @Enumerated(EnumType.STRING)
     private EmailVerification emailVerification;
 
+    private boolean isApproved;
+
     @ManyToOne
     @JoinColumn(name = "domain_id")
     private Domain domain;

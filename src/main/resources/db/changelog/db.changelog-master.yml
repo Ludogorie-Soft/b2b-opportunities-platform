@@ -86,3 +86,6 @@ databaseChangeLog:
   - include:
       file: 29-set-talent-experience-to-talent.sql
       relativeToChangelogFile: true
+  - include:
+      file: 30-modify-companies-table.sql
+      relativeToChangelogFile: true

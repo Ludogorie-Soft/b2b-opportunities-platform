@@ -146,7 +146,6 @@ class CompanyControllerTest {
                 .lastName("Doe")
                 .email("johndoe@abv.bgg")
                 .username("testUser")
-                .isApproved(true)
                 .isEnabled(true)
                 .password("password")
                 .role(roleRepository.findById(2L).orElseThrow())

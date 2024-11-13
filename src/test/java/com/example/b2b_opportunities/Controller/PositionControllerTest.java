@@ -144,7 +144,6 @@ class PositionControllerTest {
                 .lastName("Doe")
                 .email("johndoe@abv.bgg")
                 .username("testUser")
-                .isApproved(true)
                 .isEnabled(true)
                 .password("password")
                 .role(roleRepository.findById(2L).orElseThrow()) // user role
@@ -155,7 +154,6 @@ class PositionControllerTest {
                 .lastName("Doe2")
                 .email("johndoe2@abv.bgg")
                 .username("testUser2")
-                .isApproved(true)
                 .isEnabled(true)
                 .password("password2")
                 .role(roleRepository.findById(2L).orElseThrow()) // user role

@@ -59,4 +59,12 @@ public class PositionMapper {
         }
         return positionResponseDtoList;
     }
+
+    public static Set<PositionResponseDto> toResponseDtoSet(Set<Position> positions){
+        Set<PositionResponseDto> positionResponseDtoList = new HashSet<>();
+        for (Position position : positions) {
+            positionResponseDtoList.add(PositionMapper.toResponseDto(position));
+        }
+        return positionResponseDtoList;
+    }
 }

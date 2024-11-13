@@ -1,15 +1,19 @@
 package com.example.b2b_opportunities.Service;
 
 import com.example.b2b_opportunities.BaseTest;
-import com.example.b2b_opportunities.Dto.Response.UserResponseDto;
-import com.example.b2b_opportunities.Entity.User;
-import com.example.b2b_opportunities.Repository.UserRepository;
+import com.example.b2b_opportunities.Dto.Response.CompanyResponseDto;
+import com.example.b2b_opportunities.Entity.Company;
+import com.example.b2b_opportunities.Entity.CompanyType;
+import com.example.b2b_opportunities.Repository.CompanyRepository;
+import com.example.b2b_opportunities.Repository.CompanyTypeRepository;
+import com.example.b2b_opportunities.Static.EmailVerification;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -19,84 +23,105 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SpringBootTest
 @Transactional
 class AdminServiceTest extends BaseTest {
-    private final UserRepository userRepository;
+    private final CompanyRepository companyRepository;
+    private final CompanyTypeRepository companyTypeRepository;
     private final AdminService adminService;
-    private User user;
+    private CompanyType companyType;
 
     @Autowired
-    public AdminServiceTest(UserRepository userRepository, AdminService adminService) {
-        this.userRepository = userRepository;
+    public AdminServiceTest(CompanyRepository companyRepository, AdminService adminService, CompanyTypeRepository companyTypeRepository) {
+        this.companyRepository = companyRepository;
         this.adminService = adminService;
+        this.companyTypeRepository = companyTypeRepository;
     }
 
     @BeforeEach
     void setup() {
-        user = User.builder()
-                .firstName("test")
-                .lastName("test")
-                .email("test@abv.bg")
-                .username("test")
+        companyType = CompanyType.builder()
+                .name("testType")
                 .build();
     }
 
     @Test
-    void shouldApproveUnapprovedUser() {
-        user.setApproved(false);
-        user = userRepository.save(user);
+    void shouldApproveUnapprovedCompany() {
+        companyType = companyTypeRepository.save(companyType);
 
-        UserResponseDto approvedUser = adminService.approve(user.getId());
+        Company company = companyRepository.save(Company.builder()
+                .companyType(companyType)
+                .name("test")
+                .email("test@test.test")
+                .isApproved(false)
+                .emailVerification(EmailVerification.ACCEPTED)
+                .skills(new HashSet<>())
+                .build());
 
-        assertNotNull(approvedUser);
-        assertTrue(approvedUser.isApproved());
-        User updatedUser = userRepository.findById(user.getId()).orElseThrow();
-        assertTrue(updatedUser.isApproved());
+        CompanyResponseDto approvedCompany = adminService.approve(company.getId());
+
+        assertNotNull(approvedCompany);
+        assertTrue(approvedCompany.isApproved());
+        Company updatedCompany = companyRepository.findById(company.getId()).orElseThrow();
+        assertTrue(updatedCompany.isApproved());
     }
 
     @Test
     void shouldNotChangeAlreadyApprovedUser() {
-        user.setApproved(true);
-        user = userRepository.save(user);
+        companyType = companyTypeRepository.save(companyType);
 
-        UserResponseDto approvedUser = adminService.approve(user.getId());
+        Company company = companyRepository.save(Company.builder()
+                .companyType(companyType)
+                .name("test")
+                .email("test@test.test")
+                .isApproved(false)
+                .emailVerification(EmailVerification.ACCEPTED)
+                .skills(new HashSet<>())
+                .build());
 
-        assertNotNull(approvedUser);
-        assertTrue(approvedUser.isApproved());
-        User updatedUser = userRepository.findById(user.getId()).orElseThrow();
-        assertTrue(updatedUser.isApproved());
+        CompanyResponseDto approvedCompany = adminService.approve(company.getId());
+
+        assertNotNull(approvedCompany);
+        assertTrue(approvedCompany.isApproved());
+        Company updatedCompany = companyRepository.findById(company.getId()).orElseThrow();
+        assertTrue(updatedCompany.isApproved());
     }
 
     @Test
-    void shouldGetAllNonApprovedUsers() {
-        User user1 = User.builder()
-                .firstName("User1")
-                .lastName("Test1")
-                .email("user1@abv.bg")
-                .username("user1")
+    void shouldGetAllNonApprovedCompanies() {
+        companyRepository.deleteAll();
+        companyType = companyTypeRepository.save(companyType);
+
+        Company company1 = companyRepository.save(Company.builder()
+                .companyType(companyType)
+                .name("test1")
+                .email("test1@test.test")
                 .isApproved(false)
-                .build();
+                .emailVerification(EmailVerification.ACCEPTED)
+                .skills(new HashSet<>())
+                .build());
 
-        User user2 = User.builder()
-                .firstName("User2")
-                .lastName("Test2")
-                .email("user2@abv.bg")
-                .username("user2")
-                .isApproved(true)  // Approved - to make sure it's not being count
-                .build();
+        Company company2 = companyRepository.save(Company.builder()
+                .companyType(companyType)
+                .name("test2")
+                .email("test2@test.test")
+                .isApproved(true) // Approved - to make sure it's not being count
+                .emailVerification(EmailVerification.ACCEPTED)
+                .skills(new HashSet<>())
+                .build());
 
-        User user3 = User.builder()
-                .firstName("User3")
-                .lastName("Test3")
-                .email("user3@abv.bg")
-                .username("user3")
+        Company company3 = companyRepository.save(Company.builder()
+                .companyType(companyType)
+                .name("test3")
+                .email("test3@test.test")
                 .isApproved(false)
-                .build();
+                .emailVerification(EmailVerification.ACCEPTED)
+                .skills(new HashSet<>())
+                .build());
 
-        userRepository.saveAll(List.of(user1, user2, user3));
+        companyRepository.saveAll(List.of(company1, company2, company3));
 
-        List<UserResponseDto> nonApprovedUsers = adminService.getAllNonApprovedUsers();
+        List<CompanyResponseDto> nonApprovedCompanies = adminService.getAllNonApprovedCompanies();
 
-        assertNotNull(nonApprovedUsers);
-        assertEquals(2, nonApprovedUsers.size()); // user 1 and 3
-        assertTrue(nonApprovedUsers.stream().noneMatch(user -> user.isApproved()));
+        assertNotNull(nonApprovedCompanies);
+        assertEquals(2, nonApprovedCompanies.size()); // companies 1 and 3
+        assertTrue(nonApprovedCompanies.stream().noneMatch(CompanyResponseDto::isApproved));
     }
 }
