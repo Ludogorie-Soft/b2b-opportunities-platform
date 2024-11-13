@@ -126,15 +126,7 @@ public class ProjectService {
         }
     }
 
-    private List<ProjectResponseDto> getPartnerProjects(Company company) {
-        List<Project> partnerProjects = projectRepository.findPartnerOnlyProjectsByCompanyInPartnerGroupsAndStatus(company.getId(), ProjectStatus.ACTIVE);
-        if (partnerProjects.isEmpty()) {
-            return new ArrayList<>();
-        }
-        return ProjectMapper.toDtoList(partnerProjects);
-    }
-
-    private void validateProjectIsAvailableToCompany(Project project, Company userCompany) {
+    public void validateProjectIsAvailableToCompany(Project project, Company userCompany) {
         if (project.getCompany().getId().equals(userCompany.getId())) {
             return;
         }
@@ -152,6 +144,14 @@ public class ProjectService {
                 throw new NotFoundException("The company has not yet been approved to post public projects");
             }
         }
+    }
+
+    private List<ProjectResponseDto> getPartnerProjects(Company company) {
+        List<Project> partnerProjects = projectRepository.findPartnerOnlyProjectsByCompanyInPartnerGroupsAndStatus(company.getId(), ProjectStatus.ACTIVE);
+        if (partnerProjects.isEmpty()) {
+            return new ArrayList<>();
+        }
+        return ProjectMapper.toDtoList(partnerProjects);
     }
 
     private ProjectResponseDto createOrUpdate(ProjectRequestDto dto, Project project) {

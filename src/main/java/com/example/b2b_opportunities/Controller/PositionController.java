@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/positions")
@@ -34,14 +34,14 @@ public class PositionController {
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public List<PositionResponseDto> getPositions(Authentication authentication) {
+    public Set<PositionResponseDto> getPositions(Authentication authentication) {
         return positionService.getPositions(authentication);
     }
 
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public PositionResponseDto getPosition(@PathVariable("id") Long id) {
-        return positionService.getPosition(id);
+    public PositionResponseDto getPosition(Authentication authentication, @PathVariable("id") Long id) {
+        return positionService.getPosition(authentication, id);
     }
 
     @PutMapping("/{id}")
