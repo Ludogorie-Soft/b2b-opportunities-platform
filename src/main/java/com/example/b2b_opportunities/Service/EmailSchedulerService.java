@@ -25,13 +25,16 @@ public class EmailSchedulerService {
     private final CompanyRepository companyRepository;
     private final MailService mailService;
 
-    @Scheduled(cron = "0 0 9 * * MON")
+
+//    @Scheduled(cron = "0 0 9 * * MON")
+    @Scheduled(cron = "${cron.everyMondayAt9}")
     public void sendEmailEveryMonday() {
         List<Project> projectsLastThreeDays = getProjectsUpdatedInPastDays(3);
         sendEmailToEveryCompany(projectsLastThreeDays);
     }
 
-    @Scheduled(cron = "0 0 9 * * 2-5")
+//    @Scheduled(cron = "0 0 9 * * 2-5")
+    @Scheduled(cron = "${cron.TuesdayToFridayAt9}")
     public void sendEmailTuesdayToFriday() {
         List<Project> projectsLastOneDay = getProjectsUpdatedInPastDays(1);
         sendEmailToEveryCompany(projectsLastOneDay);
@@ -41,7 +44,8 @@ public class EmailSchedulerService {
      * This method will only send emails to companies that don't have any skills set and Default filter is Enabled.
      * This will remind them to set their skills or to create filters
      */
-    @Scheduled(cron = "0 0 9 * * MON")
+//    @Scheduled(cron = "0 0 9 * * MON")
+    @Scheduled(cron = "${cron.companiesNoSkillsAndNoCustomFilters}")
     public void sendWeeklyEmailsWhenCompanyHasNoSkillsAndNoCustomFilters() {
         List<Project> projectsLastWeek = getProjectsUpdatedInPastDays(7);
         String title = "B2B Important: Set Your Company Skills to Receive Relevant Project Updates";
@@ -61,8 +65,8 @@ public class EmailSchedulerService {
         }
     }
 
-    //Once per day at 13:00
-    @Scheduled(cron = "0 0 13 * * *")
+//    @Scheduled(cron = "0 0 13 * * *") //Once per day at 13:00
+    @Scheduled(cron = "${cron.processExpiringProjects}")
     public void processExpiringProjects() {
         List<Project> expiringProjects = projectRepository.findProjectsExpiringInTwoDays();
         for (Project project : expiringProjects) {
