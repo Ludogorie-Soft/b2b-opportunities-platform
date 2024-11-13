@@ -227,18 +227,6 @@ public class CompanyService {
         return FilterMapper.toDto(filterRepository.save(filter));
     }
 
-    private void disableDefaultFilterIfExistsAndHasNoSkills(Company c) {
-        Filter defaultFilter = c.getFilters().stream()
-                .filter(f -> f.getName().equalsIgnoreCase("Default") && f.getIsEnabled() && f.getSkills().isEmpty())
-                .findFirst()
-                .orElse(null);
-        // Disable only if the 'Default' filter exists, is Enabled and has No skills (which makes it custom)
-        if (defaultFilter != null) {
-            defaultFilter.setIsEnabled(false);
-            filterRepository.save(defaultFilter);
-        }
-    }
-
     public void deleteCompanyFilter(Long id, Authentication authentication) {
         User currentUser = userService.getCurrentUserOrThrow(authentication);
         Company company = getUserCompanyOrThrow(currentUser);
@@ -803,4 +791,15 @@ public class CompanyService {
                 .orElseThrow(() -> new NotFoundException("Talent with ID: " + talentId + " not found"));
     }
 
+    private void disableDefaultFilterIfExistsAndHasNoSkills(Company c) {
+        Filter defaultFilter = c.getFilters().stream()
+                .filter(f -> f.getName().equalsIgnoreCase("Default") && f.getIsEnabled() && f.getSkills().isEmpty())
+                .findFirst()
+                .orElse(null);
+        // Disable only if the 'Default' filter exists, is Enabled and has No skills (which makes it custom)
+        if (defaultFilter != null) {
+            defaultFilter.setIsEnabled(false);
+            filterRepository.save(defaultFilter);
+        }
+    }
 }
