@@ -92,3 +92,6 @@ databaseChangeLog:
   - include:
       file: 31-insert-locations.sql
       relativeToChangelogFile: true
+  - include:
+      file: 32-insert-talent-min-and-max-rates.sql
+      relativeToChangelogFile: true

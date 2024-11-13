@@ -23,4 +23,6 @@ public class TalentResponseDto {
     private List<Long> workModes;
     private List<Long> locations;
     private TalentExperienceResponseDto experience;
+    private Integer minRate;
+    private Integer maxRate;
 }
