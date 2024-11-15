@@ -11,7 +11,7 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_TABLE_NAME}
     volumes:
-      - ./db:/var/lib/postgresql/data
+      - b2b_db_data:/var/lib/postgresql/data
       - ./icons:/icons
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}" ]
@@ -47,6 +47,10 @@ services:
       STORAGE_BUCKET_NAME: ${STORAGE_BUCKET_NAME}
       FRONTEND_HOST: http://localhost:8083 # This is a string that is used to redirect users to the frontend.
       EMAIL_SERVICE_URL: http://notifications:8085/api/email/send
+      CRON_EVERY_MONDAY_AT_9: ${CRON_EVERY_MONDAY_AT_9}
+      CRON_TUESDAY_TO_FRIDAY_AT_9: ${CRON_TUESDAY_TO_FRIDAY_AT_9}
+      CRON_COMPANIES_NO_SKILLS_AND_NO_CUSTOM_FILTERS: ${CRON_COMPANIES_NO_SKILLS_AND_NO_CUSTOM_FILTERS}
+      CRON_PROCESS_EXPIRING_PROJECTS: ${CRON_PROCESS_EXPIRING_PROJECTS}
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8082/actuator/health" ]
       interval: 10s
@@ -61,7 +65,7 @@ services:
       - '9000:9000'
       - '9001:9001'
     volumes:
-      - ./storage:/bitnami/minio/data
+      - b2b_minio_data:/bitnami/minio/data
     environment:
       MINIO_ROOT_USER: ${STORAGE_USER}
       MINIO_ROOT_PASSWORD: ${STORAGE_PASSWORD}
@@ -103,3 +107,6 @@ services:
 networks:
   b2b-network:
     driver: bridge
+volumes:
+  b2b_minio_data:
+  b2b_db_data:
