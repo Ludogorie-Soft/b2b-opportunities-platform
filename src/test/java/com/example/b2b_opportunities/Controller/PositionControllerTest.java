@@ -230,7 +230,6 @@ class PositionControllerTest {
         // Create a valid ExperienceRequestDto for Skills(not required)
         ExperienceRequestDto experienceRequestDto = new ExperienceRequestDto();
         experienceRequestDto.setMonths(6);
-        experienceRequestDto.setYears(2);
         requiredSkillsDto.setExperience(experienceRequestDto);
         requestDto.setRequiredSkills(List.of(requiredSkillsDto));
 
@@ -256,7 +255,7 @@ class PositionControllerTest {
                 .andExpect(jsonPath("$.description").value("Position for software engineer"))
                 .andExpect(jsonPath("$.statusId").value(1))
                 .andExpect(jsonPath("$.location").value(location.getId()));
-      
+
         List<Position> positions = positionRepository.findAll();
         assertThat(positions).hasSize(1);
         assertThat(positions.getFirst().getDescription()).isEqualTo("Position for software engineer");
@@ -310,7 +309,6 @@ class PositionControllerTest {
                 .andExpect(jsonPath("$[0].rate").value(hasEntry("currencyId", currency.getId().intValue())))
                 .andExpect(jsonPath("$[0].requiredSkills[0].skillId").value(testSkill.getId()))
                 .andExpect(jsonPath("$[0].requiredSkills[0].experience.months").value(6))
-                .andExpect(jsonPath("$[0].requiredSkills[0].experience.years").value(2))
                 .andExpect(jsonPath("$[0].minYearsExperience").value(2))
                 .andExpect(jsonPath("$[0].hoursPerWeek").value(40))
                 .andExpect(jsonPath("$[0].responsibilities").value(containsInAnyOrder("Develop software", "Review code")))
@@ -334,7 +332,6 @@ class PositionControllerTest {
                 .andExpect(jsonPath("$.rate").value(hasEntry("currencyId", currency.getId().intValue())))
                 .andExpect(jsonPath("$.requiredSkills[0].skillId").value(testSkill.getId()))
                 .andExpect(jsonPath("$.requiredSkills[0].experience.months").value(6))
-                .andExpect(jsonPath("$.requiredSkills[0].experience.years").value(2))
                 .andExpect(jsonPath("$.minYearsExperience").value(2))
                 .andExpect(jsonPath("$.hoursPerWeek").value(40))
                 .andExpect(jsonPath("$.responsibilities").value(containsInAnyOrder("Develop software", "Review code")))
@@ -366,7 +363,6 @@ class PositionControllerTest {
                 .andExpect(jsonPath("$.rate").value(hasEntry("currencyId", currency.getId().intValue())))
                 .andExpect(jsonPath("$.requiredSkills[0].skillId").value(testSkill.getId()))
                 .andExpect(jsonPath("$.requiredSkills[0].experience.months").value(6))
-                .andExpect(jsonPath("$.requiredSkills[0].experience.years").value(2))
                 .andExpect(jsonPath("$.minYearsExperience").value(2))
                 .andExpect(jsonPath("$.hoursPerWeek").value(20))
                 .andExpect(jsonPath("$.responsibilities").value(containsInAnyOrder("Develop software", "Review code")))
@@ -473,7 +469,6 @@ class PositionControllerTest {
                 .andExpect(jsonPath("$.rate").value(hasEntry("currencyId", currency.getId().intValue())))
                 .andExpect(jsonPath("$.requiredSkills[0].skillId").value(testSkill.getId()))
                 .andExpect(jsonPath("$.requiredSkills[0].experience.months").value(6))
-                .andExpect(jsonPath("$.requiredSkills[0].experience.years").value(2))
                 .andExpect(jsonPath("$.minYearsExperience").value(2))
                 .andExpect(jsonPath("$.hoursPerWeek").value(40))
                 .andExpect(jsonPath("$.responsibilities").value(containsInAnyOrder("Develop software", "Review code")))

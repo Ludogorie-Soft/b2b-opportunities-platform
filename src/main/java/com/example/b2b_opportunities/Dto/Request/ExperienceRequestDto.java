@@ -9,10 +9,6 @@ import lombok.Setter;
 @Setter
 public class ExperienceRequestDto {
     @Min(0)
-    @Max(11)
+    @Max(600)
     private Integer months;
-
-    @Min(0)
-    @Max(100)
-    private Integer years;
 }
