@@ -1,6 +1,5 @@
 package com.example.b2b_opportunities.Controller;
 
-import com.example.b2b_opportunities.Entity.RequiredSkill;
 import com.example.b2b_opportunities.Entity.Skill;
 import com.example.b2b_opportunities.Repository.RequiredSkillRepository;
 import com.example.b2b_opportunities.Repository.SkillRepository;

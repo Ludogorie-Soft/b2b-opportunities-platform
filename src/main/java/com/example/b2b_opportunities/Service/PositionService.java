@@ -1,5 +1,6 @@
 package com.example.b2b_opportunities.Service;
 
+import com.example.b2b_opportunities.Dto.Request.ExperienceRequestDto;
 import com.example.b2b_opportunities.Dto.Request.PositionRequestDto;
 import com.example.b2b_opportunities.Dto.Request.RateRequestDto;
 import com.example.b2b_opportunities.Dto.Request.RequiredSkillsDto;
@@ -273,9 +274,14 @@ public class PositionService {
         RequiredSkill requiredSkillResult = new RequiredSkill();
         requiredSkillResult.setPosition(position);
         requiredSkillResult.setSkill(skill);
-        if (requiredSkill.getExperience() != null) {
-            Experience experience = experienceRepository.save(ExperienceMapper.toExperience(requiredSkill.getExperience()));
-            requiredSkillResult.setExperience(experience);
+        if (requiredSkill.getMonths() != null) {
+            ExperienceRequestDto experienceDto = new ExperienceRequestDto();
+            experienceDto.setMonths(requiredSkill.getMonths());
+
+            Experience experience = ExperienceMapper.toExperience(experienceDto);
+            experienceRepository.save(experience);
+
+            requiredSkillResult.setMonths(experience.getMonths());
         }
         return requiredSkillResult;
     }
