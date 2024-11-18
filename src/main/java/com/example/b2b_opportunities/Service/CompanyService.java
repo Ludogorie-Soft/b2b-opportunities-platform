@@ -44,7 +44,6 @@ import com.example.b2b_opportunities.Mapper.UserMapper;
 import com.example.b2b_opportunities.Repository.CompanyRepository;
 import com.example.b2b_opportunities.Repository.CompanyTypeRepository;
 import com.example.b2b_opportunities.Repository.DomainRepository;
-import com.example.b2b_opportunities.Repository.ExperienceRepository;
 import com.example.b2b_opportunities.Repository.FilterRepository;
 import com.example.b2b_opportunities.Repository.LocationRepository;
 import com.example.b2b_opportunities.Repository.PartnerGroupRepository;
@@ -96,7 +95,6 @@ public class CompanyService {
     private final PatternRepository patternRepository;
     private final SeniorityRepository seniorityRepository;
     private final TalentRepository talentRepository;
-    private final ExperienceRepository experienceRepository;
     private final TalentExperienceRepository talentExperienceRepository;
     private final SkillExperienceRepository skillExperienceRepository;
     private final LocationRepository locationRepository;
@@ -123,7 +121,7 @@ public class CompanyService {
         return generateCompanyResponseDto(company);
     }
 
-    public CompanyResponseDto getCompany(Long companyId){
+    public CompanyResponseDto getCompany(Long companyId) {
         Company company = companyRepository.findById(companyId)
                 .orElseThrow(() -> new NotFoundException("Company with ID: " + companyId + " not found"));
         return generateCompanyResponseDto(company);

@@ -1,12 +1,10 @@
 package com.example.b2b_opportunities.Service;
 
-import com.example.b2b_opportunities.Dto.Request.ExperienceRequestDto;
 import com.example.b2b_opportunities.Dto.Request.PositionRequestDto;
 import com.example.b2b_opportunities.Dto.Request.RateRequestDto;
 import com.example.b2b_opportunities.Dto.Request.RequiredSkillsDto;
 import com.example.b2b_opportunities.Dto.Response.PositionResponseDto;
 import com.example.b2b_opportunities.Entity.Company;
-import com.example.b2b_opportunities.Entity.Experience;
 import com.example.b2b_opportunities.Entity.Location;
 import com.example.b2b_opportunities.Entity.Pattern;
 import com.example.b2b_opportunities.Entity.Position;
@@ -18,10 +16,8 @@ import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Entity.WorkMode;
 import com.example.b2b_opportunities.Exception.common.InvalidRequestException;
 import com.example.b2b_opportunities.Exception.common.NotFoundException;
-import com.example.b2b_opportunities.Mapper.ExperienceMapper;
 import com.example.b2b_opportunities.Mapper.PositionMapper;
 import com.example.b2b_opportunities.Mapper.RateMapper;
-import com.example.b2b_opportunities.Repository.ExperienceRepository;
 import com.example.b2b_opportunities.Repository.LocationRepository;
 import com.example.b2b_opportunities.Repository.PatternRepository;
 import com.example.b2b_opportunities.Repository.PositionRepository;
@@ -53,7 +49,6 @@ public class PositionService {
     private final SkillRepository skillRepository;
     private final PositionRepository positionRepository;
     private final RateRepository rateRepository;
-    private final ExperienceRepository experienceRepository;
     private final WorkModeRepository workModeRepository;
     private final PositionStatusRepository positionStatusRepository;
     private final UserService userService;
@@ -274,15 +269,7 @@ public class PositionService {
         RequiredSkill requiredSkillResult = new RequiredSkill();
         requiredSkillResult.setPosition(position);
         requiredSkillResult.setSkill(skill);
-        if (requiredSkill.getMonths() != null) {
-            ExperienceRequestDto experienceDto = new ExperienceRequestDto();
-            experienceDto.setMonths(requiredSkill.getMonths());
-
-            Experience experience = ExperienceMapper.toExperience(experienceDto);
-            experienceRepository.save(experience);
-
-            requiredSkillResult.setMonths(experience.getMonths());
-        }
+        requiredSkillResult.setMonths(requiredSkill.getMonths());
         return requiredSkillResult;
     }
 
