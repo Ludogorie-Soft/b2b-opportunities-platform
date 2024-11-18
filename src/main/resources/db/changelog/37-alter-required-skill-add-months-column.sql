@@ -8,3 +8,5 @@ WHERE rs.experience_id = e.id;
 
 ALTER TABLE required_skill
 DROP COLUMN experience_id;
+
+DROP TABLE experience;
