@@ -8,6 +8,7 @@ import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Repository.ConfirmationTokenRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -16,6 +17,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class MailService {
     private final ConfirmationTokenRepository confirmationTokenRepository;
     private final RestTemplate restTemplate;
@@ -44,6 +46,7 @@ public class MailService {
 
         String subject = "Confirm your E-Mail - B2B Opportunities";
         sendEmail(user.getEmail(), emailContent, subject);
+        log.info("Send confirmation Email to: {}", user.getEmail());
     }
 
     public void sendPasswordRecoveryMail(User user, HttpServletRequest request) {
@@ -59,6 +62,7 @@ public class MailService {
 
         String subject = "Reset password - B2B Opportunities";
         sendEmail(user.getEmail(), emailContent, subject);
+        log.info("Send password recovery Email to: {}", user.getEmail());
     }
 
     public void sendCompanyEmailConfirmation(Company company, String token, HttpServletRequest request) {
@@ -74,6 +78,7 @@ public class MailService {
                 "</html>";
         String subject = "Company mail confirmation - B2B Opportunities";
         sendEmail(company.getEmail(), emailContent, subject);
+        log.info("Send company confirmation Email to: {}", company.getEmail());
     }
 
     public void sendProjectExpiringMail(Project project) {
@@ -88,7 +93,9 @@ public class MailService {
                 "</body>" +
                 "</html>";
         String subject = "B2B Reminder: Your Project is Expiring in 2 Days – Reactivate Now!";
-        sendEmail(project.getCompany().getEmail(), emailContent, subject);
+        String email = project.getCompany().getEmail();
+        sendEmail(email, emailContent, subject);
+        log.info("Send project expiring soon Email to: {}", email);
     }
 
     public void sendEmail(String receiver, String content, String subject) {

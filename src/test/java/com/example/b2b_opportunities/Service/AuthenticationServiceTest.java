@@ -231,7 +231,7 @@ class AuthenticationServiceTest {
                 .thenReturn(new User());
 
         InvalidRequestException exception = assertThrows(InvalidRequestException.class, () -> {
-            authenticationService.confirmEmail(token, response);
+            authenticationService.confirmEmail(token);
         });
 
         assertEquals("Expired token", exception.getMessage());
@@ -250,7 +250,7 @@ class AuthenticationServiceTest {
         when(confirmationToken.getUser())
                 .thenReturn(user);
 
-        authenticationService.confirmEmail(token, response);
+        authenticationService.confirmEmail(token);
 
 //        assertEquals("Account activated successfully", result);
         assertTrue(user.isEnabled());
