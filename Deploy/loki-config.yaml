@@ -7,16 +7,10 @@ server:
 common:
   instance_addr: 127.0.0.1
   path_prefix: /tmp/loki
-  storage:
-    filesystem:
-      chunks_directory: /tmp/loki/chunks
-      rules_directory: /tmp/loki/rules
-#       chunks_directory: /data/loki/chunks  # Log data
-#       rules_directory: /data/loki/rules    # Index data
-  replication_factor: 1
   ring:
     kvstore:
       store: inmemory
+  replication_factor: 1
 
 query_range:
   results_cache:
@@ -29,7 +23,7 @@ schema_config:
   configs:
     - from: 2020-10-24
       store: tsdb
-      object_store: filesystem
+      object_store: s3
       schema: v13
       index:
         prefix: index_
@@ -48,7 +42,7 @@ compactor:
   retention_enabled: true
   retention_delete_delay: 2h
   retention_delete_worker_count: 150
-  delete_request_store: filesystem
+  delete_request_store: s3
 
 limits_config:
   # https://grafana.com/docs/loki/latest/operations/storage/retention/
@@ -66,3 +60,15 @@ limits_config:
     - selector: '{namespace="dev",level="FATAL"}'
       priority: 1
       period: 1488h  # 60 days
+
+# https://grafana.com/docs/loki/latest/configure/storage/
+storage_config:
+  aws:
+    endpoint: ${LOKI_S3_HOST}:${LOKI_S3_PORT}
+    s3: s3://${LOKI_S3_USERNAME}:${LOKI_S3_SECRET}@${LOKI_S3_HOST}:${LOKI_S3_PORT}/${LOKI_S3_BUCKET_NAME}
+    s3forcepathstyle: true
+    insecure: true
+  tsdb_shipper:
+    active_index_directory: /loki/index
+    cache_location: /loki/index_cache
+    cache_ttl: 24h
