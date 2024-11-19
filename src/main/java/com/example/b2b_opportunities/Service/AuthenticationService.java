@@ -75,10 +75,10 @@ public class AuthenticationService {
         cookie.setSecure(true);
         cookie.setPath("/");
         cookie.setMaxAge(3600);
-
         cookie.setDomain(domain);
 
         response.addCookie(cookie);
+        response.setHeader("Set-Cookie", "jwt=" + jwtToken + "; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=3600; Domain=" + domain);
     }
 
     public ResponseEntity<UserResponseDto> register(UserRequestDto userRequestDto, BindingResult bindingResult, HttpServletRequest request) {
@@ -173,6 +173,7 @@ public class AuthenticationService {
                     cookie.setDomain("b2bapp.algorithmithy.com");
                     cookie.setHttpOnly(true);
                     response.addCookie(cookie);
+                    response.setHeader("Set-Cookie", "jwt=; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=0; Domain=b2bapp.algorithmithy.com");
                 }
             });
         }
