@@ -166,11 +166,14 @@ public class AuthenticationService {
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
             Arrays.stream(cookies).forEach(cookie -> {
-                cookie.setValue(null);
-                cookie.setMaxAge(0);
-                cookie.setPath("/");
-                cookie.setHttpOnly(true);
-                response.addCookie(cookie);
+                if ("jwt".equals(cookie.getName())) {
+                    cookie.setValue(null);
+                    cookie.setMaxAge(0);
+                    cookie.setPath("/");
+                    cookie.setDomain("b2bapp.algorithmithy.com");
+                    cookie.setHttpOnly(true);
+                    response.addCookie(cookie);
+                }
             });
         }
     }
