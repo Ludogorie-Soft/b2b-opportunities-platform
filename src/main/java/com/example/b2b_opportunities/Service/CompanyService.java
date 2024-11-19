@@ -14,6 +14,7 @@ import com.example.b2b_opportunities.Dto.Response.CompanyPublicResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyResponseDto;
 import com.example.b2b_opportunities.Dto.Response.PartnerGroupResponseDto;
 import com.example.b2b_opportunities.Dto.Response.ProjectResponseDto;
+import com.example.b2b_opportunities.Dto.Response.TalentPublicityResponseDto;
 import com.example.b2b_opportunities.Dto.Response.TalentResponseDto;
 import com.example.b2b_opportunities.Dto.Response.UserResponseDto;
 import com.example.b2b_opportunities.Entity.Company;
@@ -450,6 +451,12 @@ public class CompanyService {
     public void setTalentVisibility(Authentication authentication, TalentPublicityRequestDto requestDto) {
         Company company = getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
         if (requestDto.isPublic()) {
+            company.setTalentsSharedPublicly(true);
+            company.setTalentAccessGroups(new HashSet<>());
+        } else {
+            if(requestDto.getPartnerGroupIds() == null || requestDto.getPartnerGroupIds().isEmpty()){
+                throw new InvalidRequestException("partnerGroupIds is null or empty");
+            }
             Set<PartnerGroup> partnerGroupSet = new HashSet<>();
             for (Long id : requestDto.getPartnerGroupIds()) {
                 PartnerGroup pg = partnerGroupRepository.findById(id)
@@ -457,13 +464,25 @@ public class CompanyService {
                 validatePartnerGroupBelongsToUserCompany(company, pg);
                 partnerGroupSet.add(pg);
             }
-            company.setTalentsSharedPublicly(true);
-            company.setTalentAccessGroups(partnerGroupSet);
-        } else {
             company.setTalentsSharedPublicly(false);
-            company.setTalentAccessGroups(new HashSet<>());
+            company.setTalentAccessGroups(partnerGroupSet);
         }
         companyRepository.save(company);
+    }
+
+    public TalentPublicityResponseDto getTalentVisibility(Authentication authentication) {
+        User user = userService.getCurrentUserOrThrow(authentication);
+        Company userCompany = user.getCompany();
+        Set<Long> partnerGroupIds = new HashSet<>();
+        if (!userCompany.isTalentsSharedPublicly()) {
+            partnerGroupIds = userCompany.getPartnerGroups().stream()
+                    .map(PartnerGroup::getId)
+                    .collect(Collectors.toSet());
+        }
+        return TalentPublicityResponseDto.builder()
+                .isPublic(userCompany.isTalentsSharedPublicly())
+                .partnerGroupIds(partnerGroupIds)
+                .build();
     }
 
     private void setTalentRates(Talent talent, TalentRequestDto talentRequestDto) {

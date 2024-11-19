@@ -12,9 +12,8 @@ import com.example.b2b_opportunities.Dto.Response.CompanyPublicResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyResponseDto;
 import com.example.b2b_opportunities.Dto.Response.PartnerGroupResponseDto;
 import com.example.b2b_opportunities.Dto.Response.ProjectResponseDto;
+import com.example.b2b_opportunities.Dto.Response.TalentPublicityResponseDto;
 import com.example.b2b_opportunities.Dto.Response.TalentResponseDto;
-import com.example.b2b_opportunities.Exception.common.NotFoundException;
-import com.example.b2b_opportunities.Mapper.CompanyMapper;
 import com.example.b2b_opportunities.Repository.CompanyRepository;
 import com.example.b2b_opportunities.Service.CompanyService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -221,6 +220,12 @@ public class CompanyController {
     @ResponseStatus(HttpStatus.OK)
     public void setTalentVisibility(Authentication authentication, @RequestBody TalentPublicityRequestDto talentPublicityRequestDto) {
         companyService.setTalentVisibility(authentication, talentPublicityRequestDto);
+    }
+
+    @GetMapping("/my-talents/publicity")
+    @ResponseStatus(HttpStatus.OK)
+    public TalentPublicityResponseDto getTalentVisibility(Authentication authentication) {
+        return companyService.getTalentVisibility(authentication);
     }
 
     @DeleteMapping("/talents/{id}")
