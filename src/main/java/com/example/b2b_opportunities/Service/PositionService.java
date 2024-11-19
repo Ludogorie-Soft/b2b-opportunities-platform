@@ -34,6 +34,7 @@ import com.example.b2b_opportunities.Repository.WorkModeRepository;
 import com.example.b2b_opportunities.Static.ProjectStatus;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
@@ -46,6 +47,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PositionService {
     private final ProjectRepository projectRepository;
     private final SeniorityRepository seniorityRepository;
@@ -81,6 +83,7 @@ public class PositionService {
         if (dto.getLocation() != null) {
             position.setLocation(getLocationIfExists(dto.getLocation()));
         }
+        log.info("Successfully created position ID: {} for project ID: {}", position.getId(), dto.getProjectId());
         return PositionMapper.toResponseDto(positionRepository.save(position));
     }
 
@@ -102,7 +105,7 @@ public class PositionService {
         setPositionFields(position, dto);
 
         updateProjectDateUpdated(position);
-
+        log.info("Successfully edited position ID: {} for project ID: {}", position.getId(), dto.getProjectId());
         return PositionMapper.toResponseDto(positionRepository.save(position));
     }
 
@@ -110,6 +113,7 @@ public class PositionService {
         Position position = getPositionOrThrow(id);
         validateProjectAndUserAreRelated(position.getProject().getId(), authentication);
         positionRepository.delete(position);
+        log.info("Successfully deleted position ID: {} for project ID: {}", position.getId(), position.getProject().getId());
     }
 
     public PositionResponseDto getPosition(Authentication authentication, Long id) {
@@ -152,6 +156,7 @@ public class PositionService {
         }
 
         updateProjectDateUpdated(position);
+        log.info("Successfully changed position ID: {} status to: {}", position.getId(), position.getStatus().getName());
 
         positionRepository.save(position);
     }

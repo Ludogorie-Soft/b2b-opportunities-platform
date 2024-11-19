@@ -16,6 +16,7 @@ import com.example.b2b_opportunities.Repository.PartnerGroupRepository;
 import com.example.b2b_opportunities.Repository.ProjectRepository;
 import com.example.b2b_opportunities.Static.ProjectStatus;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +28,7 @@ import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ProjectService {
     private final ProjectRepository projectRepository;
     private final UserService userService;
@@ -35,6 +37,7 @@ public class ProjectService {
 
     public ProjectResponseDto get(Authentication authentication, Long id) {
         User user = userService.getCurrentUserOrThrow(authentication);
+        log.info("User ID: {} attempting to access Project ID: {}", user.getId(), id);
         Company company = companyService.getUserCompanyOrThrow(user);
         Project project = getProjectIfExists(id);
         validateProjectIsAvailableToCompany(project, company);
@@ -44,6 +47,7 @@ public class ProjectService {
 
     public List<ProjectResponseDto> getAvailableProjects(Authentication authentication) {
         User user = userService.getCurrentUserOrThrow(authentication);
+        log.info("User ID: {} attempting to access available projects", user.getId());
         Company company = companyService.getUserCompanyOrThrow(user);
 
         List<ProjectResponseDto> publicProjects = ProjectMapper.toDtoList(projectRepository
@@ -64,12 +68,15 @@ public class ProjectService {
 
     public ProjectResponseDto update(Long id, ProjectRequestDto dto, Authentication authentication) {
         Project project = getProjectIfExists(id);
-        validateProjectBelongsToUser(authentication, project);
+        User user = userService.getCurrentUserOrThrow(authentication);
+        log.info("User ID: {} attempting to update Project ID: {}", user.getId(), project.getId());
+        validateProjectBelongsToUser(user, project);
         return createOrUpdate(dto, project);
     }
 
     public ProjectResponseDto create(Authentication authentication, ProjectRequestDto dto) {
         User user = userService.getCurrentUserOrThrow(authentication);
+        log.info("User ID: {} attempting to create a project", user.getId());
         Company company = companyService.getUserCompanyOrThrow(user);
         Project project = new Project();
         project.setDatePosted(LocalDateTime.now());
@@ -80,7 +87,9 @@ public class ProjectService {
 
     public void delete(Long id, Authentication authentication) {
         Project project = getProjectIfExists(id);
-        validateProjectBelongsToUser(authentication, project);
+        User user = userService.getCurrentUserOrThrow(authentication);
+        log.info("User ID: {} attempting to delete Project ID: {}", user.getId(), project.getId());
+        validateProjectBelongsToUser(user, project);
         projectRepository.delete(project);
     }
 
@@ -89,6 +98,7 @@ public class ProjectService {
         Company userCompany = companyService.getUserCompanyOrThrow(user);
 
         Project project = getProjectIfExists(id);
+        log.info("User ID: {} attempting to access positions of Project ID: {}", user.getId(), project.getId());
         validateProjectIsAvailableToCompany(project, userCompany);
 
         if (project.getPositions() == null || project.getPositions().isEmpty()) {
@@ -100,7 +110,9 @@ public class ProjectService {
 
     public ProjectResponseDto reactivateProject(Long projectId, Authentication authentication) {
         Project project = getProjectIfExists(projectId);
-        validateProjectBelongsToUser(authentication, project);
+        User user = userService.getCurrentUserOrThrow(authentication);
+        log.info("User ID: {} attempting to reactivate Project ID: {}", user.getId(), project.getId());
+        validateProjectBelongsToUser(user, project);
         if (project.getProjectStatus().equals(ProjectStatus.ACTIVE)) {
             throw new AlreadyExistsException("This project is active already");
         }
@@ -111,6 +123,7 @@ public class ProjectService {
 
 
     public void validateProjectIsAvailableToCompany(Project project, Company userCompany) {
+        log.info("Validating if Project ID: {} belongs to Company ID: {}", project.getId(), userCompany.getId());
         if (project.getCompany().getId().equals(userCompany.getId())) {
             return;
         }
@@ -187,8 +200,7 @@ public class ProjectService {
     }
 
 
-    private void validateProjectBelongsToUser(Authentication authentication, Project project) {
-        User user = userService.getCurrentUserOrThrow(authentication);
+    private void validateProjectBelongsToUser(User user, Project project) {
         if (!Objects.equals(user.getCompany().getId(), project.getCompany().getId())) {
             throw new PermissionDeniedException("Project belongs to another company");
         }
