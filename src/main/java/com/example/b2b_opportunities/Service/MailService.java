@@ -78,7 +78,7 @@ public class MailService {
                 "</html>";
         String subject = "Company mail confirmation - B2B Opportunities";
         sendEmail(company.getEmail(), emailContent, subject);
-        log.info("Send company confirmation Email to: {}", company.getEmail());
+        log.info("Send company (ID: {}) confirmation Email to: {}", company.getId(), company.getEmail());
     }
 
     public void sendProjectExpiringMail(Project project) {
