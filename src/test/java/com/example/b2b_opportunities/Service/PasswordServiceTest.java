@@ -41,6 +41,8 @@ class PasswordServiceTest {
     private PasswordService passwordService;
     @Mock
     private AuthenticationService authenticationService;
+    @Mock
+    private UserService userService;
     private User user;
 
     @BeforeEach
@@ -58,7 +60,7 @@ class PasswordServiceTest {
 
     @Test
     void testRequestPasswordRecovery_Success() {
-        when(userRepository.findByEmail("test@abv.bg")).thenReturn(Optional.of(user));
+        when(userService.getUserByEmailOrThrow("test@abv.bg")).thenReturn(user);
         doNothing().when(mailService).sendPasswordRecoveryMail(any(User.class), any(HttpServletRequest.class));
 
         String result = passwordService.requestPasswordRecovery("test@abv.bg", request);
@@ -69,17 +71,18 @@ class PasswordServiceTest {
 
     @Test
     void testRequestPasswordRecovery_NotRegisteredUser() {
-        when(userRepository.findByEmail("nonexistent@abv.bg")).thenReturn(Optional.empty());
+        String nonexistentEmail = "nonexistent@abv.bg";
+        when(userService.getUserByEmailOrThrow(nonexistentEmail)).thenThrow(new NotFoundException("User with email: " + nonexistentEmail + " not found"));
 
         NotFoundException exception = assertThrows(NotFoundException.class, () ->
-                passwordService.requestPasswordRecovery("nonexistent@abv.bg", request));
+                passwordService.requestPasswordRecovery(nonexistentEmail, request));
 
-        assertEquals("User not registered", exception.getMessage());
+        assertEquals("User with email: " + nonexistentEmail + " not found", exception.getMessage());
     }
 
     @Test
     void testRequestPasswordRecovery_OauthUser() {
-        when(userRepository.findByEmail("test@abv.bg")).thenReturn(Optional.of(user));
+        when(userService.getUserByEmailOrThrow("test@abv.bg")).thenReturn(user);
         user.setProvider("testProvider");
 
         PermissionDeniedException exception = assertThrows(PermissionDeniedException.class, () ->
@@ -90,7 +93,7 @@ class PasswordServiceTest {
 
     @Test
     void testRequestPasswordRecovery_disabledUser(){
-        when(userRepository.findByEmail("test@abv.bg")).thenReturn(Optional.of(user));
+        when(userService.getUserByEmailOrThrow("test@abv.bg")).thenReturn(user);
         user.setProvider(null);
         user.setEnabled(false);
 

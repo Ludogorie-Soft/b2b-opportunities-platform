@@ -6,7 +6,6 @@ import com.example.b2b_opportunities.Entity.ConfirmationToken;
 import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Exception.AuthenticationFailedException;
 import com.example.b2b_opportunities.Exception.PasswordsNotMatchingException;
-import com.example.b2b_opportunities.Exception.common.NotFoundException;
 import com.example.b2b_opportunities.Exception.common.PermissionDeniedException;
 import com.example.b2b_opportunities.Repository.ConfirmationTokenRepository;
 import com.example.b2b_opportunities.Repository.UserRepository;
@@ -21,9 +20,10 @@ public class PasswordService {
     private final UserRepository userRepository;
     private final AuthenticationService authenticationService;
     private final ConfirmationTokenRepository confirmationTokenRepository;
+    private final UserService userService;
 
     public String requestPasswordRecovery(String email, HttpServletRequest request) {
-        User user = userRepository.findByEmail(email).orElseThrow(() -> new NotFoundException("User not registered"));
+        User user = userService.getUserByEmailOrThrow(email);
         if (user.getProvider() != null)
             throw new PermissionDeniedException("User registered using oAuth - " + user.getProvider());
         if (!user.isEnabled()) {

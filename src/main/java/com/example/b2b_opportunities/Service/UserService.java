@@ -24,11 +24,16 @@ public class UserService {
         if (authentication instanceof OAuth2AuthenticationToken) {
             OAuth2User oauthUser = ((OAuth2AuthenticationToken) authentication).getPrincipal();
             String email = (String) oauthUser.getAttributes().get("email");
-            return userRepository.findByEmail(email).orElseThrow(() -> new NotFoundException("User with email: " + email + " not found"));
+            return getUserByEmailOrThrow(email);
         }
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         // This will lazy load all company fields
         String email = userDetails.getUser().getEmail();
-        return userRepository.findByEmail(email).orElseThrow(() -> new NotFoundException("User with email: " + email + " not found"));
+        return getUserByEmailOrThrow(email);
+    }
+
+    public User getUserByEmailOrThrow(String email) {
+        return userRepository.findByEmail(email).orElseThrow(() ->
+                new NotFoundException("User with email: " + email + " not found"));
     }
 }

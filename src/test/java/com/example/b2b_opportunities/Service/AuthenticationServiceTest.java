@@ -6,9 +6,9 @@ import com.example.b2b_opportunities.Dto.Response.UserResponseDto;
 import com.example.b2b_opportunities.Entity.ConfirmationToken;
 import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Exception.AuthenticationFailedException;
+import com.example.b2b_opportunities.Exception.PasswordsNotMatchingException;
 import com.example.b2b_opportunities.Exception.common.DuplicateCredentialException;
 import com.example.b2b_opportunities.Exception.common.InvalidRequestException;
-import com.example.b2b_opportunities.Exception.PasswordsNotMatchingException;
 import com.example.b2b_opportunities.Exception.common.NotFoundException;
 import com.example.b2b_opportunities.Mapper.UserMapper;
 import com.example.b2b_opportunities.Repository.ConfirmationTokenRepository;
@@ -17,12 +17,11 @@ import com.example.b2b_opportunities.UserDetailsImpl;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -54,6 +53,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 class AuthenticationServiceTest {
     @InjectMocks
     private AuthenticationService authenticationService;
@@ -82,19 +82,8 @@ class AuthenticationServiceTest {
     @Mock
     private HttpServletResponse response;
 
-    private AutoCloseable closeable;
-
-    @BeforeEach
-    public void setUp() {
-        closeable = MockitoAnnotations.openMocks(this);
-    }
-
-    @AfterEach
-    public void tearDown() throws Exception {
-        if (closeable != null) {
-            closeable.close();
-        }
-    }
+    @Mock
+    private UserService userService;
 
     @Test
     void testLoginWithValidInput() {
@@ -111,8 +100,6 @@ class AuthenticationServiceTest {
                 .thenReturn(authentication);
         when(jwtService.generateToken(any(UserDetails.class)))
                 .thenReturn("test-jwt-token");
-        when(jwtService.getExpirationTime())
-                .thenReturn(3600L);
 
         HttpServletRequest request = mock(HttpServletRequest.class);
         HttpServletResponse response = mock(HttpServletResponse.class);
@@ -182,9 +169,8 @@ class AuthenticationServiceTest {
         existingUser.setEnabled(true);
         existingUser.setProvider("google");
 
-        when(userRepository.findByEmail("test@test.com")).thenReturn(Optional.of(existingUser));
+        when(userService.getUserByEmailOrThrow("test@test.com")).thenReturn(existingUser);
         when(jwtService.generateToken(any(UserDetails.class))).thenReturn("test-jwt-token");
-        when(jwtService.getExpirationTime()).thenReturn(3600L);
 
         authenticationService.oAuthLogin(authToken, request, response);
 
@@ -227,8 +213,6 @@ class AuthenticationServiceTest {
                 .thenReturn(Optional.of(confirmationToken));
         when(confirmationToken.getCreatedAt())
                 .thenReturn(LocalDateTime.now().minusDays(5));
-        when(confirmationToken.getUser())
-                .thenReturn(new User());
 
         InvalidRequestException exception = assertThrows(InvalidRequestException.class, () -> {
             authenticationService.confirmEmail(token);
@@ -265,8 +249,7 @@ class AuthenticationServiceTest {
         user.setEnabled(false);
 
         ConfirmationToken confirmationToken = new ConfirmationToken("test-token", user);
-
-        when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+        when(userService.getUserByEmailOrThrow(email)).thenReturn(user);
         when(confirmationTokenRepository.findByUser(user)).thenReturn(Optional.of(confirmationToken));
 
         String result = authenticationService.resendConfirmationMail(email, request);
@@ -283,7 +266,7 @@ class AuthenticationServiceTest {
         user.setEmail(email);
         user.setEnabled(true);
 
-        when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+        when(userService.getUserByEmailOrThrow(email)).thenReturn(user);
 
         String result = authenticationService.resendConfirmationMail(email, request);
 
@@ -296,13 +279,14 @@ class AuthenticationServiceTest {
     void testResendConfirmationMailWhenUserNotExist() {
         String email = "test@test.com";
 
-        when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
+        when(userService.getUserByEmailOrThrow(email)).thenThrow(new NotFoundException("User with email: " + email + " not found"));
 
         NotFoundException exception = assertThrows(NotFoundException.class, () -> {
             authenticationService.resendConfirmationMail(email, request);
         });
 
-        assertEquals("User not found with email: " + email, exception.getMessage());
+        assertEquals("User with email: " + email + " not found", exception.getMessage());
+
         verify(confirmationTokenRepository, never()).findByUser(any());
         verify(mailService, never()).sendConfirmationMail(any(), eq(request));
     }

@@ -2,9 +2,8 @@ package com.example.b2b_opportunities.Controller;
 
 import com.example.b2b_opportunities.Dto.Response.UserResponseDto;
 import com.example.b2b_opportunities.Exception.AuthenticationFailedException;
-import com.example.b2b_opportunities.Exception.common.NotFoundException;
 import com.example.b2b_opportunities.Mapper.UserMapper;
-import com.example.b2b_opportunities.Repository.UserRepository;
+import com.example.b2b_opportunities.Service.UserService;
 import com.example.b2b_opportunities.UserDetailsImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -19,8 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/user")
 @RequiredArgsConstructor
 public class UserController {
-
-    private final UserRepository userRepository;
+    private final UserService userService;
 
     @GetMapping
     public UserResponseDto getUserDetails(Authentication authentication) {
@@ -36,8 +34,7 @@ public class UserController {
         if (authentication instanceof OAuth2AuthenticationToken) {
             OAuth2User oauthUser = ((OAuth2AuthenticationToken) authentication).getPrincipal();
             String email = (String) oauthUser.getAttributes().get("email");
-            return UserMapper.toResponseDto(userRepository.findByEmail(email)
-                    .orElseThrow(() -> new NotFoundException("No user found with email: " + email)));
+            return UserMapper.toResponseDto(userService.getUserByEmailOrThrow(email));
         }
         throw new IllegalStateException("Unsupported authentication type");
     }

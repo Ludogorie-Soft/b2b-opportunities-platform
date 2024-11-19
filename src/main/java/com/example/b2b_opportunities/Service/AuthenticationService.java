@@ -53,11 +53,12 @@ public class AuthenticationService {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
     private final MailService mailService;
+    private final UserService userService;
+    private final ConfirmationTokenRepository confirmationTokenRepository;
+    private final UserRepository userRepository;
 
     @Value("${registration.token.expiration.time}")
     private int tokenExpirationDays;
-    private final ConfirmationTokenRepository confirmationTokenRepository;
-    private final UserRepository userRepository;
 
     public void login(LoginDto loginDto, HttpServletRequest request, HttpServletResponse response) {
         UserDetails userDetails;
@@ -106,7 +107,7 @@ public class AuthenticationService {
     public String resendConfirmationMail(String email, HttpServletRequest request) {
         log.info("Attempting to send confirmation email to: {}", email);
 
-        User user = getUserFromEmailOrThrow(email);
+        User user = userService.getUserByEmailOrThrow(email);
 
         if (user.isEnabled()) {
             log.info("Account with email: {} is already activated", email);
@@ -240,7 +241,7 @@ public class AuthenticationService {
     }
 
     private void generateLoginResponse(HttpServletRequest request, HttpServletResponse response, String email) {
-        User user = getUserFromEmailOrThrow(email);
+        User user = userService.getUserByEmailOrThrow(email);
         UserDetailsImpl userDetails = new UserDetailsImpl(user);
 
         String jwtToken = jwtService.generateToken(userDetails);
@@ -252,13 +253,5 @@ public class AuthenticationService {
         LocalDateTime currentDateTime = LocalDateTime.now();
         Duration duration = Duration.between(token.getCreatedAt(), currentDateTime);
         return duration.toDays() > tokenExpirationDays;
-    }
-
-    private User getUserFromEmailOrThrow(String email){
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> {
-                    log.warn("User not found with email: {}", email);
-                    return new NotFoundException("User not found with email: " + email);
-                });
     }
 }
