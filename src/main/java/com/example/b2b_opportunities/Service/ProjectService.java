@@ -12,12 +12,10 @@ import com.example.b2b_opportunities.Exception.common.NotFoundException;
 import com.example.b2b_opportunities.Exception.common.PermissionDeniedException;
 import com.example.b2b_opportunities.Mapper.PositionMapper;
 import com.example.b2b_opportunities.Mapper.ProjectMapper;
-import com.example.b2b_opportunities.Repository.CompanyRepository;
 import com.example.b2b_opportunities.Repository.PartnerGroupRepository;
 import com.example.b2b_opportunities.Repository.ProjectRepository;
 import com.example.b2b_opportunities.Static.ProjectStatus;
 import lombok.RequiredArgsConstructor;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
@@ -31,14 +29,13 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class ProjectService {
     private final ProjectRepository projectRepository;
-    private final CompanyRepository companyRepository;
     private final UserService userService;
-    private final MailService mailService;
     private final PartnerGroupRepository partnerGroupRepository;
+    private final CompanyService companyService;
 
     public ProjectResponseDto get(Authentication authentication, Long id) {
         User user = userService.getCurrentUserOrThrow(authentication);
-        Company company = getCompanyIfExists(user.getCompany().getId());
+        Company company = companyService.getUserCompanyOrThrow(user);
         Project project = getProjectIfExists(id);
         validateProjectIsAvailableToCompany(project, company);
         //TODO - also check if its posted by approved company
@@ -47,7 +44,7 @@ public class ProjectService {
 
     public List<ProjectResponseDto> getAvailableProjects(Authentication authentication) {
         User user = userService.getCurrentUserOrThrow(authentication);
-        Company company = getCompanyIfExists(user.getCompany().getId());
+        Company company = companyService.getUserCompanyOrThrow(user);
 
         List<ProjectResponseDto> publicProjects = ProjectMapper.toDtoList(projectRepository
                 .findByProjectStatusAndIsPartnerOnlyFalseAndCompanyIsApprovedTrue(ProjectStatus.ACTIVE));
@@ -73,7 +70,7 @@ public class ProjectService {
 
     public ProjectResponseDto create(Authentication authentication, ProjectRequestDto dto) {
         User user = userService.getCurrentUserOrThrow(authentication);
-        Company company = getCompanyIfExists(user.getCompany().getId());
+        Company company = companyService.getUserCompanyOrThrow(user);
         Project project = new Project();
         project.setDatePosted(LocalDateTime.now());
         project.setExpiryDate(LocalDateTime.now().plusDays(21));
@@ -89,7 +86,7 @@ public class ProjectService {
 
     public List<PositionResponseDto> getPositionsByProject(Authentication authentication, Long id) {
         User user = userService.getCurrentUserOrThrow(authentication);
-        Company userCompany = getCompanyIfExists(user.getCompany().getId());
+        Company userCompany = companyService.getUserCompanyOrThrow(user);
 
         Project project = getProjectIfExists(id);
         validateProjectIsAvailableToCompany(project, userCompany);
@@ -111,7 +108,6 @@ public class ProjectService {
         project.setExpiryDate(LocalDateTime.now().plusDays(21));
         return ProjectMapper.toDto(projectRepository.save(project));
     }
-
 
 
     public void validateProjectIsAvailableToCompany(Project project, Company userCompany) {
@@ -190,12 +186,6 @@ public class ProjectService {
         return projectRepository.findById(id).orElseThrow(() -> new NotFoundException("Project with ID: " + id + " not found"));
     }
 
-    private Company getCompanyIfExists(Long id) {
-        if (id == null) {
-            throw new NotFoundException("User does not associate with any company");
-        }
-        return companyRepository.findById(id).orElseThrow(() -> new NotFoundException("Company with ID: " + id + " not found"));
-    }
 
     private void validateProjectBelongsToUser(Authentication authentication, Project project) {
         User user = userService.getCurrentUserOrThrow(authentication);

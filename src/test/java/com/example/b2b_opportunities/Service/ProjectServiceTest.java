@@ -29,6 +29,7 @@ import org.springframework.security.core.Authentication;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -53,6 +54,7 @@ public class ProjectServiceTest {
 
     @Mock
     private MailService mailService;
+
     @Mock
     private CompanyService companyService;
 
@@ -76,6 +78,7 @@ public class ProjectServiceTest {
 
     @Mock
     private Authentication authentication;
+
 
     private User user;
     private Company company;
@@ -110,16 +113,17 @@ public class ProjectServiceTest {
         when(userService.getCurrentUserOrThrow(authentication)).thenReturn(user);
         when(companyRepository.findById(user.getCompany().getId())).thenReturn(Optional.of(company));
         when(projectRepository.findById(1L)).thenReturn(Optional.of(project));
+        when(companyService.getUserCompanyOrThrow(user)).thenReturn(company);
 
         try (MockedStatic<ProjectMapper> mockedMapper = mockStatic(ProjectMapper.class)) {
             mockedMapper.when(() -> ProjectMapper.toDto(project)).thenReturn(projectResponseDto);
-
             ProjectResponseDto result = projectService.get(authentication, 1L);
 
             Assertions.assertNotNull(result, "Result should not be null");
             Assertions.assertEquals(projectResponseDto, result, "DTOs should match");
         }
     }
+
     @Test
     public void WhenUserNotFoundThrowsException() {
         when(userService.getCurrentUserOrThrow(authentication))
@@ -141,6 +145,7 @@ public class ProjectServiceTest {
     public void shouldThrowAnExceptionWhenProjectNotAvailableToCompany() {
         when(userService.getCurrentUserOrThrow(authentication)).thenReturn(user);
         when(companyRepository.findById(user.getCompany().getId())).thenReturn(Optional.of(company));
+        when(companyService.getUserCompanyOrThrow(user)).thenReturn(company);
 
         project.setPartnerOnly(true);
         Company projectCompany = new Company();
@@ -157,8 +162,11 @@ public class ProjectServiceTest {
 
         assertThrows(PermissionDeniedException.class, () -> projectService.get(authentication, 1L));
     }
+
     @Test
     public void shouldGetAvailableProjectsWhenUserHasCompany() {
+        when(companyService.getUserCompanyOrThrow(user)).thenReturn(company);
+
         Project partnerProject = new Project();
         partnerProject.setId(123123123L);
         partnerProject.setCompany(company);
@@ -345,6 +353,7 @@ public class ProjectServiceTest {
         when(companyRepository.findById(user.getCompany().getId())).thenReturn(Optional.of(company));
         when(partnerGroupRepository.findAllById(dto.getPartnerGroups())).thenReturn(List.of(partnerGroup));
         when(projectRepository.save(any(Project.class))).thenReturn(project);
+        when(companyService.getUserCompanyOrThrow(user)).thenReturn(company);
 
         try (MockedStatic<ProjectMapper> mockedMapper = mockStatic(ProjectMapper.class)) {
             mockedMapper.when(() -> ProjectMapper.toDto(any(Project.class))).thenReturn(projectResponseDto);
@@ -378,9 +387,11 @@ public class ProjectServiceTest {
         when(userService.getCurrentUserOrThrow(authentication)).thenReturn(user);
         when(companyRepository.findById(user.getCompany().getId())).thenReturn(Optional.of(company));
         when(partnerGroupRepository.findAllById(dto.getPartnerGroups())).thenReturn(List.of(invalidPartnerGroup));
+        when(companyService.getUserCompanyOrThrow(user)).thenReturn(company);
 
         assertThrows(PermissionDeniedException.class, () -> projectService.create(authentication, dto));
     }
+
     @Test
     public void shouldDeleteProjectWhenValidDeleteRequest() {
         Long projectId = 1L;
@@ -400,6 +411,7 @@ public class ProjectServiceTest {
 
         assertThrows(NotFoundException.class, () -> projectService.delete(projectId, authentication));
     }
+
     @Test
     public void shouldThrowPermissionDeniedExceptionWhenUserNotAuthorized() {
         Long projectId = 1L;
@@ -412,6 +424,7 @@ public class ProjectServiceTest {
 
         assertThrows(PermissionDeniedException.class, () -> projectService.delete(projectId, authentication));
     }
+
     @Test
     public void shouldReturnPositionsWhenValidRequest() {
         Long projectId = 1L;
@@ -429,6 +442,7 @@ public class ProjectServiceTest {
         when(userService.getCurrentUserOrThrow(authentication)).thenReturn(user);
         when(companyRepository.findById(userCompany.getId())).thenReturn(Optional.of(userCompany));
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
+        when(companyService.getUserCompanyOrThrow(user)).thenReturn(company);
 
         try (MockedStatic<PositionMapper> mockedMapper = mockStatic(PositionMapper.class)) {
             List<PositionResponseDto> responseDtos = List.of(new PositionResponseDto(), new PositionResponseDto());
@@ -440,8 +454,9 @@ public class ProjectServiceTest {
             Assertions.assertEquals(2, result.size(), "Should return the correct number of positions");
         }
     }
+
     @Test
-    public void shouldThrowNotFoundExceptionWhenNoPositionsAvailable() {
+    public void shouldReturnEmptyListWhenNoPositionsAvailable() {
         Long projectId = 1L;
         User user = new User();
         Company userCompany = new Company();
@@ -450,12 +465,14 @@ public class ProjectServiceTest {
         Project project = new Project();
         project.setId(projectId);
         project.setPositions(Collections.emptyList());
+        project.setCompany(company);
 
         when(userService.getCurrentUserOrThrow(authentication)).thenReturn(user);
         when(companyRepository.findById(userCompany.getId())).thenReturn(Optional.of(userCompany));
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
+        when(companyService.getUserCompanyOrThrow(user)).thenReturn(company);
 
-        assertThrows(NotFoundException.class, () -> projectService.getPositionsByProject(authentication, projectId));
+        Assertions.assertEquals(projectService.getPositionsByProject(authentication, projectId), new ArrayList<>());
     }
 
     @Test
@@ -483,6 +500,7 @@ public class ProjectServiceTest {
             Assertions.assertEquals(ProjectStatus.ACTIVE, project.getProjectStatus(), "Project status should be ACTIVE");
         }
     }
+
     @Test
     public void shouldThrowAlreadyExistsExceptionWhenProjectAlreadyActive() {
         Company userCompany = new Company();
@@ -498,10 +516,12 @@ public class ProjectServiceTest {
 
         assertThrows(AlreadyExistsException.class, () -> projectService.reactivateProject(projectId, authentication));
     }
+
     @Test
     public void shouldNotPerformAnyActionWhenNoExpiringOrExpiredProjects() {
         when(projectRepository.findProjectsExpiringInTwoDays()).thenReturn(Collections.emptyList());
         when(projectRepository.findExpiredAndActiveProjects()).thenReturn(Collections.emptyList());
+        when(companyService.getUserCompanyOrThrow(user)).thenReturn(company);
 
         emailSchedulerService.processExpiringProjects();
 
@@ -518,6 +538,7 @@ public class ProjectServiceTest {
         List<Project> expiringProjects = Collections.singletonList(expiringProject);
         when(projectRepository.findProjectsExpiringInTwoDays()).thenReturn(expiringProjects);
         when(projectRepository.findExpiredAndActiveProjects()).thenReturn(Collections.emptyList());
+        when(companyService.getUserCompanyOrThrow(user)).thenReturn(company);
 
         emailSchedulerService.processExpiringProjects();
 

@@ -61,9 +61,10 @@ public class PositionService {
     private final RequiredSkillRepository requiredSkillRepository;
     private final CurrencyService currencyService;
     private final ProjectService projectService;
+    private final CompanyService companyService;
 
     public PositionResponseDto createPosition(PositionRequestDto dto, Authentication authentication) {
-        userService.validateUserAndCompany(authentication);
+        validateUserAndCompany(authentication);
         validateProjectAndUserAreRelated(dto.getProjectId(), authentication);
 
         Position position = PositionMapper.toPosition(dto);
@@ -84,7 +85,7 @@ public class PositionService {
     }
 
     public PositionResponseDto editPosition(Long id, PositionRequestDto dto, Authentication authentication) {
-        userService.validateUserAndCompany(authentication);
+        validateUserAndCompany(authentication);
         Position position = getPositionOrThrow(id);
 
         validateProjectAndUserAreRelated(position.getProject().getId(), authentication);
@@ -114,13 +115,13 @@ public class PositionService {
     public PositionResponseDto getPosition(Authentication authentication, Long id) {
         Position position = getPositionOrThrow(id);
         Project project = position.getProject();
-        Company company = userService.getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
+        Company company = companyService.getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
         projectService.validateProjectIsAvailableToCompany(project, company);
         return PositionMapper.toResponseDto(position);
     }
 
     public Set<PositionResponseDto> getPositions(Authentication authentication) {
-        Company userCompany = userService.getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
+        Company userCompany = companyService.getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
 
         Set<Position> combinedSet = new HashSet<>(positionRepository.findByProjectIsPartnerOnlyFalseAndProjectProjectStatus(ProjectStatus.ACTIVE));
         combinedSet.addAll(positionRepository.findPartnerOnlyPositionsByCompanyInPartnerGroupsAndStatus(userCompany.getId(), ProjectStatus.ACTIVE));
@@ -129,7 +130,7 @@ public class PositionService {
     }
 
     public void editPositionStatus(Long positionId, Long statusId, String customCloseReason, Authentication authentication) {
-        userService.validateUserAndCompany(authentication);
+        validateUserAndCompany(authentication);
         Position position = getPositionOrThrow(positionId);
         validateProjectAndUserAreRelated(position.getProject().getId(), authentication);
 
@@ -155,6 +156,11 @@ public class PositionService {
         positionRepository.save(position);
     }
 
+    private void validateUserAndCompany(Authentication authentication) {
+        User currentUser = userService.getCurrentUserOrThrow(authentication);
+        companyService.getUserCompanyOrThrow(currentUser);
+    }
+
     private Location getLocationIfExists(Long id) {
         return locationRepository.findById(id).orElseThrow(() -> new NotFoundException("Location with ID: " + id + " not found"));
     }
@@ -175,7 +181,7 @@ public class PositionService {
 
     private void validateProjectAndUserAreRelated(Long projectId, Authentication authentication) {
         User user = userService.getCurrentUserOrThrow(authentication);
-        Company company = userService.getUserCompanyOrThrow(user);
+        Company company = companyService.getUserCompanyOrThrow(user);
         Set<Long> projectIds = company.getProjects().stream()
                 .map(Project::getId)
                 .collect(Collectors.toSet());
