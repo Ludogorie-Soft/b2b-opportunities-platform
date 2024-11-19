@@ -268,7 +268,7 @@ class PositionControllerTest {
         authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        String expectedMessage = "No company is associated with user " + user2.getUsername();
+        String expectedMessage = "User " + user2.getUsername() + " is not associated with any company.";
 
         mockMvc.perform(post("/positions")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -405,12 +405,13 @@ class PositionControllerTest {
         UserDetailsImpl userDetails = new UserDetailsImpl(user2);
         Authentication authenticationForUser2 = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authenticationForUser2);
+        String expectedMessage = "User " + user2.getUsername() + " is not associated with any company.";
 
         mockMvc.perform(post("/positions")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(asJsonString(requestDto)))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("No company is associated with user " + user2.getUsername()));
+                .andExpect(jsonPath("$.message").value(expectedMessage));
 
     }
 

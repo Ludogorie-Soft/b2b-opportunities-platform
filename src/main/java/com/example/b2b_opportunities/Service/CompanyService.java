@@ -45,7 +45,6 @@ import com.example.b2b_opportunities.Mapper.UserMapper;
 import com.example.b2b_opportunities.Repository.CompanyRepository;
 import com.example.b2b_opportunities.Repository.CompanyTypeRepository;
 import com.example.b2b_opportunities.Repository.DomainRepository;
-import com.example.b2b_opportunities.Repository.ExperienceRepository;
 import com.example.b2b_opportunities.Repository.FilterRepository;
 import com.example.b2b_opportunities.Repository.LocationRepository;
 import com.example.b2b_opportunities.Repository.PartnerGroupRepository;
@@ -64,6 +63,7 @@ import com.example.b2b_opportunities.Utils.StringUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -82,6 +82,7 @@ import static com.example.b2b_opportunities.Utils.EmailUtils.validateEmail;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CompanyService {
     private final CompanyRepository companyRepository;
     private final ImageService imageService;
@@ -97,7 +98,6 @@ public class CompanyService {
     private final PatternRepository patternRepository;
     private final SeniorityRepository seniorityRepository;
     private final TalentRepository talentRepository;
-    private final ExperienceRepository experienceRepository;
     private final TalentExperienceRepository talentExperienceRepository;
     private final SkillExperienceRepository skillExperienceRepository;
     private final LocationRepository locationRepository;
@@ -120,13 +120,12 @@ public class CompanyService {
         createDefaultFilterIfCompanyHasNoSkills(company);
         currentUser.setCompany(company);
         userRepository.saveAndFlush(currentUser);
-
+        log.info("User {} (ID: {}) created company {} (ID: {})", currentUser.getEmail(), currentUser.getId(), company.getName(), company.getId());
         return generateCompanyResponseDto(company);
     }
 
-    public CompanyResponseDto getCompany(Long companyId){
-        Company company = companyRepository.findById(companyId)
-                .orElseThrow(() -> new NotFoundException("Company with ID: " + companyId + " not found"));
+    public CompanyResponseDto getCompany(Long companyId) {
+        Company company = getCompanyOrThrow(companyId);
         return generateCompanyResponseDto(company);
     }
 
@@ -141,11 +140,12 @@ public class CompanyService {
             filterRepository.save(filter);
             company.setFilters(new HashSet<>(Set.of(filter)));
             companyRepository.save(company);
+            log.info("Created default filter for company {}  (ID: {})", company.getName(), company.getId());
         }
     }
 
     public CompaniesAndUsersResponseDto getCompanyAndUsers(Long companyId) {
-        Company company = companyRepository.findById(companyId).orElseThrow(() -> new NotFoundException("Company with ID: " + companyId + " not found"));
+        Company company = getCompanyOrThrow(companyId);
         List<UserResponseDto> users = UserMapper.toResponseDtoList(company.getUsers());
         CompanyResponseDto responseDto = generateCompanyResponseDto(company);
 
@@ -162,6 +162,7 @@ public class CompanyService {
         company.setEmailVerification(EmailVerification.ACCEPTED);
         company.setEmailConfirmationToken(null);
         companyRepository.save(company);
+        log.info("Confirmed email address for company: {} (ID: {}) ", company.getName(), company.getId());
     }
 
     public CompanyResponseDto editCompany(Authentication authentication,
@@ -169,6 +170,7 @@ public class CompanyService {
                                           HttpServletRequest request) {
         User currentUser = userService.getCurrentUserOrThrow(authentication);
         Company userCompany = getUserCompanyOrThrow(currentUser);
+        log.info("User (ID: {}) attempting to edit company (ID: {})", currentUser.getId(), userCompany.getId());
 
         updateCompanyName(userCompany, companyRequestDto);
         validateEmail(companyRequestDto.getEmail());
@@ -178,9 +180,11 @@ public class CompanyService {
         updateCompanyWebsiteAndLinkedIn(userCompany, companyRequestDto);
         updateOtherCompanyFields(userCompany, companyRequestDto);
         Company company = companyRepository.save(userCompany);
-
+        log.info("Done editing company (ID: {})", userCompany.getId());
         return generateCompanyResponseDto(company);
     }
+
+    // TODO - add more logs for the methods below.
 
     public CompanyResponseDto setCompanyImages(Authentication authentication,
                                                MultipartFile image,
@@ -203,8 +207,7 @@ public class CompanyService {
     }
 
     public Set<ProjectResponseDto> getCompanyProjects(Authentication authentication, Long companyId) {
-        Company company = companyRepository.findById(companyId)
-                .orElseThrow(() -> new NotFoundException("Company with ID: " + companyId + " not found"));
+        Company company = getCompanyOrThrow(companyId);
         Company userCompany = getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
         if (userCompany.getId().equals(companyId)) {
             //if logged user is checking his projects - return all of them
@@ -300,7 +303,7 @@ public class CompanyService {
                 .filter(pg -> pg.getId().equals(partnerGroupId))
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Partner group with ID: " + partnerGroupId + " not found for this company."));
-        Company companyToBeRemoved = companyRepository.findById(companyId).orElseThrow(() -> new NotFoundException("Company with ID: " + companyId + " not found"));
+        Company companyToBeRemoved = getCompanyOrThrow(companyId);
         checkIfCompanyIsInPartnerGroup(partnerGroup, companyToBeRemoved);
         partnerGroup.getPartners().remove(companyToBeRemoved);
         return PartnerGroupMapper.toPartnerGroupResponseDto(partnerGroupRepository.save(partnerGroup));
@@ -485,6 +488,21 @@ public class CompanyService {
                 .build();
     }
 
+    public Company getCompanyOrThrow(Long id) {
+        return companyRepository.findById(id).orElseThrow(() -> {
+            log.warn("Company with id {} not found", id);
+            return new NotFoundException("Company with ID: " + id + " not found");
+        });
+    }
+
+    public Company getUserCompanyOrThrow(User user) {
+        Company userCompany = user.getCompany();
+        if (userCompany == null) {
+            throw new NotFoundException("User " + user.getUsername() + " is not associated with any company.");
+        }
+        return userCompany;
+    }
+
     private void setTalentRates(Talent talent, TalentRequestDto talentRequestDto) {
         Integer min = talentRequestDto.getMinRate();
         Integer max = talentRequestDto.getMaxRate();
@@ -619,18 +637,12 @@ public class CompanyService {
     private EmailVerification setCompanyEmailVerificationStatus(Company userCompany, String userEmail, String newEmail) {
         EmailVerification status = EmailVerification.PENDING;
         if (userEmail.equals(newEmail)) {
+            log.info("User email and company new email are the same. EmailVerification status will be ACCEPTED.");
             status = EmailVerification.ACCEPTED;
         }
         userCompany.setEmailVerification(status);
+        log.info("Set EmailVerification status to {} for company with ID: {}", status, userCompany.getId());
         return status;
-    }
-
-    private Company getUserCompanyOrThrow(User user) {
-        Company userCompany = user.getCompany();
-        if (userCompany == null) {
-            throw new NotFoundException("User " + user.getUsername() + " is not associated with any company.");
-        }
-        return userCompany;
     }
 
     private CompanyResponseDto generateCompanyResponseDto(Company company) {
@@ -664,24 +676,29 @@ public class CompanyService {
     }
 
     private void updateCompanyName(Company userCompany, CompanyRequestDto companyRequestDto) {
+        log.info("Attempting to update company name from {} to {}", userCompany.getName(), companyRequestDto.getName());
         String newName = companyRequestDto.getName();
         if (!newName.equals(userCompany.getName())) {
             if (companyRepository.findByNameIgnoreCase(newName).isPresent()) {
                 throw new AlreadyExistsException("Company name '" + newName + "' already registered");
             }
             userCompany.setName(newName);
+            log.info("Company name updated from {} to {}", userCompany.getName(), companyRequestDto.getName());
         }
     }
 
     private boolean updateCompanyEmailIfChanged(Company userCompany, CompanyRequestDto companyRequestDto) {
+        log.info("Attempting to update company (ID: {}) email from {} to {}", userCompany.getId(), userCompany.getEmail(), companyRequestDto.getEmail());
         String newEmail = companyRequestDto.getEmail();
         if (!newEmail.equals(userCompany.getEmail())) {
             if (companyRepository.findByEmail(companyRequestDto.getEmail()).isPresent()) {
                 throw new AlreadyExistsException("Email already registered");
             }
             userCompany.setEmail(companyRequestDto.getEmail());
+            log.info("Company (ID: {}) email updated from {} to {}", userCompany.getId(), userCompany.getEmail(), companyRequestDto.getEmail());
             return true; //mail was changed
         }
+        log.info("Company (ID: {}) email not changed.", userCompany.getId());
         return false; //mail was not changed
     }
 
@@ -691,6 +708,7 @@ public class CompanyService {
             String token = UUID.randomUUID().toString();
             userCompany.setEmailConfirmationToken(token);
             companyRepository.save(userCompany);
+            log.info("Created new token for company with ID: {}", userCompany.getId());
             mailService.sendCompanyEmailConfirmation(userCompany, token, request);
         }
     }
@@ -701,6 +719,7 @@ public class CompanyService {
             if (companyRepository.findByWebsite(newWebsite).isPresent()) {
                 throw new AlreadyExistsException("Website already registered");
             }
+            log.info("Company ID: {} - changed website to {} ",userCompany.getId(), newWebsite);
             userCompany.setWebsite(newWebsite);
         }
 
@@ -709,6 +728,7 @@ public class CompanyService {
             if (companyRepository.findByLinkedIn(newLinkedIn).isPresent()) {
                 throw new AlreadyExistsException("LinkedIn already registered");
             }
+            log.info("Company ID: {} - changed linkedIn to {} ",userCompany.getId(), newLinkedIn);
             userCompany.setLinkedIn(newLinkedIn);
         }
     }
@@ -722,16 +742,20 @@ public class CompanyService {
     private void updateOtherCompanyFields(Company company, CompanyRequestDto dto) {
         if (dto.getCompanyTypeId() != null && !company.getCompanyType().getId().equals(dto.getCompanyTypeId())) {
             company.setCompanyType(getCompanyTypeOrThrow(dto));
+            log.info("Company ID: {} - changed company type to {} ",company.getId(), getCompanyTypeOrThrow(dto));
         }
         if (dto.getDomainId() != null && !company.getDomain().getId().equals(dto.getDomainId())) {
             company.setDomain(getDomainOrThrow(dto));
+            log.info("Company ID: {} - changed domain to {} ",company.getId(), getDomainOrThrow(dto));
         }
         List<Long> companySkills = company.getSkills().stream().map(Skill::getId).toList();
         if (!companySkills.equals(dto.getSkills())) {
             company.setSkills(getSkillsOrThrow(dto));
+            log.info("Company ID: {} - changed skills to {} ",company.getId(), getSkillsOrThrow(dto).stream().toList());
         }
         if (dto.getDescription() != null && !dto.getDescription().isEmpty() && !dto.getDescription().equals(company.getDescription())) {
             company.setDescription(dto.getDescription());
+            log.info("Company ID: {} - changed description to {} ",company.getId(), dto.getDescription());
         }
     }
 
@@ -772,8 +796,7 @@ public class CompanyService {
     }
 
     private Set<Company> fetchCompaniesByIds(Set<Long> companyIds) {
-        return companyIds.stream().map(id -> companyRepository.findById(id)
-                        .orElseThrow(() -> new NotFoundException("Company with ID: " + id + " not found")))
+        return companyIds.stream().map(this::getCompanyOrThrow)
                 .collect(Collectors.toSet());
     }
 

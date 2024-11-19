@@ -12,12 +12,11 @@ import com.example.b2b_opportunities.Exception.common.NotFoundException;
 import com.example.b2b_opportunities.Exception.common.PermissionDeniedException;
 import com.example.b2b_opportunities.Mapper.PositionMapper;
 import com.example.b2b_opportunities.Mapper.ProjectMapper;
-import com.example.b2b_opportunities.Repository.CompanyRepository;
 import com.example.b2b_opportunities.Repository.PartnerGroupRepository;
 import com.example.b2b_opportunities.Repository.ProjectRepository;
 import com.example.b2b_opportunities.Static.ProjectStatus;
 import lombok.RequiredArgsConstructor;
-import org.springframework.scheduling.annotation.Scheduled;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
@@ -29,16 +28,17 @@ import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ProjectService {
     private final ProjectRepository projectRepository;
-    private final CompanyRepository companyRepository;
     private final UserService userService;
-    private final MailService mailService;
     private final PartnerGroupRepository partnerGroupRepository;
+    private final CompanyService companyService;
 
     public ProjectResponseDto get(Authentication authentication, Long id) {
         User user = userService.getCurrentUserOrThrow(authentication);
-        Company company = getCompanyIfExists(user.getCompany().getId());
+        log.info("User ID: {} attempting to access Project ID: {}", user.getId(), id);
+        Company company = companyService.getUserCompanyOrThrow(user);
         Project project = getProjectIfExists(id);
         validateProjectIsAvailableToCompany(project, company);
         //TODO - also check if its posted by approved company
@@ -47,7 +47,8 @@ public class ProjectService {
 
     public List<ProjectResponseDto> getAvailableProjects(Authentication authentication) {
         User user = userService.getCurrentUserOrThrow(authentication);
-        Company company = getCompanyIfExists(user.getCompany().getId());
+        log.info("User ID: {} attempting to access available projects", user.getId());
+        Company company = companyService.getUserCompanyOrThrow(user);
 
         List<ProjectResponseDto> publicProjects = ProjectMapper.toDtoList(projectRepository
                 .findByProjectStatusAndIsPartnerOnlyFalseAndCompanyIsApprovedTrue(ProjectStatus.ACTIVE));
@@ -67,13 +68,16 @@ public class ProjectService {
 
     public ProjectResponseDto update(Long id, ProjectRequestDto dto, Authentication authentication) {
         Project project = getProjectIfExists(id);
-        validateProjectBelongsToUser(authentication, project);
+        User user = userService.getCurrentUserOrThrow(authentication);
+        log.info("User ID: {} attempting to update Project ID: {}", user.getId(), project.getId());
+        validateProjectBelongsToUser(user, project);
         return createOrUpdate(dto, project);
     }
 
     public ProjectResponseDto create(Authentication authentication, ProjectRequestDto dto) {
         User user = userService.getCurrentUserOrThrow(authentication);
-        Company company = getCompanyIfExists(user.getCompany().getId());
+        log.info("User ID: {} attempting to create a project", user.getId());
+        Company company = companyService.getUserCompanyOrThrow(user);
         Project project = new Project();
         project.setDatePosted(LocalDateTime.now());
         project.setExpiryDate(LocalDateTime.now().plusDays(21));
@@ -83,15 +87,18 @@ public class ProjectService {
 
     public void delete(Long id, Authentication authentication) {
         Project project = getProjectIfExists(id);
-        validateProjectBelongsToUser(authentication, project);
+        User user = userService.getCurrentUserOrThrow(authentication);
+        log.info("User ID: {} attempting to delete Project ID: {}", user.getId(), project.getId());
+        validateProjectBelongsToUser(user, project);
         projectRepository.delete(project);
     }
 
     public List<PositionResponseDto> getPositionsByProject(Authentication authentication, Long id) {
         User user = userService.getCurrentUserOrThrow(authentication);
-        Company userCompany = getCompanyIfExists(user.getCompany().getId());
+        Company userCompany = companyService.getUserCompanyOrThrow(user);
 
         Project project = getProjectIfExists(id);
+        log.info("User ID: {} attempting to access positions of Project ID: {}", user.getId(), project.getId());
         validateProjectIsAvailableToCompany(project, userCompany);
 
         if (project.getPositions() == null || project.getPositions().isEmpty()) {
@@ -103,7 +110,9 @@ public class ProjectService {
 
     public ProjectResponseDto reactivateProject(Long projectId, Authentication authentication) {
         Project project = getProjectIfExists(projectId);
-        validateProjectBelongsToUser(authentication, project);
+        User user = userService.getCurrentUserOrThrow(authentication);
+        log.info("User ID: {} attempting to reactivate Project ID: {}", user.getId(), project.getId());
+        validateProjectBelongsToUser(user, project);
         if (project.getProjectStatus().equals(ProjectStatus.ACTIVE)) {
             throw new AlreadyExistsException("This project is active already");
         }
@@ -113,8 +122,8 @@ public class ProjectService {
     }
 
 
-
     public void validateProjectIsAvailableToCompany(Project project, Company userCompany) {
+        log.info("Validating if Project ID: {} belongs to Company ID: {}", project.getId(), userCompany.getId());
         if (project.getCompany().getId().equals(userCompany.getId())) {
             return;
         }
@@ -190,15 +199,8 @@ public class ProjectService {
         return projectRepository.findById(id).orElseThrow(() -> new NotFoundException("Project with ID: " + id + " not found"));
     }
 
-    private Company getCompanyIfExists(Long id) {
-        if (id == null) {
-            throw new NotFoundException("User does not associate with any company");
-        }
-        return companyRepository.findById(id).orElseThrow(() -> new NotFoundException("Company with ID: " + id + " not found"));
-    }
 
-    private void validateProjectBelongsToUser(Authentication authentication, Project project) {
-        User user = userService.getCurrentUserOrThrow(authentication);
+    private void validateProjectBelongsToUser(User user, Project project) {
         if (!Objects.equals(user.getCompany().getId(), project.getCompany().getId())) {
             throw new PermissionDeniedException("Project belongs to another company");
         }

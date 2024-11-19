@@ -33,6 +33,10 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
+      notifications:
+        condition: service_started
+      loki:
+        condition: service_started
     environment:
       POSTGRES_HOST: db
       DB_TABLE_NAME: ${DB_TABLE_NAME}
@@ -51,6 +55,8 @@ services:
       CRON_TUESDAY_TO_FRIDAY_AT_9: ${CRON_TUESDAY_TO_FRIDAY_AT_9}
       CRON_COMPANIES_NO_SKILLS_AND_NO_CUSTOM_FILTERS: ${CRON_COMPANIES_NO_SKILLS_AND_NO_CUSTOM_FILTERS}
       CRON_PROCESS_EXPIRING_PROJECTS: ${CRON_PROCESS_EXPIRING_PROJECTS}
+      LOKI_HOST: loki
+      LOG_LEVEL: ${LOG_LEVEL}
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8082/actuator/health" ]
       interval: 10s
@@ -58,6 +64,7 @@ services:
       retries: 10
     networks:
       - b2b-network
+      - logging
 
   minio:
     image: 'bitnami/minio:latest'
@@ -69,7 +76,7 @@ services:
     environment:
       MINIO_ROOT_USER: ${STORAGE_USER}
       MINIO_ROOT_PASSWORD: ${STORAGE_PASSWORD}
-      MINIO_DEFAULT_BUCKETS: ${STORAGE_BUCKET_NAME}
+      MINIO_DEFAULT_BUCKETS: ${STORAGE_BUCKET_NAME},${LOKI_BUCKET_NAME}
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
       interval: 30s
@@ -77,6 +84,7 @@ services:
       retries: 3
     networks:
       - b2b-network
+      - logging
 
   mc:
     image: bitnami/minio-client:latest
@@ -104,9 +112,65 @@ services:
     networks:
       - b2b-network
 
+  loki:
+    image: grafana/loki:3.2.1
+    depends_on:
+      minio:
+        condition: service_healthy
+    restart: always
+    environment:
+      - LOKI_S3_USERNAME=${STORAGE_USER}
+      - LOKI_S3_SECRET=${STORAGE_PASSWORD}
+      - LOKI_S3_HOST=minio
+      - LOKI_S3_PORT=9000
+      - LOKI_S3_BUCKET_NAME=${LOKI_BUCKET_NAME}
+    user: "root"
+    volumes:
+      - ./loki-config.yaml:/etc/loki/local-config.yaml:ro # Custom config
+    ports:
+      - "3100:3100"
+    command:
+      - -config.expand-env=true  # Enable environment variable expansion
+      - -config.file=/etc/loki/local-config.yaml
+    networks:
+      - logging
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3333:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PW}
+    volumes:
+      - grafana-data:/var/lib/grafana
+    entrypoint:
+      - sh
+      - -euc
+      - |
+        mkdir -p /etc/grafana/provisioning/datasources
+        cat <<EOF > /etc/grafana/provisioning/datasources/ds.yaml
+        apiVersion: 1
+        datasources:
+        - name: Loki
+          type: loki
+          access: proxy
+          orgId: 1
+          url: http://loki:3100
+          basicAuth: false
+          isDefault: true
+          version: 1
+          editable: false
+        EOF
+        /run.sh
+    networks:
+      - logging
+
 networks:
   b2b-network:
+    driver: bridge
+  logging:
     driver: bridge
 volumes:
   b2b_minio_data:
   b2b_db_data:
+  grafana-data:
