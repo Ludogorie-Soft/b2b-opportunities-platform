@@ -12,7 +12,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
         info = @Info(
                 title = "B2B",
                 version = "1.0",
-                description = "Backend API"
+                description = "Backend API (20.11.24) - Cookie"
         ))
 public class B2bOpportunitiesApplication {
 

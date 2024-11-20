@@ -22,8 +22,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.tomcat.util.descriptor.web.SecurityConstraint;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.DisabledException;
@@ -60,6 +63,9 @@ public class AuthenticationService {
     @Value("${registration.token.expiration.time}")
     private int tokenExpirationDays;
 
+    @Value("${security.jwt.expiration-time}")
+    private long jwtExpiration;
+
     public void login(LoginDto loginDto, HttpServletRequest request, HttpServletResponse response) {
         UserDetails userDetails;
         userDetails = authenticate(loginDto);
@@ -70,17 +76,29 @@ public class AuthenticationService {
     }
 
     public void setJwtCookie(HttpServletRequest request, HttpServletResponse response, String jwtToken) {
-        String domain = request.getServerName();
-        Cookie cookie = new Cookie("jwt", jwtToken);
 
-        cookie.setHttpOnly(true);
-        cookie.setSecure(true);
-        cookie.setPath("/");
-        cookie.setMaxAge(3600);
-        cookie.setDomain(domain);
+        ResponseCookie cookie = ResponseCookie.from("jwt", jwtToken)
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(jwtExpiration / 1000)
+                .domain("b2bapp.algorithmity.com")
+                .sameSite("None")
+                .build();
 
-        response.addCookie(cookie);
-        response.setHeader("Set-Cookie", "jwt=" + jwtToken + "; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=3600; Domain=" + domain);
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+
+//        String domain = request.getServerName();
+//        Cookie cookie = new Cookie("jwt", jwtToken);
+//
+//        cookie.setHttpOnly(true);
+//        cookie.setSecure(true);
+//        cookie.setPath("/");
+//        cookie.setMaxAge(3600);
+//        cookie.setDomain(domain);
+//
+//        response.addCookie(cookie);
+//        response.setHeader("Set-Cookie", "jwt=" + jwtToken + "; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=3600; Domain=" + domain);
     }
 
     public ResponseEntity<UserResponseDto> register(UserRequestDto userRequestDto, BindingResult bindingResult, HttpServletRequest request) {
@@ -172,17 +190,34 @@ public class AuthenticationService {
     }
 
     public void logout(HttpServletRequest request, HttpServletResponse response) {
+//        Cookie[] cookies = request.getCookies();
+//        if (cookies != null) {
+//            Arrays.stream(cookies).forEach(cookie -> {
+//                if ("jwt".equals(cookie.getName())) {
+//                    cookie.setValue(null);
+//                    cookie.setMaxAge(0);
+//                    cookie.setPath("/");
+//                    cookie.setDomain("b2bapp.algorithmithy.com");
+//                    cookie.setHttpOnly(true);
+//                    response.addCookie(cookie);
+//                    response.setHeader("Set-Cookie", "jwt=; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=0; Domain=b2bapp.algorithmithy.com");
+//                }
+//            });
+//        }
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
             Arrays.stream(cookies).forEach(cookie -> {
                 if ("jwt".equals(cookie.getName())) {
-                    cookie.setValue(null);
-                    cookie.setMaxAge(0);
-                    cookie.setPath("/");
-                    cookie.setDomain("b2bapp.algorithmithy.com");
-                    cookie.setHttpOnly(true);
-                    response.addCookie(cookie);
-                    response.setHeader("Set-Cookie", "jwt=; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=0; Domain=b2bapp.algorithmithy.com");
+                    ResponseCookie responseCookie = ResponseCookie.from("jwt", "")
+                            .path("/")
+                            .domain("b2bapp.algorithmithy.com")
+                            .httpOnly(true)
+                            .secure(true)
+                            .sameSite("None")
+                            .maxAge(0)
+                            .build();
+
+                    response.addHeader(HttpHeaders.SET_COOKIE, responseCookie.toString());
                 }
             });
         }
