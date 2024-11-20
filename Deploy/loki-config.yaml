@@ -1,0 +1,74 @@
+auth_enabled: false
+
+server:
+  http_listen_port: 3100
+  grpc_listen_port: 9096
+
+common:
+  instance_addr: 127.0.0.1
+  path_prefix: /tmp/loki
+  ring:
+    kvstore:
+      store: inmemory
+  replication_factor: 1
+
+query_range:
+  results_cache:
+    cache:
+      embedded_cache:
+        enabled: true
+        max_size_mb: 100
+
+schema_config:
+  configs:
+    - from: 2020-10-24
+      store: tsdb
+      object_store: s3
+      schema: v13
+      index:
+        prefix: index_
+        period: 24h
+
+#ruler:
+#  alertmanager_url: http://localhost:9093
+
+# Disable anonymous usage and configuration analytics to Grafana Labs
+analytics:
+  reporting_enabled: false
+
+compactor:
+  working_directory: /data/retention
+  compaction_interval: 10m
+  retention_enabled: true
+  retention_delete_delay: 2h
+  retention_delete_worker_count: 150
+  delete_request_store: s3
+
+limits_config:
+  # https://grafana.com/docs/loki/latest/operations/storage/retention/
+  retention_period: 744h  # Global retention period of 1 month (INFO, WARN, other)
+  retention_stream:
+    - selector: '{namespace="dev",level="TRACE"}'
+      priority: 2
+      period: 168h  # 7 days
+    - selector: '{namespace="dev",level="DEBUG"}'
+      priority: 1
+      period: 336h  # 14 days
+    - selector: '{namespace="dev",level="ERROR"}'
+      priority: 1
+      period: 1488h  # 60 days
+    - selector: '{namespace="dev",level="FATAL"}'
+      priority: 1
+      period: 1488h  # 60 days
+
+# https://grafana.com/docs/loki/latest/configure/storage/
+storage_config:
+  aws:
+    endpoint: ${LOKI_S3_HOST}:${LOKI_S3_PORT}
+    s3: s3://${LOKI_S3_USERNAME}:${LOKI_S3_SECRET}@${LOKI_S3_HOST}:${LOKI_S3_PORT}/${LOKI_S3_BUCKET_NAME}
+    s3forcepathstyle: true
+    insecure: true
+  tsdb_shipper:
+    active_index_directory: /loki/index
+    cache_location: /loki/index_cache
+    cache_ttl: 24h

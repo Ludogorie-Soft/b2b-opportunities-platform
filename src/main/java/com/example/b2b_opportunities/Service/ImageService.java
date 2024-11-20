@@ -9,6 +9,7 @@ import io.minio.errors.ErrorResponseException;
 import io.minio.errors.MinioException;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -20,6 +21,7 @@ import java.security.NoSuchAlgorithmException;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ImageService {
 
     private final MinioClient minioClient;
@@ -39,6 +41,7 @@ public class ImageService {
     }
 
     public String upload(MultipartFile file, Long companyId, String imageName) {
+        log.info("Attempting to upload image for company ID: {}", companyId);
         try {
             // Use the input stream directly from the MultipartFile
             InputStream inputStream = file.getInputStream();
@@ -55,6 +58,7 @@ public class ImageService {
             minioClient.putObject(pArgs);
 
             inputStream.close();
+            log.info("Uploaded image for company ID: {}", companyId);
 
             return storageUrl + "/" + bucketName + "/" + companyId + "/" + imageName;
         } catch (MinioException | IOException | InvalidKeyException | NoSuchAlgorithmException e) {
@@ -84,6 +88,7 @@ public class ImageService {
                     .object(companyId + "/" + imageOrBanner)
                     .build();
             minioClient.removeObject(rArgs);
+            log.info("Deleted " + imageOrBanner + " for company ID: {}", companyId);
         } catch (MinioException | IOException | InvalidKeyException | NoSuchAlgorithmException e) {
             throw new ServerErrorException("Error occurred while deleting file: " + e.getMessage());
         }
@@ -98,7 +103,6 @@ public class ImageService {
                     .bucket(bucketName)
                     .object(objectName)
                     .build());
-
             return true;
         } catch (ErrorResponseException e) {
             // If it's a "NoSuchKey" error, it means the object doesn't exist

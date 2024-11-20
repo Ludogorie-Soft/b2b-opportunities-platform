@@ -47,7 +47,8 @@ public class AuthController {
 
     @GetMapping("/register/confirm")
     public void confirmEmail(@RequestParam("token") String token, HttpServletResponse response) throws IOException {
-        authenticationService.confirmEmail(token, response);
+        authenticationService.confirmEmail(token);
+        // TODO - change localhost to use env var
         response.sendRedirect("http://localhost:5173/signup?confirmEmail=true");
     }
 
@@ -58,9 +59,8 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public void login(@RequestBody LoginDto loginDto, HttpServletRequest request, HttpServletResponse response) throws IOException {
+    public void login(@RequestBody LoginDto loginDto, HttpServletRequest request, HttpServletResponse response) {
         authenticationService.login(loginDto, request, response);
-//        response.sendRedirect(frontEndAddress + "/company/profile");
     }
 
     @GetMapping("/oauth2/success")

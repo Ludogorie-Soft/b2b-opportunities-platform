@@ -2,6 +2,7 @@ package com.example.b2b_opportunities.Config;
 
 import com.example.b2b_opportunities.Exception.ValidationException;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,11 +19,13 @@ import java.util.stream.Collectors;
 
 
 @RestControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleAllExceptions(Exception ex, HttpServletRequest request) {
         HttpStatus status = getStatus(ex);
+        logException(ex, request, status);
         return buildResponseEntity(ex, status, request);
     }
 
@@ -58,6 +61,19 @@ public class GlobalExceptionHandler {
             return HttpStatus.BAD_REQUEST;
         } else {
             return HttpStatus.INTERNAL_SERVER_ERROR;
+        }
+    }
+
+    private void logException(Exception ex, HttpServletRequest request, HttpStatus status) {
+        String logMessage = String.format("Exception caught: %s at path %s with status %s",
+                ex.getClass().getSimpleName(), request.getRequestURI(), status);
+
+        if (status.is4xxClientError()) {
+            log.warn(logMessage);
+        } else if (status.is5xxServerError()) {
+            log.error(logMessage, ex);
+        } else {
+            log.info(logMessage);
         }
     }
 }

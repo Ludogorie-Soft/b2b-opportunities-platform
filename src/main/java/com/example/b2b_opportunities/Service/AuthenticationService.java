@@ -21,8 +21,12 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.tomcat.util.descriptor.web.SecurityConstraint;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.DisabledException;
@@ -47,38 +51,54 @@ import static com.example.b2b_opportunities.Utils.EmailUtils.validateEmail;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthenticationService {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
     private final MailService mailService;
+    private final UserService userService;
+    private final ConfirmationTokenRepository confirmationTokenRepository;
+    private final UserRepository userRepository;
 
     @Value("${registration.token.expiration.time}")
     private int tokenExpirationDays;
-    private final ConfirmationTokenRepository confirmationTokenRepository;
-    private final UserRepository userRepository;
+
+    @Value("${security.jwt.expiration-time}")
+    private long jwtExpiration;
 
     public void login(LoginDto loginDto, HttpServletRequest request, HttpServletResponse response) {
         UserDetails userDetails;
         userDetails = authenticate(loginDto);
-
+        log.info("User logged in using basic auth: {}", userDetails.getUsername());
         String jwtToken = jwtService.generateToken(userDetails);
 
         setJwtCookie(request, response, jwtToken);
     }
 
-
     public void setJwtCookie(HttpServletRequest request, HttpServletResponse response, String jwtToken) {
-        String domain = request.getServerName();
-        Cookie cookie = new Cookie("jwt", jwtToken);
 
-        cookie.setHttpOnly(true);
-        cookie.setSecure(true);
-        cookie.setPath("/");
-        cookie.setMaxAge(3600);
+        ResponseCookie cookie = ResponseCookie.from("jwt", jwtToken)
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(jwtExpiration / 1000)
+                .domain("b2bapp.algorithmity.com")
+                .sameSite("None")
+                .build();
 
-        cookie.setDomain(domain);
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
-        response.addCookie(cookie);
+//        String domain = request.getServerName();
+//        Cookie cookie = new Cookie("jwt", jwtToken);
+//
+//        cookie.setHttpOnly(true);
+//        cookie.setSecure(true);
+//        cookie.setPath("/");
+//        cookie.setMaxAge(3600);
+//        cookie.setDomain(domain);
+//
+//        response.addCookie(cookie);
+//        response.setHeader("Set-Cookie", "jwt=" + jwtToken + "; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=3600; Domain=" + domain);
     }
 
     public ResponseEntity<UserResponseDto> register(UserRequestDto userRequestDto, BindingResult bindingResult, HttpServletRequest request) {
@@ -90,20 +110,25 @@ public class AuthenticationService {
 
         User user = UserMapper.toEntity(userRequestDto);
         userRepository.save(user);
+        log.info("Registered new user: {}", userRequestDto.getUsername());
         mailService.sendConfirmationMail(user, request);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(UserMapper.toResponseDto(user));
     }
 
+    // TODO - Used only for testing
     public List<UserResponseDto> getAllUsers() {
         List<User> users = userRepository.findAll();
         return UserMapper.toResponseDtoList(users);
     }
 
     public String resendConfirmationMail(String email, HttpServletRequest request) {
-        User user = userRepository.findByEmail(email).orElseThrow(()
-                -> new NotFoundException("User not found with email: " + email));
+        log.info("Attempting to send confirmation email to: {}", email);
+
+        User user = userService.getUserByEmailOrThrow(email);
+
         if (user.isEnabled()) {
+            log.info("Account with email: {} is already activated", email);
             return "Account already activated";
         }
         Optional<ConfirmationToken> optionalToken = confirmationTokenRepository.findByUser(user);
@@ -125,12 +150,15 @@ public class AuthenticationService {
             String email = (String) attributes.get("email");
 
             if (!isEmailInDB(email)) {
+                log.info("Creating user using Oauth: {}", email);
                 createUserFromOAuth(attributes, provider);
             }
+            log.info("User logged in using Oauth: {}", email);
             generateLoginResponse(request, response, email);
         }
     }
 
+    // TODO - refactor - move to DB
     public boolean isUsernameInDB(String username) {
         return userRepository.findByUsername(username).isPresent();
     }
@@ -142,35 +170,55 @@ public class AuthenticationService {
     public ConfirmationToken validateAndReturnToken(String token) {
         Optional<ConfirmationToken> optionalConfirmationToken = confirmationTokenRepository.findByToken(token);
         if (optionalConfirmationToken.isEmpty()) {
+            log.warn("Invalid token");
             throw new InvalidRequestException("Invalid token");
         }
         ConfirmationToken confirmationToken = optionalConfirmationToken.get();
         if (isTokenExpired(confirmationToken)) {
+            log.warn("Token expired");
             throw new InvalidRequestException("Expired token");
         }
         return optionalConfirmationToken.get();
     }
 
-    public void confirmEmail(String token, HttpServletResponse response) {
+    public void confirmEmail(String token) {
         ConfirmationToken confirmationToken = validateAndReturnToken(token);
         User user = confirmationToken.getUser();
-//        if (user.isEnabled()) {
-//            return "Account already activated";
-//        }
         user.setEnabled(true);
+        log.info("Email: {} for user: {} confirmed using a token", user.getEmail(), user.getUsername());
         userRepository.save(user);
-//        return "Account activated successfully";
     }
 
     public void logout(HttpServletRequest request, HttpServletResponse response) {
+//        Cookie[] cookies = request.getCookies();
+//        if (cookies != null) {
+//            Arrays.stream(cookies).forEach(cookie -> {
+//                if ("jwt".equals(cookie.getName())) {
+//                    cookie.setValue(null);
+//                    cookie.setMaxAge(0);
+//                    cookie.setPath("/");
+//                    cookie.setDomain("b2bapp.algorithmithy.com");
+//                    cookie.setHttpOnly(true);
+//                    response.addCookie(cookie);
+//                    response.setHeader("Set-Cookie", "jwt=; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=0; Domain=b2bapp.algorithmithy.com");
+//                }
+//            });
+//        }
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
             Arrays.stream(cookies).forEach(cookie -> {
-                cookie.setValue(null);
-                cookie.setMaxAge(0);
-                cookie.setPath("/");
-                cookie.setHttpOnly(true);
-                response.addCookie(cookie);
+                if ("jwt".equals(cookie.getName())) {
+                    ResponseCookie responseCookie = ResponseCookie.from("jwt", "")
+                            .path("/")
+                            .domain("b2bapp.algorithmithy.com")
+                            .httpOnly(true)
+                            .secure(true)
+                            .sameSite("None")
+                            .maxAge(0)
+                            .build();
+
+                    response.addHeader(HttpHeaders.SET_COOKIE, responseCookie.toString());
+                }
             });
         }
     }
@@ -181,24 +229,30 @@ public class AuthenticationService {
             Authentication authResult = authenticationManager.authenticate(authentication);
             return (UserDetailsImpl) authResult.getPrincipal();
         } catch (DisabledException e) {
+            log.warn("Authentication failed for user/email {}. Account not activated yet.", loginDto.getUsernameOrEmail());
             throw new AuthenticationFailedException("This account is not activated yet."); // TODO: email confirmation not accepted
         } catch (AuthenticationException e) {
+            log.warn("Authentication failed for user/email {}. Invalid username or password.", loginDto.getUsernameOrEmail());
             throw new AuthenticationFailedException("Authentication failed: Invalid username or password.");
         }
     }
 
     private void validateUser(UserRequestDto userRequestDto) {
         if (isEmailInDB(userRequestDto.getEmail().toLowerCase())) {
+            log.warn("Email {} already in use. User {} needs to try a different email.", userRequestDto.getEmail(), userRequestDto.getUsername());
             throw new DuplicateCredentialException("Email already in use. Please use a different email");
         }
         if (isUsernameInDB(userRequestDto.getUsername().toLowerCase())) {
+            log.warn("Username {} already in use.", userRequestDto.getUsername());
             throw new DuplicateCredentialException("Username already in use. Please use a different username");
         }
         if (!arePasswordsMatching(userRequestDto.getPassword(), userRequestDto.getRepeatedPassword())) {
+            log.warn("Passwords don't match for user: {}", userRequestDto.getUsername());
             throw new PasswordsNotMatchingException("Passwords don't match");
         }
     }
 
+    // TODO - refactor - move to DB
     private boolean isEmailInDB(String email) {
         return userRepository.findByEmail(email).isPresent();
     }
@@ -226,7 +280,7 @@ public class AuthenticationService {
     }
 
     private void generateLoginResponse(HttpServletRequest request, HttpServletResponse response, String email) {
-        User user = userRepository.findByEmail(email).orElseThrow(() -> new NotFoundException("User not found with email: " + email));
+        User user = userService.getUserByEmailOrThrow(email);
         UserDetailsImpl userDetails = new UserDetailsImpl(user);
 
         String jwtToken = jwtService.generateToken(userDetails);

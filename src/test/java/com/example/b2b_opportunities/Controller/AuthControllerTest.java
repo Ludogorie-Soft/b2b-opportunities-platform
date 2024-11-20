@@ -8,6 +8,7 @@ import com.example.b2b_opportunities.Repository.ConfirmationTokenRepository;
 import com.example.b2b_opportunities.Repository.UserRepository;
 import com.example.b2b_opportunities.Service.AuthenticationService;
 import com.example.b2b_opportunities.Service.MailService;
+import com.example.b2b_opportunities.Service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,7 +18,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.test.context.ActiveProfiles;
@@ -96,6 +96,9 @@ public class AuthControllerTest {
 
     @Autowired
     private ConfirmationTokenRepository confirmationTokenRepository;
+
+    @Autowired
+    private UserService userService;
 
     private final UserRequestDto userRequestDto = new UserRequestDto(
             "Test-User",
@@ -227,8 +230,8 @@ public class AuthControllerTest {
 
         Thread.sleep(1000);
 
-        User user = userRepository.findByEmail(userRequestDto.getEmail().toLowerCase())
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        User user = userService.getUserByEmailOrThrow(userRequestDto.getEmail().toLowerCase());
+
         user.setEnabled(true);
         userRepository.save(user);
 
@@ -254,8 +257,7 @@ public class AuthControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(userRequestJson));
 
-        User user = userRepository.findByEmail(userRequestDto.getEmail().toLowerCase())
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        User user = userService.getUserByEmailOrThrow(userRequestDto.getEmail().toLowerCase());
         assertFalse(user.isEnabled());
 
         mockMvc.perform(get("/api/auth/register/resend-confirmation")
@@ -272,8 +274,7 @@ public class AuthControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(userRequestJson));
 
-        User user = userRepository.findByEmail(userRequestDto.getEmail().toLowerCase())
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        User user = userService.getUserByEmailOrThrow(userRequestDto.getEmail().toLowerCase());
         assertFalse(user.isEnabled());
         String token = mailService.createAndSaveUserToken(user);
 
@@ -282,8 +283,7 @@ public class AuthControllerTest {
                 .andExpect(status().isFound()) // Change this line to expect 302
                 .andExpect(header().string("Location", "http://localhost:5173/signup?confirmEmail=true"));
 
-        User confirmedUser = userRepository.findByEmail(userRequestDto.getEmail().toLowerCase())
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        User confirmedUser = userService.getUserByEmailOrThrow(userRequestDto.getEmail().toLowerCase());
         assertTrue(confirmedUser.isEnabled());
     }
 
@@ -302,8 +302,7 @@ public class AuthControllerTest {
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrlPattern("**/company/profile"));
 
-        User newUser = userRepository.findByEmail("test@test.com")
-                .orElseThrow(() -> new IllegalStateException("User not found"));
+        User newUser = userService.getUserByEmailOrThrow("test@test.com");
 
         assertEquals("Test", newUser.getFirstName());
         assertEquals("User", newUser.getLastName());
