@@ -5,6 +5,8 @@ import com.example.b2b_opportunities.UserDetailsServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -48,6 +50,23 @@ public class SecurityConfig {
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())); // Enable CORS with custom configuration
+        http.logout(lOut -> {
+            lOut.logoutUrl("/api/auth/logout");
+            lOut.deleteCookies("jwt");
+            lOut.invalidateHttpSession(true);
+            lOut.clearAuthentication(true);
+            lOut.logoutSuccessHandler((request, response, authentication) -> {
+                ResponseCookie responseCookie = ResponseCookie.from("jwt", "")
+                        .path("/")
+                        .domain("b2bapp.algorithmity.com")
+                        .httpOnly(true)
+                        .secure(true)
+                        .sameSite("None")
+                        .maxAge(0)
+                        .build();
+                response.addHeader(HttpHeaders.SET_COOKIE, responseCookie.toString());
+            });
+        });
         return http.build();
     }
 

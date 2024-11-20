@@ -189,7 +189,7 @@ public class AuthenticationService {
         userRepository.save(user);
     }
 
-    public void logout(HttpServletRequest request, HttpServletResponse response) {
+
 //        Cookie[] cookies = request.getCookies();
 //        if (cookies != null) {
 //            Arrays.stream(cookies).forEach(cookie -> {
@@ -204,24 +204,25 @@ public class AuthenticationService {
 //                }
 //            });
 //        }
-        Cookie[] cookies = request.getCookies();
-        if (cookies != null) {
-            Arrays.stream(cookies).forEach(cookie -> {
-                if ("jwt".equals(cookie.getName())) {
-                    ResponseCookie responseCookie = ResponseCookie.from("jwt", "")
-                            .path("/")
-                            .domain("b2bapp.algorithmithy.com")
-                            .httpOnly(true)
-                            .secure(true)
-                            .sameSite("None")
-                            .maxAge(0)
-                            .build();
-
-                    response.addHeader(HttpHeaders.SET_COOKIE, responseCookie.toString());
-                }
-            });
-        }
-    }
+//    public void logout(HttpServletRequest request, HttpServletResponse response) {
+//        Cookie[] cookies = request.getCookies();
+//        if (cookies != null) {
+//            Arrays.stream(cookies).forEach(cookie -> {
+//                if ("jwt".equals(cookie.getName())) {
+//                    ResponseCookie responseCookie = ResponseCookie.from("jwt", "")
+//                            .path("/")
+//                            .domain("b2bapp.algorithmithy.com")
+//                            .httpOnly(true)
+//                            .secure(true)
+//                            .sameSite("None")
+//                            .maxAge(0)
+//                            .build();
+//
+//                    response.addHeader(HttpHeaders.SET_COOKIE, responseCookie.toString());
+//                }
+//            });
+//        }
+//    }
 
     private UserDetails authenticate(LoginDto loginDto) {
         try {

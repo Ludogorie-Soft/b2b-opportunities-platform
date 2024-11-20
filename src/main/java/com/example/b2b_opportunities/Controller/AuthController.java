@@ -89,9 +89,9 @@ public class AuthController {
         return passwordService.setNewPassword(resetPasswordDto);
     }
 
-    @PostMapping("/logout")
-    @ResponseStatus(HttpStatus.OK)
-    public void logout(HttpServletRequest request, HttpServletResponse response) {
-        authenticationService.logout(request, response);
-    }
+//    @PostMapping("/logout")
+//    @ResponseStatus(HttpStatus.OK)
+//    public void logout(HttpServletRequest request, HttpServletResponse response) {
+//        authenticationService.logout(request, response);
+//    }
 }
