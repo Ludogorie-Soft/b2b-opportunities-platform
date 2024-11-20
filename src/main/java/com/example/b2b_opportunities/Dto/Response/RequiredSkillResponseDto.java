@@ -15,5 +15,5 @@ import lombok.Setter;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class RequiredSkillResponseDto {
     private Long skillId;
-    private ExperienceResponseDto experience;
+    private Integer months;
 }

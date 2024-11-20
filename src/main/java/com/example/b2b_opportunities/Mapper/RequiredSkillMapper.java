@@ -1,6 +1,5 @@
 package com.example.b2b_opportunities.Mapper;
 
-import com.example.b2b_opportunities.Dto.Response.ExperienceResponseDto;
 import com.example.b2b_opportunities.Dto.Response.RequiredSkillResponseDto;
 import com.example.b2b_opportunities.Entity.RequiredSkill;
 import org.springframework.stereotype.Component;
@@ -16,12 +15,7 @@ public class RequiredSkillMapper {
             dto.setSkillId(s.getSkill().getId());
 
             // Set Experience
-            if (s.getExperience() != null) {
-                ExperienceResponseDto experienceResponseDto = new ExperienceResponseDto();
-                Integer months = s.getExperience().getMonths();
-                    if (months != null) experienceResponseDto.setMonths(months);
-                    dto.setExperience(experienceResponseDto);
-            }
+            if (s.getMonths() != null) dto.setMonths(s.getMonths());
             return dto;
         }).collect(Collectors.toList());
     }

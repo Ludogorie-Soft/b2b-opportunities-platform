@@ -33,7 +33,6 @@ public class RequiredSkill {
     @JoinColumn(name = "skill_id")
     private Skill skill;
 
-    @ManyToOne
-    @JoinColumn(name = "experience_id", nullable = true)
-    private Experience experience;
+    @JoinColumn(name = "months")
+    private Integer months;
 }

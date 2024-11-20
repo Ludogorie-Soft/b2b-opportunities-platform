@@ -11,5 +11,5 @@ public class RequiredSkillsDto {
     @NotNull
     private Long skillId;
     @Valid
-    private ExperienceRequestDto experience;
+    private Integer months;
 }
