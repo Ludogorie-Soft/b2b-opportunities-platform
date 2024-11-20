@@ -19,9 +19,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -40,6 +42,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -106,7 +109,16 @@ class AuthenticationServiceTest {
 
         authenticationService.login(loginDto, request, response);
 
-        verify(response).addCookie(any(Cookie.class));
+//        verify(response).addCookie(any(Cookie.class));
+        ArgumentCaptor<String> setCookieCaptor = ArgumentCaptor.forClass(String.class);
+        verify(response).addHeader(eq(HttpHeaders.SET_COOKIE), setCookieCaptor.capture());
+
+        String setCookieHeader = setCookieCaptor.getValue();
+        assertThat(setCookieHeader).contains("jwt=test-jwt-token");
+        assertThat(setCookieHeader).contains("Path=/");
+        assertThat(setCookieHeader).contains("HttpOnly");
+        assertThat(setCookieHeader).contains("Secure");
+        assertThat(setCookieHeader).contains("SameSite=None");
     }
 
     @Test
@@ -175,7 +187,17 @@ class AuthenticationServiceTest {
         authenticationService.oAuthLogin(authToken, request, response);
 
         verify(jwtService).generateToken(any(UserDetails.class));
-        verify(response).addCookie(any(Cookie.class));
+//        verify(response).addCookie(any(Cookie.class)); - for Cookies
+
+        ArgumentCaptor<String> setCookieCaptor = ArgumentCaptor.forClass(String.class);
+        verify(response).addHeader(eq(HttpHeaders.SET_COOKIE), setCookieCaptor.capture());
+
+        String setCookieHeader = setCookieCaptor.getValue();
+        assertThat(setCookieHeader).contains("jwt=test-jwt-token");
+        assertThat(setCookieHeader).contains("Path=/");
+        assertThat(setCookieHeader).contains("HttpOnly");
+        assertThat(setCookieHeader).contains("Secure");
+        assertThat(setCookieHeader).contains("SameSite=None");
     }
 
     @Test
