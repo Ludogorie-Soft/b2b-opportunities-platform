@@ -47,7 +47,7 @@ services:
       STORAGE_USER: ${STORAGE_USER}
       STORAGE_PASSWORD: ${STORAGE_PASSWORD}
       STORAGE_BUCKET_NAME: ${STORAGE_BUCKET_NAME}
-      FRONTEND_HOST: http://localhost:8083 # This is a string that is used to redirect users to the frontend.
+      FRONTEND_HOST: https://b2bapp.algorithmity.com # This is a string that is used to redirect users to the frontend.
       EMAIL_SERVICE_URL: http://notifications:8085/api/email/send
       CRON_EVERY_MONDAY_AT_9: ${CRON_EVERY_MONDAY_AT_9}
       CRON_TUESDAY_TO_FRIDAY_AT_9: ${CRON_TUESDAY_TO_FRIDAY_AT_9}
