@@ -141,8 +141,11 @@ services:
       - "3333:3000"
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PW}
+      - DS_PROMETHEUS=prometheus
     volumes:
       - grafana-data:/var/lib/grafana
+      - "./dashboard.json:/var/lib/grafana/dashboards/dashboard.json"
+      - "./default.yaml:/etc/grafana/provisioning/dashboards/default.yaml"
     entrypoint:
       - sh
       - -euc
@@ -160,10 +163,45 @@ services:
           isDefault: true
           version: 1
           editable: false
+        - name: prometheus
+          type: prometheus
+          url: http://prometheus:9090
+          access: proxy
+          isDefault: false
         EOF
         /run.sh
     networks:
       - logging
+    depends_on:
+      - prometheus
+
+  cadvisor:
+    container_name: cadvisor
+    image: gcr.io/cadvisor/cadvisor:latest
+    network_mode: "host"
+    ports:
+      - "8080:8080"
+    volumes:
+      - "/:/rootfs"
+      - "/var/run:/var/run"
+      - "/sys:/sys"
+      - "/var/lib/docker/:/var/lib/docker"
+      - "/dev/disk/:/dev/disk"
+    privileged: true
+    devices:
+      - "/dev/kmsg"
+
+  prometheus:
+    container_name: prometheus
+    image: prom/prometheus:latest
+    network_mode: "host"
+    ports:
+      - "9090:9090"
+    volumes:
+      - "./prometheus.yml:/etc/prometheus/prometheus.yml"
+    privileged: true
+    depends_on:
+      - cadvisor
 
 networks:
   b2b-network:
