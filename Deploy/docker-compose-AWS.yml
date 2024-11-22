@@ -55,6 +55,7 @@ services:
       CRON_PROCESS_EXPIRING_PROJECTS: ${CRON_PROCESS_EXPIRING_PROJECTS}
       LOKI_HOST: loki
       LOG_LEVEL: ${LOG_LEVEL}
+      DOMAIN_NAME: .algorithmity.com
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8082/actuator/health" ]
       interval: 10s

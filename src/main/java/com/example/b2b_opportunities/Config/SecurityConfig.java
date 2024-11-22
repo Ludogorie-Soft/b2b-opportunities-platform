@@ -3,6 +3,7 @@ package com.example.b2b_opportunities.Config;
 import com.example.b2b_opportunities.JwtAuthenticationFilter;
 import com.example.b2b_opportunities.UserDetailsServiceImpl;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
@@ -33,6 +34,9 @@ public class SecurityConfig {
     private final UserDetailsServiceImpl userDetailsService;
     private static BCryptPasswordEncoder encoder;
 
+    @Value(("${domain}"))
+    private String domain;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -58,7 +62,7 @@ public class SecurityConfig {
             lOut.logoutSuccessHandler((request, response, authentication) -> {
                 ResponseCookie responseCookie = ResponseCookie.from("jwt", "")
                         .path("/")
-                        .domain("b2bapp.algorithmity.com")
+                        .domain(domain)
                         .httpOnly(true)
                         .secure(true)
                         .sameSite("None")

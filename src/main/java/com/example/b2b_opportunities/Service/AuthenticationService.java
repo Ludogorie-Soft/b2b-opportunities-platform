@@ -66,6 +66,9 @@ public class AuthenticationService {
     @Value("${security.jwt.expiration-time}")
     private long jwtExpiration;
 
+    @Value(("${domain}"))
+    private String domain;
+
     public void login(LoginDto loginDto, HttpServletRequest request, HttpServletResponse response) {
         UserDetails userDetails;
         userDetails = authenticate(loginDto);
@@ -77,27 +80,15 @@ public class AuthenticationService {
 
     public void setJwtCookie(HttpServletRequest request, HttpServletResponse response, String jwtToken) {
 
-//        ResponseCookie cookie = ResponseCookie.from("jwt", jwtToken)
-//                .httpOnly(true)
-//                .secure(true)
-//                .path("/")
-//                .maxAge(jwtExpiration / 1000)
-//                .domain("algorithmity.com")
-//                .sameSite("None")
-//                .build();
-//
-//        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
-
-//        Cookie cookie = new Cookie("jwt", jwtToken);
-//
-//        cookie.setHttpOnly(true);
-//        cookie.setSecure(true);
-//        cookie.setPath("/");
-//        cookie.setMaxAge((int) (jwtExpiration / 1000));
-//        cookie.setDomain("algorithmity.com");
-//
-//        response.addCookie(cookie);
-        response.setHeader("Set-Cookie", "jwt=" + jwtToken + "; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=3600; Domain=.algorithmity.com");
+        ResponseCookie cookie = ResponseCookie.from("jwt", jwtToken)
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(jwtExpiration / 1000)
+                .domain(domain)
+                .sameSite("None")
+                .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
 
     public ResponseEntity<UserResponseDto> register(UserRequestDto userRequestDto, BindingResult bindingResult, HttpServletRequest request) {
