@@ -145,6 +145,7 @@ services:
     volumes:
       - grafana-data:/var/lib/grafana
       - "./metrics.json:/var/lib/grafana/dashboards/metrics.json"
+      - "./PostgreSQL.json:/var/lib/grafana/dashboards/postgreSQL.json"
       - "./default.yaml:/etc/grafana/provisioning/dashboards/default.yaml"
     entrypoint:
       - sh
@@ -183,14 +184,14 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - "/:/rootfs"
-      - "/var/run:/var/run"
-      - "/sys:/sys"
-      - "/var/lib/docker/:/var/lib/docker"
-      - "/dev/disk/:/dev/disk"
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
     privileged: true
     devices:
-      - "/dev/kmsg"
+      - /dev/kmsg
 
   prometheus:
     container_name: prometheus
@@ -204,6 +205,21 @@ services:
     privileged: true
     depends_on:
       - cadvisor
+
+  postgres-exporter:
+    image: quay.io/prometheuscommunity/postgres-exporter
+    container_name: postgres_exporter
+    environment:
+      DATA_SOURCE_URI: db:5432/${DB_TABLE_NAME}?sslmode=disable
+      DATA_SOURCE_USER: ${DB_USERNAME}
+      DATA_SOURCE_PASS: ${DB_PASSWORD}
+    networks:
+      - logging
+    ports:
+      - "9187:9187"
+    depends_on:
+      - db
+    restart: always
 
 networks:
   b2b-network:
