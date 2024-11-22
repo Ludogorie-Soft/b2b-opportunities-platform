@@ -149,8 +149,8 @@ services:
     volumes:
       - grafana-data:/var/lib/grafana
       - "./Logging/Grafana/postgresql.json:/var/lib/grafana/dashboards/postgresql.json"
-      - "./Logging/Grafana/dashboard.json:/var/lib/grafana/dashboards/docker.json"
-      - "./Logging/Grafana/system.json:/var/lib/grafana/dashboards/host.json"
+      - "./Logging/Grafana/docker.json:/var/lib/grafana/dashboards/docker.json"
+      - "./Logging/Grafana/host.json:/var/lib/grafana/dashboards/host.json"
       - "./Logging/Grafana/default.yaml:/etc/grafana/provisioning/dashboards/default.yaml"
     entrypoint:
       - sh

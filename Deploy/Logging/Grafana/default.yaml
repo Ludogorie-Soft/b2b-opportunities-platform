@@ -2,19 +2,17 @@ apiVersion: 1
 
 providers:
   - name: Postgresql
-    folder: Services
+#    folder: Services
     type: file
     options:
       path: /var/lib/grafana/dashboards/postgresql.json
 
   - name: Docker
-    folder: Services
     type: file
     options:
       path: /var/lib/grafana/dashboards/docker.json
 
   - name: Host
-    folder: Services
     type: file
     options:
       path: /var/lib/grafana/dashboards/host.json
