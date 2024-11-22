@@ -148,10 +148,9 @@ services:
       - DS_PROMETHEUS=prometheus
     volumes:
       - grafana-data:/var/lib/grafana
-      - "./Logging/Grafana/metrics.json:/var/lib/grafana/dashboards/metrics.json"
       - "./Logging/Grafana/postgresql.json:/var/lib/grafana/dashboards/postgresql.json"
-      - "./Logging/Grafana/dashboard.json:/var/lib/grafana/dashboards/dashboard.json"
-      - "./Logging/Grafana/system.json:/var/lib/grafana/dashboards/system.json"
+      - "./Logging/Grafana/dashboard.json:/var/lib/grafana/dashboards/docker.json"
+      - "./Logging/Grafana/system.json:/var/lib/grafana/dashboards/host.json"
       - "./Logging/Grafana/default.yaml:/etc/grafana/provisioning/dashboards/default.yaml"
     entrypoint:
       - sh
