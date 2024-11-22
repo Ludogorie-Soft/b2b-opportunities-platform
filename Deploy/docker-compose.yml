@@ -151,6 +151,7 @@ services:
       - "./Logging/Grafana/postgresql.json:/var/lib/grafana/dashboards/postgresql.json"
       - "./Logging/Grafana/docker.json:/var/lib/grafana/dashboards/docker.json"
       - "./Logging/Grafana/host.json:/var/lib/grafana/dashboards/host.json"
+      - "./Logging/Grafana/loki.json:/var/lib/grafana/dashboards/loki.json"
       - "./Logging/Grafana/default.yaml:/etc/grafana/provisioning/dashboards/default.yaml"
     entrypoint:
       - sh

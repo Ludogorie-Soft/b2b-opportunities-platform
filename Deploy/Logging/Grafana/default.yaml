@@ -16,3 +16,8 @@ providers:
     type: file
     options:
       path: /var/lib/grafana/dashboards/host.json
+
+  - name: Loki
+    type: file
+    options:
+      path: /var/lib/grafana/dashboards/loki.json
