@@ -17,4 +17,4 @@ providers:
     folder: Services
     type: file
     options:
-      path: /var/lib/grafana/dashboards/dashboard.yaml
+      path: /var/lib/grafana/dashboards/dashboard.json
