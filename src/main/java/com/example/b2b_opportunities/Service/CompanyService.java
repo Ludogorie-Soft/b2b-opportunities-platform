@@ -476,15 +476,15 @@ public class CompanyService {
     public TalentPublicityResponseDto getTalentVisibility(Authentication authentication) {
         User user = userService.getCurrentUserOrThrow(authentication);
         Company userCompany = user.getCompany();
-        Set<Long> partnerGroupIds = new HashSet<>();
+        Set<Long> talentAccessGroupIds = new HashSet<>();
         if (!userCompany.isTalentsSharedPublicly()) {
-            partnerGroupIds = userCompany.getTalentAccessGroups().stream()
+            talentAccessGroupIds = userCompany.getTalentAccessGroups().stream()
                     .map(PartnerGroup::getId)
                     .collect(Collectors.toSet());
         }
         return TalentPublicityResponseDto.builder()
                 .isPublic(userCompany.isTalentsSharedPublicly())
-                .partnerGroupIds(partnerGroupIds)
+                .partnerGroupIds(talentAccessGroupIds)
                 .build();
     }
 
