@@ -77,28 +77,27 @@ public class AuthenticationService {
 
     public void setJwtCookie(HttpServletRequest request, HttpServletResponse response, String jwtToken) {
 
-        ResponseCookie cookie = ResponseCookie.from("jwt", jwtToken)
-                .httpOnly(true)
-                .secure(true)
-                .path("/")
-                .maxAge(jwtExpiration / 1000)
-                .domain("b2bapp.algorithmity.com")
-                .sameSite("None")
-                .build();
+//        ResponseCookie cookie = ResponseCookie.from("jwt", jwtToken)
+//                .httpOnly(true)
+//                .secure(true)
+//                .path("/")
+//                .maxAge(jwtExpiration / 1000)
+//                .domain("algorithmity.com")
+//                .sameSite("None")
+//                .build();
+//
+//        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
-        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
-
-//        String domain = request.getServerName();
 //        Cookie cookie = new Cookie("jwt", jwtToken);
 //
 //        cookie.setHttpOnly(true);
 //        cookie.setSecure(true);
 //        cookie.setPath("/");
-//        cookie.setMaxAge(3600);
-//        cookie.setDomain(domain);
+//        cookie.setMaxAge((int) (jwtExpiration / 1000));
+//        cookie.setDomain("algorithmity.com");
 //
 //        response.addCookie(cookie);
-//        response.setHeader("Set-Cookie", "jwt=" + jwtToken + "; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=3600; Domain=" + domain);
+        response.setHeader("Set-Cookie", "jwt=" + jwtToken + "; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=3600; Domain=.algorithmity.com");
     }
 
     public ResponseEntity<UserResponseDto> register(UserRequestDto userRequestDto, BindingResult bindingResult, HttpServletRequest request) {
