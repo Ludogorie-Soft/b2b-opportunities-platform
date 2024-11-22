@@ -150,8 +150,9 @@ services:
       - grafana-data:/var/lib/grafana
       - "./Logging/Grafana/metrics.json:/var/lib/grafana/dashboards/metrics.json"
       - "./Logging/Grafana/postgresql.json:/var/lib/grafana/dashboards/postgresql.json"
-      - "./Logging/Grafana/default.yaml:/etc/grafana/provisioning/dashboards/default.yaml"
       - "./Logging/Grafana/dashboard.json:/var/lib/grafana/dashboards/dashboard.json"
+      - "./Logging/Grafana/system.json:/var/lib/grafana/dashboards/system.json"
+      - "./Logging/Grafana/default.yaml:/etc/grafana/provisioning/dashboards/default.yaml"
     entrypoint:
       - sh
       - -euc
@@ -227,6 +228,18 @@ services:
     depends_on:
       - db
     restart: always
+
+  node-exporter:
+    image: quay.io/prometheus/node-exporter:latest
+    container_name: node_exporter
+    command:
+      - '--path.rootfs=/host'
+    networks:
+      - logging
+    pid: host
+    restart: unless-stopped
+    volumes:
+      - '/:/host:ro,rslave'
 
 networks:
   b2b-network:

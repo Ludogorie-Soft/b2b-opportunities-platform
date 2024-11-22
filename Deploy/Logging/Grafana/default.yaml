@@ -18,3 +18,9 @@ providers:
     type: file
     options:
       path: /var/lib/grafana/dashboards/dashboard.json
+
+  - name: Docker
+    folder: Services
+    type: file
+    options:
+      path: /var/lib/grafana/dashboards/system.json
