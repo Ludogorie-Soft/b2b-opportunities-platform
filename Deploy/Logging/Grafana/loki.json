@@ -206,7 +206,7 @@
   },
   "timepicker": {},
   "timezone": "browser",
-  "title": "New dashboard",
+  "title": "Backend logs (loki)",
   "uid": "ee4q2pzv9wa2ob",
   "version": 2,
   "weekStart": ""
