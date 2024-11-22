@@ -1,7 +1,6 @@
 services:
   db:
     image: postgres:16.4-alpine3.20
-    restart: always
     # set shared memory limit when using docker-compose
     shm_size: 128mb
     ports:
@@ -21,7 +20,8 @@ services:
       timeout: 5s
     networks:
       - b2b-network
-      
+    restart: always
+
   backend:
     build:
       context: ..
@@ -65,6 +65,7 @@ services:
     networks:
       - b2b-network
       - logging
+    restart: unless-stopped
 
   minio:
     image: 'bitnami/minio:latest'
@@ -85,6 +86,7 @@ services:
     networks:
       - b2b-network
       - logging
+    restart: always
 
   mc:
     image: bitnami/minio-client:latest
@@ -111,13 +113,13 @@ services:
       SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME}
     networks:
       - b2b-network
+    restart: always
 
   loki:
     image: grafana/loki:3.2.1
     depends_on:
       minio:
         condition: service_healthy
-    restart: always
     environment:
       - LOKI_S3_USERNAME=${STORAGE_USER}
       - LOKI_S3_SECRET=${STORAGE_PASSWORD}
@@ -134,6 +136,7 @@ services:
       - -config.file=/etc/loki/local-config.yaml
     networks:
       - logging
+    restart: always
 
   grafana:
     image: grafana/grafana:latest
@@ -175,6 +178,7 @@ services:
       - logging
     depends_on:
       - prometheus
+    restart: always
 
   cadvisor:
     container_name: cadvisor
@@ -192,6 +196,7 @@ services:
     privileged: true
     devices:
       - /dev/kmsg
+    restart: always
 
   prometheus:
     container_name: prometheus
@@ -205,6 +210,7 @@ services:
     privileged: true
     depends_on:
       - cadvisor
+    restart: always
 
   postgres-exporter:
     image: quay.io/prometheuscommunity/postgres-exporter
