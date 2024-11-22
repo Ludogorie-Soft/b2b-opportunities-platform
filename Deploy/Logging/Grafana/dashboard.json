@@ -359,15 +359,26 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "rate(container_cpu_user_seconds_total{image!=\"\"}[5m]) * 100",
+          "editorMode": "code",
+          "expr": "sum(rate(container_cpu_usage_seconds_total{image!=\"\"}[1m])) * 100 or\r\nrate(container_cpu_user_seconds_total{image!=\"\"}[1m]) * 100\r\n",
           "intervalFactor": 2,
-          "legendFormat": "{{name}}",
+          "legendFormat": "{{container_label_com_docker_compose_service}}",
           "metric": "cpu",
+          "range": true,
           "refId": "A",
           "step": 10
         }
       ],
       "title": "CPU Usage",
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "Value",
+            "renamePattern": "Total"
+          }
+        }
+      ],
       "type": "timeseries"
     },
     {
@@ -461,16 +472,27 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "container_memory_usage_bytes{image!=\"\"}",
+          "editorMode": "code",
+          "expr": "container_memory_usage_bytes{image!=\"\"} or sum(container_memory_usage_bytes{image!=\"\"})",
           "hide": false,
           "intervalFactor": 2,
-          "legendFormat": "{{name}}",
+          "legendFormat": "{{container_label_com_docker_compose_service}}",
           "metric": "container_memory_usage_bytes",
+          "range": true,
           "refId": "A",
           "step": 10
         }
       ],
       "title": "Memory Usage",
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "Value",
+            "renamePattern": "Total RAM"
+          }
+        }
+      ],
       "type": "timeseries"
     },
     {
@@ -561,10 +583,12 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
+          "editorMode": "code",
           "expr": "irate(container_network_receive_bytes_total{image!=\"\"}[5m])",
           "intervalFactor": 2,
-          "legendFormat": "{{name}}",
+          "legendFormat": "{{container_label_com_docker_compose_service}}",
           "metric": "container_network_receive_bytes_total",
+          "range": true,
           "refId": "A",
           "step": 20
         }
@@ -660,9 +684,11 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
+          "editorMode": "code",
           "expr": "irate(container_network_transmit_bytes_total{image!=\"\"}[5m])",
           "intervalFactor": 2,
-          "legendFormat": "{{name}}",
+          "legendFormat": "{{container_label_com_docker_compose_service}}",
+          "range": true,
           "refId": "A",
           "step": 20
         }
