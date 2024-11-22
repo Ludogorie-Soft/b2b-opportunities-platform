@@ -478,7 +478,7 @@ public class CompanyService {
         Company userCompany = user.getCompany();
         Set<Long> partnerGroupIds = new HashSet<>();
         if (!userCompany.isTalentsSharedPublicly()) {
-            partnerGroupIds = userCompany.getPartnerGroups().stream()
+            partnerGroupIds = userCompany.getTalentAccessGroups().stream()
                     .map(PartnerGroup::getId)
                     .collect(Collectors.toSet());
         }
