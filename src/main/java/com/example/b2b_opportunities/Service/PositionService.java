@@ -73,6 +73,7 @@ public class PositionService {
         checkForNonAssignableSkills(dto.getRequiredSkills());
         setPositionFields(position, dto);
         updateProjectDateUpdated(position);
+        extendProjectDurationWhenPositionStatusNotCanceled(position, dto.getStatusId());
         activateProjectIfInactive(position.getProject());
         position.setStatus(positionStatusRepository.findById(1L).orElseThrow());
 
@@ -95,6 +96,7 @@ public class PositionService {
         position.setHiringProcess(dto.getHiringProcess());
         position.setDescription(dto.getDescription());
         setPositionStatusOrThrow(position, dto.getStatusId());
+        extendProjectDurationWhenPositionStatusNotCanceled(position, dto.getStatusId());
 
         checkForNonAssignableSkills(dto.getRequiredSkills());
         deleteAllRequiredSkillsForPositionIfAny(position);
@@ -321,6 +323,14 @@ public class PositionService {
         if (!hasActivePosition) {
             project.setProjectStatus(ProjectStatus.INACTIVE);
             projectRepository.save(project);
+        }
+    }
+
+    private void extendProjectDurationWhenPositionStatusNotCanceled(Position position, Long positionStatusId) {
+        if (positionStatusId != 4) {
+            Project project = position.getProject();
+            project.setExpiryDate(LocalDateTime.now().plusWeeks(3));
+            activateProjectIfInactive(project);
         }
     }
 }
