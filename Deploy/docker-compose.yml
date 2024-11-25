@@ -243,21 +243,6 @@ services:
 #    volumes:
 #      - '/:/host:ro,rslave'
 
-  setup_grafana_datasource:
-    # This is an arbitrary small image that has curl installed
-    # Use a quay.io mirror to prevent build outages due to Docker Hub pull quotas
-    # Use latest from https://quay.io/repository/quay.io/rackspace/curl?tab=tags
-    image: quay.io/cilium/alpine-curl:v1.9.0
-    container_name: setup_grafana_datasource
-    depends_on:
-      - grafana
-    volumes:
-      - ./Logging/Prometheus/create-datasource-and-dashboard.sh:/tmp/create.sh:ro
-    working_dir: /tmp
-    entrypoint: /tmp/create.sh
-    networks:
-      - logging
-
   zipkin:
     image: ghcr.io/openzipkin/zipkin-slim:${TAG:-latest}
     container_name: zipkin
