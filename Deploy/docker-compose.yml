@@ -58,6 +58,7 @@ services:
       CRON_PROCESS_EXPIRING_PROJECTS: ${CRON_PROCESS_EXPIRING_PROJECTS}
       LOKI_HOST: loki
       LOG_LEVEL: ${LOG_LEVEL}
+      ZIPKIN_HOST: zipkin
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8082/actuator/health" ]
       interval: 10s
@@ -211,6 +212,7 @@ services:
       - "9090:9090"
     volumes:
       - "./Logging/prometheus.yml:/etc/prometheus/prometheus.yml"
+      - prometheus_data:/prometheus
     privileged: true
     restart: always
 
@@ -229,17 +231,57 @@ services:
       - db
     restart: always
 
-  node-exporter:
-    image: quay.io/prometheus/node-exporter:latest
-    container_name: node_exporter
-    command:
-      - '--path.rootfs=/host'
+#  node-exporter:
+#    image: quay.io/prometheus/node-exporter:latest
+#    container_name: node_exporter
+#    command:
+#      - '--path.rootfs=/host'
+#    networks:
+#      - logging
+#    pid: host
+#    restart: unless-stopped
+#    volumes:
+#      - '/:/host:ro,rslave'
+
+  setup_grafana_datasource:
+    # This is an arbitrary small image that has curl installed
+    # Use a quay.io mirror to prevent build outages due to Docker Hub pull quotas
+    # Use latest from https://quay.io/repository/quay.io/rackspace/curl?tab=tags
+    image: quay.io/cilium/alpine-curl:v1.9.0
+    container_name: setup_grafana_datasource
+    depends_on:
+      - grafana
+    volumes:
+      - ./Logging/Prometheus/create-datasource-and-dashboard.sh:/tmp/create.sh:ro
+    working_dir: /tmp
+    entrypoint: /tmp/create.sh
     networks:
       - logging
-    pid: host
-    restart: unless-stopped
-    volumes:
-      - '/:/host:ro,rslave'
+
+  zipkin:
+    image: ghcr.io/openzipkin/zipkin-slim:${TAG:-latest}
+    container_name: zipkin
+    # Environment settings are defined here https://github.com/openzipkin/zipkin/blob/master/zipkin-server/README.md#environment-variables
+    environment:
+      - STORAGE_TYPE=mem
+      - ZIPKIN_METRICS_PROMETHEUS_ENABLED=true
+    ports:
+      - "9411:9411"
+    networks:
+      - logging
+    restart: always
+
+## TODO: Storage is currently not working on my windows(WSL) .. to be tested further
+#  storage:
+#    image: ghcr.io/openzipkin/zipkin-elasticsearch8:${TAG:-latest}
+#    container_name: elasticsearch
+#    # ports:
+#    #   - 9200:9200
+#    volumes:
+#      - zipkin_elasticsearch_data:/elasticsearch/data
+#    networks:
+#      - logging
+#    restart: always
 
 networks:
   b2b-network:
@@ -250,3 +292,5 @@ volumes:
   b2b_minio_data:
   b2b_db_data:
   grafana-data:
+  zipkin_elasticsearch_data:
+  prometheus_data:

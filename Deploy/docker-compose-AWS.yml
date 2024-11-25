@@ -228,6 +228,46 @@ services:
     volumes:
       - '/:/host:ro,rslave'
 
+  setup_grafana_datasource:
+    # This is an arbitrary small image that has curl installed
+    # Use a quay.io mirror to prevent build outages due to Docker Hub pull quotas
+    # Use latest from https://quay.io/repository/quay.io/rackspace/curl?tab=tags
+    image: quay.io/cilium/alpine-curl:v1.9.0
+    container_name: setup_grafana_datasource
+    depends_on:
+      - grafana
+    volumes:
+      - ./Logging/Prometheus/create-datasource-and-dashboard.sh:/tmp/create.sh:ro
+    working_dir: /tmp
+    entrypoint: /tmp/create.sh
+    networks:
+      - logging
+
+  zipkin:
+    image: ghcr.io/openzipkin/zipkin-slim:${TAG:-latest}
+    container_name: zipkin
+    environment:
+      - STORAGE_TYPE=elasticsearch
+      - ES_HOSTS=elasticsearch:9200
+      - ZIPKIN_METRICS_PROMETHEUS_ENABLED=true
+    ports:
+      - "9411:9411"
+    depends_on:
+      storage:
+        condition: service_healthy
+    networks:
+      - logging
+    restart: always
+
+  storage:
+    image: ghcr.io/openzipkin/zipkin-elasticsearch8:${TAG:-latest}
+    container_name: elasticsearch
+    volumes:
+      - zipkin_elasticsearch_data:/elasticsearch/data
+    networks:
+      - logging
+    restart: always
+
 networks:
   b2b-network:
     driver: bridge
@@ -237,3 +277,5 @@ volumes:
   b2b_minio_data:
   b2b_db_data:
   grafana-data:
+  zipkin_elasticsearch_data:
+  prometheus_data:

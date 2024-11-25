@@ -43,6 +43,17 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'io.minio:minio:8.5.12'
     implementation 'com.github.loki4j:loki-logback-appender:1.5.2'
+
+    implementation 'io.micrometer:micrometer-tracing-bridge-brave'
+    implementation 'io.zipkin.reporter2:zipkin-reporter-brave'
+    implementation 'io.micrometer:micrometer-tracing'
+
+// TODO: Delete after testing on Linux
+//    implementation 'org.springframework.cloud:spring-cloud-starter-sleuth:3.1.11'
+//    implementation 'org.springframework.cloud:spring-cloud-sleuth-zipkin:3.1.11'
+//    implementation 'io.opentelemetry:opentelemetry-exporter-zipkin:1.44.1'
+//    implementation 'io.micrometer:micrometer-tracing-bridge-otel:1.4.0'
+
 }
 
 tasks.named('test') {
