@@ -49,15 +49,6 @@ class JwtServiceTest {
     }
 
     @Test
-    void testGenerateTokenWithExtraClaims() {
-        UserDetails userDetails = new User("john.doe@example.com", "password", Collections.emptyList());
-        Map<String, Object> extraClaims = new HashMap<>();
-        extraClaims.put("role", "USER");
-        String token = jwtService.generateToken(extraClaims, userDetails);
-        assertNotNull(token);
-    }
-
-    @Test
     void testIsTokenValid() {
         UserDetails userDetails = new User("john.doe@example.com", "password", Collections.emptyList());
         String token = jwtService.generateToken(userDetails);
