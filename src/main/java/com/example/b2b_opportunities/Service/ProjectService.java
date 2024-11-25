@@ -80,7 +80,6 @@ public class ProjectService {
         Company company = companyService.getUserCompanyOrThrow(user);
         Project project = new Project();
         project.setDatePosted(LocalDateTime.now());
-        project.setExpiryDate(LocalDateTime.now().plusDays(21));
         project.setCompany(company);
         return createOrUpdate(dto, project);
     }
@@ -116,8 +115,7 @@ public class ProjectService {
         if (project.getProjectStatus().equals(ProjectStatus.ACTIVE)) {
             throw new AlreadyExistsException("This project is active already");
         }
-        project.setProjectStatus(ProjectStatus.ACTIVE);
-        project.setExpiryDate(LocalDateTime.now().plusDays(21));
+        extendProjectDuration(project);
         return ProjectMapper.toDto(projectRepository.save(project));
     }
 
@@ -158,7 +156,7 @@ public class ProjectService {
         project.setDuration(dto.getDuration());
         project.setDescription(dto.getDescription());
         project.setDateUpdated(LocalDateTime.now());
-        project.setProjectStatus(ProjectStatus.ACTIVE);
+        extendProjectDuration(project);
         if (dto.isPartnerOnly()) {
             project.setPartnerOnly(true);
             List<PartnerGroup> projectPartnerGroups = getPartnerGroupsOrThrow(dto.getPartnerGroups());
@@ -204,5 +202,10 @@ public class ProjectService {
         if (!Objects.equals(user.getCompany().getId(), project.getCompany().getId())) {
             throw new PermissionDeniedException("Project belongs to another company");
         }
+    }
+
+    private static void extendProjectDuration(Project project) {
+        project.setExpiryDate(LocalDateTime.now().plusWeeks(3));
+        project.setProjectStatus(ProjectStatus.ACTIVE);
     }
 }
