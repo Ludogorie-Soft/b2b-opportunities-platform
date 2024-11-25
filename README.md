@@ -24,4 +24,12 @@ Follow the steps below to set up and run the project using Docker:
 
 4. **Access Swagger UI**
 
-   http://localhost:8082/swagger-ui/index.html
+   http://localhost:8082
+
+   https://b2b.algorithmity.com
+
+5. **Access Grafana UI**
+   
+   http://localhost:3333
+
+   http://b2b.algorithmity.com:3333
