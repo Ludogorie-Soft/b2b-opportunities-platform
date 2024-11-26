@@ -1,7 +1,6 @@
 services:
   db:
     image: postgres:16.4-alpine3.20
-    restart: always
     # set shared memory limit when using docker-compose
     shm_size: 128mb
     ports:
@@ -21,7 +20,9 @@ services:
       timeout: 5s
     networks:
       - b2b-network
-      
+      - logging
+    restart: always
+
   backend:
     build:
       context: ..
@@ -57,6 +58,7 @@ services:
       CRON_PROCESS_EXPIRING_PROJECTS: ${CRON_PROCESS_EXPIRING_PROJECTS}
       LOKI_HOST: loki
       LOG_LEVEL: ${LOG_LEVEL}
+      ZIPKIN_HOST: zipkin
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8082/actuator/health" ]
       interval: 10s
@@ -65,6 +67,7 @@ services:
     networks:
       - b2b-network
       - logging
+    restart: unless-stopped
 
   minio:
     image: 'bitnami/minio:latest'
@@ -85,6 +88,7 @@ services:
     networks:
       - b2b-network
       - logging
+    restart: always
 
   mc:
     image: bitnami/minio-client:latest
@@ -111,13 +115,13 @@ services:
       SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME}
     networks:
       - b2b-network
+    restart: always
 
   loki:
     image: grafana/loki:3.2.1
     depends_on:
       minio:
-        condition: service_healthy
-    restart: always
+        condition: service_healthy # Minio is used as a storage for loki
     environment:
       - LOKI_S3_USERNAME=${STORAGE_USER}
       - LOKI_S3_SECRET=${STORAGE_PASSWORD}
@@ -126,7 +130,7 @@ services:
       - LOKI_S3_BUCKET_NAME=${LOKI_BUCKET_NAME}
     user: "root"
     volumes:
-      - ./loki-config.yaml:/etc/loki/local-config.yaml:ro # Custom config
+      - ./Logging/loki-config.yaml:/etc/loki/local-config.yaml:ro # Custom config
     ports:
       - "3100:3100"
     command:
@@ -134,6 +138,7 @@ services:
       - -config.file=/etc/loki/local-config.yaml
     networks:
       - logging
+    restart: always
 
   grafana:
     image: grafana/grafana:latest
@@ -141,8 +146,15 @@ services:
       - "3333:3000"
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PW}
+      - DS_PROMETHEUS=prometheus
     volumes:
       - grafana-data:/var/lib/grafana
+      - "./Logging/Grafana/postgresql.json:/var/lib/grafana/dashboards/postgresql.json"
+      - "./Logging/Grafana/docker.json:/var/lib/grafana/dashboards/docker.json"
+      - "./Logging/Grafana/host.json:/var/lib/grafana/dashboards/host.json"
+      - "./Logging/Grafana/loki.json:/var/lib/grafana/dashboards/loki.json"
+      - "./Logging/Grafana/zipkin.json:/var/lib/grafana/dashboards/zipkin.json"
+      - "./Logging/Grafana/default.yaml:/etc/grafana/provisioning/dashboards/default.yaml"
     entrypoint:
       - sh
       - -euc
@@ -160,8 +172,109 @@ services:
           isDefault: true
           version: 1
           editable: false
+        - name: prometheus
+          type: prometheus
+          url: http://prometheus:9090
+          access: proxy
+          isDefault: false
         EOF
         /run.sh
+    networks:
+      - logging
+    depends_on:
+      - prometheus
+      - loki
+    restart: always
+
+  cadvisor:
+    container_name: cadvisor
+    image: gcr.io/cadvisor/cadvisor:latest
+    networks:
+      - logging
+    ports:
+      - "8080:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    privileged: true
+    devices:
+      - /dev/kmsg
+    restart: always
+
+  prometheus:
+    container_name: prometheus
+    image: prom/prometheus:latest
+    networks:
+      - logging
+    ports:
+      - "9090:9090"
+    volumes:
+      - "./Logging/prometheus.yml:/etc/prometheus/prometheus.yml"
+      - prometheus_data:/prometheus
+    privileged: true
+    restart: always
+
+  postgres-exporter:
+    image: quay.io/prometheuscommunity/postgres-exporter
+    container_name: postgres_exporter
+    environment:
+      DATA_SOURCE_URI: db:5432/${DB_TABLE_NAME}?sslmode=disable
+      DATA_SOURCE_USER: ${DB_USERNAME}
+      DATA_SOURCE_PASS: ${DB_PASSWORD}
+    networks:
+      - logging
+    ports:
+      - "9187:9187"
+    depends_on:
+      - db
+    restart: always
+
+# Enable if you are on Linux (Not working on Windows. Not tested on MacOS)
+#  node-exporter:
+#    image: quay.io/prometheus/node-exporter:latest
+#    container_name: node_exporter
+#    command:
+#      - '--path.rootfs=/host'
+#    networks:
+#      - logging
+#    pid: host
+#    restart: unless-stopped
+#    volumes:
+#      - '/:/host:ro,rslave'
+
+  zipkin:
+    image: ghcr.io/openzipkin/zipkin-slim:latest
+    container_name: zipkin
+    environment:
+      - STORAGE_TYPE=elasticsearch
+      - ES_HOSTS=elasticsearch:9200
+      - ZIPKIN_METRICS_PROMETHEUS_ENABLED=true
+    ports:
+      - "9411:9411"
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - logging
+    restart: always
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.16.1
+    container_name: elasticsearch
+    restart: unless-stopped
+    ports:
+      - "9200:9200"
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: false
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+    volumes:
+      - zipkin_elasticsearch_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: "curl -f http://localhost:9200 || exit 1"
     networks:
       - logging
 
@@ -174,3 +287,5 @@ volumes:
   b2b_minio_data:
   b2b_db_data:
   grafana-data:
+  zipkin_elasticsearch_data:
+  prometheus_data:
