@@ -232,6 +232,7 @@ services:
       - db
     restart: always
 
+# Enable if you are on Linux (Not working on Windows. Not tested on MacOS)
 #  node-exporter:
 #    image: quay.io/prometheus/node-exporter:latest
 #    container_name: node_exporter
@@ -245,29 +246,37 @@ services:
 #      - '/:/host:ro,rslave'
 
   zipkin:
-    image: ghcr.io/openzipkin/zipkin-slim:${TAG:-latest}
+    image: ghcr.io/openzipkin/zipkin-slim:latest
     container_name: zipkin
-    # Environment settings are defined here https://github.com/openzipkin/zipkin/blob/master/zipkin-server/README.md#environment-variables
     environment:
-      - STORAGE_TYPE=mem
+      - STORAGE_TYPE=elasticsearch
+      - ES_HOSTS=elasticsearch:9200
       - ZIPKIN_METRICS_PROMETHEUS_ENABLED=true
     ports:
       - "9411:9411"
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
     networks:
       - logging
     restart: always
 
-## TODO: Storage is currently not working on my windows(WSL) .. to be tested further
-#  storage:
-#    image: ghcr.io/openzipkin/zipkin-elasticsearch8:${TAG:-latest}
-#    container_name: elasticsearch
-#    # ports:
-#    #   - 9200:9200
-#    volumes:
-#      - zipkin_elasticsearch_data:/elasticsearch/data
-#    networks:
-#      - logging
-#    restart: always
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.16.1
+    container_name: elasticsearch
+    restart: unless-stopped
+    ports:
+      - "9200:9200"
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: false
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+    volumes:
+      - zipkin_elasticsearch_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: "curl -f http://localhost:9200 || exit 1"
+    networks:
+      - logging
 
 networks:
   b2b-network:
