@@ -140,7 +140,7 @@ public class PositionService {
 
         if (statusId.equals(5L)) {
             if (customCloseReason == null || customCloseReason.isEmpty()) {
-                throw new InvalidRequestException("Custom close reason must be entered");
+                throw new InvalidRequestException("Custom close reason must be entered", "customCloseReason");
             }
             position.setCustomCloseReason(customCloseReason);
         } else {
@@ -234,7 +234,7 @@ public class PositionService {
 
     private void setRate(Position position, RateRequestDto rateRequestDto) {
         if (rateRequestDto.getMax() != null && rateRequestDto.getMin() > rateRequestDto.getMax()) {
-            throw new InvalidRequestException("Min rate cannot exceed max rate");
+            throw new InvalidRequestException("Min rate cannot exceed max rate", "minRate");
         }
         Rate rate = RateMapper.toRate(rateRequestDto);
         rate.setCurrency(currencyService.getById(rateRequestDto.getCurrencyId()));

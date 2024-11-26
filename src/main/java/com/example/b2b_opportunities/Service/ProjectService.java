@@ -7,7 +7,7 @@ import com.example.b2b_opportunities.Entity.Company;
 import com.example.b2b_opportunities.Entity.PartnerGroup;
 import com.example.b2b_opportunities.Entity.Project;
 import com.example.b2b_opportunities.Entity.User;
-import com.example.b2b_opportunities.Exception.common.AlreadyExistsException;
+import com.example.b2b_opportunities.Exception.common.InvalidRequestException;
 import com.example.b2b_opportunities.Exception.common.NotFoundException;
 import com.example.b2b_opportunities.Exception.common.PermissionDeniedException;
 import com.example.b2b_opportunities.Mapper.PositionMapper;
@@ -113,7 +113,7 @@ public class ProjectService {
         log.info("User ID: {} attempting to reactivate Project ID: {}", user.getId(), project.getId());
         validateProjectBelongsToUser(user, project);
         if (project.getProjectStatus().equals(ProjectStatus.ACTIVE)) {
-            throw new AlreadyExistsException("This project is active already");
+            throw new InvalidRequestException("This project is active already", "projectStatus");
         }
         extendProjectDuration(project);
         return ProjectMapper.toDto(projectRepository.save(project));

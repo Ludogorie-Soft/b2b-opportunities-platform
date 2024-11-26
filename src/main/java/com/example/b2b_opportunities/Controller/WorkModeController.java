@@ -63,7 +63,7 @@ public class WorkModeController {
         List<WorkMode> workModes = workModeRepository.findAll();
         for (WorkMode w : workModes) {
             if (w.getName().equalsIgnoreCase(newName)) {
-                throw new AlreadyExistsException("WorkMode with name: '" + StringUtils.stripCapitalizeAndValidateNotEmpty(newName) + "' already exists");
+                throw new AlreadyExistsException("WorkMode with name: '" + StringUtils.stripCapitalizeAndValidateNotEmpty(newName) + "' already exists", "name");
             }
         }
     }

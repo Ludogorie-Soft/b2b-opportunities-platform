@@ -69,7 +69,7 @@ public class CompanyTypeController {
 
     private void validateNameDoesNotExists(String name) {
         if (companyTypeRepository.findByName(name).isPresent())
-            throw new AlreadyExistsException("Company type with name: '" + name + "' already exists");
+            throw new AlreadyExistsException("Company type with name: '" + name + "' already exists", "name");
     }
 
     private CompanyType findCompanyTypeByIdOrThrow(Long id) {

@@ -12,7 +12,7 @@ public class EmailUtils {
 
     public static void validateEmail(String email) {
         if (!isValidEmail(email))
-            throw new InvalidRequestException("Invalid email format or domain.");
+            throw new InvalidRequestException("Invalid email format or domain.", "email");
     }
 
     private static boolean isValidEmail(String email) {

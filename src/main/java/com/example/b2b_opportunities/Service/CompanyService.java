@@ -341,7 +341,7 @@ public class CompanyService {
         Company company = getUserCompanyOrThrow(user); //check if user belongs to a company
 
         if (company.getPartnerGroups().stream().map(PartnerGroup::getName).toList().contains(dto.getName())) {
-            throw new AlreadyExistsException("Partner group: '" + dto.getName() + "' already exists.");
+            throw new AlreadyExistsException("Partner group: '" + dto.getName() + "' already exists.", "name");
         }
 
         Set<Company> companies = fetchCompaniesByIds(dto.getCompanyIds());
@@ -457,7 +457,7 @@ public class CompanyService {
             company.setTalentsSharedPublicly(true);
             company.setTalentAccessGroups(new HashSet<>());
         } else {
-            if(requestDto.getPartnerGroupIds() == null || requestDto.getPartnerGroupIds().isEmpty()){
+            if (requestDto.getPartnerGroupIds() == null || requestDto.getPartnerGroupIds().isEmpty()) {
                 throw new InvalidRequestException("partnerGroupIds is null or empty");
             }
             Set<PartnerGroup> partnerGroupSet = new HashSet<>();
@@ -507,10 +507,10 @@ public class CompanyService {
         Integer min = talentRequestDto.getMinRate();
         Integer max = talentRequestDto.getMaxRate();
         if (min == null || min <= 0) {
-            throw new InvalidRequestException("Min rate must be greater than 0");
+            throw new InvalidRequestException("Min rate must be greater than 0", "minRate");
         }
         if (max != null && min > max) {
-            throw new InvalidRequestException("Min rate cannot exceed max rate");
+            throw new InvalidRequestException("Min rate cannot exceed max rate", "minRate");
         }
         talent.setMinRate(min);
         talent.setMaxRate(max);
@@ -630,7 +630,7 @@ public class CompanyService {
 
     private void validateUserIsNotAssociatedWithAnotherCompany(User user) {
         if (user.getCompany() != null) {
-            throw new AlreadyExistsException(user.getUsername() + " is already associated with Company: " + user.getCompany().getName());
+            throw new InvalidRequestException(user.getUsername() + " is already associated with Company: " + user.getCompany().getName());
         }
     }
 
@@ -680,7 +680,7 @@ public class CompanyService {
         String newName = companyRequestDto.getName();
         if (!newName.equals(userCompany.getName())) {
             if (companyRepository.findByNameIgnoreCase(newName).isPresent()) {
-                throw new AlreadyExistsException("Company name '" + newName + "' already registered");
+                throw new AlreadyExistsException("Company name '" + newName + "' already registered", "name");
             }
             userCompany.setName(newName);
             log.info("Company name updated from {} to {}", userCompany.getName(), companyRequestDto.getName());
@@ -692,7 +692,7 @@ public class CompanyService {
         String newEmail = companyRequestDto.getEmail();
         if (!newEmail.equals(userCompany.getEmail())) {
             if (companyRepository.findByEmail(companyRequestDto.getEmail()).isPresent()) {
-                throw new AlreadyExistsException("Email already registered");
+                throw new AlreadyExistsException("Email already registered", "email");
             }
             userCompany.setEmail(companyRequestDto.getEmail());
             log.info("Company (ID: {}) email updated from {} to {}", userCompany.getId(), userCompany.getEmail(), companyRequestDto.getEmail());
@@ -717,18 +717,18 @@ public class CompanyService {
         String newWebsite = companyRequestDto.getWebsite();
         if (newWebsite != null && !newWebsite.isEmpty() && !newWebsite.equals(userCompany.getWebsite())) {
             if (companyRepository.findByWebsite(newWebsite).isPresent()) {
-                throw new AlreadyExistsException("Website already registered");
+                throw new AlreadyExistsException("Website already registered", "website");
             }
-            log.info("Company ID: {} - changed website to {} ",userCompany.getId(), newWebsite);
+            log.info("Company ID: {} - changed website to {} ", userCompany.getId(), newWebsite);
             userCompany.setWebsite(newWebsite);
         }
 
         String newLinkedIn = companyRequestDto.getLinkedIn();
         if (newLinkedIn != null && !newLinkedIn.isEmpty() && !newLinkedIn.equals(userCompany.getLinkedIn())) {
             if (companyRepository.findByLinkedIn(newLinkedIn).isPresent()) {
-                throw new AlreadyExistsException("LinkedIn already registered");
+                throw new AlreadyExistsException("LinkedIn already registered", "linkedIn");
             }
-            log.info("Company ID: {} - changed linkedIn to {} ",userCompany.getId(), newLinkedIn);
+            log.info("Company ID: {} - changed linkedIn to {} ", userCompany.getId(), newLinkedIn);
             userCompany.setLinkedIn(newLinkedIn);
         }
     }
@@ -742,39 +742,39 @@ public class CompanyService {
     private void updateOtherCompanyFields(Company company, CompanyRequestDto dto) {
         if (dto.getCompanyTypeId() != null && !company.getCompanyType().getId().equals(dto.getCompanyTypeId())) {
             company.setCompanyType(getCompanyTypeOrThrow(dto));
-            log.info("Company ID: {} - changed company type to {} ",company.getId(), getCompanyTypeOrThrow(dto));
+            log.info("Company ID: {} - changed company type to {} ", company.getId(), getCompanyTypeOrThrow(dto));
         }
         if (dto.getDomainId() != null && !company.getDomain().getId().equals(dto.getDomainId())) {
             company.setDomain(getDomainOrThrow(dto));
-            log.info("Company ID: {} - changed domain to {} ",company.getId(), getDomainOrThrow(dto));
+            log.info("Company ID: {} - changed domain to {} ", company.getId(), getDomainOrThrow(dto));
         }
         List<Long> companySkills = company.getSkills().stream().map(Skill::getId).toList();
         if (!companySkills.equals(dto.getSkills())) {
             company.setSkills(getSkillsOrThrow(dto));
-            log.info("Company ID: {} - changed skills to {} ",company.getId(), getSkillsOrThrow(dto).stream().toList());
+            log.info("Company ID: {} - changed skills to {} ", company.getId(), getSkillsOrThrow(dto).stream().toList());
         }
         if (dto.getDescription() != null && !dto.getDescription().isEmpty() && !dto.getDescription().equals(company.getDescription())) {
             company.setDescription(dto.getDescription());
-            log.info("Company ID: {} - changed description to {} ",company.getId(), dto.getDescription());
+            log.info("Company ID: {} - changed description to {} ", company.getId(), dto.getDescription());
         }
     }
 
     private void validateCompanyRequestInput(CompanyRequestDto companyRequestDto) {
         if (companyRepository.findByNameIgnoreCase(companyRequestDto.getName()).isPresent())
-            throw new AlreadyExistsException("Name already registered");
+            throw new AlreadyExistsException("Name already registered", "name");
         if (companyRepository.findByEmail(companyRequestDto.getEmail()).isPresent())
-            throw new AlreadyExistsException("Email already registered");
+            throw new AlreadyExistsException("Email already registered", "email");
 
         String website = companyRequestDto.getWebsite();
         if (website != null && !website.isEmpty()) {
             if (companyRepository.findByWebsite(website).isPresent())
-                throw new AlreadyExistsException("Website already registered");
+                throw new AlreadyExistsException("Website already registered", "website");
         }
 
         String linkedIn = companyRequestDto.getLinkedIn();
         if (linkedIn != null && !linkedIn.isEmpty()) {
             if (companyRepository.findByLinkedIn(linkedIn).isPresent())
-                throw new AlreadyExistsException("LinkedIn already registered");
+                throw new AlreadyExistsException("LinkedIn already registered", "linkedIn");
         }
     }
 
