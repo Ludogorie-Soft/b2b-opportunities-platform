@@ -234,26 +234,26 @@ services:
     image: ghcr.io/openzipkin/zipkin-slim:${TAG:-latest}
     container_name: zipkin
     environment:
-      - STORAGE_TYPE=elasticsearch
-      - ES_HOSTS=elasticsearch:9200
+      - STORAGE_TYPE=mem
+#      - ES_HOSTS=elasticsearch:9200
       - ZIPKIN_METRICS_PROMETHEUS_ENABLED=true
     ports:
       - "9411:9411"
-    depends_on:
-      storage:
-        condition: service_healthy
+#    depends_on:
+#      storage:
+#        condition: service_healthy
     networks:
       - logging
     restart: always
 
-  storage:
-    image: ghcr.io/openzipkin/zipkin-elasticsearch8:${TAG:-latest}
-    container_name: elasticsearch
-    volumes:
-      - zipkin_elasticsearch_data:/elasticsearch/data
-    networks:
-      - logging
-    restart: always
+#  storage:
+#    image: ghcr.io/openzipkin/zipkin-elasticsearch8:${TAG:-latest}
+#    container_name: elasticsearch
+#    volumes:
+#      - zipkin_elasticsearch_data:/elasticsearch/data
+#    networks:
+#      - logging
+#    restart: always
 
 networks:
   b2b-network:
