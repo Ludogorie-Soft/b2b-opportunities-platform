@@ -14,7 +14,7 @@ public class StringUtils {
 
     private static void validateNameNotBlank(String name, String context) {
         if (name == null || name.isBlank()) {
-            throw new InvalidRequestException(context.strip() + " cannot be null or blank");
+            throw new InvalidRequestException(context.strip() + " cannot be null or blank", "name");
         }
     }
 

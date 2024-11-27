@@ -50,6 +50,6 @@ public class PasswordService {
             log.info("Changing password for user ID: {}", user.getId());
             return "Password changed successfully";
         }
-        throw new PasswordsNotMatchingException("Passwords do not match");
+        throw new PasswordsNotMatchingException("Passwords do not match", "password");
     }
 }

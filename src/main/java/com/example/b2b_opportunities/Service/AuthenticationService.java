@@ -231,15 +231,15 @@ public class AuthenticationService {
     private void validateUser(UserRequestDto userRequestDto) {
         if (isEmailInDB(userRequestDto.getEmail().toLowerCase())) {
             log.warn("Email {} already in use. User {} needs to try a different email.", userRequestDto.getEmail(), userRequestDto.getUsername());
-            throw new DuplicateCredentialException("Email already in use. Please use a different email");
+            throw new DuplicateCredentialException("Email already in use. Please use a different email", "email");
         }
         if (isUsernameInDB(userRequestDto.getUsername().toLowerCase())) {
             log.warn("Username {} already in use.", userRequestDto.getUsername());
-            throw new DuplicateCredentialException("Username already in use. Please use a different username");
+            throw new DuplicateCredentialException("Username already in use. Please use a different username", "username");
         }
         if (!arePasswordsMatching(userRequestDto.getPassword(), userRequestDto.getRepeatedPassword())) {
             log.warn("Passwords don't match for user: {}", userRequestDto.getUsername());
-            throw new PasswordsNotMatchingException("Passwords don't match");
+            throw new PasswordsNotMatchingException("Passwords don't match", "password");
         }
     }
 

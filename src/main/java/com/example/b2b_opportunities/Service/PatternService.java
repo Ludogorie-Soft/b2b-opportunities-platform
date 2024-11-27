@@ -101,7 +101,7 @@ public class PatternService {
 
         if (optionalPattern.isPresent()) {
             if (Objects.equals(id, null) || !Objects.equals(optionalPattern.get().getId(), id)) {
-                throw new AlreadyExistsException("Pattern with name: '" + name + "' already exists.");
+                throw new AlreadyExistsException("Pattern with name: '" + name + "' already exists.", "name");
             }
         }
     }

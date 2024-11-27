@@ -69,7 +69,7 @@ public class DomainController {
 
     private void validateNameDoesNotExist(String name) {
         if (domainRepository.findByName(name).isPresent()) {
-            throw new AlreadyExistsException("Domain with name: '" + name + "' already exists");
+            throw new AlreadyExistsException("Domain with name: '" + name + "' already exists", "name");
         }
     }
 

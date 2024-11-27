@@ -9,7 +9,7 @@ import com.example.b2b_opportunities.Entity.Domain;
 import com.example.b2b_opportunities.Entity.Skill;
 import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Exception.AuthenticationFailedException;
-import com.example.b2b_opportunities.Exception.common.AlreadyExistsException;
+import com.example.b2b_opportunities.Exception.common.InvalidRequestException;
 import com.example.b2b_opportunities.Exception.common.NotFoundException;
 import com.example.b2b_opportunities.Mapper.UserMapper;
 import com.example.b2b_opportunities.Repository.CompanyRepository;
@@ -130,7 +130,7 @@ public class CompanyServiceTest {
     }
 
     @Test
-    public void testCreateCompany_UserAlreadyHasCompany_ShouldThrowAlreadyExistsException() {
+    public void shouldThrowInvalidRequestExceptionWhenUserAlreadyHasCompany() {
         Company existingCompany = new Company();
         existingCompany.setName("Existing Company");
         currentUser.setCompany(existingCompany);
@@ -138,11 +138,11 @@ public class CompanyServiceTest {
         when(authentication.isAuthenticated()).thenReturn(true);
         when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
 
-        assertThrows(AlreadyExistsException.class, () -> companyService.createCompany(authentication, companyRequestDto, request));
+        assertThrows(InvalidRequestException.class, () -> companyService.createCompany(authentication, companyRequestDto, request));
     }
 
     @Test
-    public void testCreateCompany_ValidRequest_ShouldCreateCompany() {
+    public void ShouldCreateCompanyWhenValidRequest() {
         Company company = new Company();
         company.setId(1L);
         company.setEmailVerification(EmailVerification.ACCEPTED);
@@ -164,7 +164,7 @@ public class CompanyServiceTest {
     }
 
     @Test
-    public void testGetCompanyAndUsers_Success() {
+    public void shouldGetCompanyAndUsersSuccessfully() {
         Long companyId = 1L;
         Company company = new Company();
         company.setId(companyId);
@@ -191,7 +191,7 @@ public class CompanyServiceTest {
     }
 
     @Test
-    public void testGetCompanyAndUsers_CompanyNotFound() {
+    public void shouldThrowNotFoundExceptionWhenCompanyDoesNotExist() {
         Long companyId = 999L;
         when(companyRepository.findById(companyId)).thenReturn(Optional.empty());
 
@@ -204,7 +204,7 @@ public class CompanyServiceTest {
     }
 
     @Test
-    public void testGetCompanyAndUsers_CompanyHasNoUsers() {
+    public void shouldReturnEmptyListWhenCompanyHasNoUsers() {
         Long companyId = 1L;
         Company company = new Company();
         company.setId(companyId);
@@ -227,7 +227,7 @@ public class CompanyServiceTest {
     }
 
     @Test
-    public void testGetCompanyAndUsers_WithMultipleUsers() {
+    public void shouldReturnListOfUsersWhenCompanyHasUsers() {
         Long companyId = 2L;
         Company company = new Company();
         company.setId(companyId);
@@ -255,7 +255,7 @@ public class CompanyServiceTest {
     }
 
     @Test
-    public void testConfirmCompanyEmail_WithValidToken() {
+    public void shouldConfirmCompanyWithValidToken() {
         Long companyId = 9999L;
         Company company = new Company();
         company.setId(companyId);
@@ -272,7 +272,7 @@ public class CompanyServiceTest {
     }
 
     @Test
-    public void testConfirmCompanyEmail_WithInvalidToken() {
+    public void shouldNotConfirmCompanyEmailWithInvalidToken() {
         Long companyId = 9999L;
         Company company = new Company();
         company.setId(companyId);
@@ -290,7 +290,7 @@ public class CompanyServiceTest {
 
 
     @Test
-    public void testEditCompany_Success() {
+    public void shouldEditCompanySuccessfully() {
         MultipartFile image = mock(MultipartFile.class);
         MultipartFile banner = mock(MultipartFile.class);
 
@@ -345,7 +345,7 @@ public class CompanyServiceTest {
     }
 
     @Test
-    public void testEditCompany_UserHasNoCompany() {
+    public void shouldThrowNotFoundExceptionWhenUserHasNoCompany() {
         User currentUser = new User();
 
         when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);

@@ -9,7 +9,7 @@ import com.example.b2b_opportunities.Entity.Position;
 import com.example.b2b_opportunities.Entity.Project;
 import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Exception.AuthenticationFailedException;
-import com.example.b2b_opportunities.Exception.common.AlreadyExistsException;
+import com.example.b2b_opportunities.Exception.common.InvalidRequestException;
 import com.example.b2b_opportunities.Exception.common.NotFoundException;
 import com.example.b2b_opportunities.Exception.common.PermissionDeniedException;
 import com.example.b2b_opportunities.Mapper.PositionMapper;
@@ -502,7 +502,7 @@ public class ProjectServiceTest {
     }
 
     @Test
-    public void shouldThrowAlreadyExistsExceptionWhenProjectAlreadyActive() {
+    public void shouldThrowInvalidRequestExceptionWhenProjectAlreadyActive() {
         Company userCompany = new Company();
         user.setCompany(userCompany);
         Long projectId = 1L;
@@ -514,7 +514,7 @@ public class ProjectServiceTest {
         when(userService.getCurrentUserOrThrow(authentication)).thenReturn(user);
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
 
-        assertThrows(AlreadyExistsException.class, () -> projectService.reactivateProject(projectId, authentication));
+        assertThrows(InvalidRequestException.class, () -> projectService.reactivateProject(projectId, authentication));
     }
 
     @Test

@@ -1,6 +1,7 @@
 package com.example.b2b_opportunities.Config;
 
 import com.example.b2b_opportunities.Exception.ValidationException;
+import com.example.b2b_opportunities.Exception.common.BaseException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
@@ -36,6 +37,9 @@ public class GlobalExceptionHandler {
         response.put("error", status.getReasonPhrase());
         response.put("message", getMessage(ex));
         response.put("path", request.getRequestURI());
+        if (ex instanceof BaseException baseException && baseException.getField() != null) {
+            response.put("field", baseException.getField());
+        }
         return new ResponseEntity<>(response, status);
     }
 

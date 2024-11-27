@@ -53,7 +53,7 @@ public class LocationService {
 
     private void validateLocationNameDoesNotExist(String name) {
         if (locationRepository.findByName(name).isPresent()) {
-            throw new AlreadyExistsException("Location with name: '" + name + "' already exists");
+            throw new AlreadyExistsException("Location with name: '" + name + "' already exists", "name");
         }
     }
 

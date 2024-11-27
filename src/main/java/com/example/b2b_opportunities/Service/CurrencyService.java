@@ -38,7 +38,7 @@ public class CurrencyService {
 
     private void checkIfAlreadyExists(String currencyName) {
         if (currencyRepository.findByName(currencyName).isPresent()) {
-            throw new AlreadyExistsException("Currency with name: " + currencyName + " already exists");
+            throw new AlreadyExistsException("Currency with name: " + currencyName + " already exists", "name");
         }
     }
 
