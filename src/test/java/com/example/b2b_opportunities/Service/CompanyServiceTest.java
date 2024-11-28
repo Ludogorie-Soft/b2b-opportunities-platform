@@ -1,11 +1,16 @@
 package com.example.b2b_opportunities.Service;
 
+import com.example.b2b_opportunities.Dto.Request.CompanyFilterEditDto;
 import com.example.b2b_opportunities.Dto.Request.CompanyRequestDto;
 import com.example.b2b_opportunities.Dto.Response.CompaniesAndUsersResponseDto;
+import com.example.b2b_opportunities.Dto.Response.CompanyFilterResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyResponseDto;
+import com.example.b2b_opportunities.Dto.Response.ProjectResponseDto;
 import com.example.b2b_opportunities.Entity.Company;
 import com.example.b2b_opportunities.Entity.CompanyType;
 import com.example.b2b_opportunities.Entity.Domain;
+import com.example.b2b_opportunities.Entity.Filter;
+import com.example.b2b_opportunities.Entity.Project;
 import com.example.b2b_opportunities.Entity.Skill;
 import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Exception.AuthenticationFailedException;
@@ -16,8 +21,11 @@ import com.example.b2b_opportunities.Repository.CompanyRepository;
 import com.example.b2b_opportunities.Repository.CompanyTypeRepository;
 import com.example.b2b_opportunities.Repository.DomainRepository;
 import com.example.b2b_opportunities.Repository.FilterRepository;
+import com.example.b2b_opportunities.Repository.ProjectRepository;
+import com.example.b2b_opportunities.Repository.SkillRepository;
 import com.example.b2b_opportunities.Repository.UserRepository;
 import com.example.b2b_opportunities.Static.EmailVerification;
+import com.example.b2b_opportunities.Static.ProjectStatus;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,7 +46,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -73,7 +83,13 @@ public class CompanyServiceTest {
     private FilterRepository filterRepository;
 
     @Mock
+    private SkillRepository skillRepository;
+
+    @Mock
     private CompanyTypeRepository companyTypeRepository;
+
+    @Mock
+    private ProjectRepository projectRepository;
 
     @Mock
     private Authentication authentication;
@@ -307,7 +323,6 @@ public class CompanyServiceTest {
         Domain domain = new Domain();
         domain.setId(9999L);
         domain.setName("testDomain");
-        // Arrange
         User currentUser = new User();
         currentUser.setId(9999L);
         Company userCompany = new Company();
@@ -356,5 +371,204 @@ public class CompanyServiceTest {
         });
 
         verify(companyRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldReturnAllProjectsForUserCompany() {
+        User currentUser = new User();
+        currentUser.setId(99999999L);
+        Company userCompany = new Company();
+        userCompany.setId(1L);
+        currentUser.setCompany(userCompany);
+
+        Company company = new Company();
+        company.setId(1L);
+        ProjectStatus projectStatus = ProjectStatus.ACTIVE;
+        Project project1 = new Project();
+        Project project2 = new Project();
+        project1.setCompany(company);
+        project1.setProjectStatus(projectStatus);
+        project2.setCompany(company);
+        project2.setProjectStatus(projectStatus);
+        List<Project> projects = List.of(project1, project2);
+        company.setProjects(projects);
+
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
+        when(companyRepository.findById(1L)).thenReturn(Optional.of(company));
+
+        Set<ProjectResponseDto> result = companyService.getCompanyProjects(authentication, 1L);
+
+        assertEquals(2, result.size());
+        verify(companyRepository).findById(1L);
+        verify(userService).getCurrentUserOrThrow(authentication);
+    }
+
+    @Test
+    void shouldReturnEmptySetForUnapprovedCompany() {
+        User currentUser = new User();
+        currentUser.setId(99999999L);
+        Company userCompany = new Company();
+        userCompany.setId(1L);
+        currentUser.setCompany(userCompany);
+
+        Company company = new Company();
+        company.setId(2L);
+        company.setApproved(false);
+
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
+        when(companyRepository.findById(2L)).thenReturn(Optional.of(company));
+
+        Set<ProjectResponseDto> result = companyService.getCompanyProjects(authentication, 2L);
+
+        assertTrue(result.isEmpty());
+        verify(companyRepository).findById(2L);
+        verify(userService).getCurrentUserOrThrow(authentication);
+    }
+
+    @Test
+    void shouldReturnOnlyPublicActiveProjectsForApprovedCompany() {
+        User currentUser = new User();
+        currentUser.setId(99999999L);
+        Company userCompany = new Company();
+        userCompany.setId(1L);
+        currentUser.setCompany(userCompany);
+
+        Company company = new Company();
+        company.setId(2L);
+        company.setApproved(true);
+
+        Project publicProject1 = new Project();
+        publicProject1.setCompany(company);
+        publicProject1.setProjectStatus(ProjectStatus.ACTIVE);
+        Project publicProject2 = new Project();
+        publicProject2.setCompany(company);
+        publicProject2.setProjectStatus(ProjectStatus.ACTIVE);
+
+        List<Project> publicProjects = List.of(publicProject1, publicProject2);
+
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
+        when(companyRepository.findById(2L)).thenReturn(Optional.of(company));
+        when(projectRepository.findActiveNonPartnerOnlyProjectsByCompanyId(ProjectStatus.ACTIVE, 2L))
+                .thenReturn(publicProjects);
+        when(projectRepository.findActivePartnerOnlyProjectsSharedWithCompany(ProjectStatus.ACTIVE, 2L, 1L))
+                .thenReturn(List.of());
+
+        Set<ProjectResponseDto> result = companyService.getCompanyProjects(authentication, 2L);
+
+        assertEquals(2, result.size());
+        verify(projectRepository).findActiveNonPartnerOnlyProjectsByCompanyId(ProjectStatus.ACTIVE, 2L);
+        verify(projectRepository).findActivePartnerOnlyProjectsSharedWithCompany(ProjectStatus.ACTIVE, 2L, 1L);
+    }
+
+    @Test
+    void shouldReturnPublicAndPartnerProjectsForApprovedCompany() {
+        User currentUser = new User();
+        currentUser.setId(99999999L);
+        Company userCompany = new Company();
+        userCompany.setId(1L);
+        currentUser.setCompany(userCompany);
+
+        Company company = new Company();
+        company.setId(2L);
+        company.setApproved(true);
+
+        Project publicProject = new Project();
+        publicProject.setCompany(company);
+        publicProject.setProjectStatus(ProjectStatus.ACTIVE);
+        Project partnerProject = new Project();
+        partnerProject.setCompany(company);
+        partnerProject.setProjectStatus(ProjectStatus.ACTIVE);
+
+        List<Project> publicProjects = List.of(publicProject);
+        List<Project> partnerProjects = List.of(partnerProject);
+
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
+        when(companyRepository.findById(2L)).thenReturn(Optional.of(company));
+        when(projectRepository.findActiveNonPartnerOnlyProjectsByCompanyId(ProjectStatus.ACTIVE, 2L))
+                .thenReturn(publicProjects);
+        when(projectRepository.findActivePartnerOnlyProjectsSharedWithCompany(ProjectStatus.ACTIVE, 2L, 1L))
+                .thenReturn(partnerProjects);
+
+        Set<ProjectResponseDto> result = companyService.getCompanyProjects(authentication, 2L);
+
+        assertEquals(2, result.size());
+        verify(projectRepository).findActiveNonPartnerOnlyProjectsByCompanyId(ProjectStatus.ACTIVE, 2L);
+        verify(projectRepository).findActivePartnerOnlyProjectsSharedWithCompany(ProjectStatus.ACTIVE, 2L, 1L);
+    }
+
+    @Test
+    void shouldThrowExceptionWhenQueriedCompanyNotFound() {
+        when(companyRepository.findById(3L)).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class, () -> companyService.getCompanyProjects(authentication, 3L));
+        verify(companyRepository).findById(3L);
+    }
+
+    @Test
+    void shouldThrowExceptionWhenAuthenticationIsNull() {
+        assertThrows(NotFoundException.class, () -> companyService.getCompanyProjects(null, 1L));
+    }
+
+    @Test
+    void shouldReturnCompanyFilters(){
+        User currentUser = new User();
+        currentUser.setId(99999999L);
+        Company userCompany = new Company();
+        userCompany.setId(1L);
+        currentUser.setCompany(userCompany);
+
+        Skill skill = new Skill();
+        skill.setId(55L);
+
+        Filter testFilter = new Filter();
+        testFilter.setId(9999L);
+        testFilter.setCompany(userCompany);
+        testFilter.setSkills(Set.of(skill));
+
+        Filter testFilter2 = new Filter();
+        testFilter2.setId(99999L);
+        testFilter2.setCompany(userCompany);
+        testFilter2.setSkills(Set.of(skill));
+
+        Set<Filter> filters = Set.of(testFilter, testFilter2);
+        userCompany.setFilters(filters);
+
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
+
+        List<CompanyFilterResponseDto> result = companyService.getCompanyFilters(authentication);
+
+        assertEquals(2, result.size());
+        verify(userService).getCurrentUserOrThrow(authentication);
+    }
+
+    @Test
+    void shouldReturnCompanyFilter(){
+        User currentUser = new User();
+        currentUser.setId(99999999L);
+        Company userCompany = new Company();
+        userCompany.setId(1L);
+        currentUser.setCompany(userCompany);
+
+        Skill skill = new Skill();
+        skill.setId(55L);
+
+        Filter testFilter = new Filter();
+        testFilter.setId(9999L);
+        testFilter.setName("testFilter");
+        testFilter.setCompany(userCompany);
+        testFilter.setSkills(Set.of(skill));
+
+        Set<Filter> filters = Set.of(testFilter);
+        userCompany.setFilters(filters);
+
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
+        when(filterRepository.findById(9999L)).thenReturn(Optional.of(testFilter));
+
+        CompanyFilterResponseDto result = companyService.getCompanyFilter(9999L, authentication);
+
+        assertEquals("testFilter", result.getName());
+        assertEquals(9999L, result.getId());
+        assertEquals(1, result.getSkills().size());
+        assertTrue(result.getSkills().contains(55L));
     }
 }
