@@ -240,6 +240,7 @@ public class CompanyController {
 
     @PostMapping("/apply")
     @ResponseStatus(HttpStatus.CREATED)
+    //TODO we need implement taking the CVs of the talents here
     public PositionApplicationResponseDto applyForPosition(Authentication authentication, @RequestBody PositionApplicationRequestDto requestDto){
         return positionApplicationService.applyForPosition(authentication, requestDto);
     }
@@ -248,5 +249,11 @@ public class CompanyController {
     @ResponseStatus(HttpStatus.OK)
     public List<PositionApplicationResponseDto> getApplicationsForMyPositions(Authentication authentication){
         return positionApplicationService.getApplicationsForMyPositions(authentication);
+    }
+
+    @GetMapping("/my-applications")
+    @ResponseStatus(HttpStatus.OK)
+    public List<PositionApplicationResponseDto> getMyApplications(Authentication authentication){
+        return positionApplicationService.getMyApplications(authentication);
     }
 }

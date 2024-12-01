@@ -78,4 +78,14 @@ public class PositionApplicationService {
         List<PositionApplication> positionApplications = positionApplicationRepository.findAllApplicationsForCompany(userCompany.getId());
         return PositionApplicationMapper.toPositionApplicationDtoList(positionApplications);
     }
+
+    public List<PositionApplicationResponseDto> getMyApplications(Authentication authentication) {
+        User user = userService.getCurrentUserOrThrow(authentication);
+        Company userCompany = companyService.getUserCompanyOrThrow(user);
+        List<PositionApplication> myApplications = positionApplicationRepository.findAllMyApplications(userCompany.getId());
+        if (myApplications.isEmpty()) {
+            return new ArrayList<>();
+        }
+        return PositionApplicationMapper.toPositionApplicationDtoList(myApplications);
+    }
 }
