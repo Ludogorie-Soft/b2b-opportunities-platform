@@ -38,22 +38,7 @@ public class PositionApplicationService {
         Project project = position.getProject();
         Talent talent = companyService.getTalentOrThrow(requestDto.getTalentId());
 
-        companyService.validateTalentBelongsToCompany(userCompany, talent);
-        if (project.getCompany().getId().equals(userCompany.getId())) {
-            throw new InvalidRequestException("You can't apply to a position that belongs to your company!");
-        }
-        if (project.getProjectStatus().equals(ProjectStatus.INACTIVE)) {
-            throw new InvalidRequestException("This position belongs to a project that is inactive");
-        }
-        projectService.validateProjectIsAvailableToCompany(project, userCompany);
-        if (!position.getStatus().getId().equals(1L)) {
-            throw new InvalidRequestException("The position is not opened");
-        }
-
-        //TODO do we want only one PA per talent or only one PA per company? (for 1 position)
-        if (positionApplicationRepository.existsByPositionIdAndTalentIdAndApplicationStatus(position.getId(), requestDto.getTalentId(), ApplicationStatus.IN_PROGRESS)) {
-            throw new AlreadyExistsException("You've already applied for this position");
-        }
+        validateApplication(userCompany, project, position, requestDto, talent);
 
         PositionApplication application = PositionApplication.builder()
                 .talent(talent)
@@ -87,5 +72,28 @@ public class PositionApplicationService {
             return new ArrayList<>();
         }
         return PositionApplicationMapper.toPositionApplicationDtoList(myApplications);
+    }
+
+    private void validateApplication(Company userCompany, Project project, Position position,
+                                     PositionApplicationRequestDto requestDto, Talent talent) {
+        //TODO do we want only one PA per talent or only one PA per company? (for 1 position)
+        if (positionApplicationRepository.existsByPositionIdAndTalentIdAndApplicationStatus(position.getId(),
+                requestDto.getTalentId(), ApplicationStatus.IN_PROGRESS)) {
+            throw new AlreadyExistsException("You've already applied for this position");
+        }
+
+        companyService.validateTalentBelongsToCompany(userCompany, talent);
+        projectService.validateProjectIsAvailableToCompany(project, userCompany);
+
+        if (project.getCompany().getId().equals(userCompany.getId())) {
+            throw new InvalidRequestException("You can't apply to a position that belongs to your company!");
+        }
+        if (project.getProjectStatus().equals(ProjectStatus.INACTIVE)) {
+            throw new InvalidRequestException("This position belongs to a project that is inactive");
+        }
+        if (!position.getStatus().getId().equals(1L)) {
+            throw new InvalidRequestException("The position is not opened");
+        }
+
     }
 }
