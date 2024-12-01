@@ -239,7 +239,14 @@ public class CompanyController {
     }
 
     @PostMapping("/apply")
+    @ResponseStatus(HttpStatus.CREATED)
     public PositionApplicationResponseDto applyForPosition(Authentication authentication, @RequestBody PositionApplicationRequestDto requestDto){
         return positionApplicationService.applyForPosition(authentication, requestDto);
+    }
+
+    @GetMapping("/applications")
+    @ResponseStatus(HttpStatus.OK)
+    public List<PositionApplicationResponseDto> getApplicationsForMyPositions(Authentication authentication){
+        return positionApplicationService.getApplicationsForMyPositions(authentication);
     }
 }

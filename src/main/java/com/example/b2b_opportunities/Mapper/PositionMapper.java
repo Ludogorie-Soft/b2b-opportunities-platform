@@ -70,12 +70,4 @@ public class PositionMapper {
         return positionResponseDtoList;
     }
 
-    public static PositionApplicationResponseDto toPositionApplicationResponseDto(PositionApplication pa){
-        return PositionApplicationResponseDto.builder()
-                .positionId(pa.getPosition().getId())
-                .talentId(pa.getTalent().getId())
-                .applicationStatus(pa.getApplicationStatus().toString())
-                .applicationDateTime(pa.getApplicationDateTime())
-                .build();
-    }
 }

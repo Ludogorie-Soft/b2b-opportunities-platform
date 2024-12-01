@@ -4,6 +4,8 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Setter
 public class PositionApplicationRequestDto {
@@ -13,4 +15,10 @@ public class PositionApplicationRequestDto {
 
     @NotNull
     private Long talentId;
+
+    @NotNull
+    private int rate;
+
+    @NotNull
+    private LocalDateTime availableFrom;
 }

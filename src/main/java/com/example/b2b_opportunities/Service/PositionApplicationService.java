@@ -10,7 +10,7 @@ import com.example.b2b_opportunities.Entity.Talent;
 import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Exception.common.AlreadyExistsException;
 import com.example.b2b_opportunities.Exception.common.InvalidRequestException;
-import com.example.b2b_opportunities.Mapper.PositionMapper;
+import com.example.b2b_opportunities.Mapper.PositionApplicationMapper;
 import com.example.b2b_opportunities.Repository.PositionApplicationRepository;
 import com.example.b2b_opportunities.Static.ApplicationStatus;
 import com.example.b2b_opportunities.Static.ProjectStatus;
@@ -19,6 +19,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -58,8 +60,22 @@ public class PositionApplicationService {
                 .position(position)
                 .applicationStatus(ApplicationStatus.IN_PROGRESS)
                 .applicationDateTime(LocalDateTime.now())
+                .rate(requestDto.getRate())
+                .availableFrom(requestDto.getAvailableFrom())
                 .build();
 
-        return PositionMapper.toPositionApplicationResponseDto(positionApplicationRepository.save(application));
+        return PositionApplicationMapper.toPositionApplicationResponseDto(positionApplicationRepository.save(application));
+    }
+
+    public List<PositionApplicationResponseDto> getApplicationsForMyPositions(Authentication authentication) {
+        User user = userService.getCurrentUserOrThrow(authentication);
+        Company userCompany = companyService.getUserCompanyOrThrow(user);
+        List<Project> projects = userCompany.getProjects();
+        List<Position> positions = projects.stream().flatMap(project -> project.getPositions().stream()).toList();
+        if (positions.isEmpty()) {
+            return new ArrayList<>();
+        }
+        List<PositionApplication> positionApplications = positionApplicationRepository.findAllApplicationsForCompany(userCompany.getId());
+        return PositionApplicationMapper.toPositionApplicationDtoList(positionApplications);
     }
 }

@@ -41,5 +41,7 @@ public class PositionApplication {
     @Enumerated(EnumType.STRING)
     private ApplicationStatus applicationStatus;
 
+    private int rate;
     private LocalDateTime applicationDateTime;
+    private LocalDateTime availableFrom;
 }
