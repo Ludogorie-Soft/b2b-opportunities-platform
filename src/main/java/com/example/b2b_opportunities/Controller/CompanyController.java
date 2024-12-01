@@ -4,6 +4,7 @@ import com.example.b2b_opportunities.Dto.Request.CompanyFilterEditDto;
 import com.example.b2b_opportunities.Dto.Request.CompanyFilterRequestDto;
 import com.example.b2b_opportunities.Dto.Request.CompanyRequestDto;
 import com.example.b2b_opportunities.Dto.Request.PartnerGroupRequestDto;
+import com.example.b2b_opportunities.Dto.Request.PositionApplicationRequestDto;
 import com.example.b2b_opportunities.Dto.Request.TalentPublicityRequestDto;
 import com.example.b2b_opportunities.Dto.Request.TalentRequestDto;
 import com.example.b2b_opportunities.Dto.Response.CompaniesAndUsersResponseDto;
@@ -11,11 +12,13 @@ import com.example.b2b_opportunities.Dto.Response.CompanyFilterResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyPublicResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyResponseDto;
 import com.example.b2b_opportunities.Dto.Response.PartnerGroupResponseDto;
+import com.example.b2b_opportunities.Dto.Response.PositionApplicationResponseDto;
 import com.example.b2b_opportunities.Dto.Response.ProjectResponseDto;
 import com.example.b2b_opportunities.Dto.Response.TalentPublicityResponseDto;
 import com.example.b2b_opportunities.Dto.Response.TalentResponseDto;
 import com.example.b2b_opportunities.Repository.CompanyRepository;
 import com.example.b2b_opportunities.Service.CompanyService;
+import com.example.b2b_opportunities.Service.PositionApplicationService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -45,6 +48,7 @@ import java.util.Set;
 public class CompanyController {
     private final CompanyRepository companyRepository;
     private final CompanyService companyService;
+    private final PositionApplicationService positionApplicationService;
 
     @Value("${frontend.address}")
     private String frontEndAddress;
@@ -232,5 +236,10 @@ public class CompanyController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteTalent(Authentication authentication, @PathVariable("id") Long id) {
         companyService.deleteTalent(authentication, id);
+    }
+
+    @PostMapping("/apply")
+    public PositionApplicationResponseDto applyForPosition(Authentication authentication, @RequestBody PositionApplicationRequestDto requestDto){
+        return positionApplicationService.applyForPosition(authentication, requestDto);
     }
 }

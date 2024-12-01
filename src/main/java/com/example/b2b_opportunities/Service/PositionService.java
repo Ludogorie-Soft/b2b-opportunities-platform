@@ -298,7 +298,7 @@ public class PositionService {
         }
     }
 
-    private Position getPositionOrThrow(Long id) {
+    protected Position getPositionOrThrow(Long id) {
         return positionRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Position with ID: " + id + " not found"));
     }
