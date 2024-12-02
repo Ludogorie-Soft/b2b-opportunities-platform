@@ -44,11 +44,11 @@ services:
       JWT_SECRET_KEY: ${JWT_SECRET_KEY}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
-      STORAGE_HOST: http://minio:9000
+      STORAGE_HOST: ${STORAGE_HOST} # This needs to be visible from the clients too, so that they can view the images
       STORAGE_USER: ${STORAGE_USER}
       STORAGE_PASSWORD: ${STORAGE_PASSWORD}
       STORAGE_BUCKET_NAME: ${STORAGE_BUCKET_NAME}
-      FRONTEND_HOST: https://b2bapp.algorithmity.com # This is a string that is used to redirect users to the frontend.
+      FRONTEND_HOST: ${FRONTEND_HOST} # This is a string that is used to redirect users to the frontend.
       EMAIL_SERVICE_URL: http://notifications:8085/api/email/send
       CRON_EVERY_MONDAY_AT_9: ${CRON_EVERY_MONDAY_AT_9}
       CRON_TUESDAY_TO_FRIDAY_AT_9: ${CRON_TUESDAY_TO_FRIDAY_AT_9}
@@ -57,7 +57,7 @@ services:
       LOKI_HOST: loki
       LOG_LEVEL: ${LOG_LEVEL}
       ZIPKIN_HOST: zipkin
-      DOMAIN_NAME: .algorithmity.com
+      DOMAIN_NAME: ${DOMAIN_NAME} # Used for logout. Example value: .algorithmity.com
       ZIPKIN_ENABLED: false
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8082/actuator/health" ]
