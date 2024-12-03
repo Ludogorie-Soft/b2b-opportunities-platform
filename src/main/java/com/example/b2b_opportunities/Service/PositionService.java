@@ -95,6 +95,7 @@ public class PositionService {
         position.setResponsibilities(dto.getResponsibilities());
         position.setHiringProcess(dto.getHiringProcess());
         position.setDescription(dto.getDescription());
+        position.setPattern(companyService.getPatternOrThrow(dto.getPatternId()));
         setPositionStatusOrThrow(position, dto.getStatusId());
         extendProjectDurationWhenPositionStatusNotCanceled(position, dto.getStatusId());
 

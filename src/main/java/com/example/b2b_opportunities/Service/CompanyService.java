@@ -871,7 +871,7 @@ public class CompanyService {
                 .orElseThrow(() -> new NotFoundException("Skill with ID: " + skillId + " not found"));
     }
 
-    private Pattern getPatternOrThrow(Long patternId) {
+    protected Pattern getPatternOrThrow(Long patternId) {
         return patternRepository.findById(patternId)
                 .orElseThrow(() -> new NotFoundException("Pattern with ID: " + patternId + " not found"));
     }
