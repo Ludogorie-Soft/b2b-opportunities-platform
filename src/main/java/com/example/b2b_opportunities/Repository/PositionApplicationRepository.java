@@ -11,8 +11,9 @@ import java.util.List;
 
 @Repository
 public interface PositionApplicationRepository extends JpaRepository<PositionApplication, Long> {
-    boolean existsByPositionIdAndTalentIdAndApplicationStatus(Long positionId, Long talentId, ApplicationStatus applicationStatus);
-
+    //the method below does the check for 1 talent only
+//    boolean existsByPositionIdAndTalentIdAndApplicationStatus(Long positionId, Long talentId, ApplicationStatus applicationStatus);
+    boolean existsByPositionIdAndTalent_CompanyIdAndApplicationStatus(Long positionId, Long companyId, ApplicationStatus applicationStatus);
     @Query("SELECT pa FROM PositionApplication pa " +
             "JOIN pa.position p " +
             "JOIN p.project pr " +

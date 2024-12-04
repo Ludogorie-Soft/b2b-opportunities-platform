@@ -38,7 +38,7 @@ public class PositionApplicationService {
         Project project = position.getProject();
         Talent talent = companyService.getTalentOrThrow(requestDto.getTalentId());
 
-        validateApplication(userCompany, project, position, requestDto, talent);
+        validateApplication(userCompany, project, position, talent);
 
         PositionApplication application = PositionApplication.builder()
                 .talent(talent)
@@ -74,11 +74,9 @@ public class PositionApplicationService {
         return PositionApplicationMapper.toPositionApplicationDtoList(myApplications);
     }
 
-    private void validateApplication(Company userCompany, Project project, Position position,
-                                     PositionApplicationRequestDto requestDto, Talent talent) {
-        //TODO do we want only one PA per talent or only one PA per company? (for 1 position)
-        if (positionApplicationRepository.existsByPositionIdAndTalentIdAndApplicationStatus(position.getId(),
-                requestDto.getTalentId(), ApplicationStatus.IN_PROGRESS)) {
+    private void validateApplication(Company userCompany, Project project, Position position, Talent talent) {
+        if (positionApplicationRepository.existsByPositionIdAndTalent_CompanyIdAndApplicationStatus(position.getId(),
+                talent.getCompany().getId(), ApplicationStatus.IN_PROGRESS)) {
             throw new AlreadyExistsException("You've already applied for this position");
         }
 
