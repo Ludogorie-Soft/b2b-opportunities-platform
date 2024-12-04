@@ -6,7 +6,8 @@ import lombok.Getter;
 public enum ApplicationStatus {
 
     IN_PROGRESS(1),
-    DENIED(2);
+    DENIED(2),
+    ACCEPTED(3);
 
     private final long id;
 

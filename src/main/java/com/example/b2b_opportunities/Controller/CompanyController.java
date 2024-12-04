@@ -251,6 +251,10 @@ public class CompanyController {
         return positionApplicationService.getApplicationsForMyPositions(authentication);
     }
 
+    //TODO
+    // @GetMapping("/applications/accept/{id}")
+    // @GetMapping("/applications/reject/{id}")
+
     @GetMapping("/my-applications")
     @ResponseStatus(HttpStatus.OK)
     public List<PositionApplicationResponseDto> getMyApplications(Authentication authentication){

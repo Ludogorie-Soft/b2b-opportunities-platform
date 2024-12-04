@@ -77,14 +77,14 @@ public class PositionApplicationService {
     private void validateApplication(Company userCompany, Project project, Position position, Talent talent) {
         if (positionApplicationRepository.existsByPositionIdAndTalent_CompanyIdAndApplicationStatus(position.getId(),
                 talent.getCompany().getId(), ApplicationStatus.IN_PROGRESS)) {
-            throw new AlreadyExistsException("You've already applied for this position");
+            throw new AlreadyExistsException("You've already applied for this position", "positionId");
         }
 
         companyService.validateTalentBelongsToCompany(userCompany, talent);
         projectService.validateProjectIsAvailableToCompany(project, userCompany);
 
         if (project.getCompany().getId().equals(userCompany.getId())) {
-            throw new InvalidRequestException("You can't apply to a position that belongs to your company!");
+            throw new InvalidRequestException("You can't apply to a position that belongs to your company!", "positionId");
         }
         if (project.getProjectStatus().equals(ProjectStatus.INACTIVE)) {
             throw new InvalidRequestException("This position belongs to a project that is inactive");
