@@ -75,10 +75,17 @@ public class PositionApplicationService {
     }
 
     private void validateApplication(Company userCompany, Project project, Position position, Talent talent) {
-        if (positionApplicationRepository.existsByPositionIdAndTalent_CompanyIdAndApplicationStatus(position.getId(),
-                talent.getCompany().getId(), ApplicationStatus.IN_PROGRESS)) {
-            throw new AlreadyExistsException("You've already applied for this position", "positionId");
-        }
+        positionApplicationRepository.findFirstByPositionIdAndTalentIdAndApplicationStatusIn(
+                        position.getId(),
+                        talent.getCompany().getId(),
+                        List.of(ApplicationStatus.IN_PROGRESS, ApplicationStatus.ACCEPTED))
+                .ifPresent(application -> {
+                    if (application.getApplicationStatus().equals(ApplicationStatus.IN_PROGRESS)) {
+                        throw new AlreadyExistsException("You've already applied for this position", "positionId");
+                    } else if (application.getApplicationStatus().equals(ApplicationStatus.ACCEPTED)) {
+                        throw new AlreadyExistsException("You're already accepted for this position", "positionId");
+                    }
+                });
 
         companyService.validateTalentBelongsToCompany(userCompany, talent);
         projectService.validateProjectIsAvailableToCompany(project, userCompany);

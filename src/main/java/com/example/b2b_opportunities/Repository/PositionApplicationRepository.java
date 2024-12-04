@@ -8,12 +8,14 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface PositionApplicationRepository extends JpaRepository<PositionApplication, Long> {
-    //the method below does the check for 1 talent only
-//    boolean existsByPositionIdAndTalentIdAndApplicationStatus(Long positionId, Long talentId, ApplicationStatus applicationStatus);
-    boolean existsByPositionIdAndTalent_CompanyIdAndApplicationStatus(Long positionId, Long companyId, ApplicationStatus applicationStatus);
+    Optional<PositionApplication> findFirstByPositionIdAndTalentIdAndApplicationStatusIn(Long positionId, Long talentId, List<ApplicationStatus> applicationStatuses);
+
+//    the method below checks if 1 Company has already applied to 1 position
+//    boolean existsByPositionIdAndTalent_CompanyIdAndApplicationStatusIn(Long positionId, Long companyId, List<ApplicationStatus> applicationStatuses);
     @Query("SELECT pa FROM PositionApplication pa " +
             "JOIN pa.position p " +
             "JOIN p.project pr " +

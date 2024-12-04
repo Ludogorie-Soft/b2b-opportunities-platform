@@ -240,7 +240,7 @@ public class CompanyController {
 
     @PostMapping("/apply")
     @ResponseStatus(HttpStatus.CREATED)
-    //TODO we need implement taking the CVs of the talents here
+    //TODO we need to implement taking the CVs of the talents here
     public PositionApplicationResponseDto applyForPosition(Authentication authentication, @RequestBody PositionApplicationRequestDto requestDto){
         return positionApplicationService.applyForPosition(authentication, requestDto);
     }
