@@ -19,9 +19,6 @@ repositories {
     mavenCentral()
 }
 
-def enableZipkin = System.getenv('ZIPKIN_ENABLED')?.toBoolean() ?: false
-
-
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.liquibase:liquibase-core:4.29.2'
@@ -47,11 +44,10 @@ dependencies {
     implementation 'io.minio:minio:8.5.12'
     implementation 'com.github.loki4j:loki-logback-appender:1.5.2'
 
-    if (enableZipkin) {
-        implementation 'io.micrometer:micrometer-tracing-bridge-brave'
-        implementation 'io.zipkin.reporter2:zipkin-reporter-brave'
-        implementation 'io.micrometer:micrometer-tracing'
-    }
+    implementation 'io.micrometer:micrometer-tracing-bridge-brave'
+    implementation 'io.zipkin.reporter2:zipkin-reporter-brave'
+    implementation 'io.micrometer:micrometer-tracing'
+
 
 // TODO: Delete after testing on Linux
 //    implementation 'org.springframework.cloud:spring-cloud-starter-sleuth:3.1.11'
