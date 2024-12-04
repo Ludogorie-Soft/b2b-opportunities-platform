@@ -48,7 +48,7 @@ services:
       STORAGE_USER: ${STORAGE_USER}
       STORAGE_PASSWORD: ${STORAGE_PASSWORD}
       STORAGE_BUCKET_NAME: ${STORAGE_BUCKET_NAME}
-      FRONTEND_HOST: https://b2bapp.algorithmity.com # This is a string that is used to redirect users to the frontend.
+      FRONTEND_HOST: ${FRONTEND_HOST} # This is a string that is used to redirect users to the frontend.
       EMAIL_SERVICE_URL: http://notifications:8085/api/email/send
       CRON_EVERY_MONDAY_AT_9: ${CRON_EVERY_MONDAY_AT_9}
       CRON_TUESDAY_TO_FRIDAY_AT_9: ${CRON_TUESDAY_TO_FRIDAY_AT_9}
@@ -58,6 +58,7 @@ services:
       LOG_LEVEL: ${LOG_LEVEL}
       ZIPKIN_HOST: zipkin
       DOMAIN_NAME: .algorithmity.com
+      PASSWORD_RECOVERY_URL: ${FRONTEND_HOST}/?action=forgottenPassword&token=
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8082/actuator/health" ]
       interval: 10s
