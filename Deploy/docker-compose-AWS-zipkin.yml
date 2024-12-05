@@ -37,20 +37,5 @@ services:
     networks:
       - logging
 
-  nginx:
-    image: 'jc21/nginx-proxy-manager:latest'
-    restart: unless-stopped
-    ports:
-      - '80:80'
-      - '81:81'
-      - '443:443'
-    volumes:
-      - ./data:/data
-      - ./letsencrypt:/etc/letsencrypt
-      - ./_hsts.conf:/app/templates/_hsts.conf:ro
-    networks:
-      - logging
-      - b2b-network
-
 volumes:
   zipkin_elasticsearch_data:
