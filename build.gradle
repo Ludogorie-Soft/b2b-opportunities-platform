@@ -49,14 +49,6 @@ dependencies {
     implementation 'io.micrometer:micrometer-tracing'
     // Enable if statement needed for logback-spring.xml
     implementation 'org.codehaus.janino:janino:3.1.12'
-
-
-// TODO: Delete after testing on Linux
-//    implementation 'org.springframework.cloud:spring-cloud-starter-sleuth:3.1.11'
-//    implementation 'org.springframework.cloud:spring-cloud-sleuth-zipkin:3.1.11'
-//    implementation 'io.opentelemetry:opentelemetry-exporter-zipkin:1.44.1'
-//    implementation 'io.micrometer:micrometer-tracing-bridge-otel:1.4.0'
-
 }
 
 tasks.named('test') {
@@ -99,7 +91,7 @@ sonar {
         property "sonar.projectKey", "Ludogorie-Soft_b2b-opportunities-platform"
         property "sonar.organization", "ludogorie-soft-1"
         property "sonar.host.url", "https://sonarcloud.io"
-        property "sonar.coverage.jacoco.xmlReportPaths", "${buildDir}/reports/jacoco/test/jacocoTestReport.xml"
+        property "sonar.coverage.jacoco.xmlReportPaths", "${layout.buildDirectory.get()}/reports/jacoco/test/jacocoTestReport.xml"
         property "sonar.exclusions", "**/Dto/**,**/Entity/**,**/Mapper/**,**/Static/**,**/Exception/**,**/Config/**,**/UserDetailsImpl.java,**/JwtAuthenticationFilter.java,**/Repository/**"
     }
 }
