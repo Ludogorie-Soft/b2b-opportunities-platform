@@ -12,6 +12,7 @@ public class PositionApplicationMapper {
 
     public static PositionApplicationResponseDto toPositionApplicationResponseDto(PositionApplication pa) {
         return PositionApplicationResponseDto.builder()
+                .id(pa.getId())
                 .positionId(pa.getPosition().getId())
                 .talentId(pa.getTalent().getId())
                 .applicationStatus(pa.getApplicationStatus().toString())

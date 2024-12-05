@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PositionApplicationResponseDto {
+    private Long id;
     private Long positionId;
     private Long talentId;
     private String applicationStatus;

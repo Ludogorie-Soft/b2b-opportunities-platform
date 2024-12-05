@@ -14,7 +14,7 @@ import java.util.Optional;
 public interface PositionApplicationRepository extends JpaRepository<PositionApplication, Long> {
     Optional<PositionApplication> findFirstByPositionIdAndTalentIdAndApplicationStatusIn(Long positionId, Long talentId, List<ApplicationStatus> applicationStatuses);
 
-//    the method below checks if 1 Company has already applied to 1 position
+    //    the method below checks if 1 Company has already applied to 1 position
 //    boolean existsByPositionIdAndTalent_CompanyIdAndApplicationStatusIn(Long positionId, Long companyId, List<ApplicationStatus> applicationStatuses);
     @Query("SELECT pa FROM PositionApplication pa " +
             "JOIN pa.position p " +

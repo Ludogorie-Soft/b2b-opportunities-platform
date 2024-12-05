@@ -250,10 +250,14 @@ public class CompanyController {
     public List<PositionApplicationResponseDto> getApplicationsForMyPositions(Authentication authentication){
         return positionApplicationService.getApplicationsForMyPositions(authentication);
     }
+    @PutMapping("/applications/accept/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public PositionApplicationResponseDto acceptApplication(Authentication authentication, @PathVariable("id") Long applicationId){
+        return positionApplicationService.acceptApplication(authentication, applicationId);
+    }
 
     //TODO
-    // @GetMapping("/applications/accept/{id}")
-    // @GetMapping("/applications/reject/{id}")
+    // @PutMapping("/applications/reject/{id}")
 
     @GetMapping("/my-applications")
     @ResponseStatus(HttpStatus.OK)

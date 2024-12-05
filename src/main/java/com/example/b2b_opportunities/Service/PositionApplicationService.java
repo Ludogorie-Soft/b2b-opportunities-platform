@@ -10,6 +10,8 @@ import com.example.b2b_opportunities.Entity.Talent;
 import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Exception.common.AlreadyExistsException;
 import com.example.b2b_opportunities.Exception.common.InvalidRequestException;
+import com.example.b2b_opportunities.Exception.common.NotFoundException;
+import com.example.b2b_opportunities.Exception.common.PermissionDeniedException;
 import com.example.b2b_opportunities.Mapper.PositionApplicationMapper;
 import com.example.b2b_opportunities.Repository.PositionApplicationRepository;
 import com.example.b2b_opportunities.Static.ApplicationStatus;
@@ -21,6 +23,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -72,6 +75,28 @@ public class PositionApplicationService {
             return new ArrayList<>();
         }
         return PositionApplicationMapper.toPositionApplicationDtoList(myApplications);
+    }
+
+    public PositionApplicationResponseDto acceptApplication(Authentication authentication, Long applicationId) {
+        User user = userService.getCurrentUserOrThrow(authentication);
+        Company userCompany = companyService.getUserCompanyOrThrow(user);
+        PositionApplication pa = getPositionApplicationOrThrow(applicationId);
+        if (!Objects.equals(userCompany.getId(), pa.getPosition().getProject().getCompany().getId())) {
+            throw new PermissionDeniedException("This application does not belong to your company");
+        }
+        if (pa.getApplicationStatus() == ApplicationStatus.ACCEPTED) {
+            return PositionApplicationMapper.toPositionApplicationResponseDto(pa);
+        }
+        if (pa.getApplicationStatus() == ApplicationStatus.DENIED) {
+            throw new InvalidRequestException("This application has been denied and cannot be accepted");
+        }
+        pa.setApplicationStatus(ApplicationStatus.ACCEPTED);
+        return PositionApplicationMapper.toPositionApplicationResponseDto(
+                positionApplicationRepository.save(pa));
+    }
+
+    private PositionApplication getPositionApplicationOrThrow(Long id) {
+        return positionApplicationRepository.findById(id).orElseThrow(() -> new NotFoundException("Position application with ID :" + id + " not found"));
     }
 
     private void validateApplication(Company userCompany, Project project, Position position, Talent talent) {
