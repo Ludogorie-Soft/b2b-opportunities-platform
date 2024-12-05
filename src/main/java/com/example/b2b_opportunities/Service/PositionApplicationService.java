@@ -5,6 +5,7 @@ import com.example.b2b_opportunities.Dto.Response.PositionApplicationResponseDto
 import com.example.b2b_opportunities.Entity.Company;
 import com.example.b2b_opportunities.Entity.Position;
 import com.example.b2b_opportunities.Entity.PositionApplication;
+import com.example.b2b_opportunities.Entity.PositionStatus;
 import com.example.b2b_opportunities.Entity.Project;
 import com.example.b2b_opportunities.Entity.Talent;
 import com.example.b2b_opportunities.Entity.User;
@@ -78,21 +79,49 @@ public class PositionApplicationService {
     }
 
     public PositionApplicationResponseDto acceptApplication(Authentication authentication, Long applicationId) {
+        return updatePositionApplicationStatus(authentication,
+                applicationId,
+                ApplicationStatus.ACCEPTED,
+                ApplicationStatus.DENIED,
+                "This application has been denied and cannot be accepted"
+        );
+    }
+
+    public PositionApplicationResponseDto rejectApplication(Authentication authentication, Long applicationId) {
+        return updatePositionApplicationStatus(authentication,
+                applicationId,
+                ApplicationStatus.DENIED,
+                ApplicationStatus.ACCEPTED,
+                "This application has been accepted and cannot be denied"
+        );
+    }
+
+    private PositionApplicationResponseDto updatePositionApplicationStatus(
+            Authentication authentication,
+            Long applicationId,
+            ApplicationStatus targetStatus,
+            ApplicationStatus invalidStatus,
+            String invalidStatusMessage
+    ) {
         User user = userService.getCurrentUserOrThrow(authentication);
         Company userCompany = companyService.getUserCompanyOrThrow(user);
         PositionApplication pa = getPositionApplicationOrThrow(applicationId);
-        if (!Objects.equals(userCompany.getId(), pa.getPosition().getProject().getCompany().getId())) {
-            throw new PermissionDeniedException("This application does not belong to your company");
-        }
-        if (pa.getApplicationStatus() == ApplicationStatus.ACCEPTED) {
+        validateApplicationBelongsToCompany(pa, userCompany);
+        if (pa.getApplicationStatus() == targetStatus) {
             return PositionApplicationMapper.toPositionApplicationResponseDto(pa);
         }
-        if (pa.getApplicationStatus() == ApplicationStatus.DENIED) {
-            throw new InvalidRequestException("This application has been denied and cannot be accepted");
+        if (pa.getApplicationStatus() == invalidStatus) {
+            throw new InvalidRequestException(invalidStatusMessage);
         }
-        pa.setApplicationStatus(ApplicationStatus.ACCEPTED);
+        pa.setApplicationStatus(targetStatus);
         return PositionApplicationMapper.toPositionApplicationResponseDto(
                 positionApplicationRepository.save(pa));
+    }
+
+    private void validateApplicationBelongsToCompany(PositionApplication pa, Company company) {
+        if (!Objects.equals(company.getId(), pa.getPosition().getProject().getCompany().getId())) {
+            throw new PermissionDeniedException("This application does not belong to your company");
+        }
     }
 
     private PositionApplication getPositionApplicationOrThrow(Long id) {
