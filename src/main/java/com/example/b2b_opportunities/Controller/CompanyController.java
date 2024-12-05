@@ -238,33 +238,49 @@ public class CompanyController {
         companyService.deleteTalent(authentication, id);
     }
 
+    //TODO maybe change this to void?
     @PostMapping("/apply")
     @ResponseStatus(HttpStatus.CREATED)
-    //TODO we need to implement taking the CVs of the talents here
-    public PositionApplicationResponseDto applyForPosition(Authentication authentication, @RequestBody PositionApplicationRequestDto requestDto){
+    public PositionApplicationResponseDto applyForPosition(
+            Authentication authentication,
+            @RequestBody PositionApplicationRequestDto requestDto) {
         return positionApplicationService.applyForPosition(authentication, requestDto);
+    }
+
+    @PostMapping(value = "/upload-cv", consumes = "multipart/form-data")
+    @ResponseStatus(HttpStatus.CREATED)
+    public String uploadCV(@RequestParam("file") MultipartFile file,
+                           @RequestParam("application_id") Long applicationId) {
+        return positionApplicationService.uploadCV(file, applicationId);
     }
 
     @GetMapping("/applications")
     @ResponseStatus(HttpStatus.OK)
-    public List<PositionApplicationResponseDto> getApplicationsForMyPositions(Authentication authentication){
+    public List<PositionApplicationResponseDto> getApplicationsForMyPositions(Authentication authentication) {
         return positionApplicationService.getApplicationsForMyPositions(authentication);
     }
+
+    @GetMapping("/applications/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public PositionApplicationResponseDto getApplicationById(Authentication authentication, @PathVariable("id")Long applicationId){
+        return positionApplicationService.getApplicationById(authentication, applicationId);
+    }
+
     @PutMapping("/applications/accept/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public PositionApplicationResponseDto acceptApplication(Authentication authentication, @PathVariable("id") Long applicationId){
+    public PositionApplicationResponseDto acceptApplication(Authentication authentication, @PathVariable("id") Long applicationId) {
         return positionApplicationService.acceptApplication(authentication, applicationId);
     }
 
     @PutMapping("/applications/reject/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public PositionApplicationResponseDto rejectApplication(Authentication authentication, @PathVariable("id") Long applicationId){
+    public PositionApplicationResponseDto rejectApplication(Authentication authentication, @PathVariable("id") Long applicationId) {
         return positionApplicationService.rejectApplication(authentication, applicationId);
     }
 
     @GetMapping("/my-applications")
     @ResponseStatus(HttpStatus.OK)
-    public List<PositionApplicationResponseDto> getMyApplications(Authentication authentication){
+    public List<PositionApplicationResponseDto> getMyApplications(Authentication authentication) {
         return positionApplicationService.getMyApplications(authentication);
     }
 }

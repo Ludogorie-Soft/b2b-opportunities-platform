@@ -13,7 +13,6 @@ public class PositionApplicationRequestDto {
     @NotNull
     private Long positionId;
 
-    @NotNull
     private Long talentId;
 
     @NotNull

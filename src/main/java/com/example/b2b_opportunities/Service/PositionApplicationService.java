@@ -5,10 +5,10 @@ import com.example.b2b_opportunities.Dto.Response.PositionApplicationResponseDto
 import com.example.b2b_opportunities.Entity.Company;
 import com.example.b2b_opportunities.Entity.Position;
 import com.example.b2b_opportunities.Entity.PositionApplication;
-import com.example.b2b_opportunities.Entity.PositionStatus;
 import com.example.b2b_opportunities.Entity.Project;
 import com.example.b2b_opportunities.Entity.Talent;
 import com.example.b2b_opportunities.Entity.User;
+import com.example.b2b_opportunities.Exception.ServerErrorException;
 import com.example.b2b_opportunities.Exception.common.AlreadyExistsException;
 import com.example.b2b_opportunities.Exception.common.InvalidRequestException;
 import com.example.b2b_opportunities.Exception.common.NotFoundException;
@@ -17,10 +17,23 @@ import com.example.b2b_opportunities.Mapper.PositionApplicationMapper;
 import com.example.b2b_opportunities.Repository.PositionApplicationRepository;
 import com.example.b2b_opportunities.Static.ApplicationStatus;
 import com.example.b2b_opportunities.Static.ProjectStatus;
+import io.minio.MinioClient;
+import io.minio.PutObjectArgs;
+import io.minio.StatObjectArgs;
+import io.minio.errors.ErrorResponseException;
+import io.minio.errors.MinioException;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,6 +41,7 @@ import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PositionApplicationService {
     private final UserService userService;
     private final CompanyService companyService;
@@ -35,25 +49,103 @@ public class PositionApplicationService {
     private final PositionService positionService;
     private final PositionApplicationRepository positionApplicationRepository;
 
+
+    private final MinioClient minioClient;
+
+    @Value("${storage.bucketName}")
+    private String bucketName;
+
+    @Value("${storage.url}")
+    private String storageUrl;
+
+    @PostConstruct
+    private void init() {
+        // Change storageUrl if it's set to http://minio:9000 - to make it work while testing in docker.
+        if (storageUrl.toLowerCase().contains("minio")) {
+            storageUrl = "http://localhost:9000";
+        }
+    }
+
     public PositionApplicationResponseDto applyForPosition(Authentication authentication, PositionApplicationRequestDto requestDto) {
         User user = userService.getCurrentUserOrThrow(authentication);
         Company userCompany = companyService.getUserCompanyOrThrow(user);
         Position position = positionService.getPositionOrThrow(requestDto.getPositionId());
         Project project = position.getProject();
-        Talent talent = companyService.getTalentOrThrow(requestDto.getTalentId());
-
-        validateApplication(userCompany, project, position, talent);
 
         PositionApplication application = PositionApplication.builder()
-                .talent(talent)
                 .position(position)
                 .applicationStatus(ApplicationStatus.IN_PROGRESS)
                 .applicationDateTime(LocalDateTime.now())
                 .rate(requestDto.getRate())
                 .availableFrom(requestDto.getAvailableFrom())
+                .talentCompany(userCompany)
                 .build();
 
-        return PositionApplicationMapper.toPositionApplicationResponseDto(positionApplicationRepository.save(application));
+        if (requestDto.getTalentId() != null) {
+            Talent talent = companyService.getTalentOrThrow(requestDto.getTalentId());
+            validateApplication(userCompany, project, position, talent);
+            application.setTalent(talent);
+        }
+
+        PositionApplication pa = positionApplicationRepository.save(application);
+        return PositionApplicationMapper.toPositionApplicationResponseDto(pa);
+    }
+
+    public String uploadCV(MultipartFile file, Long applicationId) {
+        log.info("Attempting to upload CV for application ID: {}", applicationId);
+        try {
+            // Use the input stream directly from the MultipartFile
+            InputStream inputStream = file.getInputStream();
+
+            // Upload the CV to MinIO
+            PutObjectArgs pArgs = PutObjectArgs.builder()
+                    .bucket(bucketName)
+                    .object("CV/" + applicationId)
+                    .stream(inputStream, file.getSize(), -1) // Pass the file size and unknown part size (-1)
+                    .contentType(file.getContentType()) // Ensure the correct content type is set
+                    .build();
+
+            minioClient.putObject(pArgs);
+
+            inputStream.close();
+            log.info("Uploaded CV for application ID: {}", applicationId);
+
+            //check if either a CV or a Talent was added to the Application
+            validateApplicationHasCVOrTalent(applicationId);
+
+            // Return the URL where the CV is accessible
+            return storageUrl + "/" + bucketName + "/CV/" + applicationId;
+        } catch (MinioException | IOException | InvalidKeyException | NoSuchAlgorithmException e) {
+            throw new ServerErrorException("Error occurred while uploading file: " + e.getMessage());
+        }
+    }
+
+    public boolean doesCVExist(Long positionApplicationId) {
+        try {
+            String objectName = "CV/" + positionApplicationId;
+
+            // Check if the object exists by fetching its metadata
+            minioClient.statObject(StatObjectArgs.builder()
+                    .bucket(bucketName)
+                    .object(objectName)
+                    .build());
+            return true;
+        } catch (ErrorResponseException e) {
+            if (e.errorResponse().code().equals("NoSuchKey")) {
+                return false;
+            } else {
+                throw new ServerErrorException("Error occurred while checking CV file for ID: " + positionApplicationId + " existence: " + e.getMessage());
+            }
+        } catch (MinioException | IOException | InvalidKeyException | NoSuchAlgorithmException e) {
+            throw new ServerErrorException("Error occurred while checking object existence: " + e.getMessage());
+        }
+    }
+
+    public String returnUrlIfCVExists(Long positionApplicationId) {
+        if (doesCVExist(positionApplicationId)) {
+            return storageUrl + "/" + bucketName + "/CV/" + positionApplicationId;
+        }
+        return null;
     }
 
     public List<PositionApplicationResponseDto> getApplicationsForMyPositions(Authentication authentication) {
@@ -64,8 +156,12 @@ public class PositionApplicationService {
         if (positions.isEmpty()) {
             return new ArrayList<>();
         }
-        List<PositionApplication> positionApplications = positionApplicationRepository.findAllApplicationsForCompany(userCompany.getId());
-        return PositionApplicationMapper.toPositionApplicationDtoList(positionApplications);
+        List<PositionApplication> positionApplications = positionApplicationRepository.findAllApplicationsForMyPositions(userCompany.getId());
+        List<PositionApplicationResponseDto> responseDtoList = new ArrayList<>();
+        for (PositionApplication pa : positionApplications) {
+            responseDtoList.add(generatePAResponse(pa));
+        }
+        return responseDtoList;
     }
 
     public List<PositionApplicationResponseDto> getMyApplications(Authentication authentication) {
@@ -75,7 +171,11 @@ public class PositionApplicationService {
         if (myApplications.isEmpty()) {
             return new ArrayList<>();
         }
-        return PositionApplicationMapper.toPositionApplicationDtoList(myApplications);
+        List<PositionApplicationResponseDto> responseDtoList = new ArrayList<>();
+        for (PositionApplication pa : myApplications) {
+            responseDtoList.add(generatePAResponse(pa));
+        }
+        return responseDtoList;
     }
 
     public PositionApplicationResponseDto acceptApplication(Authentication authentication, Long applicationId) {
@@ -94,6 +194,52 @@ public class PositionApplicationService {
                 ApplicationStatus.ACCEPTED,
                 "This application has been accepted and cannot be denied"
         );
+    }
+
+    public PositionApplicationResponseDto getApplicationById(Authentication authentication, Long applicationId) {
+        User user = userService.getCurrentUserOrThrow(authentication);
+        Company userCompany = companyService.getUserCompanyOrThrow(user);
+        PositionApplication pa = getPositionApplicationOrThrow(applicationId);
+
+        validateUserAccessToApplication(pa, userCompany);
+
+        return generatePAResponse(pa);
+    }
+
+    private void validateApplicationHasCVOrTalent(Long applicationId) {
+        PositionApplication pa = getPositionApplicationOrThrow(applicationId);
+        String optionalCVUrl = returnUrlIfCVExists(applicationId);
+        if (pa.getTalent() == null && optionalCVUrl == null) {
+            throw new InvalidRequestException("Talent or CV must be passed");
+        }
+    }
+
+    private PositionApplicationResponseDto generatePAResponse(PositionApplication pa) {
+        PositionApplicationResponseDto responseDto = PositionApplicationMapper.toPositionApplicationResponseDto(pa);
+        responseDto.setCvUrl(returnUrlIfCVExists(pa.getId()));
+        return responseDto;
+    }
+
+    private void validateUserAccessToApplication(PositionApplication pa, Company userCompany) {
+        if (pa.getTalent() != null) {
+            validateAccessForTalent(pa, userCompany);
+        } else {
+            validateAccessForTalentCompanyAndProject(pa, userCompany);
+        }
+    }
+
+    private void validateAccessForTalent(PositionApplication pa, Company userCompany) {
+        if (!Objects.equals(pa.getTalent().getCompany().getId(), userCompany.getId())) {
+            throw new PermissionDeniedException("This application was not created to/by your company/project");
+        }
+    }
+
+    private void validateAccessForTalentCompanyAndProject(PositionApplication pa, Company userCompany) {
+        boolean isNotMatchingTalentCompany = pa.getTalentCompany().getId().equals(userCompany.getId());
+        boolean isNotMatchingProjectCompany = pa.getPosition().getProject().getCompany().getId().equals(userCompany.getId());
+        if (!isNotMatchingTalentCompany && !isNotMatchingProjectCompany) {
+            throw new PermissionDeniedException("This application was not created to/by your company/project");
+        }
     }
 
     private PositionApplicationResponseDto updatePositionApplicationStatus(
@@ -148,11 +294,10 @@ public class PositionApplicationService {
             throw new InvalidRequestException("You can't apply to a position that belongs to your company!", "positionId");
         }
         if (project.getProjectStatus().equals(ProjectStatus.INACTIVE)) {
-            throw new InvalidRequestException("This position belongs to a project that is inactive");
+            throw new InvalidRequestException("This position belongs to a project that is inactive", "positionId");
         }
         if (!position.getStatus().getId().equals(1L)) {
-            throw new InvalidRequestException("The position is not opened");
+            throw new InvalidRequestException("The position is not opened", "positionId");
         }
-
     }
 }

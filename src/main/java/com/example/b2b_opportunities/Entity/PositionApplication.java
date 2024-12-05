@@ -2,6 +2,7 @@ package com.example.b2b_opportunities.Entity;
 
 
 import com.example.b2b_opportunities.Static.ApplicationStatus;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -27,6 +28,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "position_applications")
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class PositionApplication {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -36,6 +38,11 @@ public class PositionApplication {
     @ManyToOne
     @JoinColumn(name = "position_id")
     private Position position;
+
+    @ManyToOne
+    @JoinColumn(name = "company_id")
+    private Company talentCompany;
+
     @ManyToOne
     @JoinColumn(name = "talent_id")
     private Talent talent;

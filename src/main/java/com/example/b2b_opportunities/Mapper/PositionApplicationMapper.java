@@ -14,7 +14,7 @@ public class PositionApplicationMapper {
         return PositionApplicationResponseDto.builder()
                 .id(pa.getId())
                 .positionId(pa.getPosition().getId())
-                .talentId(pa.getTalent().getId())
+                .talentId(pa.getTalent() != null ? pa.getTalent().getId() : null)
                 .applicationStatus(pa.getApplicationStatus().toString())
                 .applicationDateTime(pa.getApplicationDateTime())
                 .rate(pa.getRate())

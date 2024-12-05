@@ -21,4 +21,5 @@ public class PositionApplicationResponseDto {
     private LocalDateTime applicationDateTime;
     private LocalDateTime availableFrom;
     private int rate;
+    private String cvUrl;
 }
