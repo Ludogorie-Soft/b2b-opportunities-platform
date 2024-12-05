@@ -1,6 +1,7 @@
 services:
   backend:
     environment:
+      ZIPKIN_HOST: zipkin
       ZIPKIN_ENABLED: true
 
   zipkin:

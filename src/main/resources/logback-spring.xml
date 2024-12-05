@@ -4,6 +4,8 @@
     <property name="LOKI_HOST" value="${LOKI_HOST:-localhost}" />
     <property name="LOG_LEVEL" value="${LOG_LEVEL:-INFO}" />
 
+    <springProperty name="LOKI_ENABLED" source="LOKI_ENABLED" defaultValue="false" />
+
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg traceId=%X{traceId} spanId=%X{spanId}%n</pattern>
@@ -28,6 +30,10 @@
     <!-- Root logger configuration -->
     <root level="${LOG_LEVEL}">
         <appender-ref ref="STDOUT" />
-        <appender-ref ref="LOKI"/>
+        <if condition='property("LOKI_ENABLED").equals("true")'>
+            <then>
+                <appender-ref ref="LOKI" />
+            </then>
+        </if>
     </root>
 </configuration>
