@@ -38,6 +38,9 @@ public class SecurityConfig {
     @Value(("${domain}"))
     private String domain;
 
+    @Value("${cors.allowedOrigins}")
+    private String[] allowedOrigins;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -80,7 +83,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:8083", "http://localhost:5173", "https://localhost:8082", "https://uat.d1ij20tphiry77.amplifyapp.com", "https://b2bapp.algorithmity.com", "https://b2b.ludogoriesoft.duckdns.org", "https://fe.ludogoriesoft.duckdns.org"));
+        configuration.setAllowedOrigins(List.of(allowedOrigins));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));
         configuration.setExposedHeaders(List.of("Authorization"));
