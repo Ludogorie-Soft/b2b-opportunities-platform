@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.SpyBean;
@@ -75,6 +76,9 @@ public class AuthControllerTest {
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
     }
+
+    @Value("{frontend.address}")
+    private String frontEndAddress;
 
     @SpyBean
     private MailService mailService;
@@ -281,7 +285,7 @@ public class AuthControllerTest {
         mockMvc.perform(get("/api/auth/register/confirm")
                         .param("token", token))
                 .andExpect(status().isFound()) // Change this line to expect 302
-                .andExpect(header().string("Location", "http://localhost:5173/signup?confirmEmail=true"));
+                .andExpect(header().string("Location", frontEndAddress + "/signup?confirmEmail=true"));
 
         User confirmedUser = userService.getUserByEmailOrThrow(userRequestDto.getEmail().toLowerCase());
         assertTrue(confirmedUser.isEnabled());
