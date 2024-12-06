@@ -175,6 +175,7 @@ public class AuthenticationService {
         ConfirmationToken confirmationToken = validateAndReturnToken(token);
         User user = confirmationToken.getUser();
         user.setEnabled(true);
+        confirmationTokenRepository.delete(confirmationToken);
         log.info("Email: {} for user: {} confirmed using a token", user.getEmail(), user.getUsername());
         userRepository.save(user);
     }

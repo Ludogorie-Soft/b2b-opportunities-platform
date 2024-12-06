@@ -14,6 +14,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -32,6 +34,7 @@ public class PasswordService {
         if (!user.isEnabled()) {
             throw new AuthenticationFailedException("Account not activated");
         }
+        deleteTokenIfExists(user);
         mailService.sendPasswordRecoveryMail(user, request);
         log.info("Sending password recovery mail for user ID: {}", user.getId());
         return "Password recovery e-mail was sent successfully";
@@ -51,5 +54,10 @@ public class PasswordService {
             return "Password changed successfully";
         }
         throw new PasswordsNotMatchingException("Passwords do not match", "password");
+    }
+
+    private void deleteTokenIfExists(User user){
+        Optional<ConfirmationToken> confirmationToken = confirmationTokenRepository.findByUser(user);
+        confirmationToken.ifPresent(confirmationTokenRepository::delete);
     }
 }
