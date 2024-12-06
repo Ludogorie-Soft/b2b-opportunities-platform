@@ -7,6 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -16,7 +18,6 @@ import java.net.BindException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 
 @RestControllerAdvice
@@ -37,23 +38,27 @@ public class GlobalExceptionHandler {
         response.put("error", status.getReasonPhrase());
         response.put("message", getMessage(ex));
         response.put("path", request.getRequestURI());
-        if (ex instanceof BaseException baseException && baseException.getField() != null) {
-            response.put("field", baseException.getField());
+
+        String[] field = getFieldNamesFromException(ex);
+        if (field != null) {
+            response.put("field", field);
         }
+
         return new ResponseEntity<>(response, status);
     }
 
-    private String getMessage(Exception ex) {
-        if (ex instanceof MethodArgumentNotValidException manve) {
-            return manve.getBindingResult().getFieldErrors().stream()
-                    .map(error -> error.getField() + ": " + error.getDefaultMessage())
-                    .collect(Collectors.joining(", "));
-        } else if (ex instanceof ValidationException validationException) {
-            return validationException.getBindingResult().getAllErrors().stream()
+
+    private String[] getMessage(Exception ex) {
+        if (ex instanceof MethodArgumentNotValidException ma) {
+            return ma.getBindingResult().getAllErrors().stream()
                     .map(DefaultMessageSourceResolvable::getDefaultMessage)
-                    .collect(Collectors.joining(", "));
+                    .toArray(String[]::new);
+        } else if (ex instanceof ValidationException ve) {
+            return ve.getBindingResult().getAllErrors().stream()
+                    .map(DefaultMessageSourceResolvable::getDefaultMessage)
+                    .toArray(String[]::new);
         } else {
-            return ex.getMessage() != null ? ex.getMessage() : "An error occurred";
+            return new String[]{ex.getMessage() != null ? ex.getMessage() : "An error occurred"};
         }
     }
 
@@ -79,5 +84,22 @@ public class GlobalExceptionHandler {
         } else {
             log.info(logMessage);
         }
+    }
+
+    private String[] getFieldNameFromBindingResult(BindingResult bindingResult) {
+        return bindingResult.getFieldErrors().stream()
+                .map(FieldError::getField)
+                .toArray(String[]::new);
+    }
+
+    private String[] getFieldNamesFromException(Exception ex) {
+        if (ex instanceof MethodArgumentNotValidException manve) {
+            return getFieldNameFromBindingResult(manve.getBindingResult());
+        } else if (ex instanceof ValidationException ve) {
+            return getFieldNameFromBindingResult(ve.getBindingResult());
+        } else if (ex instanceof BaseException baseException && baseException.getField() != null) {
+            return new String[]{baseException.getField()};
+        }
+        return null;
     }
 }
