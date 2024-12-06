@@ -77,7 +77,7 @@ public class AuthControllerTest {
         registry.add("spring.datasource.password", postgres::getPassword);
     }
 
-    @Value("{frontend.address}")
+    @Value("${frontend.address}")
     private String frontEndAddress;
 
     @SpyBean
