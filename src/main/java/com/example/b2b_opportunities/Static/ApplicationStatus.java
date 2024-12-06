@@ -7,7 +7,8 @@ public enum ApplicationStatus {
 
     IN_PROGRESS(1),
     DENIED(2),
-    ACCEPTED(3);
+    ACCEPTED(3),
+    AWAITING_CV_OR_TALENT(4);
 
     private final long id;
 

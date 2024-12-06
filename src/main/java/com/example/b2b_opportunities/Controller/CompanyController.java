@@ -254,6 +254,7 @@ public class CompanyController {
         return positionApplicationService.uploadCV(file, applicationId);
     }
 
+
     @GetMapping("/applications")
     @ResponseStatus(HttpStatus.OK)
     public List<PositionApplicationResponseDto> getApplicationsForMyPositions(Authentication authentication) {
@@ -262,11 +263,22 @@ public class CompanyController {
 
     @GetMapping("/applications/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public PositionApplicationResponseDto getApplicationById(Authentication authentication, @PathVariable("id")Long applicationId){
+    public PositionApplicationResponseDto getApplicationById(Authentication authentication, @PathVariable("id") Long applicationId) {
         return positionApplicationService.getApplicationById(authentication, applicationId);
     }
 
+    @PutMapping(value = "/applications", consumes = "multipart/form-data")
+    @ResponseStatus(HttpStatus.OK)
+    public PositionApplicationResponseDto updateApplication(
+            Authentication authentication,
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            @RequestParam("application_id") Long applicationId,
+            @RequestParam(value = "talent_id", required = false) Long talentId) {
+        return positionApplicationService.updateApplication(authentication, file, applicationId, talentId);
+    }
+
     @PutMapping("/applications/accept/{id}")
+
     @ResponseStatus(HttpStatus.OK)
     public PositionApplicationResponseDto acceptApplication(Authentication authentication, @PathVariable("id") Long applicationId) {
         return positionApplicationService.acceptApplication(authentication, applicationId);

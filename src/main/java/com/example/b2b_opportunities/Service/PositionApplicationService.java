@@ -74,7 +74,7 @@ public class PositionApplicationService {
 
         PositionApplication application = PositionApplication.builder()
                 .position(position)
-                .applicationStatus(ApplicationStatus.IN_PROGRESS)
+                .applicationStatus(ApplicationStatus.AWAITING_CV_OR_TALENT)
                 .applicationDateTime(LocalDateTime.now())
                 .rate(requestDto.getRate())
                 .availableFrom(requestDto.getAvailableFrom())
@@ -85,6 +85,7 @@ public class PositionApplicationService {
             Talent talent = companyService.getTalentOrThrow(requestDto.getTalentId());
             validateApplication(userCompany, project, position, talent);
             application.setTalent(talent);
+            application.setApplicationStatus(ApplicationStatus.IN_PROGRESS);
         }
 
         PositionApplication pa = positionApplicationRepository.save(application);
@@ -111,7 +112,9 @@ public class PositionApplicationService {
             log.info("Uploaded CV for application ID: {}", applicationId);
 
             //check if either a CV or a Talent was added to the Application
-            validateApplicationHasCVOrTalent(applicationId);
+            PositionApplication pa = getPositionApplicationOrThrow(applicationId);
+            pa.setApplicationStatus(ApplicationStatus.IN_PROGRESS);
+            positionApplicationRepository.save(pa);
 
             // Return the URL where the CV is accessible
             return storageUrl + "/" + bucketName + "/CV/" + applicationId;
@@ -156,7 +159,7 @@ public class PositionApplicationService {
         if (positions.isEmpty()) {
             return new ArrayList<>();
         }
-        List<PositionApplication> positionApplications = positionApplicationRepository.findAllApplicationsForMyPositions(userCompany.getId());
+        List<PositionApplication> positionApplications = positionApplicationRepository.findAllApplicationsForMyPositions(userCompany.getId(), ApplicationStatus.AWAITING_CV_OR_TALENT);
         List<PositionApplicationResponseDto> responseDtoList = new ArrayList<>();
         for (PositionApplication pa : positionApplications) {
             responseDtoList.add(generatePAResponse(pa));
@@ -201,17 +204,30 @@ public class PositionApplicationService {
         Company userCompany = companyService.getUserCompanyOrThrow(user);
         PositionApplication pa = getPositionApplicationOrThrow(applicationId);
 
-        validateUserAccessToApplication(pa, userCompany);
-
+        validateAccess(pa, userCompany);
         return generatePAResponse(pa);
     }
 
-    private void validateApplicationHasCVOrTalent(Long applicationId) {
+    public PositionApplicationResponseDto updateApplication(Authentication authentication, MultipartFile file, Long applicationId, Long talentId) {
+        User user = userService.getCurrentUserOrThrow(authentication);
+        Company userCompany = companyService.getUserCompanyOrThrow(user);
         PositionApplication pa = getPositionApplicationOrThrow(applicationId);
-        String optionalCVUrl = returnUrlIfCVExists(applicationId);
-        if (pa.getTalent() == null && optionalCVUrl == null) {
-            throw new InvalidRequestException("Talent or CV must be passed");
+        if (!Objects.equals(pa.getTalentCompany().getId(), userCompany.getId())) {
+            throw new PermissionDeniedException("This application was not made by your company");
         }
+        if (talentId != null) {
+            Talent talent = companyService.getTalentOrThrow(talentId);
+            companyService.validateTalentBelongsToCompany(userCompany, talent);
+            pa.setTalent(talent);
+            pa.setApplicationStatus(ApplicationStatus.IN_PROGRESS);
+            positionApplicationRepository.save(pa);
+        }
+        if (file != null && !file.isEmpty()) {
+            uploadCV(file, applicationId);
+            pa.setApplicationStatus(ApplicationStatus.IN_PROGRESS);
+            positionApplicationRepository.save(pa);
+        }
+        return generatePAResponse(pa);
     }
 
     private PositionApplicationResponseDto generatePAResponse(PositionApplication pa) {
@@ -220,24 +236,10 @@ public class PositionApplicationService {
         return responseDto;
     }
 
-    private void validateUserAccessToApplication(PositionApplication pa, Company userCompany) {
-        if (pa.getTalent() != null) {
-            validateAccessForTalent(pa, userCompany);
-        } else {
-            validateAccessForTalentCompanyAndProject(pa, userCompany);
-        }
-    }
-
-    private void validateAccessForTalent(PositionApplication pa, Company userCompany) {
-        if (!Objects.equals(pa.getTalent().getCompany().getId(), userCompany.getId())) {
-            throw new PermissionDeniedException("This application was not created to/by your company/project");
-        }
-    }
-
-    private void validateAccessForTalentCompanyAndProject(PositionApplication pa, Company userCompany) {
-        boolean isNotMatchingTalentCompany = pa.getTalentCompany().getId().equals(userCompany.getId());
-        boolean isNotMatchingProjectCompany = pa.getPosition().getProject().getCompany().getId().equals(userCompany.getId());
-        if (!isNotMatchingTalentCompany && !isNotMatchingProjectCompany) {
+    private void validateAccess(PositionApplication pa, Company userCompany) {
+        boolean isMatchingCompany = pa.getTalentCompany().equals(userCompany);
+        boolean isMatchingProjectCompany = pa.getPosition().getProject().getCompany().getId().equals(userCompany.getId());
+        if (!isMatchingCompany && !isMatchingProjectCompany) {
             throw new PermissionDeniedException("This application was not created to/by your company/project");
         }
     }
@@ -277,7 +279,7 @@ public class PositionApplicationService {
     private void validateApplication(Company userCompany, Project project, Position position, Talent talent) {
         positionApplicationRepository.findFirstByPositionIdAndTalentIdAndApplicationStatusIn(
                         position.getId(),
-                        talent.getCompany().getId(),
+                        talent.getId(),
                         List.of(ApplicationStatus.IN_PROGRESS, ApplicationStatus.ACCEPTED))
                 .ifPresent(application -> {
                     if (application.getApplicationStatus().equals(ApplicationStatus.IN_PROGRESS)) {
