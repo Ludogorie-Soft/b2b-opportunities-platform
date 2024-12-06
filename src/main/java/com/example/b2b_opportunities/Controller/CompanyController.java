@@ -278,7 +278,6 @@ public class CompanyController {
     }
 
     @PutMapping("/applications/accept/{id}")
-
     @ResponseStatus(HttpStatus.OK)
     public PositionApplicationResponseDto acceptApplication(Authentication authentication, @PathVariable("id") Long applicationId) {
         return positionApplicationService.acceptApplication(authentication, applicationId);
