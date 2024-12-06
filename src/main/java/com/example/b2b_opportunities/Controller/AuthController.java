@@ -32,7 +32,6 @@ import java.security.Principal;
 public class AuthController {
     private final AuthenticationService authenticationService;
     private final PasswordService passwordService;
-
     @Value("${frontend.address}")
     private String frontEndAddress;
 
@@ -49,7 +48,7 @@ public class AuthController {
     public void confirmEmail(@RequestParam("token") String token, HttpServletResponse response) throws IOException {
         authenticationService.confirmEmail(token);
         // TODO - change localhost to use env var
-        response.sendRedirect("http://localhost:5173/signup?confirmEmail=true");
+        response.sendRedirect(frontEndAddress + "/signup?confirmEmail=true");
     }
 
     @GetMapping("/register/resend-confirmation")
