@@ -1,8 +1,10 @@
 package com.example.b2b_opportunities.Mapper;
 
 import com.example.b2b_opportunities.Dto.Request.PositionRequestDto;
+import com.example.b2b_opportunities.Dto.Response.PositionApplicationResponseDto;
 import com.example.b2b_opportunities.Dto.Response.PositionResponseDto;
 import com.example.b2b_opportunities.Entity.Position;
+import com.example.b2b_opportunities.Entity.PositionApplication;
 import com.example.b2b_opportunities.Entity.Skill;
 import com.example.b2b_opportunities.Entity.WorkMode;
 import org.springframework.stereotype.Component;
@@ -67,4 +69,5 @@ public class PositionMapper {
         }
         return positionResponseDtoList;
     }
+
 }

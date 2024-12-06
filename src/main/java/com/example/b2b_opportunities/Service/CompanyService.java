@@ -583,7 +583,7 @@ public class CompanyService {
         }
     }
 
-    private void validateTalentBelongsToCompany(Company company, Talent talent) {
+    protected void validateTalentBelongsToCompany(Company company, Talent talent) {
         if (!Objects.equals(talent.getCompany().getId(), company.getId())) {
             throw new PermissionDeniedException("This talent does not belong to your company");
         }
@@ -881,7 +881,7 @@ public class CompanyService {
                 .orElseThrow(() -> new NotFoundException("Seniority with ID: " + seniorityId + " not found"));
     }
 
-    private Talent getTalentOrThrow(Long talentId) {
+    protected Talent getTalentOrThrow(Long talentId) {
         return talentRepository.findById(talentId)
                 .orElseThrow(() -> new NotFoundException("Talent with ID: " + talentId + " not found"));
     }
