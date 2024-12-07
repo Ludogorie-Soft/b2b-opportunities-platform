@@ -1,32 +1,41 @@
 package com.example.b2b_opportunities.Service;
 
 import com.example.b2b_opportunities.Dto.Request.CompanyFilterEditDto;
+import com.example.b2b_opportunities.Dto.Request.CompanyFilterRequestDto;
 import com.example.b2b_opportunities.Dto.Request.CompanyRequestDto;
+import com.example.b2b_opportunities.Dto.Request.PartnerGroupRequestDto;
 import com.example.b2b_opportunities.Dto.Response.CompaniesAndUsersResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyFilterResponseDto;
+import com.example.b2b_opportunities.Dto.Response.CompanyPublicResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyResponseDto;
+import com.example.b2b_opportunities.Dto.Response.PartnerGroupResponseDto;
 import com.example.b2b_opportunities.Dto.Response.ProjectResponseDto;
 import com.example.b2b_opportunities.Entity.Company;
 import com.example.b2b_opportunities.Entity.CompanyType;
 import com.example.b2b_opportunities.Entity.Domain;
 import com.example.b2b_opportunities.Entity.Filter;
+import com.example.b2b_opportunities.Entity.PartnerGroup;
 import com.example.b2b_opportunities.Entity.Project;
 import com.example.b2b_opportunities.Entity.Skill;
 import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Exception.AuthenticationFailedException;
+import com.example.b2b_opportunities.Exception.common.AlreadyExistsException;
 import com.example.b2b_opportunities.Exception.common.InvalidRequestException;
 import com.example.b2b_opportunities.Exception.common.NotFoundException;
+import com.example.b2b_opportunities.Exception.common.PermissionDeniedException;
 import com.example.b2b_opportunities.Mapper.UserMapper;
 import com.example.b2b_opportunities.Repository.CompanyRepository;
 import com.example.b2b_opportunities.Repository.CompanyTypeRepository;
 import com.example.b2b_opportunities.Repository.DomainRepository;
 import com.example.b2b_opportunities.Repository.FilterRepository;
+import com.example.b2b_opportunities.Repository.PartnerGroupRepository;
 import com.example.b2b_opportunities.Repository.ProjectRepository;
 import com.example.b2b_opportunities.Repository.SkillRepository;
 import com.example.b2b_opportunities.Repository.UserRepository;
 import com.example.b2b_opportunities.Static.EmailVerification;
 import com.example.b2b_opportunities.Static.ProjectStatus;
 import jakarta.servlet.http.HttpServletRequest;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -42,13 +51,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -100,6 +110,9 @@ public class CompanyServiceTest {
     @Mock
     private HttpServletRequest request;
 
+    @Mock
+    private PartnerGroupRepository partnerGroupRepository;
+
     @InjectMocks
     private CompanyService companyService;
 
@@ -134,15 +147,13 @@ public class CompanyServiceTest {
     }
 
     @Test
-    public void testCreateCompany_ThrowsAuthenticationFailedException() {
+    public void testCreateCompanyThrowsAuthenticationFailedException() {
         Authentication authentication = null;
 
         when(userService.getCurrentUserOrThrow(authentication))
                 .thenThrow(new AuthenticationFailedException("User not authenticated"));
 
-        assertThrows(AuthenticationFailedException.class, () -> {
-            companyService.createCompany(authentication, companyRequestDto, request);
-        });
+        assertThrows(AuthenticationFailedException.class, () -> companyService.createCompany(authentication, companyRequestDto, request));
     }
 
     @Test
@@ -211,9 +222,7 @@ public class CompanyServiceTest {
         Long companyId = 999L;
         when(companyRepository.findById(companyId)).thenReturn(Optional.empty());
 
-        NotFoundException thrown = assertThrows(NotFoundException.class, () -> {
-            companyService.getCompanyAndUsers(companyId);
-        });
+        NotFoundException thrown = assertThrows(NotFoundException.class, () -> companyService.getCompanyAndUsers(companyId));
 
         assertEquals("Company with ID: " + companyId + " not found", thrown.getMessage());
         verify(companyRepository).findById(companyId);
@@ -353,9 +362,9 @@ public class CompanyServiceTest {
         CompanyResponseDto responseDto = companyService.editCompany(authentication, companyRequestDto, request);
 
         assertNotNull(responseDto);
-        assertEquals("New Company Name", responseDto.getName()); // Validate name is updated
-        assertEquals("newemail@example.com", userCompany.getEmail()); // Verify that the email has been updated
-        assertEquals("newwebsite.com", userCompany.getWebsite()); // Verify that the website has been updated
+        assertEquals("New Company Name", responseDto.getName());
+        assertEquals("newemail@example.com", userCompany.getEmail());
+        assertEquals("newwebsite.com", userCompany.getWebsite());
         verify(companyRepository, times(2)).save(userCompany);
     }
 
@@ -366,9 +375,7 @@ public class CompanyServiceTest {
         when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
         when(companyRepository.findById(currentUser.getId())).thenReturn(Optional.empty());
 
-        assertThrows(NotFoundException.class, () -> {
-            companyService.editCompany(authentication, companyRequestDto, request);
-        });
+        assertThrows(NotFoundException.class, () -> companyService.editCompany(authentication, companyRequestDto, request));
 
         verify(companyRepository, never()).save(any());
     }
@@ -510,7 +517,7 @@ public class CompanyServiceTest {
     }
 
     @Test
-    void shouldReturnCompanyFilters(){
+    void shouldReturnCompanyFilters() {
         User currentUser = new User();
         currentUser.setId(99999999L);
         Company userCompany = new Company();
@@ -542,7 +549,7 @@ public class CompanyServiceTest {
     }
 
     @Test
-    void shouldReturnCompanyFilter(){
+    void shouldReturnCompanyFilter() {
         User currentUser = new User();
         currentUser.setId(99999999L);
         Company userCompany = new Company();
@@ -570,5 +577,608 @@ public class CompanyServiceTest {
         assertEquals(9999L, result.getId());
         assertEquals(1, result.getSkills().size());
         assertTrue(result.getSkills().contains(55L));
+    }
+
+    @Test
+    void testShouldThrowAlreadyExistsExceptionWhenEmailAlreadyRegistered() {
+        when(companyRepository.findByEmail(companyRequestDto.getEmail())).thenReturn(Optional.of(new Company()));
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
+
+        assertThrows(AlreadyExistsException.class, () -> companyService.createCompany(authentication, companyRequestDto, request));
+
+        verify(companyRepository, never()).save(any());
+    }
+
+
+    @Test
+    void testShouldThrowAlreadyExistsExceptionWhenLinkedInAlreadyRegistered() {
+        companyRequestDto.setLinkedIn("duplicateLinkedIn");
+        when(companyRepository.findByLinkedIn("duplicateLinkedIn")).thenReturn(Optional.of(new Company()));
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
+
+        assertThrows(AlreadyExistsException.class, () -> companyService.createCompany(authentication, companyRequestDto, request));
+        verify(companyRepository, never()).save(any());
+    }
+
+    @Test
+    void testShouldThrowNotFoundExceptionWhenEmailTokenIsInvalid() {
+        when(companyRepository.findByEmailConfirmationToken("invalidToken")).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class, () -> companyService.confirmCompanyEmail("invalidToken"));
+
+        verify(companyRepository, never()).save(any());
+    }
+
+    @Test
+    void testShouldThrowNotFoundExceptionWhenCompanyBannerDoesNotExist() {
+        Company company = new Company();
+        company.setId(1L);
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
+        when(imageService.doesImageExist(company.getId(), "banner")).thenReturn(false);
+
+        assertThrows(NotFoundException.class, () -> companyService.deleteCompanyBanner(authentication));
+    }
+
+    @Test
+    void testShouldDeleteCompanyBannerSuccessfullyWhenItExists() {
+        Company company = new Company();
+        company.setId(1L);
+        currentUser.setCompany(company);
+
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
+        when(imageService.doesImageExist(company.getId(), "banner")).thenReturn(true);
+
+        doNothing().when(imageService).deleteBanner(company.getId());
+
+        companyService.deleteCompanyBanner(authentication);
+
+        verify(imageService, times(1)).deleteBanner(company.getId());
+    }
+
+    @Test
+    void testShouldThrowNotFoundExceptionWhenCompanyImageDoesNotExist() {
+        Company company = new Company();
+        company.setId(1L);
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
+        when(imageService.doesImageExist(company.getId(), "companyImage")).thenReturn(false);
+
+        assertThrows(NotFoundException.class, () -> companyService.deleteCompanyBanner(authentication));
+    }
+
+    @Test
+    void testShouldThrowNotFoundExceptionWhenFilterNotRelatedToCompany() {
+        Company company = new Company();
+        company.setId(1L);
+        company.setFilters(new HashSet<>());
+        currentUser.setCompany(company);
+
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
+        when(filterRepository.findById(999L)).thenReturn(Optional.of(new Filter()));
+
+        assertThrows(NotFoundException.class, () -> companyService.getCompanyFilter(999L, authentication));
+    }
+
+    @Test
+    void testEditCompanyFilterWithInvalidId() {
+        Long invalidId = -1L;
+        CompanyFilterEditDto dto = new CompanyFilterEditDto();
+        Authentication authentication = mock(Authentication.class);
+
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(new User());
+
+        assertThrows(NotFoundException.class, () ->
+                companyService.editCompanyFilter(invalidId, dto, authentication)
+        );
+    }
+
+    @Test
+    void testDeleteCompanyFilterWithInvalidId() {
+        Long invalidId = -1L;
+        Authentication authentication = mock(Authentication.class);
+
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(new User());
+
+        assertThrows(NotFoundException.class, () ->
+                companyService.deleteCompanyFilter(invalidId, authentication)
+        );
+    }
+
+    @Test
+    void testAddCompanyFilterWithInvalidCompanyId() {
+        Authentication authentication = mock(Authentication.class);
+        CompanyFilterRequestDto dto = new CompanyFilterRequestDto();
+
+        User user = new User();
+        Company company = new Company();
+
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(user);
+        when(companyRepository.findById(anyLong())).thenReturn(Optional.of(company));
+
+        assertThrows(NotFoundException.class, () ->
+                companyService.addCompanyFilter(authentication, dto)
+        );
+    }
+
+    @Test
+    void testShouldSetCompanyImagesSuccessfully() {
+        Company company = new Company();
+        company.setId(1L);
+
+        Skill skill = new Skill();
+        skill.setId(1L);
+        skill.setName("testSkill");
+        company.setSkills(Set.of(skill));
+        company.setEmailVerification(EmailVerification.ACCEPTED);
+
+        User currentUser = new User();
+        currentUser.setId(1L);
+        currentUser.setCompany(company);
+
+        MultipartFile image = mock(MultipartFile.class);
+        MultipartFile banner = mock(MultipartFile.class);
+
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
+
+        when(imageService.upload(image, company.getId(), "image")).thenReturn("imageUploaded");
+        when(imageService.upload(banner, company.getId(), "banner")).thenReturn("bannerUploaded");
+
+        CompanyResponseDto mockResponseDto = new CompanyResponseDto();
+        mockResponseDto.setImage("imageUploaded");
+        mockResponseDto.setBanner("bannerUploaded");
+
+        CompanyResponseDto result = companyService.setCompanyImages(authentication, image, banner);
+
+        verify(imageService, times(1)).upload(image, company.getId(), "image");
+        verify(imageService, times(1)).upload(banner, company.getId(), "banner");
+
+        assertNotNull(result);
+    }
+
+    @Test
+    void testShouldReturnCompanyResponseDtoSuccessfully() {
+        Company company = new Company();
+        company.setId(1L);
+
+        Skill skill = new Skill();
+        skill.setId(1L);
+        skill.setName("testSkill");
+        company.setSkills(Set.of(skill));
+        company.setEmailVerification(EmailVerification.ACCEPTED);
+
+        User currentUser = new User();
+        currentUser.setId(1L);
+        currentUser.setCompany(company);
+
+        CompanyResponseDto mockResponseDto = new CompanyResponseDto();
+        mockResponseDto.setName("Test Company");
+
+        when(companyRepository.findById(1L)).thenReturn(Optional.of(company));
+
+        when(imageService.returnUrlIfPictureExists(company.getId(), "image")).thenReturn("http://image.url");
+        when(imageService.returnUrlIfPictureExists(company.getId(), "banner")).thenReturn("http://banner.url");
+
+        CompanyResponseDto result = companyService.getCompany(1L);
+
+        verify(companyRepository, times(1)).findById(1L);
+
+        assertNotNull(result);
+        assertEquals("http://image.url", result.getImage());
+        assertEquals("http://banner.url", result.getBanner());
+    }
+
+
+    @Test
+    void testShouldThrowNotFoundExceptionWhenCompanyNotFound() {
+        when(companyRepository.findById(9999L)).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class, () -> companyService.getCompany(9999L));
+
+        verify(companyRepository, times(1)).findById(9999L);
+    }
+
+    @Test
+    void testEditCompanyFilterSuccessfully() {
+        Long filterId = 1L;
+        CompanyFilterEditDto dto = new CompanyFilterEditDto();
+        dto.setSkills(Set.of(1L, 2L));
+        Authentication authentication = mock(Authentication.class);
+        User currentUser = new User();
+        Company company = new Company();
+        company.setId(1L);
+        currentUser.setCompany(company);
+        Filter filter = new Filter();
+        filter.setId(filterId);
+        filter.setCompany(company);
+        filter.setSkills(Set.of(new Skill(), new Skill()));
+        company.setFilters(Set.of(filter));
+
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
+        when(filterRepository.findById(filterId)).thenReturn(Optional.of(filter));
+        when(filterRepository.save(any(Filter.class))).thenReturn(filter);
+
+        CompanyFilterResponseDto response = companyService.editCompanyFilter(filterId, dto, authentication);
+
+        assertNotNull(response);
+        assertEquals(filterId, response.getId());
+        verify(filterRepository).save(any(Filter.class));
+    }
+
+    @Test
+    void testEditCompanyFilterFilterNotRelatedToCompany() {
+        Long filterId = 1L;
+        CompanyFilterEditDto dto = new CompanyFilterEditDto();
+        Authentication authentication = mock(Authentication.class);
+        User currentUser = new User();
+        Company company = new Company();
+        company.setId(1L);
+        currentUser.setCompany(company);
+
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
+        when(filterRepository.findById(filterId)).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class, () -> companyService.editCompanyFilter(filterId, dto, authentication));
+    }
+
+    @Test
+    void testDeleteCompanyFilterSuccessfully() {
+        Long filterId = 1L;
+        CompanyFilterEditDto dto = new CompanyFilterEditDto();
+        dto.setSkills(Set.of(1L, 2L));
+        Authentication authentication = mock(Authentication.class);
+        User currentUser = new User();
+        Company company = new Company();
+        company.setId(1L);
+        currentUser.setCompany(company);
+        Filter filter = new Filter();
+        filter.setId(filterId);
+        filter.setCompany(company);
+        filter.setSkills(Set.of(new Skill(), new Skill()));
+        company.setFilters(Set.of(filter));
+
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
+        when(filterRepository.findById(filterId)).thenReturn(Optional.of(new Filter()));
+
+        companyService.deleteCompanyFilter(filterId, authentication);
+
+        verify(filterRepository).deleteById(filterId);
+    }
+
+    @Test
+    void testDeleteCompanyFilterFilterNotRelatedToCompany() {
+        Long filterId = 1L;
+        Authentication authentication = mock(Authentication.class);
+        User currentUser = new User();
+        Company company = new Company();
+        company.setId(1L);
+        currentUser.setCompany(company);
+
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
+        when(filterRepository.findById(filterId)).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class, () -> companyService.deleteCompanyFilter(filterId, authentication));
+    }
+
+    @Test
+    void testAddCompanyFilterSuccessfully() {
+        Long filterId = 1L;
+        CompanyFilterEditDto dto = new CompanyFilterEditDto();
+        dto.setSkills(Set.of(1L, 2L));
+        Authentication authentication = mock(Authentication.class);
+        User currentUser = new User();
+        Company company = new Company();
+        company.setId(1L);
+        currentUser.setCompany(company);
+        Filter filter = new Filter();
+        filter.setId(filterId);
+        filter.setCompany(company);
+        filter.setName("Test Filter");
+        filter.setSkills(new HashSet<>(Set.of(new Skill(), new Skill())));
+        company.setFilters(new HashSet<>(Set.of(filter)));
+
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
+        when(filterRepository.save(any(Filter.class))).thenReturn(filter);
+        when(companyRepository.save(any(Company.class))).thenReturn(company);
+
+        CompanyFilterResponseDto response = companyService.addCompanyFilter(authentication, dto);
+
+        assertNotNull(response);
+        assertEquals(1L, response.getId());
+        verify(filterRepository).save(any(Filter.class));
+        verify(companyRepository).save(any(Company.class));
+    }
+
+    @Test
+    void testAddCompanyFilterInvalidCompany() {
+        CompanyFilterRequestDto dto = new CompanyFilterRequestDto();
+        Authentication authentication = mock(Authentication.class);
+        User currentUser = new User();
+
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
+        when(companyRepository.findById(anyLong())).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class, () -> companyService.addCompanyFilter(authentication, dto));
+    }
+
+    @Test
+    void testGetPartnerGroupsSuccessfully() {
+        Authentication authentication = mock(Authentication.class);
+        User currentUser = new User();
+        Company company = new Company();
+        company.setId(1L);
+        currentUser.setCompany(company);
+        PartnerGroup partnerGroup = new PartnerGroup();
+        partnerGroup.setId(1L);
+        company.setPartnerGroups(Set.of(partnerGroup));
+
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
+
+        List<PartnerGroupResponseDto> response = companyService.getPartnerGroups(authentication);
+
+        assertNotNull(response);
+        assertEquals(1, response.size());
+        assertEquals(1L, response.get(0).getId());
+    }
+
+    @Test
+    void testDeletePartnerGroupSuccessfully() {
+        Long partnerGroupId = 1L;
+        Authentication authentication = mock(Authentication.class);
+        User currentUser = new User();
+        Company company = new Company();
+        company.setId(1L);
+        currentUser.setCompany(company);
+        PartnerGroup partnerGroup = new PartnerGroup();
+        partnerGroup.setId(partnerGroupId);
+        company.setPartnerGroups(new HashSet<>(Set.of(partnerGroup)));
+
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
+        when(partnerGroupRepository.findById(partnerGroupId)).thenReturn(Optional.of(partnerGroup));
+
+        companyService.deletePartnerGroup(authentication, partnerGroupId);
+
+        verify(partnerGroupRepository).delete(partnerGroup);
+    }
+
+    @Test
+    void testDeletePartnerGroupPartnerGroupNotFound() {
+        Long partnerGroupId = 1L;
+        Authentication authentication = mock(Authentication.class);
+        User currentUser = new User();
+        Company company = new Company();
+        company.setId(1L);
+        currentUser.setCompany(company);
+
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
+        when(partnerGroupRepository.findById(partnerGroupId)).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class, () -> companyService.deletePartnerGroup(authentication, partnerGroupId));
+    }
+
+    @Test
+    void testRemoveCompanyFromPartnersSuccessfully() {
+        Long partnerGroupId = 1L;
+        Long companyId = 2L;
+        Authentication authentication = mock(Authentication.class);
+        User currentUser = new User();
+        Company company = new Company();
+        company.setId(1L);
+        currentUser.setCompany(company);
+        PartnerGroup partnerGroup = new PartnerGroup();
+        partnerGroup.setId(partnerGroupId);
+        Company companyToBeRemoved = new Company();
+        companyToBeRemoved.setId(companyId);
+        partnerGroup.setPartners(new HashSet<>(Set.of(companyToBeRemoved)));
+        company.setPartnerGroups(new HashSet<>(Set.of(partnerGroup)));
+
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
+        when(companyRepository.findById(companyId)).thenReturn(Optional.of(companyToBeRemoved));
+        when(partnerGroupRepository.save(any(PartnerGroup.class))).thenReturn(partnerGroup);
+
+        PartnerGroupResponseDto response = companyService.removeCompanyFromPartners(authentication, partnerGroupId, companyId);
+
+        assertNotNull(response);
+        assertEquals(partnerGroupId, response.getId());
+        Assertions.assertFalse(response.getCompanies().stream().anyMatch(c -> c.getId().equals(companyId)));
+        verify(partnerGroupRepository).save(any(PartnerGroup.class));
+    }
+
+    @Test
+    void testRemoveCompanyFromPartnersPartnerGroupNotFound() {
+        Long partnerGroupId = 1L;
+        Long companyId = 2L;
+        Authentication authentication = mock(Authentication.class);
+        User currentUser = new User();
+        Company company = new Company();
+        company.setId(1L);
+        company.setPartnerGroups(new HashSet<>()); // Initialize the partnerGroups set
+        currentUser.setCompany(company);
+
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
+
+        assertThrows(IllegalArgumentException.class, () -> companyService.removeCompanyFromPartners(authentication, partnerGroupId, companyId));
+    }
+
+    @Test
+    void testRemoveCompanyFromPartnersCompanyNotInPartnerGroup() {
+        Long partnerGroupId = 1L;
+        Long companyId = 2L;
+        Authentication authentication = mock(Authentication.class);
+        User currentUser = new User();
+        Company company = new Company();
+        company.setId(1L);
+        currentUser.setCompany(company);
+        PartnerGroup partnerGroup = new PartnerGroup();
+        partnerGroup.setId(partnerGroupId);
+        Company companyToBeRemoved = new Company();
+        companyToBeRemoved.setId(companyId);
+        partnerGroup.setPartners(new HashSet<>());
+        company.setPartnerGroups(new HashSet<>(Set.of(partnerGroup)));
+
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
+        when(companyRepository.findById(companyId)).thenReturn(Optional.of(companyToBeRemoved));
+
+        assertThrows(InvalidRequestException.class, () -> companyService.removeCompanyFromPartners(authentication, partnerGroupId, companyId));
+    }
+
+    @Test
+    void testDeletePartnerGroupSuccess() {
+        Long partnerGroupId = 1L;
+        Authentication authentication = mock(Authentication.class);
+        User currentUser = new User();
+        Company company = new Company();
+        company.setId(1L);
+        currentUser.setCompany(company);
+        PartnerGroup partnerGroup = new PartnerGroup();
+        partnerGroup.setId(partnerGroupId);
+        company.setPartnerGroups(new HashSet<>(Set.of(partnerGroup)));
+
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
+        when(partnerGroupRepository.findById(partnerGroupId)).thenReturn(Optional.of(partnerGroup));
+
+        companyService.deletePartnerGroup(authentication, partnerGroupId);
+
+        verify(partnerGroupRepository).delete(partnerGroup);
+    }
+
+    @Test
+    void testDeletePartnerGroupPermissionDenied() {
+        Long partnerGroupId = 1L;
+        Authentication authentication = mock(Authentication.class);
+        User currentUser = new User();
+        Company company = new Company();
+        company.setId(1L);
+        company.setPartnerGroups(new HashSet<>()); // Initialize the partnerGroups set
+        currentUser.setCompany(company);
+        PartnerGroup partnerGroup = new PartnerGroup();
+        partnerGroup.setId(partnerGroupId);
+
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
+        when(partnerGroupRepository.findById(partnerGroupId)).thenReturn(Optional.of(partnerGroup));
+
+        assertThrows(PermissionDeniedException.class, () -> companyService.deletePartnerGroup(authentication, partnerGroupId));
+    }
+
+    @Test
+    void testGetAcceptedCompaniesPublicDataSuccessfully() {
+        Company company1 = new Company();
+        company1.setId(1L);
+        Company company2 = new Company();
+        company2.setId(2L);
+        List<Company> verifiedCompanies = List.of(company1, company2);
+        CompanyPublicResponseDto dto1 = new CompanyPublicResponseDto();
+        dto1.setId(1L);
+        CompanyPublicResponseDto dto2 = new CompanyPublicResponseDto();
+        dto2.setId(2L);
+
+        when(companyRepository.findCompaniesByEmailVerificationAccepted()).thenReturn(verifiedCompanies);
+        when(imageService.returnUrlIfPictureExists(1L, "image")).thenReturn("image1.jpg");
+        when(imageService.returnUrlIfPictureExists(2L, "image")).thenReturn("image2.jpg");
+
+        List<CompanyPublicResponseDto> response = companyService.getAcceptedCompaniesPublicData();
+
+        assertNotNull(response);
+        assertEquals(2, response.size());
+        assertEquals("image1.jpg", response.get(0).getImage());
+        assertEquals("image2.jpg", response.get(1).getImage());
+    }
+
+    @Test
+    void testCreatePartnerGroupSuccessfully() {
+        Authentication authentication = mock(Authentication.class);
+        PartnerGroupRequestDto dto = new PartnerGroupRequestDto();
+        dto.setName("New Partner Group");
+        dto.setCompanyIds(Set.of(2L, 3L));
+        User currentUser = new User();
+        Company company = new Company();
+        company.setId(1L);
+        company.setPartnerGroups(new HashSet<>());
+        currentUser.setCompany(company);
+        Company partnerCompany1 = new Company();
+        partnerCompany1.setId(2L);
+        Company partnerCompany2 = new Company();
+        partnerCompany2.setId(3L);
+        PartnerGroup partnerGroup = new PartnerGroup();
+        partnerGroup.setId(1L);
+        partnerGroup.setName("New Partner Group");
+        partnerGroup.setCompany(company);
+        partnerGroup.setPartners(Set.of(partnerCompany1, partnerCompany2));
+
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
+        when(companyRepository.findById(2L)).thenReturn(Optional.of(partnerCompany1));
+        when(companyRepository.findById(3L)).thenReturn(Optional.of(partnerCompany2));
+        when(partnerGroupRepository.save(any(PartnerGroup.class))).thenReturn(partnerGroup);
+        when(companyRepository.save(any(Company.class))).thenReturn(company);
+
+        PartnerGroupResponseDto response = companyService.createPartnerGroup(authentication, dto);
+
+        assertNotNull(response);
+        assertEquals("New Partner Group", response.getName());
+        verify(partnerGroupRepository).save(any(PartnerGroup.class));
+        verify(companyRepository).save(any(Company.class));
+    }
+    @Test
+    void testCreatePartnerGroupAlreadyExists() {
+        Authentication authentication = mock(Authentication.class);
+        PartnerGroupRequestDto dto = new PartnerGroupRequestDto();
+        dto.setName("Existing Partner Group");
+        User currentUser = new User();
+        Company company = new Company();
+        company.setId(1L);
+        currentUser.setCompany(company);
+        PartnerGroup existingPartnerGroup = new PartnerGroup();
+        existingPartnerGroup.setName("Existing Partner Group");
+        company.setPartnerGroups(Set.of(existingPartnerGroup));
+
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
+
+        assertThrows(AlreadyExistsException.class, () -> companyService.createPartnerGroup(authentication, dto));
+    }
+
+    @Test
+    void testEditPartnerGroupSuccess() {
+        Long partnerGroupId = 1L;
+        PartnerGroupRequestDto dto = new PartnerGroupRequestDto();
+        dto.setName("Updated Partner Group");
+        dto.setCompanyIds(Set.of(2L, 3L));
+        Authentication authentication = mock(Authentication.class);
+        User currentUser = new User();
+        Company company = new Company();
+        company.setId(1L);
+        currentUser.setCompany(company);
+        PartnerGroup partnerGroup = new PartnerGroup();
+        partnerGroup.setId(partnerGroupId);
+        partnerGroup.setCompany(company);
+        Company partnerCompany1 = new Company();
+        partnerCompany1.setId(2L);
+        Company partnerCompany2 = new Company();
+        partnerCompany2.setId(3L);
+
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
+        when(partnerGroupRepository.findById(partnerGroupId)).thenReturn(Optional.of(partnerGroup));
+        when(companyRepository.findById(2L)).thenReturn(Optional.of(partnerCompany1));
+        when(companyRepository.findById(3L)).thenReturn(Optional.of(partnerCompany2));
+        when(partnerGroupRepository.save(any(PartnerGroup.class))).thenReturn(partnerGroup);
+
+        PartnerGroupResponseDto response = companyService.editPartnerGroup(authentication, partnerGroupId, dto);
+
+        assertNotNull(response);
+        assertEquals("Updated Partner Group", response.getName());
+        verify(partnerGroupRepository).save(any(PartnerGroup.class));
+    }
+
+    @Test
+    void testEditPartnerGroupPartnerGroupNotFound() {
+        Long partnerGroupId = 1L;
+        PartnerGroupRequestDto dto = new PartnerGroupRequestDto();
+        Authentication authentication = mock(Authentication.class);
+        User currentUser = new User();
+        Company company = new Company();
+        company.setId(1L);
+        currentUser.setCompany(company);
+
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
+        when(partnerGroupRepository.findById(partnerGroupId)).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class, () -> companyService.editPartnerGroup(authentication, partnerGroupId, dto));
     }
 }
