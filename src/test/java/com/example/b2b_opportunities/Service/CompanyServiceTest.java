@@ -14,6 +14,7 @@ import com.example.b2b_opportunities.Dto.Response.CompanyPublicResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyResponseDto;
 import com.example.b2b_opportunities.Dto.Response.PartnerGroupResponseDto;
 import com.example.b2b_opportunities.Dto.Response.ProjectResponseDto;
+import com.example.b2b_opportunities.Dto.Response.TalentPublicityResponseDto;
 import com.example.b2b_opportunities.Dto.Response.TalentResponseDto;
 import com.example.b2b_opportunities.Entity.Company;
 import com.example.b2b_opportunities.Entity.CompanyType;
@@ -63,6 +64,7 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -1502,20 +1504,101 @@ public class CompanyServiceTest {
     }
 
     @Test
-    public void testSetTalentVisibilityPartnerGroupNotFound() {
+    public void testSetTalentVisibilityPermissionDenied() {
         Authentication authentication = mock(Authentication.class);
         TalentPublicityRequestDto requestDto = new TalentPublicityRequestDto();
         requestDto.setPublic(false);
-        requestDto.setPartnerGroupIds(Set.of(1L, 2L));
+        requestDto.setPartnerGroupIds(Set.of(1L));
+
         User currentUser = new User();
         Company company = new Company();
         company.setId(1L);
         currentUser.setCompany(company);
 
+        PartnerGroup partnerGroup = new PartnerGroup();
+        partnerGroup.setCompany(new Company());
+
         when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
-        when(partnerGroupRepository.findById(1L)).thenReturn(Optional.of(new PartnerGroup()));
-        when(partnerGroupRepository.findById(2L)).thenReturn(Optional.empty());
+        when(partnerGroupRepository.findById(1L)).thenReturn(Optional.of(partnerGroup));
 
         assertThrows(PermissionDeniedException.class, () -> companyService.setTalentVisibility(authentication, requestDto));
+    }
+
+    @Test
+    public void testGetTalentVisibilityPublicTalents() {
+        Authentication authentication = mock(Authentication.class);
+        User user = new User();
+        Company company = new Company();
+        company.setTalentsSharedPublicly(true);
+        user.setCompany(company);
+
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(user);
+
+        TalentPublicityResponseDto result = companyService.getTalentVisibility(authentication);
+
+        assertTrue(result.isPublic());
+        assertTrue(result.getPartnerGroupIds().isEmpty());
+    }
+
+    @Test
+    public void testGetTalentVisibilityPrivateTalents() {
+        Authentication authentication = mock(Authentication.class);
+        User user = new User();
+        Company company = new Company();
+        company.setTalentsSharedPublicly(false);
+
+        PartnerGroup pg1 = new PartnerGroup();
+        pg1.setId(1L);
+        PartnerGroup pg2 = new PartnerGroup();
+        pg2.setId(2L);
+
+        company.setTalentAccessGroups(Set.of(pg1, pg2));
+        user.setCompany(company);
+
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(user);
+
+        TalentPublicityResponseDto result = companyService.getTalentVisibility(authentication);
+
+        Assertions.assertFalse(result.isPublic());
+        assertEquals(Set.of(1L, 2L), result.getPartnerGroupIds());
+    }
+
+    @Test
+    public void testValidateTalentIsAvailableToCompany_TalentBelongsToTheCompany() throws Exception {
+        Company company = new Company();
+        company.setId(1L);
+
+        Talent talent = new Talent();
+        talent.setCompany(company);
+        talent.setActive(true);
+
+        // Use reflection to access the method, which is with a private modifier
+        Method method = CompanyService.class.getDeclaredMethod("validateTalentIsAvailableToCompany", Company.class, Talent.class);
+        method.setAccessible(true);
+
+        method.invoke(companyService, company, talent);
+    }
+
+    @Test
+    public void testValidateTalentIsAvailableToCompany_TalentSharedWithTheCompany() throws Exception {
+        Company company = new Company();
+        company.setId(1L);
+
+        Company talentCompany = new Company();
+        talentCompany.setId(2L);
+
+        PartnerGroup partnerGroup = new PartnerGroup();
+        partnerGroup.setPartners(Set.of(company));
+
+        talentCompany.setPartnerGroups(Set.of(partnerGroup));
+
+        Talent talent = new Talent();
+        talent.setCompany(talentCompany);
+        talent.setActive(true);
+
+        Method method = CompanyService.class.getDeclaredMethod("validateTalentIsAvailableToCompany", Company.class, Talent.class);
+        method.setAccessible(true);
+
+        method.invoke(companyService, company, talent);
     }
 }
