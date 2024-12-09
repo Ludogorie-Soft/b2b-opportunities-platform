@@ -154,7 +154,7 @@ public class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(userRequestJson2))
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.message", is("Email already in use. Please use a different email")));
+                .andExpect(jsonPath("$.message[0]", is("Email already in use. Please use a different email")));
 
         assertTrue(authenticationService.isUsernameInDB("test-user"));
 
@@ -181,7 +181,7 @@ public class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(userRequestJson2))
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.message", is("Username already in use. Please use a different username")));
+                .andExpect(jsonPath("$.message[0]", is("Username already in use. Please use a different username")));
 
         assertTrue(authenticationService.isUsernameInDB("test-user"));
 
@@ -210,7 +210,7 @@ public class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(userRequestJson2))
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.message", is("Passwords don't match")));
+                .andExpect(jsonPath("$.message[0]", is("Passwords don't match")));
 
         assertTrue(authenticationService.isUsernameInDB("test-user"));
         assertFalse(authenticationService.isUsernameInDB("new-free-username"));
