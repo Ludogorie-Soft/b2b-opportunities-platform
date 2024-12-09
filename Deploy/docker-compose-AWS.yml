@@ -27,6 +27,7 @@ services:
     build:
       context: ..
       dockerfile: Deploy/Dockerfile
+    image: ludogoriesoft/b2b-backend
     ports:
       - "8082:8082"
     depends_on:
