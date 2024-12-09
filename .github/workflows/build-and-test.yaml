@@ -122,10 +122,16 @@ jobs:
           username: ${{ needs.secret-generator.outputs.dockerhub_username }}
           password: ${{ needs.secret-generator.outputs.dockerhub_token }}
 
-      - name: Build Docker image
-        run: docker build -t ${{ needs.secret-generator.outputs.dockerhub_username }}/b2b-backend:${{ github.sha }} -f Deploy/Dockerfile .
+      - name: Set Date/Time Tag
+        id: tag
+        run: echo "tag=$(date +'%Y-%m-%d_%H-%M-%S')" >> $GITHUB_ENV
 
+      - name: Build Docker image with unique dt tag and 'latest'
+        run: |
+          docker build -t ${{ needs.secret-generator.outputs.dockerhub_username }}/b2b-backend:${{ env.tag }} -f Deploy/Dockerfile .
+          docker tag ${{ needs.secret-generator.outputs.dockerhub_username }}/b2b-backend:${{ env.tag }} ${{ needs.secret-generator.outputs.dockerhub_username }}/b2b-backend:latest
 
       - name: Push Docker image to Docker Hub
-        run: docker push ${{ needs.secret-generator.outputs.dockerhub_username }}/b2b-backend:${{ github.sha }}
-
+        run: docker push ${{ needs.secret-generator.outputs.dockerhub_username }}/b2b-backend:${{ env.tag }}
+        run: docker push ${{ needs.secret-generator.outputs.dockerhub_username }}/b2b-backend:latest
+      
