@@ -15,6 +15,8 @@ jobs:
       db_username: ${{ steps.export-secrets.outputs.db_username }}
       db_password: ${{ steps.export-secrets.outputs.db_password }}
       test_db_table_name: ${{ steps.export-secrets.outputs.test_db_table_name }}
+      dockerhub_username: ${{ steps.export-secrets.outputs.dockerhub_username }}
+      dockerhub_token: ${{ steps.export-secrets.outputs.dockerhub_token }}
 
     steps:
       - name: Install Infisical CLI
