@@ -1,6 +1,6 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.3.3'
+    id 'org.springframework.boot' version '3.4.0'
     id 'io.spring.dependency-management' version '1.1.6'
     id "org.sonarqube" version "4.4.1.3373"
     id 'jacoco'
@@ -21,7 +21,7 @@ repositories {
 
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'org.liquibase:liquibase-core:4.29.2'
+    implementation 'org.liquibase:liquibase-core:4.30.0'
     runtimeOnly 'org.postgresql:postgresql'
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
@@ -36,24 +36,19 @@ dependencies {
     runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-impl', version: '0.12.6'
     runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-jackson', version: '0.12.6'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
-    implementation group: 'org.springdoc', name: 'springdoc-openapi-starter-webmvc-ui', version: '2.5.0'
-    testImplementation 'org.testcontainers:postgresql:1.20.1'
-    testImplementation 'org.testcontainers:junit-jupiter:1.20.1'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0'
+    testImplementation 'org.testcontainers:postgresql:1.20.4'
+    testImplementation 'org.testcontainers:junit-jupiter:1.20.4'
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'io.minio:minio:8.5.12'
     implementation 'com.github.loki4j:loki-logback-appender:1.5.2'
 
-//    implementation 'io.micrometer:micrometer-tracing-bridge-brave'
-//    implementation 'io.zipkin.reporter2:zipkin-reporter-brave'
-//    implementation 'io.micrometer:micrometer-tracing'
-
-// TODO: Delete after testing on Linux
-//    implementation 'org.springframework.cloud:spring-cloud-starter-sleuth:3.1.11'
-//    implementation 'org.springframework.cloud:spring-cloud-sleuth-zipkin:3.1.11'
-//    implementation 'io.opentelemetry:opentelemetry-exporter-zipkin:1.44.1'
-//    implementation 'io.micrometer:micrometer-tracing-bridge-otel:1.4.0'
-
+    implementation 'io.micrometer:micrometer-tracing-bridge-brave'
+    implementation 'io.zipkin.reporter2:zipkin-reporter-brave'
+    implementation 'io.micrometer:micrometer-tracing'
+    // Enable if statement needed for logback-spring.xml
+    implementation 'org.codehaus.janino:janino:3.1.12'
 }
 
 tasks.named('test') {
@@ -96,7 +91,7 @@ sonar {
         property "sonar.projectKey", "Ludogorie-Soft_b2b-opportunities-platform"
         property "sonar.organization", "ludogorie-soft-1"
         property "sonar.host.url", "https://sonarcloud.io"
-        property "sonar.coverage.jacoco.xmlReportPaths", "${buildDir}/reports/jacoco/test/jacocoTestReport.xml"
+        property "sonar.coverage.jacoco.xmlReportPaths", "${layout.buildDirectory.get()}/reports/jacoco/test/jacocoTestReport.xml"
         property "sonar.exclusions", "**/Dto/**,**/Entity/**,**/Mapper/**,**/Static/**,**/Exception/**,**/Config/**,**/UserDetailsImpl.java,**/JwtAuthenticationFilter.java,**/Repository/**"
     }
 }

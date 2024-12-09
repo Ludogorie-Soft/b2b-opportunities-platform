@@ -3,12 +3,11 @@ package com.example.b2b_opportunities.Controller;
 import com.example.b2b_opportunities.Entity.Skill;
 import com.example.b2b_opportunities.Repository.RequiredSkillRepository;
 import com.example.b2b_opportunities.Repository.SkillRepository;
-import jakarta.transaction.Transactional;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
@@ -27,9 +26,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
-@Transactional
 @AutoConfigureMockMvc(addFilters = false)
 @Testcontainers
+@ActiveProfiles("test")
 public class SkillControllerTest {
     private static final String HOST_PATH = Paths.get("Deploy/icons").toAbsolutePath().toString();
     private static final String CONTAINER_PATH = "/icons";
@@ -55,10 +54,6 @@ public class SkillControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @BeforeEach
-    void setUp() {
-        skillRepository.deleteAll();
-    }
 
     @Test
     void shouldReturnASkillAsPartOfTheList() throws Exception {
@@ -69,7 +64,6 @@ public class SkillControllerTest {
         skill.setName("testSkill");
         skill.setAssignable(false);
         skillRepository.save(skill);
-
         skillRepository.flush();
 
         mockMvc.perform(get("/skills"))

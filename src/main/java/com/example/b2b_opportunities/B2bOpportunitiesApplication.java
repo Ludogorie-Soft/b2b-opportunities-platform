@@ -11,8 +11,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @OpenAPIDefinition(
         info = @Info(
                 title = "B2B",
-                version = "1.0",
-                description = "Backend API (26.11.24) - Prometheus"
+                version = "${spring.application.version}",
+                description = "Backend API (05-12-24) - deployment changes, SpringBoot 3.4"
         ))
 public class B2bOpportunitiesApplication {
 

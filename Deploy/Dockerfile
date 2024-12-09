@@ -1,5 +1,5 @@
 # Stage 1: Build the application
-FROM gradle:jdk21 AS build
+FROM gradle:jdk21-alpine AS build
 
 WORKDIR /App
 
@@ -13,12 +13,10 @@ COPY src src
 RUN chmod +x gradlew && ./gradlew clean bootJar
 
 # Stage 2: Run the application
-FROM amazoncorretto:21
+FROM gcr.io/distroless/java21-debian12:nonroot
 
 WORKDIR /App
 
 COPY --from=build /App/build/libs/*.jar app.jar
 
-EXPOSE 8080
-
-ENTRYPOINT ["java", "-jar", "app.jar"]
+CMD ["app.jar"]
