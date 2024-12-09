@@ -116,7 +116,7 @@ jobs:
   
   docker-build-push:
     needs:
-      - build-and-test
+      - build
       - secret-generator
     runs-on: ubuntu-latest
 
