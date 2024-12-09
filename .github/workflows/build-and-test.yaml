@@ -29,15 +29,13 @@ jobs:
         env:
           INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
         run: |
+          # The token that we use is for the PRODUCTION secrets from Infisical! 
           infisical export --env=development | sed "s/'//g" > .env
-          cat .env
           echo "db_username=$(grep DB_USERNAME .env | cut -d '=' -f2)" >> $GITHUB_OUTPUT
           echo "db_password=$(grep DB_PASSWORD .env | cut -d '=' -f2)" >> $GITHUB_OUTPUT
           echo "test_db_table_name=$(grep TEST_DB_TABLE_NAME .env | cut -d '=' -f2)" >> $GITHUB_OUTPUT
           echo "dockerhub_username=$(grep DOCKERHUB_USERNAME .env | cut -d '=' -f2)" >> $GITHUB_OUTPUT
           echo "dockerhub_token=$(grep DOCKERHUB_TOKEN .env | cut -d '=' -f2)" >> $GITHUB_OUTPUT
-          echo "Exported Variables:"
-          echo ${{ steps.export-secrets.outputs }}
 
   build-and-test:
     needs: secret-generator
@@ -115,11 +113,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Debug outputs
-        run: |
-          echo "DockerHub Username: ${{ needs.secret-generator.outputs.dockerhub_username }}"
-          echo "DockerHub Token: ${{ needs.secret-generator.outputs.dockerhub_token }}"
-
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -130,7 +123,8 @@ jobs:
           password: ${{ needs.secret-generator.outputs.dockerhub_token }}
 
       - name: Build Docker image
-        run: docker build -t ${{ needs.secret-generator.outputs.dockerhub_username }}/b2b-backend:${{ github.sha }} .
+        run: docker build -t ${{ needs.secret-generator.outputs.dockerhub_username }}/b2b-backend:${{ github.sha }} -f Deploy/Dockerfile .
+
 
       - name: Push Docker image to Docker Hub
         run: docker push ${{ needs.secret-generator.outputs.dockerhub_username }}/b2b-backend:${{ github.sha }}
