@@ -134,7 +134,10 @@ jobs:
         with:
           username: ${{ needs.secret-generator.outputs.dockerhub_username }}
           password: ${{ needs.secret-generator.outputs.dockerhub_token }}
-
+          
+      - name: Set Timezone to Sofia, Bulgaria
+        run: sudo timedatectl set-timezone Europe/Sofia
+      
       - name: Set Date/Time Tag
         id: tag
         run: echo "DATE_TAG=$(date +'%Y-%m-%d_%H-%M-%S')" >> $GITHUB_ENV
