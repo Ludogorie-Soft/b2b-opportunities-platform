@@ -50,7 +50,7 @@ services:
       STORAGE_USER: ${STORAGE_USER}
       STORAGE_PASSWORD: ${STORAGE_PASSWORD}
       STORAGE_BUCKET_NAME: ${STORAGE_BUCKET_NAME}
-      FRONTEND_HOST: http://localhost:5173 # This is a string that is used to redirect users to the frontend.
+      FRONTEND_HOST: ${FRONTEND_HOST} # This is a string that is used to redirect users to the frontend.
       EMAIL_SERVICE_URL: http://notifications:8085/api/email/send
       CRON_EVERY_MONDAY_AT_9: ${CRON_EVERY_MONDAY_AT_9}
       CRON_TUESDAY_TO_FRIDAY_AT_9: ${CRON_TUESDAY_TO_FRIDAY_AT_9}
@@ -59,6 +59,7 @@ services:
       LOKI_HOST: loki
       LOG_LEVEL: ${LOG_LEVEL}
       ZIPKIN_HOST: zipkin
+      PASSWORD_RECOVERY_URL: ${FRONTEND_HOST}/?action=forgottenPassword&token=
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8082/actuator/health" ]
       interval: 10s

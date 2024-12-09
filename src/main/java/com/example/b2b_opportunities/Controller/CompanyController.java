@@ -4,6 +4,7 @@ import com.example.b2b_opportunities.Dto.Request.CompanyFilterEditDto;
 import com.example.b2b_opportunities.Dto.Request.CompanyFilterRequestDto;
 import com.example.b2b_opportunities.Dto.Request.CompanyRequestDto;
 import com.example.b2b_opportunities.Dto.Request.PartnerGroupRequestDto;
+import com.example.b2b_opportunities.Dto.Request.PositionApplicationRequestDto;
 import com.example.b2b_opportunities.Dto.Request.TalentPublicityRequestDto;
 import com.example.b2b_opportunities.Dto.Request.TalentRequestDto;
 import com.example.b2b_opportunities.Dto.Response.CompaniesAndUsersResponseDto;
@@ -11,11 +12,13 @@ import com.example.b2b_opportunities.Dto.Response.CompanyFilterResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyPublicResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyResponseDto;
 import com.example.b2b_opportunities.Dto.Response.PartnerGroupResponseDto;
+import com.example.b2b_opportunities.Dto.Response.PositionApplicationResponseDto;
 import com.example.b2b_opportunities.Dto.Response.ProjectResponseDto;
 import com.example.b2b_opportunities.Dto.Response.TalentPublicityResponseDto;
 import com.example.b2b_opportunities.Dto.Response.TalentResponseDto;
 import com.example.b2b_opportunities.Repository.CompanyRepository;
 import com.example.b2b_opportunities.Service.CompanyService;
+import com.example.b2b_opportunities.Service.PositionApplicationService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -45,6 +48,7 @@ import java.util.Set;
 public class CompanyController {
     private final CompanyRepository companyRepository;
     private final CompanyService companyService;
+    private final PositionApplicationService positionApplicationService;
 
     @Value("${frontend.address}")
     private String frontEndAddress;
@@ -232,5 +236,61 @@ public class CompanyController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteTalent(Authentication authentication, @PathVariable("id") Long id) {
         companyService.deleteTalent(authentication, id);
+    }
+    
+    @PostMapping("/apply")
+    @ResponseStatus(HttpStatus.CREATED)
+    public PositionApplicationResponseDto applyForPosition(
+            Authentication authentication,
+            @RequestBody PositionApplicationRequestDto requestDto) {
+        return positionApplicationService.applyForPosition(authentication, requestDto);
+    }
+
+    @PostMapping(value = "/upload-cv", consumes = "multipart/form-data")
+    @ResponseStatus(HttpStatus.CREATED)
+    public String uploadCV(@RequestParam("file") MultipartFile file,
+                           @RequestParam("application_id") Long applicationId) {
+        return positionApplicationService.uploadCV(file, applicationId);
+    }
+
+
+    @GetMapping("/applications")
+    @ResponseStatus(HttpStatus.OK)
+    public List<PositionApplicationResponseDto> getApplicationsForMyPositions(Authentication authentication) {
+        return positionApplicationService.getApplicationsForMyPositions(authentication);
+    }
+
+    @GetMapping("/applications/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public PositionApplicationResponseDto getApplicationById(Authentication authentication, @PathVariable("id") Long applicationId) {
+        return positionApplicationService.getApplicationById(authentication, applicationId);
+    }
+
+    @PutMapping(value = "/applications", consumes = "multipart/form-data")
+    @ResponseStatus(HttpStatus.OK)
+    public PositionApplicationResponseDto updateApplication(
+            Authentication authentication,
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            @RequestParam("application_id") Long applicationId,
+            @RequestParam(value = "talent_id", required = false) Long talentId) {
+        return positionApplicationService.updateApplication(authentication, file, applicationId, talentId);
+    }
+
+    @PutMapping("/applications/accept/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public PositionApplicationResponseDto acceptApplication(Authentication authentication, @PathVariable("id") Long applicationId) {
+        return positionApplicationService.acceptApplication(authentication, applicationId);
+    }
+
+    @PutMapping("/applications/reject/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public PositionApplicationResponseDto rejectApplication(Authentication authentication, @PathVariable("id") Long applicationId) {
+        return positionApplicationService.rejectApplication(authentication, applicationId);
+    }
+
+    @GetMapping("/my-applications")
+    @ResponseStatus(HttpStatus.OK)
+    public List<PositionApplicationResponseDto> getMyApplications(Authentication authentication) {
+        return positionApplicationService.getMyApplications(authentication);
     }
 }

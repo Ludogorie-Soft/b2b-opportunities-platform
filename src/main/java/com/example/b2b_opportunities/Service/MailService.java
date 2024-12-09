@@ -25,6 +25,9 @@ public class MailService {
     @Value("${email.service.url}")
     private String emailServiceUrl;
 
+    @Value("${password.recovery.url}")
+    private String passwordRecoveryUrl;
+
     public String createAndSaveUserToken(User user) {
         String token = UUID.randomUUID().toString();
         ConfirmationToken confirmationToken = new ConfirmationToken(token, user);
@@ -115,9 +118,9 @@ public class MailService {
     }
 
     private String generatePasswordRecoveryLink(User user, HttpServletRequest request) {
-        String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath();
+//        String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath();
         String token = createAndSaveUserToken(user);
-        return "<a href=" + baseUrl + "/api/auth/reset-password?token=" + token + ">Reset password</a>";
+        return "<a href=" + passwordRecoveryUrl + token + ">Reset password</a>";
     }
 
     private String generateEmailConfirmationLink(String token, HttpServletRequest request) {

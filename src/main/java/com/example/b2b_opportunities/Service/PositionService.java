@@ -95,6 +95,7 @@ public class PositionService {
         position.setResponsibilities(dto.getResponsibilities());
         position.setHiringProcess(dto.getHiringProcess());
         position.setDescription(dto.getDescription());
+        position.setPattern(companyService.getPatternOrThrow(dto.getPatternId()));
         setPositionStatusOrThrow(position, dto.getStatusId());
         extendProjectDurationWhenPositionStatusNotCanceled(position, dto.getStatusId());
 
@@ -298,7 +299,7 @@ public class PositionService {
         }
     }
 
-    private Position getPositionOrThrow(Long id) {
+    protected Position getPositionOrThrow(Long id) {
         return positionRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Position with ID: " + id + " not found"));
     }

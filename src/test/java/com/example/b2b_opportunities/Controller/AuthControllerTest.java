@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -75,6 +76,9 @@ public class AuthControllerTest {
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
     }
+    
+    @Value("${frontend.address}")
+    private String frontEndAddress;
 
     @MockitoSpyBean
     private MailService mailService;
@@ -150,7 +154,7 @@ public class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(userRequestJson2))
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.message", is("Email already in use. Please use a different email")));
+                .andExpect(jsonPath("$.message[0]", is("Email already in use. Please use a different email")));
 
         assertTrue(authenticationService.isUsernameInDB("test-user"));
 
@@ -177,7 +181,7 @@ public class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(userRequestJson2))
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.message", is("Username already in use. Please use a different username")));
+                .andExpect(jsonPath("$.message[0]", is("Username already in use. Please use a different username")));
 
         assertTrue(authenticationService.isUsernameInDB("test-user"));
 
@@ -206,7 +210,7 @@ public class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(userRequestJson2))
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.message", is("Passwords don't match")));
+                .andExpect(jsonPath("$.message[0]", is("Passwords don't match")));
 
         assertTrue(authenticationService.isUsernameInDB("test-user"));
         assertFalse(authenticationService.isUsernameInDB("new-free-username"));
@@ -281,7 +285,7 @@ public class AuthControllerTest {
         mockMvc.perform(get("/api/auth/register/confirm")
                         .param("token", token))
                 .andExpect(status().isFound()) // Change this line to expect 302
-                .andExpect(header().string("Location", "http://localhost:5173/signup?confirmEmail=true"));
+                .andExpect(header().string("Location", frontEndAddress + "/signup?confirmEmail=true"));
 
         User confirmedUser = userService.getUserByEmailOrThrow(userRequestDto.getEmail().toLowerCase());
         assertTrue(confirmedUser.isEnabled());
