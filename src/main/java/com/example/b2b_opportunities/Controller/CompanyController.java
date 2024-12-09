@@ -237,8 +237,7 @@ public class CompanyController {
     public void deleteTalent(Authentication authentication, @PathVariable("id") Long id) {
         companyService.deleteTalent(authentication, id);
     }
-
-    //TODO maybe change this to void?
+    
     @PostMapping("/apply")
     @ResponseStatus(HttpStatus.CREATED)
     public PositionApplicationResponseDto applyForPosition(
