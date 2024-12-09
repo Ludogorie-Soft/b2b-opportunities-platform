@@ -17,6 +17,8 @@ jobs:
       db_username: ${{ steps.export-secrets.outputs.db_username }}
       db_password: ${{ steps.export-secrets.outputs.db_password }}
       test_db_table_name: ${{ steps.export-secrets.outputs.test_db_table_name }}
+      dockerhub_username: ${{ steps.export-secrets.outputs.dockerhub_username }}
+      dockerhub_token: ${{ steps.export-secrets.outputs.dockerhub_token }}
 
     steps:
       - name: Install Infisical CLI
@@ -29,11 +31,14 @@ jobs:
         env:
           INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
         run: |
+          # The token that we use is for the PRODUCTION secrets from Infisical! 
           infisical export --env=development | sed "s/'//g" > .env
           echo "db_username=$(grep DB_USERNAME .env | cut -d '=' -f2)" >> $GITHUB_OUTPUT
           echo "db_password=$(grep DB_PASSWORD .env | cut -d '=' -f2)" >> $GITHUB_OUTPUT
           echo "test_db_table_name=$(grep TEST_DB_TABLE_NAME .env | cut -d '=' -f2)" >> $GITHUB_OUTPUT
-
+          echo "dockerhub_username=$(grep DOCKERHUB_USERNAME .env | cut -d '=' -f2)" >> $GITHUB_OUTPUT
+          echo "dockerhub_token=$(grep DOCKERHUB_TOKEN .env | cut -d '=' -f2)" >> $GITHUB_OUTPUT
+  
   build:
     needs: secret-generator
     name: Build, test and analysis
