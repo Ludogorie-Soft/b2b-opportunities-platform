@@ -104,7 +104,7 @@ jobs:
 
       - name: Test
         run: ./gradlew test --info --no-daemon
-
+  
   docker-build-push:
     needs:
       - build-and-test
@@ -112,6 +112,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Debug outputs
+        run: |
+          echo "DockerHub Username: ${{ needs.secret-generator.outputs.dockerhub_username }}"
+          echo "DockerHub Token: ${{ needs.secret-generator.outputs.dockerhub_token }}"
+
       - name: Checkout code
         uses: actions/checkout@v4
 
