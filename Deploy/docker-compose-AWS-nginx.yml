@@ -13,3 +13,9 @@ services:
     networks:
       - logging
       - b2b-network
+
+networks:
+  b2b-network:
+    driver: bridge
+  logging:
+    driver: bridge
