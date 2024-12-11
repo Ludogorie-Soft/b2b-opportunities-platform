@@ -72,6 +72,8 @@ services:
 
   minio:
     image: 'bitnami/minio:latest'
+    ports:
+      - '9000:9000'
     volumes:
       - b2b_minio_data:/bitnami/minio/data
     environment:
