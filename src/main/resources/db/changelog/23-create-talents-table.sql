@@ -29,7 +29,7 @@ CREATE TABLE talent_experience (
     pattern_id BIGINT,
     seniority_id BIGINT,
     total_time INT,
-    CONSTRAINT fk_talent_experience_talent FOREIGN KEY (talent_id) REFERENCES talents(id) ON DELETE CASCADE,
+    CONSTRAINT fk_talent_experience_talent FOREIGN KEY (talent_id) REFERENCES talents(id) ON DELETE SET NULL,
     CONSTRAINT fk_pattern FOREIGN KEY (pattern_id) REFERENCES patterns(id) ON DELETE CASCADE,
     CONSTRAINT fk_seniority FOREIGN KEY (seniority_id) REFERENCES seniorities(id) ON DELETE SET NULL
 );
