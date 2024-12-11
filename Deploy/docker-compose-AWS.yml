@@ -56,8 +56,8 @@ services:
       CRON_COMPANIES_NO_SKILLS_AND_NO_CUSTOM_FILTERS: ${CRON_COMPANIES_NO_SKILLS_AND_NO_CUSTOM_FILTERS}
       CRON_PROCESS_EXPIRING_PROJECTS: ${CRON_PROCESS_EXPIRING_PROJECTS}
       DOMAIN_NAME: ${DOMAIN_NAME} # Used for logout. Example value: .algorithmity.com
-      ZIPKIN_ENABLED: false
-      LOKI_ENABLED: false
+      ZIPKIN_ENABLED: "false"
+      LOKI_ENABLED: "false"
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
       PASSWORD_RECOVERY_URL: ${FRONTEND_HOST}/?action=forgottenPassword&token=
     healthcheck:
