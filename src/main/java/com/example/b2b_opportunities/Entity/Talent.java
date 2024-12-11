@@ -15,6 +15,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.CascadeType;
 
 import java.util.Set;
 
@@ -51,6 +53,7 @@ public class Talent {
 
     @ManyToOne
     @JoinColumn(name = "talent_experience_id")
+    @Cascade(CascadeType.ALL)
     private TalentExperience talentExperience;
 
     @ManyToMany
