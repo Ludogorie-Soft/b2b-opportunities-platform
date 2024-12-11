@@ -32,6 +32,14 @@ public class ImageService {
     @Value("${storage.url}")
     private String storageUrl;
 
+    @PostConstruct
+    private void init() {
+        // Change storageUrl to localhost if it's set to http://minio:9000 - to make it work in docker(FE)
+        if (storageUrl.toLowerCase().contains("minio:9000")) {
+            storageUrl = "http://localhost:9000";
+        }
+    }
+
     public String upload(MultipartFile file, Long companyId, String imageName) {
         log.info("Attempting to upload image for company ID: {}", companyId);
         try {
