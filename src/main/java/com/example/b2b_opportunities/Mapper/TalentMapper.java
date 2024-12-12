@@ -66,7 +66,7 @@ public class TalentMapper {
         for (SkillExperience se : skillExperienceList) {
             SkillExperienceResponseDto responseDto = SkillExperienceResponseDto.builder()
                     .skillId(se.getSkill().getId())
-                    .experience(se.getExperience())
+                    .months(se.getMonths())
                     .build();
             responseDtoList.add(responseDto);
         }

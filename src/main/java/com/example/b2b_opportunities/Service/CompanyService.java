@@ -535,11 +535,11 @@ public class CompanyService {
             (List<SkillExperience> existingSkills, List<SkillExperienceRequestDto> newSkillsDtoList) {
         Set<String> existingSkillsSet = existingSkills.stream()
                 .map(skillExp -> skillExp.getSkill().getId() + "-" +
-                        skillExp.getExperience())
+                        skillExp.getMonths())
                 .collect(Collectors.toSet());
 
         Set<String> newSkillsSet = newSkillsDtoList.stream()
-                .map(dto -> dto.getSkillId() + "-" + dto.getExperience())
+                .map(dto -> dto.getSkillId() + "-" + dto.getMonths())
                 .collect(Collectors.toSet());
         return !existingSkillsSet.equals(newSkillsSet);
     }
@@ -825,7 +825,7 @@ public class CompanyService {
                 if (isSkillIsAlreadyInList(skillExperienceList, skill)) {
                     continue;
                 }
-                skillExperienceList.add(createSkillExperience(talentExperience, skill, dtoItem.getExperience()));
+                skillExperienceList.add(createSkillExperience(talentExperience, skill, dtoItem.getMonths()));
             }
             return skillExperienceList;
         } else {
@@ -862,7 +862,7 @@ public class CompanyService {
         return SkillExperience.builder()
                 .talentExperience(talentExperience)
                 .skill(skill)
-                .experience(experience)
+                .months(experience)
                 .build();
     }
 

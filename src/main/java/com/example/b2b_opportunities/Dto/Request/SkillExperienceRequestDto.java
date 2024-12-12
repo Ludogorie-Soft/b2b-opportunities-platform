@@ -12,5 +12,5 @@ public class SkillExperienceRequestDto {
 
     @Min(0)
     @Max(600)
-    private Integer experience;
+    private Integer months;
 }

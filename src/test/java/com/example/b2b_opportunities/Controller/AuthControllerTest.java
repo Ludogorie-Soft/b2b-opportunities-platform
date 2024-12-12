@@ -138,6 +138,7 @@ public class AuthControllerTest {
     @Test
     void shouldNotRegisterSameEmailTwice() throws Exception {
         // Convert the DTO to JSON
+        userRepository.deleteAll();
         String userRequestJson = objectMapper.writeValueAsString(userRequestDto);
 
         mockMvc.perform(post("/api/auth/register")
@@ -165,6 +166,7 @@ public class AuthControllerTest {
     @Test
     void shouldNotRegisterSameUsernameTwice() throws Exception {
         // Convert the DTO to JSON
+        userRepository.deleteAll();
         String userRequestJson = objectMapper.writeValueAsString(userRequestDto);
 
         mockMvc.perform(post("/api/auth/register")
@@ -192,6 +194,7 @@ public class AuthControllerTest {
     @Test
     void shouldNotRegisterUserWithWrongRepeatPassword() throws Exception {
         // Convert the DTO to JSON
+        userRepository.deleteAll();
         String userRequestJson = objectMapper.writeValueAsString(userRequestDto);
 
         mockMvc.perform(post("/api/auth/register")
@@ -294,7 +297,7 @@ public class AuthControllerTest {
     @Test
     void testOAuthLoginCreatesNewUser() throws Exception {
         Map<String, Object> attributes = new HashMap<>();
-        attributes.put("email", "test@test.com");
+        attributes.put("email", "test2@test.com");
         attributes.put("given_name", "Test");
         attributes.put("family_name", "User");
 
@@ -306,7 +309,7 @@ public class AuthControllerTest {
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrlPattern("**/company/profile"));
 
-        User newUser = userService.getUserByEmailOrThrow("test@test.com");
+        User newUser = userService.getUserByEmailOrThrow("test2@test.com");
 
         assertEquals("Test", newUser.getFirstName());
         assertEquals("User", newUser.getLastName());

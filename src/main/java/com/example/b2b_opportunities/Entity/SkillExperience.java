@@ -32,5 +32,5 @@ public class SkillExperience {
     @JoinColumn(name = "skill_id")
     private Skill skill;
 
-    private Integer experience; //in months
+    private Integer months; //in months
 }

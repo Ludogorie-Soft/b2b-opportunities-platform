@@ -119,3 +119,6 @@ databaseChangeLog:
   - include:
       file: 40-add-test-user-and-company.sql
       relativeToChangelogFile: true
+  - include:
+      file: 41-rename-talent-skills-column.sql
+      relativeToChangelogFile: true

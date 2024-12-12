@@ -13,5 +13,5 @@ import lombok.Setter;
 @NoArgsConstructor
 public class SkillExperienceResponseDto {
     private Long skillId;
-    private Integer experience;
+    private Integer months;
 }

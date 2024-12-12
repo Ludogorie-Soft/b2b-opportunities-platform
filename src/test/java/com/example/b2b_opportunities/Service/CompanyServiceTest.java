@@ -1210,7 +1210,7 @@ public class CompanyServiceTest {
         TalentExperienceRequestDto experienceDto = new TalentExperienceRequestDto();
         SkillExperienceRequestDto skillExperienceRequestDto = new SkillExperienceRequestDto();
         skillExperienceRequestDto.setSkillId(1L);
-        skillExperienceRequestDto.setExperience(5);
+        skillExperienceRequestDto.setMonths(5);
         experienceDto.setSkills(List.of(skillExperienceRequestDto));
         experienceDto.setPatternId(1L);
         experienceDto.setSeniorityId(1L);
@@ -1286,7 +1286,7 @@ public class CompanyServiceTest {
         TalentExperienceRequestDto experienceDto = new TalentExperienceRequestDto();
         SkillExperienceRequestDto skillExperienceRequestDto = new SkillExperienceRequestDto();
         skillExperienceRequestDto.setSkillId(1L);
-        skillExperienceRequestDto.setExperience(5);
+        skillExperienceRequestDto.setMonths(5);
         experienceDto.setSkills(List.of(skillExperienceRequestDto));
         experienceDto.setPatternId(1L);
         experienceDto.setSeniorityId(1L);
@@ -1373,7 +1373,7 @@ public class CompanyServiceTest {
         TalentExperienceRequestDto experienceDto = new TalentExperienceRequestDto();
         SkillExperienceRequestDto skillExperienceRequestDto = new SkillExperienceRequestDto();
         skillExperienceRequestDto.setSkillId(1L);
-        skillExperienceRequestDto.setExperience(5);
+        skillExperienceRequestDto.setMonths(5);
         experienceDto.setSkills(List.of(skillExperienceRequestDto));
         experienceDto.setPatternId(1L);
         experienceDto.setSeniorityId(1L);
