@@ -116,3 +116,6 @@ databaseChangeLog:
   - include:
       file: 39-modify-talent-experience-table.sql
       relativeToChangelogFile: true
+  - include:
+      file: 40-add-test-user-and-company.sql
+      relativeToChangelogFile: true
