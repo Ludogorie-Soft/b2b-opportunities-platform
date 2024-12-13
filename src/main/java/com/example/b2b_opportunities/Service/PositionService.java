@@ -167,7 +167,7 @@ public class PositionService {
 
     private PositionResponseDto generatePositionResponseDto(Position position) {
         PositionResponseDto responseDto = PositionMapper.toResponseDto(position);
-        Long applicationAmount = (long) positionApplicationRepository.findByPositionId(position.getId()).size();
+        Long applicationAmount = (long) positionApplicationRepository.findByPositionIdExcludingAwaitingCvOrTalent(position.getId()).size();
         Long acceptedApplicationsAmount = (long) positionApplicationRepository.findByPositionIdAndApplicationStatus(position.getId(), ApplicationStatus.ACCEPTED).size();
         responseDto.setApplications(applicationAmount);
         responseDto.setApprovedApplications(acceptedApplicationsAmount);
