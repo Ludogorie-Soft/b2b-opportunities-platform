@@ -97,6 +97,9 @@ jobs:
           INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
         run: infisical export --env=development | sed "s/'//g" > .env
 
+      - name: Override STORAGE_HOST variable
+        run: echo "STORAGE_HOST=http://localhost:9000" >> .env
+
       - name: Load environment variables (globally)
         run: cat .env >> $GITHUB_ENV
 
