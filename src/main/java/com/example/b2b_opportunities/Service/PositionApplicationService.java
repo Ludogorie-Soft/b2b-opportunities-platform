@@ -71,6 +71,7 @@ public class PositionApplicationService {
         Company userCompany = companyService.getUserCompanyOrThrow(user);
         Position position = positionService.getPositionOrThrow(requestDto.getPositionId());
         Project project = position.getProject();
+        checkPositionEligibility(project, position, userCompany);
 
         PositionApplication application = PositionApplication.builder()
                 .position(position)
@@ -83,7 +84,7 @@ public class PositionApplicationService {
 
         if (requestDto.getTalentId() != null) {
             Talent talent = companyService.getTalentOrThrow(requestDto.getTalentId());
-            validateApplication(userCompany, project, position, talent);
+            validateApplication(userCompany, position, talent);
             application.setTalent(talent);
             application.setApplicationStatus(ApplicationStatus.IN_PROGRESS);
         }
@@ -230,6 +231,19 @@ public class PositionApplicationService {
         return generatePAResponse(pa);
     }
 
+
+    private void checkPositionEligibility(Project project, Position position, Company userCompany) {
+        projectService.validateProjectIsAvailableToCompany(project, userCompany);
+        if (project.getCompany().getId().equals(userCompany.getId())) {
+            throw new InvalidRequestException("You can't apply to a position that belongs to your company!", "positionId");
+        }
+        if (project.getProjectStatus().equals(ProjectStatus.INACTIVE)) {
+            throw new InvalidRequestException("This position belongs to a project that is inactive", "positionId");
+        }
+        if (!position.getStatus().getId().equals(1L)) {
+            throw new InvalidRequestException("The position is not opened", "positionId");
+        }
+    }
     private PositionApplicationResponseDto generatePAResponse(PositionApplication pa) {
         PositionApplicationResponseDto responseDto = PositionApplicationMapper.toPositionApplicationResponseDto(pa);
         responseDto.setCvUrl(returnUrlIfCVExists(pa.getId()));
@@ -276,7 +290,7 @@ public class PositionApplicationService {
         return positionApplicationRepository.findById(id).orElseThrow(() -> new NotFoundException("Position application with ID :" + id + " not found"));
     }
 
-    private void validateApplication(Company userCompany, Project project, Position position, Talent talent) {
+    private void validateApplication(Company userCompany, Position position, Talent talent) {
         positionApplicationRepository.findFirstByPositionIdAndTalentIdAndApplicationStatusIn(
                         position.getId(),
                         talent.getId(),
@@ -290,16 +304,5 @@ public class PositionApplicationService {
                 });
 
         companyService.validateTalentBelongsToCompany(userCompany, talent);
-        projectService.validateProjectIsAvailableToCompany(project, userCompany);
-
-        if (project.getCompany().getId().equals(userCompany.getId())) {
-            throw new InvalidRequestException("You can't apply to a position that belongs to your company!", "positionId");
-        }
-        if (project.getProjectStatus().equals(ProjectStatus.INACTIVE)) {
-            throw new InvalidRequestException("This position belongs to a project that is inactive", "positionId");
-        }
-        if (!position.getStatus().getId().equals(1L)) {
-            throw new InvalidRequestException("The position is not opened", "positionId");
-        }
     }
 }
