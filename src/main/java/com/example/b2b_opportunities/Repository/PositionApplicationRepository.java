@@ -30,4 +30,6 @@ public interface PositionApplicationRepository extends JpaRepository<PositionApp
 
     Optional<PositionApplication> findByPositionIdAndTalentId(Long positionId, Long talentId);
 
+    List<PositionApplication> findByPositionId(Long positionId);
+    List<PositionApplication> findByPositionIdAndApplicationStatus(Long positionId, ApplicationStatus applicationStatus);
 }

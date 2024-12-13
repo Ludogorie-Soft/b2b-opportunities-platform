@@ -33,4 +33,7 @@ public class PositionResponseDto {
     private String description;
     private Long statusId;
     private String customCloseReason;
+    private Long views;
+    private Long applications;
+    private Long approvedApplications;
 }
