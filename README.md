@@ -58,3 +58,13 @@ Follow the steps below to set up and run the project using Docker:
 9. **cAdvisor**
 
    http://localhost:8080/containers/
+
+***
+
+## Testing Notes
+When a new Company is created, its Projects will initially not be visible to the public.
+
+To make the Projects publicly accessible:
+
+1. Retrieve the **Company ID**.
+2. Use the endpoint `/admin/approve/{id}` to set the Company's `isApproved` flag to `true`.
