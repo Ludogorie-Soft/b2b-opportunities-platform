@@ -103,6 +103,7 @@ class PositionApplicationServiceTest {
     void testApplyForPosition() {
         User user = mock(User.class);
         Company company = mock(Company.class);
+        Company userCompany = mock(Company.class);
         Position position = mock(Position.class);
         Project project = mock(Project.class);
         PositionApplication application = new PositionApplication();
@@ -112,7 +113,13 @@ class PositionApplicationServiceTest {
         application.setApplicationStatus(ApplicationStatus.ACCEPTED);
 
         when(userService.getCurrentUserOrThrow(authentication)).thenReturn(user);
-        when(companyService.getUserCompanyOrThrow(user)).thenReturn(company);
+        when(project.getProjectStatus()).thenReturn(ProjectStatus.ACTIVE);
+        when(position.getStatus()).thenReturn(PositionStatus.builder().id(1L).build());
+        when(user.getCompany()).thenReturn(userCompany);
+        when(userCompany.getId()).thenReturn(2L);
+        when(project.getCompany()).thenReturn(company);
+        when(company.getId()).thenReturn(1L);
+        when(companyService.getUserCompanyOrThrow(user)).thenReturn(userCompany);
         when(positionService.getPositionOrThrow(requestDto.getPositionId())).thenReturn(position);
         when(position.getProject()).thenReturn(project);
         when(positionApplicationRepository.save(any(PositionApplication.class))).thenReturn(application);
