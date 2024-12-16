@@ -1,5 +1,6 @@
 package com.example.b2b_opportunities.Controller;
 
+import com.example.b2b_opportunities.Dto.Request.PositionEditRequestDto;
 import com.example.b2b_opportunities.Dto.Request.PositionRequestDto;
 import com.example.b2b_opportunities.Dto.Request.RateRequestDto;
 import com.example.b2b_opportunities.Dto.Request.RequiredSkillsDto;
@@ -50,6 +51,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 import org.testcontainers.utility.DockerImageName;
 
+import java.lang.reflect.Field;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -236,7 +238,6 @@ class PositionControllerTest {
         requestDto.setResponsibilities(List.of("Develop software", "Review code"));
         requestDto.setHiringProcess("Interview -> Coding Test -> Offer");
         requestDto.setDescription("Position for software engineer");
-        requestDto.setStatusId(1L);
     }
 
     @Test
@@ -343,11 +344,21 @@ class PositionControllerTest {
     void shouldGetEditedPosition() throws Exception {
         Long id = createPositionAndGetID();
 
-        requestDto.setHoursPerWeek(20);
+        PositionEditRequestDto editRequestDto = new PositionEditRequestDto();
+        for(Field field: PositionRequestDto.class.getDeclaredFields()){
+            field.setAccessible(true);
+            try{
+                field.set(editRequestDto, field.get(requestDto));
+            } catch (IllegalArgumentException e){
+                throw new RuntimeException("Failed to copy field: " + field.getName(), e);
+            }
+        }
+        editRequestDto.setHoursPerWeek(20);
+        editRequestDto.setStatusId(1L);
 
         mockMvc.perform(put("/positions/" + id)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(asJsonString(requestDto)))
+                        .content(asJsonString(editRequestDto)))
                 .andExpect(status().isOk());
 
         mockMvc.perform(get("/positions/" + id))

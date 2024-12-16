@@ -1,5 +1,6 @@
 package com.example.b2b_opportunities.Service;
 
+import com.example.b2b_opportunities.Dto.Request.PositionEditRequestDto;
 import com.example.b2b_opportunities.Dto.Request.PositionRequestDto;
 import com.example.b2b_opportunities.Dto.Request.RateRequestDto;
 import com.example.b2b_opportunities.Dto.Request.RequiredSkillsDto;
@@ -76,9 +77,11 @@ public class PositionService {
         checkForNonAssignableSkills(dto.getRequiredSkills());
         setPositionFields(position, dto);
         updateProjectDateUpdated(position);
-        extendProjectDurationWhenPositionStatusNotCanceled(position, dto.getStatusId());
-        activateProjectIfInactive(position.getProject());
+
+        extendProjectDurationAndActivateIfNeeded(position.getProject());
+
         position.setStatus(positionStatusRepository.findById(1L).orElseThrow());
+        position.setViews(0L);
 
         if (dto.getLocation() != null) {
             position.setLocation(getLocationIfExists(dto.getLocation()));
@@ -87,7 +90,7 @@ public class PositionService {
         return PositionMapper.toResponseDto(positionRepository.save(position));
     }
 
-    public PositionResponseDto editPosition(Long id, PositionRequestDto dto, Authentication authentication) {
+    public PositionResponseDto editPosition(Long id, PositionEditRequestDto dto, Authentication authentication) {
         validateUserAndCompany(authentication);
         Position position = getPositionOrThrow(id);
 
@@ -100,7 +103,11 @@ public class PositionService {
         position.setDescription(dto.getDescription());
         position.setPattern(companyService.getPatternOrThrow(dto.getPatternId()));
         setPositionStatusOrThrow(position, dto.getStatusId());
-        extendProjectDurationWhenPositionStatusNotCanceled(position, dto.getStatusId());
+
+        //if status keeps being 'Opened'
+        if (dto.getStatusId() == 1) {
+            extendProjectDurationAndActivateIfNeeded(position.getProject());
+        }
 
         checkForNonAssignableSkills(dto.getRequiredSkills());
         deleteAllRequiredSkillsForPositionIfAny(position);
@@ -153,7 +160,7 @@ public class PositionService {
         }
 
         if (statusId == 1L) {
-            activateProjectIfInactive(position.getProject());
+            extendProjectDurationAndActivateIfNeeded(position.getProject());
         } else {
             deactivateProjectIfNoActivePositions(position.getProject());
         }
@@ -323,15 +330,6 @@ public class PositionService {
         return positionRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Position with ID: " + id + " not found"));
     }
-
-
-    private void activateProjectIfInactive(Project project) {
-        if (project.getProjectStatus().equals(ProjectStatus.INACTIVE)) {
-            project.setProjectStatus(ProjectStatus.ACTIVE);
-            projectRepository.save(project);
-        }
-    }
-
     private void deactivateProjectIfNoActivePositions(Project project) {
         List<Position> positions = project.getPositions();
         boolean hasActivePosition = false;
@@ -347,11 +345,11 @@ public class PositionService {
         }
     }
 
-    private void extendProjectDurationWhenPositionStatusNotCanceled(Position position, Long positionStatusId) {
-        if (positionStatusId != 4) {
-            Project project = position.getProject();
-            project.setExpiryDate(LocalDateTime.now().plusWeeks(3));
-            activateProjectIfInactive(project);
+    private void extendProjectDurationAndActivateIfNeeded(Project project) {
+        project.setExpiryDate(LocalDateTime.now().plusWeeks(3));
+        if (project.getProjectStatus().equals(ProjectStatus.INACTIVE)) {
+            project.setProjectStatus(ProjectStatus.ACTIVE);
         }
+        projectRepository.save(project);
     }
 }
