@@ -1,0 +1,1 @@
+ALTER TABLE positions ADD COLUMN views BIGINT DEFAULT 0;

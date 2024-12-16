@@ -96,4 +96,5 @@ public class Position {
     private PositionStatus status;
 
     private String customCloseReason;
+    private Long views;
 }

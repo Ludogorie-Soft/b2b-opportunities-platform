@@ -20,6 +20,7 @@ import com.example.b2b_opportunities.Mapper.PositionMapper;
 import com.example.b2b_opportunities.Mapper.RateMapper;
 import com.example.b2b_opportunities.Repository.LocationRepository;
 import com.example.b2b_opportunities.Repository.PatternRepository;
+import com.example.b2b_opportunities.Repository.PositionApplicationRepository;
 import com.example.b2b_opportunities.Repository.PositionRepository;
 import com.example.b2b_opportunities.Repository.PositionStatusRepository;
 import com.example.b2b_opportunities.Repository.ProjectRepository;
@@ -28,6 +29,7 @@ import com.example.b2b_opportunities.Repository.RequiredSkillRepository;
 import com.example.b2b_opportunities.Repository.SeniorityRepository;
 import com.example.b2b_opportunities.Repository.SkillRepository;
 import com.example.b2b_opportunities.Repository.WorkModeRepository;
+import com.example.b2b_opportunities.Static.ApplicationStatus;
 import com.example.b2b_opportunities.Static.ProjectStatus;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -46,6 +48,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class PositionService {
+    private final PositionApplicationRepository positionApplicationRepository;
     private final ProjectRepository projectRepository;
     private final SeniorityRepository seniorityRepository;
     private final SkillRepository skillRepository;
@@ -120,7 +123,8 @@ public class PositionService {
         Project project = position.getProject();
         Company company = companyService.getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
         projectService.validateProjectIsAvailableToCompany(project, company);
-        return PositionMapper.toResponseDto(position);
+        incrementPositionViews(position);
+        return generatePositionResponseDto(position);
     }
 
     public Set<PositionResponseDto> getPositions(Authentication authentication) {
@@ -157,6 +161,22 @@ public class PositionService {
         updateProjectDateUpdated(position);
         log.info("Successfully changed position ID: {} status to: {}", position.getId(), position.getStatus().getName());
 
+        positionRepository.save(position);
+    }
+
+
+    private PositionResponseDto generatePositionResponseDto(Position position) {
+        PositionResponseDto responseDto = PositionMapper.toResponseDto(position);
+        Long applicationAmount = (long) positionApplicationRepository.findByPositionIdExcludingAwaitingCvOrTalent(position.getId()).size();
+        Long acceptedApplicationsAmount = (long) positionApplicationRepository.findByPositionIdAndApplicationStatus(position.getId(), ApplicationStatus.ACCEPTED).size();
+        responseDto.setApplications(applicationAmount);
+        responseDto.setApprovedApplications(acceptedApplicationsAmount);
+        responseDto.setViews(position.getViews());
+        return responseDto;
+    }
+
+    private void incrementPositionViews(Position position) {
+        position.setViews(position.getViews() + 1);
         positionRepository.save(position);
     }
 

@@ -30,4 +30,7 @@ public interface PositionApplicationRepository extends JpaRepository<PositionApp
 
     Optional<PositionApplication> findByPositionIdAndTalentId(Long positionId, Long talentId);
 
+    @Query("SELECT pa FROM PositionApplication pa WHERE pa.position.id = :positionId AND pa.applicationStatus != 'AWAITING_CV_OR_TALENT'")
+    List<PositionApplication> findByPositionIdExcludingAwaitingCvOrTalent(@Param("positionId") Long positionId);
+    List<PositionApplication> findByPositionIdAndApplicationStatus(Long positionId, ApplicationStatus applicationStatus);
 }
