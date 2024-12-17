@@ -232,7 +232,7 @@ public class ProjectService {
         }
     }
 
-    private static void extendProjectDuration(Project project) {
+    private void extendProjectDuration(Project project) {
         project.setExpiryDate(LocalDateTime.now().plusWeeks(3));
         project.setProjectStatus(ProjectStatus.ACTIVE);
     }
