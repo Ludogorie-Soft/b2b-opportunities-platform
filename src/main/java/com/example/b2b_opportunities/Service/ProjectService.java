@@ -5,6 +5,7 @@ import com.example.b2b_opportunities.Dto.Response.PositionResponseDto;
 import com.example.b2b_opportunities.Dto.Response.ProjectResponseDto;
 import com.example.b2b_opportunities.Entity.Company;
 import com.example.b2b_opportunities.Entity.PartnerGroup;
+import com.example.b2b_opportunities.Entity.Position;
 import com.example.b2b_opportunities.Entity.Project;
 import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Exception.common.InvalidRequestException;
@@ -13,7 +14,9 @@ import com.example.b2b_opportunities.Exception.common.PermissionDeniedException;
 import com.example.b2b_opportunities.Mapper.PositionMapper;
 import com.example.b2b_opportunities.Mapper.ProjectMapper;
 import com.example.b2b_opportunities.Repository.PartnerGroupRepository;
+import com.example.b2b_opportunities.Repository.PositionApplicationRepository;
 import com.example.b2b_opportunities.Repository.ProjectRepository;
+import com.example.b2b_opportunities.Static.ApplicationStatus;
 import com.example.b2b_opportunities.Static.ProjectStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +37,7 @@ public class ProjectService {
     private final UserService userService;
     private final PartnerGroupRepository partnerGroupRepository;
     private final CompanyService companyService;
+    private final PositionApplicationRepository positionApplicationRepository;
 
     public ProjectResponseDto get(Authentication authentication, Long id) {
         User user = userService.getCurrentUserOrThrow(authentication);
@@ -41,8 +45,13 @@ public class ProjectService {
         Company company = companyService.getUserCompanyOrThrow(user);
         Project project = getProjectIfExists(id);
         validateProjectIsAvailableToCompany(project, company);
-        //TODO - also check if its posted by approved company
-        return ProjectMapper.toDto(project);
+        ProjectResponseDto responseDto = ProjectMapper.toDto(project);
+        if (project.getPositions() != null) {
+            responseDto.setPositionViews(getPositionViews(project));
+            responseDto.setAcceptedApplications(getAcceptedApplications(project));
+            responseDto.setTotalApplications(getTotalApplications(project));
+        }
+        return responseDto;
     }
 
     public List<ProjectResponseDto> getAvailableProjects(Authentication authentication) {
@@ -125,7 +134,6 @@ public class ProjectService {
         if (project.getCompany().getId().equals(userCompany.getId())) {
             return;
         }
-
         if (project.isPartnerOnly()) {
             boolean isCompanyInGroup = project.getPartnerGroupList().stream()
                     .anyMatch(partnerGroup -> partnerGroup.getPartners().contains(userCompany));
@@ -139,6 +147,26 @@ public class ProjectService {
                 throw new NotFoundException("The company has not yet been approved to post public projects");
             }
         }
+        if (!project.getCompany().isApproved()) {
+            throw new PermissionDeniedException("Project posted by an unapproved company");
+        }
+    }
+
+    private Long getPositionViews(Project project) {
+        return project.getPositions().stream().mapToLong(Position::getViews).sum();
+    }
+
+    private Long getAcceptedApplications(Project project) {
+        return project.getPositions().stream()
+                .mapToLong(p -> positionApplicationRepository
+                        .countByPositionIdAndApplicationStatus(p.getId(), ApplicationStatus.ACCEPTED))
+                .sum();
+    }
+
+    private Long getTotalApplications(Project project) {
+        return project.getPositions().stream()
+                .mapToLong(p -> positionApplicationRepository
+                        .countByPositionIdExcludingAwaitingCvOrTalent(p.getId())).sum();
     }
 
     private List<ProjectResponseDto> getPartnerProjects(Company company) {

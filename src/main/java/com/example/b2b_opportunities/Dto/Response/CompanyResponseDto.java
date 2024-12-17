@@ -31,4 +31,8 @@ public class CompanyResponseDto {
     private String banner;
     private String description;
     private List<Long> skills;
+
+    private Long positionViews;
+    private Long acceptedApplications;
+    private Long totalApplications;
 }
