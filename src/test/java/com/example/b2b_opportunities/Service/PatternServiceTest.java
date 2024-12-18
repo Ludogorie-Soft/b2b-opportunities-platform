@@ -4,6 +4,7 @@ import com.example.b2b_opportunities.Dto.Request.PatternRequestDto;
 import com.example.b2b_opportunities.Dto.Response.PatternResponseDto;
 import com.example.b2b_opportunities.Entity.Pattern;
 import com.example.b2b_opportunities.Entity.Skill;
+import com.example.b2b_opportunities.Exception.common.AlreadyExistsException;
 import com.example.b2b_opportunities.Exception.common.NotFoundException;
 import com.example.b2b_opportunities.Repository.PatternRepository;
 import com.example.b2b_opportunities.Repository.SkillRepository;
@@ -23,6 +24,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -52,18 +56,18 @@ public class PatternServiceTest {
     }
 
     @Test
-    public void shouldReturnPattern(){
+    public void shouldReturnPattern() {
         when(patternRepository.findById(99999L)).thenReturn(Optional.of(pattern));
 
         PatternResponseDto result = patternService.get(99999L);
 
-        assertEquals(result.getName(),"test");
+        assertEquals(result.getName(), "test");
         assertEquals(result.getId(), 99999L);
         assertNotNull(result);
     }
 
     @Test
-    public void shouldThrowExceptionWhenPatternNotFound(){
+    public void shouldThrowExceptionWhenPatternNotFound() {
         when(patternRepository.findById(99999999L)).thenReturn(Optional.empty());
 
         NotFoundException expectedException = assertThrows(NotFoundException.class, () -> {
@@ -75,7 +79,7 @@ public class PatternServiceTest {
     }
 
     @Test
-    public void testGetAll_ReturnsPatternResponseDtoList() {
+    public void testGetAllShouldReturnPatternResponseDtoList() {
         Pattern pattern1 = new Pattern();
         pattern1.setId(1L);
         pattern1.setName("Pattern 1");
@@ -110,7 +114,7 @@ public class PatternServiceTest {
     }
 
     @Test
-    public void testCreatePattern(){
+    public void testCreatePattern() {
         PatternRequestDto dto = new PatternRequestDto();
         dto.setName("test");
         dto.setSuggestedSkills(new ArrayList<>());
@@ -134,7 +138,7 @@ public class PatternServiceTest {
     }
 
     @Test
-    public void testUpdatePattern(){
+    public void testUpdatePattern() {
         PatternRequestDto dto = new PatternRequestDto();
         dto.setId(1L);
         dto.setName("newName");
@@ -159,7 +163,7 @@ public class PatternServiceTest {
     }
 
     @Test
-    public void testDelete_Success() {
+    public void testDeleteSuccessfully() {
         Long patternId = 1L;
 
         Pattern pattern = new Pattern();
@@ -173,7 +177,7 @@ public class PatternServiceTest {
     }
 
     @Test
-    public void testDelete_NotFound() {
+    public void testDeleteWhenPatternNotFound() {
         Long patternId = 1L;
 
         when(patternRepository.findById(patternId)).thenReturn(Optional.empty());
@@ -184,7 +188,7 @@ public class PatternServiceTest {
     }
 
     @Test
-    public void testCreate_WithNonExistentSkills() {
+    public void testCreateWithNonExistentSkills() {
         PatternRequestDto dto = new PatternRequestDto();
         dto.setName("Test Pattern");
         dto.setSuggestedSkills(Arrays.asList(1L, 2L, 3L));
@@ -204,7 +208,7 @@ public class PatternServiceTest {
     }
 
     @Test
-    public void testUpdate_WithNonExistentSkills() {
+    public void testUpdateWithNonExistentSkills() {
         Long patternId = 1L;
         PatternRequestDto dto = new PatternRequestDto();
         dto.setId(patternId);
@@ -230,4 +234,77 @@ public class PatternServiceTest {
         verify(patternRepository, never()).save(any(Pattern.class));
     }
 
+    @Test
+    void shouldThrowExceptionWhenPatternExists() {
+        PatternRequestDto dto = new PatternRequestDto();
+        dto.setName("existing");
+        dto.setSuggestedSkills(List.of(1L, 2L));
+        dto.setParentId(null);
+
+        Pattern pattern = new Pattern();
+        pattern.setName("existing");
+        pattern.setId(1L);
+        pattern.setParent(null);
+        pattern.setSuggestedSkills(List.of(new Skill(), new Skill()));
+
+        when(patternRepository.findByName("existing")).thenReturn(Optional.of(pattern));
+
+        AlreadyExistsException exception = assertThrows(AlreadyExistsException.class, () -> {
+            patternService.create(dto);
+        });
+
+        assertEquals(exception.getMessage(), "Pattern with name: 'existing' already exists.");
+        assertEquals(exception.getField(), "name");
+    }
+
+    @Test
+    void shouldGetAllAssignableSkills() {
+        List<Long> skills = List.of(1L, 2L);
+        Skill firstSkill = new Skill();
+        firstSkill.setId(1L);
+        firstSkill.setAssignable(true);
+        Skill secondSkill = new Skill();
+        secondSkill.setId(2L);
+        secondSkill.setAssignable(true);
+
+        when(skillRepository.findAllById(anyList())).thenReturn(List.of(firstSkill, secondSkill));
+
+        List<Skill> result = patternService.getAllAssignableSkillsIfSkillIdsExist(skills);
+
+        assertEquals(result.size(), 2);
+    }
+
+    @Test
+    void shouldGetOneAssignableSkillAndThrowExceptionForOneNonAssignable() {
+        List<Long> skills = List.of(1L, 2L);
+        Skill firstSkill = new Skill();
+        firstSkill.setId(1L);
+        firstSkill.setAssignable(true);
+        Skill secondSkill = new Skill();
+        secondSkill.setId(2L);
+        secondSkill.setAssignable(false);
+
+        when(skillRepository.findAllById(anyList())).thenReturn(List.of(firstSkill, secondSkill));
+
+        NotFoundException exception = assertThrows(NotFoundException.class, () ->
+                patternService.getAllAssignableSkillsIfSkillIdsExist(skills));
+
+        assertEquals(exception.getMessage(), "Skills with ID(s) [" + secondSkill.getId() + "] cannot be assigned.");
+    }
+
+    @Test
+    void shouldThrowExceptionWhenParentExistsButItsNotFound(){
+        PatternRequestDto dto = new PatternRequestDto();
+        dto.setParentId(2L);
+        dto.setName("test");
+        dto.setSuggestedSkills(List.of(5L, 6L));
+
+        when(patternRepository.findByName(anyString())).thenReturn(Optional.empty());
+        when(patternRepository.findById(anyLong())).thenReturn(Optional.empty());
+
+        NotFoundException exception = assertThrows(NotFoundException.class, () ->
+                patternService.create(dto));
+
+        assertEquals(exception.getMessage(), "Parent with pattern ID: " + 2L + " not found.");
+    }
 }

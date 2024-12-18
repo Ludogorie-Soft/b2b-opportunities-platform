@@ -25,6 +25,7 @@ import java.util.List;
 public class PatternController {
     private final PatternService patternService;
 
+    //TODO - change POST/PUT endpoints in SecurityConfig to be accessible to admins only
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     public PatternResponseDto get(@PathVariable("id") Long id) {
