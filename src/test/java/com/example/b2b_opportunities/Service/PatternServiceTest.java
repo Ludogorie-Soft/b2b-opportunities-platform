@@ -307,4 +307,42 @@ public class PatternServiceTest {
 
         assertEquals(exception.getMessage(), "Parent with pattern ID: " + 2L + " not found.");
     }
+
+    @Test
+    void shouldThrowExceptionWhenParentExistsAndIsFound(){
+        PatternRequestDto dto = new PatternRequestDto();
+        dto.setId(1L);
+        dto.setParentId(2L);
+        dto.setName("test");
+        dto.setSuggestedSkills(List.of(5L, 6L));
+
+        Skill firstSkill = new Skill();
+        firstSkill.setId(5L);
+        firstSkill.setAssignable(true);
+        Skill secondSkill = new Skill();
+        secondSkill.setId(6L);
+        secondSkill.setAssignable(false);
+
+        Pattern parentPattern = new Pattern();
+        parentPattern.setId(2L);
+
+        when(patternRepository.findByName(anyString())).thenReturn(Optional.empty());
+        when(patternRepository.findById(anyLong())).thenReturn(Optional.of(parentPattern));
+        when(skillRepository.findAllById(anyList())).thenReturn(List.of(firstSkill, secondSkill));
+
+        Pattern pattern = new Pattern();
+        pattern.setId(1L);
+        pattern.setName("test");
+        pattern.setParent(parentPattern);
+        pattern.setSuggestedSkills(List.of(firstSkill, secondSkill));
+
+        when(patternRepository.save(any(Pattern.class))).thenReturn(pattern);
+
+        PatternResponseDto responseDto = patternService.create(dto);
+
+        assertNotNull(responseDto);
+        assertEquals(responseDto.getParentId(), 2L);
+        assertEquals(responseDto.getName(), "test");
+        assertEquals(responseDto.getSuggestedSkills(), List.of(5L, 6L));
+    }
 }
