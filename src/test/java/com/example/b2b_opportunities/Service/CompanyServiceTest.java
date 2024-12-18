@@ -1601,4 +1601,155 @@ public class CompanyServiceTest {
 
         method.invoke(companyService, company, talent);
     }
+
+    @Test
+    void shouldGetAllTalents(){
+        User user = new User();
+        user.setId(1L);
+        Company userCompany = Company.builder().id(1L).build();
+        userCompany.setId(1L);
+        userCompany.setTalentsSharedPublicly(true);
+        user.setCompany(userCompany);
+
+        WorkMode wm = WorkMode.builder()
+                .id(1L).build();
+        Location loc = Location.builder()
+                .id(1L).build();
+        Pattern pattern = new Pattern();
+        pattern.setId(1L);
+        Seniority seniority = Seniority.builder().id(1L).build();
+
+        TalentExperience te = TalentExperience.builder()
+                .id(1L)
+                .pattern(pattern)
+                .seniority(seniority)
+                .build();
+
+        Talent talent = Talent.builder()
+                .id(1L)
+                .workModes(Set.of(wm))
+                .locations(Set.of(loc))
+                .talentExperience(te)
+                .isActive(true)
+                .company(userCompany)
+                .build();
+
+        te.setTalent(talent);
+        List<Talent> talentList = List.of(talent);
+        List<Talent> sharedTalents = new ArrayList<>();
+
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(user);
+        when(talentRepository.findAllActivePublicTalents()).thenReturn(talentList);
+        when(talentRepository.findActiveTalentsSharedWithUserCompany(userCompany.getId())).thenReturn(sharedTalents);
+
+        List<TalentResponseDto> resultList = companyService.getAllTalents(authentication);
+
+        assertEquals(resultList.size(), 1);
+    }
+
+    @Test
+    void shouldThrowExceptionWhenGetTalentByNonExistingId() {
+        User user = new User();
+        user.setId(1L);
+        Company userCompany = Company.builder().id(1L).build();
+        userCompany.setId(1L);
+        user.setCompany(userCompany);
+
+        when(talentRepository.findById(1L)).thenReturn(Optional.empty());
+
+        NotFoundException exception = assertThrows(NotFoundException.class, () -> {
+            companyService.getTalentById(authentication, 1L);
+        });
+
+        assertEquals(exception.getMessage(), "Talent with ID: " + 1L + " not found");
+    }
+
+    @Test
+    void shouldThrowPermissionDeniedExceptionWhenGetTalentByIdIsNotAccessible() {
+        User user = new User();
+        user.setId(1L);
+        Company userCompany = Company.builder().id(1L).build();
+        userCompany.setId(1L);
+        user.setCompany(userCompany);
+
+        Company thirdCompany = Company.builder()
+                .id(3L)
+                .build();
+
+        PartnerGroup pg = PartnerGroup.builder()
+                .partners(Set.of(thirdCompany))
+                .build();
+
+        Company anotherCompany = Company.builder().id(2L).build();
+        anotherCompany.setTalentsSharedPublicly(false);
+        anotherCompany.setPartnerGroups(Set.of(pg));
+
+        Talent t = Talent.builder().id(1L).isActive(true).company(anotherCompany).build();
+
+        when(talentRepository.findById(1L)).thenReturn(Optional.of(t));
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(user);
+
+        PermissionDeniedException exception = assertThrows(PermissionDeniedException.class, () -> {
+            companyService.getTalentById(authentication, 1L);
+        });
+
+        assertEquals(exception.getMessage(), "You have no access to this talent");
+    }
+
+    @Test
+    void shouldThrowPermissionDeniedExceptionWhenGetTalentByIdIsNotActive() {
+        User user = new User();
+        user.setId(1L);
+        Company userCompany = Company.builder().id(1L).build();
+        userCompany.setId(1L);
+        user.setCompany(userCompany);
+
+        Company thirdCompany = Company.builder()
+                .id(3L)
+                .build();
+
+        PartnerGroup pg = PartnerGroup.builder()
+                .partners(Set.of(thirdCompany))
+                .build();
+
+        Company anotherCompany = Company.builder().id(2L).build();
+        anotherCompany.setTalentsSharedPublicly(false);
+        anotherCompany.setPartnerGroups(Set.of(pg));
+
+        Talent t = Talent.builder().id(1L).isActive(false).company(anotherCompany).build();
+
+        when(talentRepository.findById(1L)).thenReturn(Optional.of(t));
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(user);
+
+        PermissionDeniedException exception = assertThrows(PermissionDeniedException.class, () -> {
+            companyService.getTalentById(authentication, 1L);
+        });
+
+        assertEquals(exception.getMessage(), "Talent is not active.");
+    }
+
+    @Test
+    void shouldThrowPermissionDeniedExceptionWhenGetTalentByIdIsInactive() {
+        User user = new User();
+        user.setId(1L);
+        Company userCompany = Company.builder().id(1L).build();
+        userCompany.setId(1L);
+        user.setCompany(userCompany);
+
+        Company anotherCompany = Company.builder().id(2L).build();
+        anotherCompany.setTalentsSharedPublicly(true);
+
+        Talent t = Talent.builder().id(1L).isActive(false).company(anotherCompany).build();
+
+        when(talentRepository.findById(1L)).thenReturn(Optional.of(t));
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(user);
+
+        PermissionDeniedException exception = assertThrows(PermissionDeniedException.class, () -> {
+            companyService.getTalentById(authentication, 1L);
+        });
+
+        assertEquals(exception.getMessage(), "Talent is inactive");
+    }
+
+
 }
