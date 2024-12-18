@@ -1573,7 +1573,6 @@ public class CompanyServiceTest {
         talent.setActive(true);
         talent.setWorkModes(Set.of(new WorkMode()));
         talent.setLocations(Set.of(new Location()));
-        talent.setDescription("Drank Mountain Dew");
         talent.setMaxRate(1);
         talent.setMaxRate(2);
         TalentExperience talentExperience = new TalentExperience();
@@ -1616,7 +1615,6 @@ public class CompanyServiceTest {
         talent.setCompany(talentCompany);
         talent.setActive(true);
         talent.setWorkModes(Set.of(new WorkMode()));
-        talent.setDescription("alabala");
         talent.setLocations(Set.of(new Location()));
         talent.setMinRate(3);
         talent.setMaxRate(15);
