@@ -64,7 +64,6 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -163,7 +162,7 @@ public class CompanyServiceTest {
     private User currentUser;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         MockitoAnnotations.openMocks(this);
         companyRequestDto = new CompanyRequestDto();
         companyRequestDto.setCompanyTypeId(999L);
@@ -189,14 +188,14 @@ public class CompanyServiceTest {
     }
 
     @Test
-    public void testCreateCompanyThrowsAuthenticationFailedException() {
+    void testCreateCompanyThrowsAuthenticationFailedException() {
         when(userService.getCurrentUserOrThrow(null))
                 .thenThrow(new AuthenticationFailedException("User not authenticated"));
         assertThrows(AuthenticationFailedException.class, () -> companyService.createCompany(null, companyRequestDto, request));
     }
 
     @Test
-    public void shouldThrowInvalidRequestExceptionWhenUserAlreadyHasCompany() {
+    void shouldThrowInvalidRequestExceptionWhenUserAlreadyHasCompany() {
         Company existingCompany = new Company();
         existingCompany.setName("Existing Company");
         currentUser.setCompany(existingCompany);
@@ -208,7 +207,7 @@ public class CompanyServiceTest {
     }
 
     @Test
-    public void ShouldCreateCompanyWhenValidRequest() {
+    void ShouldCreateCompanyWhenValidRequest() {
         Company company = new Company();
         company.setId(1L);
         company.setEmailVerification(EmailVerification.ACCEPTED);
@@ -230,7 +229,7 @@ public class CompanyServiceTest {
     }
 
     @Test
-    public void shouldGetCompanyAndUsersSuccessfully() {
+    void shouldGetCompanyAndUsersSuccessfully() {
         Long companyId = 1L;
         Company company = new Company();
         company.setId(companyId);
@@ -257,7 +256,7 @@ public class CompanyServiceTest {
     }
 
     @Test
-    public void shouldThrowNotFoundExceptionWhenCompanyDoesNotExist() {
+    void shouldThrowNotFoundExceptionWhenCompanyDoesNotExist() {
         Long companyId = 999L;
         when(companyRepository.findById(companyId)).thenReturn(Optional.empty());
 
@@ -268,7 +267,7 @@ public class CompanyServiceTest {
     }
 
     @Test
-    public void shouldReturnEmptyListWhenCompanyHasNoUsers() {
+    void shouldReturnEmptyListWhenCompanyHasNoUsers() {
         Long companyId = 1L;
         Company company = new Company();
         company.setId(companyId);
@@ -291,7 +290,7 @@ public class CompanyServiceTest {
     }
 
     @Test
-    public void shouldReturnListOfUsersWhenCompanyHasUsers() {
+    void shouldReturnListOfUsersWhenCompanyHasUsers() {
         Long companyId = 2L;
         Company company = new Company();
         company.setId(companyId);
@@ -319,7 +318,7 @@ public class CompanyServiceTest {
     }
 
     @Test
-    public void shouldConfirmCompanyWithValidToken() {
+    void shouldConfirmCompanyWithValidToken() {
         Long companyId = 9999L;
         Company company = new Company();
         company.setId(companyId);
@@ -336,7 +335,7 @@ public class CompanyServiceTest {
     }
 
     @Test
-    public void shouldNotConfirmCompanyEmailWithInvalidToken() {
+    void shouldNotConfirmCompanyEmailWithInvalidToken() {
         Long companyId = 9999L;
         Company company = new Company();
         company.setId(companyId);
@@ -354,7 +353,7 @@ public class CompanyServiceTest {
 
 
     @Test
-    public void shouldEditCompanySuccessfully() {
+    void shouldEditCompanySuccessfully() {
         CompanyType companyType = new CompanyType();
         companyType.setId(99999L);
         companyType.setName("testCT");
@@ -405,7 +404,7 @@ public class CompanyServiceTest {
     }
 
     @Test
-    public void shouldThrowNotFoundExceptionWhenUserHasNoCompany() {
+    void shouldThrowNotFoundExceptionWhenUserHasNoCompany() {
         User currentUser = new User();
 
         when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
@@ -1200,7 +1199,7 @@ public class CompanyServiceTest {
     }
 
     @Test
-    public void testCreateTalentSuccessfully() {
+    void testCreateTalentSuccessfully() {
         Long talentId = 1L;
         TalentRequestDto talentRequestDto = new TalentRequestDto();
         talentRequestDto.setLocations(List.of(1L, 2L));
@@ -1259,7 +1258,7 @@ public class CompanyServiceTest {
     }
 
     @Test
-    public void testCreateTalentInvalidSkills() {
+    void testCreateTalentInvalidSkills() {
         Authentication authentication = mock(Authentication.class);
         TalentRequestDto talentRequestDto = new TalentRequestDto();
         talentRequestDto.setExperience(new TalentExperienceRequestDto());
@@ -1276,7 +1275,7 @@ public class CompanyServiceTest {
     }
 
     @Test
-    public void testUpdateTalentSuccessfully() {
+    void testUpdateTalentSuccessfully() {
         Long talentId = 1L;
         TalentRequestDto talentRequestDto = new TalentRequestDto();
         talentRequestDto.setLocations(List.of(1L, 2L));
@@ -1336,7 +1335,7 @@ public class CompanyServiceTest {
     }
 
     @Test
-    public void testUpdateTalentTalentNotFound() {
+    void testUpdateTalentTalentNotFound() {
         Long talentId = 1L;
         TalentRequestDto talentRequestDto = new TalentRequestDto();
 
@@ -1353,7 +1352,7 @@ public class CompanyServiceTest {
     }
 
     @Test
-    public void testGetTalentByIdTalentNotFound() {
+    void testGetTalentByIdTalentNotFound() {
         Long talentId = 1L;
         Authentication authentication = mock(Authentication.class);
 
@@ -1363,7 +1362,7 @@ public class CompanyServiceTest {
     }
 
     @Test
-    public void testGetMyTalentsSuccessfully() {
+    void testGetMyTalentsSuccessfully() {
         Long talentId = 1L;
         TalentRequestDto talentRequestDto = new TalentRequestDto();
         talentRequestDto.setLocations(List.of(1L, 2L));
@@ -1422,7 +1421,7 @@ public class CompanyServiceTest {
     }
 
     @Test
-    public void testDeleteTalentSuccessfully() {
+    void testDeleteTalentSuccessfully() {
         Long talentId = 1L;
         Authentication authentication = mock(Authentication.class);
         User currentUser = new User();
@@ -1442,7 +1441,7 @@ public class CompanyServiceTest {
     }
 
     @Test
-    public void testDeleteTalentTalentNotFound() {
+    void testDeleteTalentTalentNotFound() {
         Long talentId = 1L;
         Authentication authentication = mock(Authentication.class);
         User currentUser = new User();
@@ -1457,7 +1456,7 @@ public class CompanyServiceTest {
     }
 
     @Test
-    public void testSetTalentVisibilityPublic() {
+    void testSetTalentVisibilityPublic() {
         Authentication authentication = mock(Authentication.class);
         TalentPublicityRequestDto requestDto = new TalentPublicityRequestDto();
         requestDto.setPublic(true);
@@ -1476,7 +1475,7 @@ public class CompanyServiceTest {
     }
 
     @Test
-    public void testSetTalentVisibilityPrivate() {
+    void testSetTalentVisibilityPrivate() {
         Authentication authentication = mock(Authentication.class);
         TalentPublicityRequestDto requestDto = new TalentPublicityRequestDto();
         requestDto.setPublic(false);
@@ -1504,7 +1503,7 @@ public class CompanyServiceTest {
     }
 
     @Test
-    public void testSetTalentVisibilityPermissionDenied() {
+    void testSetTalentVisibilityPermissionDenied() {
         Authentication authentication = mock(Authentication.class);
         TalentPublicityRequestDto requestDto = new TalentPublicityRequestDto();
         requestDto.setPublic(false);
@@ -1525,7 +1524,7 @@ public class CompanyServiceTest {
     }
 
     @Test
-    public void testGetTalentVisibilityPublicTalents() {
+    void testGetTalentVisibilityPublicTalents() {
         Authentication authentication = mock(Authentication.class);
         User user = new User();
         Company company = new Company();
@@ -1541,7 +1540,7 @@ public class CompanyServiceTest {
     }
 
     @Test
-    public void testGetTalentVisibilityPrivateTalents() {
+    void testGetTalentVisibilityPrivateTalents() {
         Authentication authentication = mock(Authentication.class);
         User user = new User();
         Company company = new Company();
@@ -1564,23 +1563,38 @@ public class CompanyServiceTest {
     }
 
     @Test
-    public void testValidateTalentIsAvailableToCompany_TalentBelongsToTheCompany() throws Exception {
+    void testValidateTalentIsAvailableToCompany_TalentBelongsToTheCompany() {
         Company company = new Company();
         company.setId(1L);
 
         Talent talent = new Talent();
+        talent.setId(1L);
         talent.setCompany(company);
         talent.setActive(true);
+        talent.setWorkModes(Set.of(new WorkMode()));
+        talent.setLocations(Set.of(new Location()));
+        talent.setDescription("Drank Mountain Dew");
+        talent.setMaxRate(1);
+        talent.setMaxRate(2);
+        TalentExperience talentExperience = new TalentExperience();
+        talentExperience.setPattern(new Pattern());
+        talentExperience.setSeniority(new Seniority());
+        talentExperience.setTotalTime(1);
+        talent.setTalentExperience(talentExperience);
 
-        // Use reflection to access the method, which is with a private modifier
-        Method method = CompanyService.class.getDeclaredMethod("validateTalentIsAvailableToCompany", Company.class, Talent.class);
-        method.setAccessible(true);
+        User user = new User();
+        user.setCompany(company);
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(user);
+        when(talentRepository.findById(1L)).thenReturn(Optional.of(talent));
 
-        method.invoke(companyService, company, talent);
+        TalentResponseDto result = companyService.getTalentById(authentication, 1L);
+
+        assertNotNull(result);
+        assertEquals(1L, result.getId());
     }
 
     @Test
-    public void testValidateTalentIsAvailableToCompany_TalentSharedWithTheCompany() throws Exception {
+    void testValidateTalentIsAvailableToCompany_TalentSharedWithTheCompany() {
         Company company = new Company();
         company.setId(1L);
 
@@ -1592,18 +1606,35 @@ public class CompanyServiceTest {
 
         talentCompany.setPartnerGroups(Set.of(partnerGroup));
 
+        TalentExperience talentExperience = new TalentExperience();
+        talentExperience.setPattern(new Pattern());
+        talentExperience.setSeniority(new Seniority());
+        talentExperience.setTotalTime(15);
+
         Talent talent = new Talent();
+        talent.setId(1L);
         talent.setCompany(talentCompany);
         talent.setActive(true);
+        talent.setWorkModes(Set.of(new WorkMode()));
+        talent.setDescription("alabala");
+        talent.setLocations(Set.of(new Location()));
+        talent.setMinRate(3);
+        talent.setMaxRate(15);
+        talent.setTalentExperience(talentExperience);
 
-        Method method = CompanyService.class.getDeclaredMethod("validateTalentIsAvailableToCompany", Company.class, Talent.class);
-        method.setAccessible(true);
+        User user = new User();
+        user.setCompany(company);
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(user);
+        when(talentRepository.findById(1L)).thenReturn(Optional.of(talent));
 
-        method.invoke(companyService, company, talent);
+        TalentResponseDto result = companyService.getTalentById(authentication, 1L);
+
+        assertNotNull(result);
+        assertEquals(1L, result.getId());
     }
 
     @Test
-    void shouldGetAllTalents(){
+    void shouldGetAllTalents() {
         User user = new User();
         user.setId(1L);
         Company userCompany = Company.builder().id(1L).build();
@@ -1657,9 +1688,7 @@ public class CompanyServiceTest {
 
         when(talentRepository.findById(1L)).thenReturn(Optional.empty());
 
-        NotFoundException exception = assertThrows(NotFoundException.class, () -> {
-            companyService.getTalentById(authentication, 1L);
-        });
+        NotFoundException exception = assertThrows(NotFoundException.class, () -> companyService.getTalentById(authentication, 1L));
 
         assertEquals(exception.getMessage(), "Talent with ID: " + 1L + " not found");
     }
@@ -1689,9 +1718,7 @@ public class CompanyServiceTest {
         when(talentRepository.findById(1L)).thenReturn(Optional.of(t));
         when(userService.getCurrentUserOrThrow(authentication)).thenReturn(user);
 
-        PermissionDeniedException exception = assertThrows(PermissionDeniedException.class, () -> {
-            companyService.getTalentById(authentication, 1L);
-        });
+        PermissionDeniedException exception = assertThrows(PermissionDeniedException.class, () -> companyService.getTalentById(authentication, 1L));
 
         assertEquals(exception.getMessage(), "You have no access to this talent");
     }
@@ -1721,9 +1748,7 @@ public class CompanyServiceTest {
         when(talentRepository.findById(1L)).thenReturn(Optional.of(t));
         when(userService.getCurrentUserOrThrow(authentication)).thenReturn(user);
 
-        PermissionDeniedException exception = assertThrows(PermissionDeniedException.class, () -> {
-            companyService.getTalentById(authentication, 1L);
-        });
+        PermissionDeniedException exception = assertThrows(PermissionDeniedException.class, () -> companyService.getTalentById(authentication, 1L));
 
         assertEquals(exception.getMessage(), "Talent is not active.");
     }
@@ -1744,9 +1769,7 @@ public class CompanyServiceTest {
         when(talentRepository.findById(1L)).thenReturn(Optional.of(t));
         when(userService.getCurrentUserOrThrow(authentication)).thenReturn(user);
 
-        PermissionDeniedException exception = assertThrows(PermissionDeniedException.class, () -> {
-            companyService.getTalentById(authentication, 1L);
-        });
+        PermissionDeniedException exception = assertThrows(PermissionDeniedException.class, () -> companyService.getTalentById(authentication, 1L));
 
         assertEquals(exception.getMessage(), "Talent is inactive");
     }
