@@ -24,6 +24,7 @@ import com.example.b2b_opportunities.Entity.Filter;
 import com.example.b2b_opportunities.Entity.Location;
 import com.example.b2b_opportunities.Entity.PartnerGroup;
 import com.example.b2b_opportunities.Entity.Pattern;
+import com.example.b2b_opportunities.Entity.Position;
 import com.example.b2b_opportunities.Entity.Project;
 import com.example.b2b_opportunities.Entity.Seniority;
 import com.example.b2b_opportunities.Entity.Skill;
@@ -49,6 +50,7 @@ import com.example.b2b_opportunities.Repository.FilterRepository;
 import com.example.b2b_opportunities.Repository.LocationRepository;
 import com.example.b2b_opportunities.Repository.PartnerGroupRepository;
 import com.example.b2b_opportunities.Repository.PatternRepository;
+import com.example.b2b_opportunities.Repository.PositionApplicationRepository;
 import com.example.b2b_opportunities.Repository.ProjectRepository;
 import com.example.b2b_opportunities.Repository.SeniorityRepository;
 import com.example.b2b_opportunities.Repository.SkillExperienceRepository;
@@ -57,6 +59,7 @@ import com.example.b2b_opportunities.Repository.TalentExperienceRepository;
 import com.example.b2b_opportunities.Repository.TalentRepository;
 import com.example.b2b_opportunities.Repository.UserRepository;
 import com.example.b2b_opportunities.Repository.WorkModeRepository;
+import com.example.b2b_opportunities.Static.ApplicationStatus;
 import com.example.b2b_opportunities.Static.EmailVerification;
 import com.example.b2b_opportunities.Static.ProjectStatus;
 import com.example.b2b_opportunities.Utils.StringUtils;
@@ -84,6 +87,7 @@ import static com.example.b2b_opportunities.Utils.EmailUtils.validateEmail;
 @RequiredArgsConstructor
 @Slf4j
 public class CompanyService {
+    private final PositionApplicationRepository positionApplicationRepository;
     private final CompanyRepository companyRepository;
     private final ImageService imageService;
     private final CompanyTypeRepository companyTypeRepository;
@@ -649,7 +653,40 @@ public class CompanyService {
         CompanyResponseDto companyResponseDto = CompanyMapper.toCompanyResponseDto(company);
         companyResponseDto.setImage(imageService.returnUrlIfPictureExists(company.getId(), "image"));
         companyResponseDto.setBanner(imageService.returnUrlIfPictureExists(company.getId(), "banner"));
+        if (company.getProjects() != null && !company.getProjects().isEmpty() && hasPositions(company.getProjects())) {
+            companyResponseDto.setPositionViews(getProjectPositionsViews(company));
+            companyResponseDto.setAcceptedApplications(getAcceptedApplications(company));
+            companyResponseDto.setTotalApplications(getTotalApplications(company));
+        }
         return companyResponseDto;
+    }
+
+    private boolean hasPositions(List<Project> projects){
+        return projects.stream()
+                .anyMatch(project -> project.getPositions() != null && !project.getPositions().isEmpty());
+    }
+
+    private Long getProjectPositionsViews(Company company) {
+        return company.getProjects().stream()
+                .flatMap(project -> project.getPositions().stream())
+                .mapToLong(Position::getViews)
+                .sum();
+    }
+
+    private Long getAcceptedApplications(Company company) {
+        return company.getProjects().stream()
+                .flatMap(project -> project.getPositions().stream())
+                .mapToLong(position -> positionApplicationRepository
+                        .countByPositionIdAndApplicationStatus(position.getId(), ApplicationStatus.ACCEPTED))
+                .sum();
+    }
+
+    private Long getTotalApplications(Company company) {
+        return company.getProjects().stream()
+                .flatMap(project -> project.getPositions().stream())
+                .mapToLong(position -> positionApplicationRepository
+                        .countByPositionIdExcludingAwaitingCvOrTalent(position.getId()))
+                .sum();
     }
 
     private Company setCompanyFields(CompanyRequestDto dto) {

@@ -431,6 +431,7 @@ public class ProjectServiceTest {
         User user = new User();
         Company userCompany = new Company();
         userCompany.setId(99999L);
+        userCompany.setApproved(true);
         user.setCompany(userCompany);
         userCompany.setUsers(List.of(user));
 

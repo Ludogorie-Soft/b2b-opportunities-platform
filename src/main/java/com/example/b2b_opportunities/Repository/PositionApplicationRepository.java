@@ -33,4 +33,9 @@ public interface PositionApplicationRepository extends JpaRepository<PositionApp
     @Query("SELECT pa FROM PositionApplication pa WHERE pa.position.id = :positionId AND pa.applicationStatus != 'AWAITING_CV_OR_TALENT'")
     List<PositionApplication> findByPositionIdExcludingAwaitingCvOrTalent(@Param("positionId") Long positionId);
     List<PositionApplication> findByPositionIdAndApplicationStatus(Long positionId, ApplicationStatus applicationStatus);
+
+    Long countByPositionIdAndApplicationStatus(Long positionId, ApplicationStatus status);
+
+    @Query("SELECT COUNT(pa) FROM PositionApplication pa WHERE pa.position.id = :positionId AND pa.applicationStatus != 'AWAITING_CV_OR_TALENT'")
+    Long countByPositionIdExcludingAwaitingCvOrTalent(@Param("positionId") Long positionId);
 }

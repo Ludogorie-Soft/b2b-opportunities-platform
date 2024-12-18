@@ -34,4 +34,8 @@ public class ProjectResponseDto {
     private String status;
     private boolean isPartnerOnly;
     private List<Long> partnerGroups;
+
+    private Long positionViews;
+    private Long acceptedApplications;
+    private Long totalApplications;
 }
