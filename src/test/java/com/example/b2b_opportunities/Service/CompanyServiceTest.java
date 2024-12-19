@@ -1832,9 +1832,10 @@ public class CompanyServiceTest {
         dto.setEmail("email@test.test");
         dto.setWebsite("test.com");
         dto.setLinkedIn("linkedin.com");
-        dto.setCompanyTypeId(1L);
+        dto.setCompanyTypeId(2L);
         dto.setSkills(List.of(2L));
         dto.setDescription("newDescription");
+        dto.setDomainId(2L);
 
         when(userService.getCurrentUserOrThrow(authentication)).thenReturn(user);
         when(companyRepository.findByLinkedIn(any())).thenReturn(Optional.empty());
