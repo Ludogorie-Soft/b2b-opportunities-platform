@@ -7,16 +7,19 @@ import java.net.UnknownHostException;
 import java.util.regex.Pattern;
 
 public class EmailUtils {
+
+    private static final int MAX_EMAIL_LENGTH = 320;
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[\\w.-]+@([\\w-]+\\.)+[\\w-]{2,4}$");
 
 
     public static void validateEmail(String email) {
-        if (!isValidEmail(email))
+        if (email == null || email.length() > MAX_EMAIL_LENGTH || !isValidEmail(email)) {
             throw new InvalidRequestException("Invalid email format or domain.", "email");
+        }
     }
 
     private static boolean isValidEmail(String email) {
-        if (email == null || email.length() > 320) { // Basic check for null or unreasonably long emails
+        if (email == null || email.isEmpty() || email.length() > MAX_EMAIL_LENGTH) { // Basic check for null or unreasonably long emails
             return false;
         }
         return EMAIL_PATTERN.matcher(email).matches();
