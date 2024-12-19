@@ -9,7 +9,9 @@ import java.util.regex.Pattern;
 public class EmailUtils {
 
     private static final int MAX_EMAIL_LENGTH = 320;
-    private static final Pattern EMAIL_PATTERN = Pattern.compile("^[\\w.-]+@([\\w-]+\\.)+[\\w-]{2,4}$");
+    private static final Pattern EMAIL_PATTERN = Pattern.compile(
+            "^[\\w.-]++@[\\w-]++(\\.[\\w-]++)+$",
+            Pattern.CASE_INSENSITIVE);
 
 
     public static void validateEmail(String email) {
