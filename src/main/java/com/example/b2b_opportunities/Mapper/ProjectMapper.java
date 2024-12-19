@@ -21,7 +21,7 @@ public class ProjectMapper {
                 .startDate(project.getStartDate())
                 .endDate(project.getEndDate())
                 .duration(project.getDuration())
-                .Description(project.getDescription())
+                .description(project.getDescription())
                 .status(project.getProjectStatus().toString())
                 .isPartnerOnly(project.isPartnerOnly())
                 .partnerGroups(project.isPartnerOnly() ?

@@ -6,6 +6,7 @@ import com.example.b2b_opportunities.Dto.Response.ProjectResponseDto;
 import com.example.b2b_opportunities.Entity.Company;
 import com.example.b2b_opportunities.Entity.PartnerGroup;
 import com.example.b2b_opportunities.Entity.Position;
+import com.example.b2b_opportunities.Entity.PositionApplication;
 import com.example.b2b_opportunities.Entity.Project;
 import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Exception.AuthenticationFailedException;
@@ -16,9 +17,10 @@ import com.example.b2b_opportunities.Mapper.PositionMapper;
 import com.example.b2b_opportunities.Mapper.ProjectMapper;
 import com.example.b2b_opportunities.Repository.CompanyRepository;
 import com.example.b2b_opportunities.Repository.PartnerGroupRepository;
+import com.example.b2b_opportunities.Repository.PositionApplicationRepository;
 import com.example.b2b_opportunities.Repository.ProjectRepository;
+import com.example.b2b_opportunities.Static.ApplicationStatus;
 import com.example.b2b_opportunities.Static.ProjectStatus;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -38,8 +40,12 @@ import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -60,6 +66,9 @@ public class ProjectServiceTest {
 
     @InjectMocks
     private ProjectService projectService;
+
+    @Mock
+    PositionApplicationRepository positionApplicationRepository;
 
     @Mock
     private CompanyRepository companyRepository;
@@ -119,8 +128,8 @@ public class ProjectServiceTest {
             mockedMapper.when(() -> ProjectMapper.toDto(project)).thenReturn(projectResponseDto);
             ProjectResponseDto result = projectService.get(authentication, 1L);
 
-            Assertions.assertNotNull(result, "Result should not be null");
-            Assertions.assertEquals(projectResponseDto, result, "DTOs should match");
+            assertNotNull(result, "Result should not be null");
+            assertEquals(projectResponseDto, result, "DTOs should match");
         }
     }
 
@@ -194,7 +203,7 @@ public class ProjectServiceTest {
                     .startDate(LocalDate.now())
                     .endDate(LocalDate.now().plusDays(30))
                     .duration(1)
-                    .Description("Public project description")
+                    .description("Public project description")
                     .status("ACTIVE")
                     .isPartnerOnly(false)
                     .build();
@@ -207,7 +216,7 @@ public class ProjectServiceTest {
                     .startDate(LocalDate.now())
                     .endDate(LocalDate.now().plusDays(60))
                     .duration(2)
-                    .Description("Partner project description")
+                    .description("Partner project description")
                     .status("ACTIVE")
                     .isPartnerOnly(true)
                     .build();
@@ -217,9 +226,9 @@ public class ProjectServiceTest {
 
             List<ProjectResponseDto> result = projectService.getAvailableProjects(authentication);
 
-            Assertions.assertNotNull(result);
-            Assertions.assertEquals(publicProjectDto, result.get(0));
-            Assertions.assertEquals(partnerProjectDto, result.get(1));
+            assertNotNull(result);
+            assertEquals(publicProjectDto, result.get(0));
+            assertEquals(partnerProjectDto, result.get(1));
         }
     }
 
@@ -243,8 +252,8 @@ public class ProjectServiceTest {
 
             ProjectResponseDto result = projectService.update(projectId, dto, authentication);
 
-            Assertions.assertNotNull(result, "Result should not be null");
-            Assertions.assertEquals(projectResponseDto, result, "DTOs should match");
+            assertNotNull(result, "Result should not be null");
+            assertEquals(projectResponseDto, result, "DTOs should match");
         }
     }
 
@@ -290,8 +299,8 @@ public class ProjectServiceTest {
 
             ProjectResponseDto result = projectService.update(projectId, dto, authentication);
 
-            Assertions.assertNotNull(result, "Result should not be null");
-            Assertions.assertEquals(projectResponseDto, result, "DTOs should match");
+            assertNotNull(result, "Result should not be null");
+            assertEquals(projectResponseDto, result, "DTOs should match");
         }
     }
 
@@ -317,8 +326,8 @@ public class ProjectServiceTest {
             ProjectResponseDto result = projectService.create(authentication, dto);
 
             // Assert
-            Assertions.assertNotNull(result, "Result should not be null");
-            Assertions.assertEquals(projectResponseDto, result, "DTOs should match");
+            assertNotNull(result, "Result should not be null");
+            assertEquals(projectResponseDto, result, "DTOs should match");
         }
     }
 
@@ -362,8 +371,8 @@ public class ProjectServiceTest {
             ProjectResponseDto result = projectService.create(authentication, dto);
 
             // Assert
-            Assertions.assertNotNull(result, "Result should not be null");
-            Assertions.assertEquals(projectResponseDto, result, "DTOs should match");
+            assertNotNull(result, "Result should not be null");
+            assertEquals(projectResponseDto, result, "DTOs should match");
         }
     }
 
@@ -451,8 +460,8 @@ public class ProjectServiceTest {
 
             List<PositionResponseDto> result = projectService.getPositionsByProject(authentication, projectId);
 
-            Assertions.assertNotNull(result, "Result should not be null");
-            Assertions.assertEquals(2, result.size(), "Should return the correct number of positions");
+            assertNotNull(result, "Result should not be null");
+            assertEquals(2, result.size(), "Should return the correct number of positions");
         }
     }
 
@@ -473,7 +482,7 @@ public class ProjectServiceTest {
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
         when(companyService.getUserCompanyOrThrow(user)).thenReturn(company);
 
-        Assertions.assertEquals(projectService.getPositionsByProject(authentication, projectId), new ArrayList<>());
+        assertEquals(projectService.getPositionsByProject(authentication, projectId), new ArrayList<>());
     }
 
     @Test
@@ -496,9 +505,9 @@ public class ProjectServiceTest {
 
             ProjectResponseDto result = projectService.reactivateProject(projectId, authentication);
 
-            Assertions.assertNotNull(result, "Result should not be null");
-            Assertions.assertEquals(projectResponseDto, result, "DTOs should match");
-            Assertions.assertEquals(ProjectStatus.ACTIVE, project.getProjectStatus(), "Project status should be ACTIVE");
+            assertNotNull(result, "Result should not be null");
+            assertEquals(projectResponseDto, result, "DTOs should match");
+            assertEquals(ProjectStatus.ACTIVE, project.getProjectStatus(), "Project status should be ACTIVE");
         }
     }
 
@@ -561,7 +570,7 @@ public class ProjectServiceTest {
 
         verify(mailService, never()).sendProjectExpiringMail(any(Project.class));
         verify(projectRepository, times(1)).save(expiredProject);
-        Assertions.assertEquals(ProjectStatus.INACTIVE, expiredProject.getProjectStatus(), "Project status should be INACTIVE");
+        assertEquals(ProjectStatus.INACTIVE, expiredProject.getProjectStatus(), "Project status should be INACTIVE");
     }
 
     @Test
@@ -584,6 +593,189 @@ public class ProjectServiceTest {
 
         verify(mailService, times(1)).sendProjectExpiringMail(expiringProject);
         verify(projectRepository, times(1)).save(expiredProject);
-        Assertions.assertEquals(ProjectStatus.INACTIVE, expiredProject.getProjectStatus(), "Project status should be INACTIVE");
+        assertEquals(ProjectStatus.INACTIVE, expiredProject.getProjectStatus(), "Project status should be INACTIVE");
+    }
+
+    @Test
+    void shouldGetProjectAndItsViewsAndApplicationsInfo() {
+        User user = new User();
+        Company company = Company.builder().id(1L).build();
+
+        Project project = new Project();
+        project.setId(1L);
+        project.setPartnerOnly(false);
+        project.setCompany(company);
+        project.setProjectStatus(ProjectStatus.ACTIVE);
+
+        Position position = new Position();
+        position.setId(1L);
+        position.setViews(2L);
+        Position position2 = new Position();
+        position2.setId(2L);
+        position2.setViews(2L);
+
+        PositionApplication pa = new PositionApplication();
+        pa.setId(1L);
+        pa.setPosition(position);
+        pa.setApplicationStatus(ApplicationStatus.IN_PROGRESS); //One in progress
+        PositionApplication pa2 = new PositionApplication();
+        pa2.setId(2L);
+        pa2.setPosition(position);
+        pa.setApplicationStatus(ApplicationStatus.ACCEPTED); //And one accepted
+
+        project.setPositions(List.of(position, position2));
+
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(user);
+        when(companyService.getUserCompanyOrThrow(user)).thenReturn(company);
+        when(projectRepository.findById(anyLong())).thenReturn(Optional.of(project));
+        when(positionApplicationRepository.countByPositionIdAndApplicationStatus(1L, ApplicationStatus.ACCEPTED))
+                .thenReturn(1L);
+        when(positionApplicationRepository.countByPositionIdAndApplicationStatus(2L, ApplicationStatus.ACCEPTED))
+                .thenReturn(0L);
+
+        when(positionApplicationRepository.countByPositionIdExcludingAwaitingCvOrTalent(1L))
+                .thenReturn(2L);
+        when(positionApplicationRepository.countByPositionIdExcludingAwaitingCvOrTalent(2L))
+                .thenReturn(0L);
+
+        ProjectResponseDto responseDto = projectService.get(authentication, 1L);
+
+        assertEquals(4L, responseDto.getPositionViews());
+        assertEquals(1L, responseDto.getAcceptedApplications());
+        assertEquals(2L, responseDto.getTotalApplications());
+    }
+
+    @Test
+    void testGetProjectByUnapprovedCompanyShouldThrowException(){
+        User user = new User();
+        Company company = Company.builder().id(1L).build();
+
+        Company anotherCompany = Company.builder().id(2L).build();
+        anotherCompany.setApproved(false);
+
+        Project project = new Project();
+        project.setId(1L);
+        project.setPartnerOnly(false);
+        project.setCompany(anotherCompany);
+
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(user);
+        when(companyService.getUserCompanyOrThrow(user)).thenReturn(company);
+        when(projectRepository.findById(anyLong())).thenReturn(Optional.of(project));
+
+        PermissionDeniedException exception = assertThrows(PermissionDeniedException.class, () ->
+                projectService.get(authentication, 1L));
+
+        assertEquals(exception.getMessage(), "Project posted by an unapproved company");
+    }
+
+    @Test
+    void getPartnerOnlyProjectWhenProjectIsInactiveShouldThrowException(){
+        User user = new User();
+        Company company = Company.builder().id(1L).build();
+
+        Company anotherCompany = Company.builder().id(2L).build();
+
+        Project project = new Project();
+        project.setId(1L);
+        project.setPartnerOnly(true);
+        project.setCompany(anotherCompany);
+        PartnerGroup pg = PartnerGroup.builder()
+                .partners(Set.of(company))
+                .build();
+        project.setPartnerGroupList(List.of(pg));
+        project.setProjectStatus(ProjectStatus.INACTIVE);
+
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(user);
+        when(companyService.getUserCompanyOrThrow(user)).thenReturn(company);
+        when(projectRepository.findById(anyLong())).thenReturn(Optional.of(project));
+
+        PermissionDeniedException exception = assertThrows(PermissionDeniedException.class, () ->
+                projectService.get(authentication, 1L));
+
+        assertEquals(exception.getMessage(), "This project is inactive");
+    }
+
+    @Test
+    void getPartnerProjectWhenCompanyIsUnapprovedShouldThrowException(){
+        User user = new User();
+        Company company = Company.builder().id(1L).build();
+
+        Company anotherCompany = Company.builder().id(2L).build();
+        anotherCompany.setApproved(false);
+
+        Project project = new Project();
+        project.setId(1L);
+        project.setPartnerOnly(true);
+        project.setCompany(anotherCompany);
+        PartnerGroup pg = PartnerGroup.builder()
+                .partners(Set.of(company))
+                .build();
+        project.setPartnerGroupList(List.of(pg));
+        project.setProjectStatus(ProjectStatus.ACTIVE);
+
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(user);
+        when(companyService.getUserCompanyOrThrow(user)).thenReturn(company);
+        when(projectRepository.findById(anyLong())).thenReturn(Optional.of(project));
+
+        NotFoundException exception = assertThrows(NotFoundException.class, () ->
+                projectService.get(authentication, 1L));
+
+        assertEquals(exception.getMessage(), "The company has not yet been approved to post public projects");
+    }
+
+    @Test
+    void getAvailableProjectsWithNoPartnerProjectsShouldReturnNewArrayListForPartnerProjects(){
+        User user = new User();
+        Company company = Company.builder().id(1L).build();
+
+        Project project = new Project();
+        project.setId(1L);
+        project.setCompany(company);
+        project.setDatePosted(LocalDateTime.now());
+        project.setExpiryDate(LocalDateTime.now().plusWeeks(3));
+        project.setName("test");
+        project.setStartDate(LocalDate.now());
+        project.setEndDate(LocalDate.now().plusDays(2));
+        project.setDuration(2);
+        project.setDescription("test");
+        project.setProjectStatus(ProjectStatus.ACTIVE);
+        project.setPartnerOnly(false);
+
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(user);
+        when(companyService.getUserCompanyOrThrow(user)).thenReturn(company);
+        when(projectRepository.findByProjectStatusAndIsPartnerOnlyFalseAndCompanyIsApprovedTrue(any())).thenReturn(List.of(project));
+        when(projectRepository.findPartnerOnlyProjectsByCompanyInPartnerGroupsAndStatus(anyLong(), any())).thenReturn(new ArrayList<>());
+
+        List<ProjectResponseDto> responseDtoList = projectService.getAvailableProjects(authentication);
+
+        assertEquals(responseDtoList.size(),1);
+        assertEquals(responseDtoList.get(0).getName(), "test");
+    }
+
+    @Test
+    void createOrUpdateShouldThrowExceptionWhenPartnerGroupNotFound(){
+        User user = new User();
+        Company company = Company.builder().id(1L).build();
+
+        ProjectRequestDto dto = new ProjectRequestDto();
+        dto.setName("test");
+        dto.setStartDate(LocalDate.now());
+        dto.setEndDate(LocalDate.now());
+        dto.setDuration(5);
+        dto.setDescription("test");
+        dto.setPartnerOnly(true);
+        dto.setPartnerGroups(List.of(1L, 2L));
+
+        PartnerGroup partnerGroup = new PartnerGroup();
+        partnerGroup.setId(1L);
+
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(user);
+        when(companyService.getUserCompanyOrThrow(user)).thenReturn(company);
+        when(partnerGroupRepository.findAllById(anyList())).thenReturn(List.of(partnerGroup));
+
+        NotFoundException exception = assertThrows(NotFoundException.class, () ->
+                projectService.create(authentication, dto));
+
+        assertEquals(exception.getMessage(), "PartnerGroups with ID(s) [2] not found.");
     }
 }

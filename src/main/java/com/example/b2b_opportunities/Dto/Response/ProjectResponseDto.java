@@ -30,7 +30,7 @@ public class ProjectResponseDto {
     private LocalDate endDate;
     private Integer duration; // months
 
-    private String Description;
+    private String description;
     private String status;
     private boolean isPartnerOnly;
     private List<Long> partnerGroups;
