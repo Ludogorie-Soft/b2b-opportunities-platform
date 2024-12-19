@@ -23,6 +23,9 @@ import com.example.b2b_opportunities.Entity.Filter;
 import com.example.b2b_opportunities.Entity.Location;
 import com.example.b2b_opportunities.Entity.PartnerGroup;
 import com.example.b2b_opportunities.Entity.Pattern;
+import com.example.b2b_opportunities.Entity.Position;
+import com.example.b2b_opportunities.Entity.PositionApplication;
+import com.example.b2b_opportunities.Entity.PositionStatus;
 import com.example.b2b_opportunities.Entity.Project;
 import com.example.b2b_opportunities.Entity.Seniority;
 import com.example.b2b_opportunities.Entity.Skill;
@@ -44,6 +47,7 @@ import com.example.b2b_opportunities.Repository.FilterRepository;
 import com.example.b2b_opportunities.Repository.LocationRepository;
 import com.example.b2b_opportunities.Repository.PartnerGroupRepository;
 import com.example.b2b_opportunities.Repository.PatternRepository;
+import com.example.b2b_opportunities.Repository.PositionApplicationRepository;
 import com.example.b2b_opportunities.Repository.ProjectRepository;
 import com.example.b2b_opportunities.Repository.SeniorityRepository;
 import com.example.b2b_opportunities.Repository.SkillExperienceRepository;
@@ -52,6 +56,7 @@ import com.example.b2b_opportunities.Repository.TalentExperienceRepository;
 import com.example.b2b_opportunities.Repository.TalentRepository;
 import com.example.b2b_opportunities.Repository.UserRepository;
 import com.example.b2b_opportunities.Repository.WorkModeRepository;
+import com.example.b2b_opportunities.Static.ApplicationStatus;
 import com.example.b2b_opportunities.Static.EmailVerification;
 import com.example.b2b_opportunities.Static.ProjectStatus;
 import jakarta.servlet.http.HttpServletRequest;
@@ -63,6 +68,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.multipart.MultipartFile;
+import org.testcontainers.shaded.org.checkerframework.checker.units.qual.C;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -92,6 +98,9 @@ public class CompanyServiceTest {
     private UserService userService;
 
     @Mock
+    private HttpServletRequest request;
+
+    @Mock
     private MailService mailService;
 
     @Mock
@@ -99,6 +108,9 @@ public class CompanyServiceTest {
 
     @Mock
     private DomainRepository domainRepository;
+
+    @Mock
+    private PositionApplicationRepository positionApplicationRepository;
 
     @Mock
     private ImageService imageService;
@@ -147,9 +159,6 @@ public class CompanyServiceTest {
 
     @Mock
     private UserMapper userMapper;
-
-    @Mock
-    private HttpServletRequest request;
 
     @Mock
     private PartnerGroupRepository partnerGroupRepository;
@@ -1772,5 +1781,76 @@ public class CompanyServiceTest {
         assertEquals(exception.getMessage(), "Talent is inactive");
     }
 
+    @Test
+    void updateCompanyWithOtherFieldsIncluded(){
+        User user = User.builder().id(1L).build();
 
+        Company company = Company.builder()
+                .name("currentName")
+                .email("email@test.test")
+                .website("test.com")
+                .linkedIn("linkedIn.com")
+                .emailVerification(EmailVerification.ACCEPTED)
+                .build();
+
+        user.setCompany(company);
+
+        Project project = new Project();
+        project.setCompany(company);
+
+        Position position = new Position();
+        position.setId(1L);
+        position.setViews(2L);
+        position.setProject(project);
+
+        project.setPositions(List.of(position));
+        company.setProjects(List.of(project));
+
+        PositionApplication pa = new PositionApplication();
+        pa.setPosition(position);
+        pa.setApplicationStatus(ApplicationStatus.ACCEPTED);
+        PositionApplication pa2 = new PositionApplication();
+        pa2.setPosition(position);
+        pa2.setApplicationStatus(ApplicationStatus.IN_PROGRESS);
+
+        CompanyType ct = CompanyType.builder().id(1L).build();
+        company.setCompanyType(ct);
+        CompanyType newCompanyType = CompanyType.builder().id(2L).build();
+
+        Domain domain = Domain.builder().id(1L).build();
+        company.setDomain(domain);
+        Domain newDomain = Domain.builder().id(2L).build();
+
+        Skill currentSkill = Skill.builder().id(1L).build();
+        company.setSkills(Set.of(currentSkill));
+
+        Skill newSkill = Skill.builder().id(2L).build();
+        company.setDescription("oldDescription");
+
+        CompanyRequestDto dto = new CompanyRequestDto();
+        dto.setName("newName");
+        dto.setEmail("email@test.test");
+        dto.setWebsite("test.com");
+        dto.setLinkedIn("linkedin.com");
+        dto.setCompanyTypeId(1L);
+        dto.setSkills(List.of(2L));
+        dto.setDescription("newDescription");
+
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(user);
+        when(companyRepository.findByLinkedIn(any())).thenReturn(Optional.empty());
+        when(companyRepository.findByWebsite(any())).thenReturn(Optional.empty());
+        when(companyTypeRepository.findById(anyLong())).thenReturn(Optional.of(newCompanyType));
+        when(domainRepository.findById(anyLong())).thenReturn(Optional.of(newDomain));
+        when(patternService.getAllSkillsIfSkillIdsExist(any())).thenReturn(List.of(newSkill));
+        when(positionApplicationRepository.countByPositionIdExcludingAwaitingCvOrTalent(anyLong())).thenReturn(2L);
+        when(positionApplicationRepository.countByPositionIdAndApplicationStatus(anyLong(), any())).thenReturn(1L);
+        when(companyRepository.save(any(Company.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        CompanyResponseDto responseDto = companyService.editCompany(authentication, dto, request);
+
+        assertEquals(responseDto.getName(), "newName");
+        assertEquals(responseDto.getPositionViews(), 2L);
+        assertEquals(responseDto.getAcceptedApplications(), 1L);
+        assertEquals(responseDto.getTotalApplications(), 2L);
+    }
 }
