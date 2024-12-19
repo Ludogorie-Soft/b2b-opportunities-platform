@@ -26,7 +26,8 @@ class EmailUtilsTest {
             "test@test.com, valid",
             "test_test@test.com, valid",
             "nodomain.com, invalid",
-            "randomtest, invalid"
+            "randomtest, invalid",
+            "emaillemaillemaillemaillemaillemaillemaillemaillemaillemaillemaillemaillemaillemaillemaillemaillemaillemaillemaillemaillemaillemaillemaillemaillemaillemaillemaillemaillemaillemaillemaillemaillemaillemaillemaillemaillemaillemaillemaillemaillemaillemaillemaillemaillemaillemaillemaillemaillemaillemaillemaillemaillemaillemaillemaillemaillemaillemaillemaillemaillemaillemaillemaillemaill, false"
     })
     void testEmailUtils(String email, String expectedOutcome) {
         if ("valid".equals(expectedOutcome)) {
