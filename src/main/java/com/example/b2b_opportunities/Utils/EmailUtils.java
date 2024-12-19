@@ -13,15 +13,8 @@ public class EmailUtils {
 
 
     public static void validateEmail(String email) {
-        if (email == null || email.length() > MAX_EMAIL_LENGTH || !isValidEmail(email)) {
+        if (email == null || email.isEmpty() || email.length() > MAX_EMAIL_LENGTH || !EMAIL_PATTERN.matcher(email).matches()) {
             throw new InvalidRequestException("Invalid email format or domain.", "email");
         }
-    }
-
-    private static boolean isValidEmail(String email) {
-        if (email == null || email.isEmpty() || email.length() > MAX_EMAIL_LENGTH) { // Basic check for null or unreasonably long emails
-            return false;
-        }
-        return EMAIL_PATTERN.matcher(email).matches();
     }
 }
