@@ -75,6 +75,24 @@ services:
       - b2b-network
     restart: always
 
+  mc:
+    image: bitnami/minio-client:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      MINIO_SERVER_HOST: minio
+      MINIO_SERVER_ACCESS_KEY: ${STORAGE_USER}
+      MINIO_SERVER_SECRET_KEY: ${STORAGE_PASSWORD}
+    entrypoint: >
+      /bin/sh -c "
+      sleep 10; 
+      mc alias set myminio http://$${MINIO_SERVER_HOST}:9000 $${MINIO_SERVER_ACCESS_KEY} $${MINIO_SERVER_SECRET_KEY};
+      mc anonymous set download myminio/company-assets;
+      "
+    networks:
+      - b2b-network
+
 networks:
   b2b-network:
     driver: bridge
