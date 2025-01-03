@@ -1,5 +1,6 @@
 package com.example.b2b_opportunities.Dto.Response;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -13,6 +14,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class PositionApplicationResponseDto {
     private Long id;
     private Long positionId;
@@ -22,4 +24,6 @@ public class PositionApplicationResponseDto {
     private LocalDateTime availableFrom;
     private int rate;
     private String cvUrl;
+    private String companyName;
+    private String companyImage;
 }

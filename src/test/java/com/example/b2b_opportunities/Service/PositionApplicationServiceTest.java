@@ -68,6 +68,9 @@ class PositionApplicationServiceTest {
     UserService userService;
 
     @Mock
+    ImageService imageService;
+
+    @Mock
     CompanyService companyService;
 
     @Mock
@@ -494,11 +497,13 @@ class PositionApplicationServiceTest {
     void testGetApplicationsForMyPositionsWithNonEmptyPositions() {
         User user = new User();
         Company company = mock(Company.class);
+        company.setName("companyNameTest");
         Project project = mock(Project.class);
         Position position = mock(Position.class);
         PositionApplication application = new PositionApplication();
         application.setApplicationStatus(ApplicationStatus.ACCEPTED);
         application.setPosition(position);
+        application.setTalentCompany(company);
 
         List<Project> projects = List.of(project);
         List<Position> positions = List.of(position);

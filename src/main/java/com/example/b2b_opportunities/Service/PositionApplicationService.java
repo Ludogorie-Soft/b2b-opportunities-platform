@@ -48,6 +48,7 @@ public class PositionApplicationService {
     private final ProjectService projectService;
     private final PositionService positionService;
     private final PositionApplicationRepository positionApplicationRepository;
+    private final ImageService imageService;
 
 
     private final MinioClient minioClient;
@@ -163,7 +164,10 @@ public class PositionApplicationService {
         List<PositionApplication> positionApplications = positionApplicationRepository.findAllApplicationsForMyPositions(userCompany.getId(), ApplicationStatus.AWAITING_CV_OR_TALENT);
         List<PositionApplicationResponseDto> responseDtoList = new ArrayList<>();
         for (PositionApplication pa : positionApplications) {
-            responseDtoList.add(generatePAResponse(pa));
+            PositionApplicationResponseDto positionApplicationResponseDto = generatePAResponse(pa);
+            positionApplicationResponseDto.setCompanyName(pa.getTalentCompany().getName());
+            positionApplicationResponseDto.setCompanyImage(imageService.returnUrlIfPictureExists(pa.getTalentCompany().getId(), "image"));
+            responseDtoList.add(positionApplicationResponseDto);
         }
         return responseDtoList;
     }
@@ -204,9 +208,12 @@ public class PositionApplicationService {
         User user = userService.getCurrentUserOrThrow(authentication);
         Company userCompany = companyService.getUserCompanyOrThrow(user);
         PositionApplication pa = getPositionApplicationOrThrow(applicationId);
-
         validateAccess(pa, userCompany);
-        return generatePAResponse(pa);
+
+        PositionApplicationResponseDto responseDto = generatePAResponse(pa);
+        responseDto.setCompanyName(pa.getTalentCompany().getName());
+        responseDto.setCompanyImage(imageService.returnUrlIfPictureExists(pa.getTalentCompany().getId(), "image"));
+        return responseDto;
     }
 
     public PositionApplicationResponseDto updateApplication(Authentication authentication, MultipartFile file, Long applicationId, Long talentId) {
