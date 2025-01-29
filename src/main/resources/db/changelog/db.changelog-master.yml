@@ -125,3 +125,6 @@ databaseChangeLog:
   - include:
       file: 42-add-position-views.sql
       relativeToChangelogFile: true
+  - include:
+      file: 43-fix-parent-ids.sql
+      relativeToChangelogFile: true
