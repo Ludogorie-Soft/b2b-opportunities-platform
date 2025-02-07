@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -38,4 +39,7 @@ public interface PositionApplicationRepository extends JpaRepository<PositionApp
 
     @Query("SELECT COUNT(pa) FROM PositionApplication pa WHERE pa.position.id = :positionId AND pa.applicationStatus != 'AWAITING_CV_OR_TALENT'")
     Long countByPositionIdExcludingAwaitingCvOrTalent(@Param("positionId") Long positionId);
+
+    @Query("SELECT p FROM PositionApplication p WHERE p.applicationDateTime >= :start AND p.applicationDateTime < :end")
+    List<PositionApplication> findAllApplicationsBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 }
