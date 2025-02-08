@@ -98,6 +98,9 @@ class PositionApplicationServiceTest {
     @Mock
     MultipartFile multipartFile;
 
+    @Mock
+    MailService mailService;
+
     private PositionApplicationRequestDto requestDto;
 
     @BeforeEach

@@ -5,6 +5,7 @@ import com.example.b2b_opportunities.Dto.Response.PositionResponseDto;
 import com.example.b2b_opportunities.Dto.Response.ProjectResponseDto;
 import com.example.b2b_opportunities.Entity.Company;
 import com.example.b2b_opportunities.Entity.PartnerGroup;
+import com.example.b2b_opportunities.Entity.Pattern;
 import com.example.b2b_opportunities.Entity.Position;
 import com.example.b2b_opportunities.Entity.PositionApplication;
 import com.example.b2b_opportunities.Entity.Project;
@@ -46,6 +47,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -66,6 +69,9 @@ public class ProjectServiceTest {
 
     @InjectMocks
     private ProjectService projectService;
+
+    @Mock
+    private PositionApplicationService positionApplicationService;
 
     @Mock
     PositionApplicationRepository positionApplicationRepository;
@@ -778,4 +784,70 @@ public class ProjectServiceTest {
 
         assertEquals(exception.getMessage(), "PartnerGroups with ID(s) [2] not found.");
     }
+
+    @Test
+    void testProcessNewApplicationsWithNoApplications() {
+        when(positionApplicationService.getPreviousDayApplications()).thenReturn(Collections.emptyList());
+
+        emailSchedulerService.processNewApplications();
+
+        verify(mailService, never()).sendEmail(anyString(), anyString(), anyString());
+    }
+
+    @Test
+    void testProcessNewApplicationsWithApplications() {
+        Company company = new Company();
+        company.setEmail("company@example.com");
+        Position position = new Position();
+        position.setPattern(Pattern.builder().name("Position A").build());
+        Project project = new Project();
+        project.setCompany(company);
+        position.setProject(project);
+        PositionApplication application = new PositionApplication();
+        application.setPosition(position);
+        application.setApplicationDateTime(LocalDateTime.now());
+
+        List<PositionApplication> positionApplications = Collections.singletonList(application);
+
+        when(positionApplicationService.getPreviousDayApplications()).thenReturn(positionApplications);
+
+        emailSchedulerService.processNewApplications();
+
+        verify(mailService, times(1)).sendEmail(eq("company@example.com"), anyString(), eq("New Job Applications for Your Positions"));
+    }
+
+    @Test
+    void testProcessNewApplicationsWithmultipleApplications() {
+        Company company = new Company();
+        company.setEmail("company@example.com");
+
+        Position positionA = new Position();
+        positionA.setPattern(Pattern.builder().name("Position A").build());
+
+        Position positionB = new Position();
+        positionB.setPattern(Pattern.builder().name("Position B").build());
+
+        Project project = new Project();
+        project.setCompany(company);
+
+        positionA.setProject(project);
+        positionB.setProject(project);
+
+        PositionApplication applicationA = new PositionApplication();
+        applicationA.setPosition(positionA);
+        applicationA.setApplicationDateTime(LocalDateTime.now());
+
+        PositionApplication applicationB = new PositionApplication();
+        applicationB.setPosition(positionB);
+        applicationB.setApplicationDateTime(LocalDateTime.now());
+
+        List<PositionApplication> positionApplications = Arrays.asList(applicationA, applicationB);
+
+        when(positionApplicationService.getPreviousDayApplications()).thenReturn(positionApplications);
+
+        emailSchedulerService.processNewApplications();
+
+        verify(mailService, times(1)).sendEmail(eq("company@example.com"), anyString(), eq("New Job Applications for Your Positions"));
+    }
+
 }

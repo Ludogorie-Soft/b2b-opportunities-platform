@@ -26,6 +26,7 @@ import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cglib.core.Local;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -34,6 +35,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -49,8 +52,7 @@ public class PositionApplicationService {
     private final PositionService positionService;
     private final PositionApplicationRepository positionApplicationRepository;
     private final ImageService imageService;
-
-
+    private final MailService mailService;
     private final MinioClient minioClient;
 
     @Value("${storage.bucketName}")
@@ -238,6 +240,23 @@ public class PositionApplicationService {
         return generatePAResponse(pa);
     }
 
+    public List<PositionApplication> getPreviousDayApplications(){
+        LocalDate today = LocalDate.now();
+        DayOfWeek dayOfWeek = today.getDayOfWeek();
+
+        LocalDate startDate;
+
+        if(dayOfWeek == DayOfWeek.MONDAY) {
+            startDate = today.minusDays(3);
+        } else {
+            startDate = today.minusDays(1);
+        }
+
+        LocalDateTime startDateTime = startDate.atStartOfDay();
+        LocalDateTime endDateTime = today.atStartOfDay();
+
+        return positionApplicationRepository.findAllApplicationsBetween(startDateTime, endDateTime);
+    }
 
     private void checkPositionEligibility(Project project, Position position, Company userCompany) {
         projectService.validateProjectIsAvailableToCompany(project, userCompany);
@@ -275,7 +294,9 @@ public class PositionApplicationService {
         User user = userService.getCurrentUserOrThrow(authentication);
         Company userCompany = companyService.getUserCompanyOrThrow(user);
         PositionApplication pa = getPositionApplicationOrThrow(applicationId);
+
         validateApplicationBelongsToCompany(pa, userCompany);
+
         if (pa.getApplicationStatus() == targetStatus) {
             return PositionApplicationMapper.toPositionApplicationResponseDto(pa);
         }
@@ -283,6 +304,11 @@ public class PositionApplicationService {
             throw new InvalidRequestException(invalidStatusMessage);
         }
         pa.setApplicationStatus(targetStatus);
+
+        if (targetStatus == ApplicationStatus.ACCEPTED) {
+            mailService.sendEmailWhenApplicationIsApproved(pa);
+        }
+
         return PositionApplicationMapper.toPositionApplicationResponseDto(
                 positionApplicationRepository.save(pa));
     }

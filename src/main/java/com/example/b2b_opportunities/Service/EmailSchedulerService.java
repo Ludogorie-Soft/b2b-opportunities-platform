@@ -3,10 +3,12 @@ package com.example.b2b_opportunities.Service;
 import com.example.b2b_opportunities.Entity.Company;
 import com.example.b2b_opportunities.Entity.Filter;
 import com.example.b2b_opportunities.Entity.Position;
+import com.example.b2b_opportunities.Entity.PositionApplication;
 import com.example.b2b_opportunities.Entity.Project;
 import com.example.b2b_opportunities.Entity.RequiredSkill;
 import com.example.b2b_opportunities.Entity.Skill;
 import com.example.b2b_opportunities.Repository.CompanyRepository;
+import com.example.b2b_opportunities.Repository.PositionApplicationRepository;
 import com.example.b2b_opportunities.Repository.ProjectRepository;
 import com.example.b2b_opportunities.Static.ProjectStatus;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +18,9 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -24,16 +28,17 @@ public class EmailSchedulerService {
     private final ProjectRepository projectRepository;
     private final CompanyRepository companyRepository;
     private final MailService mailService;
+    private final PositionApplicationService positionApplicationService;
 
 
-//    @Scheduled(cron = "0 0 9 * * MON")
+    //    @Scheduled(cron = "0 0 9 * * MON")
     @Scheduled(cron = "${cron.everyMondayAt9}")
     public void sendEmailEveryMonday() {
         List<Project> projectsLastThreeDays = getProjectsUpdatedInPastDays(3);
         sendEmailToEveryCompany(projectsLastThreeDays);
     }
 
-//    @Scheduled(cron = "0 0 9 * * 2-5")
+    //    @Scheduled(cron = "0 0 9 * * 2-5")
     @Scheduled(cron = "${cron.TuesdayToFridayAt9}")
     public void sendEmailTuesdayToFriday() {
         List<Project> projectsLastOneDay = getProjectsUpdatedInPastDays(1);
@@ -65,7 +70,7 @@ public class EmailSchedulerService {
         }
     }
 
-//    @Scheduled(cron = "0 0 13 * * *") //Once per day at 13:00
+    //    @Scheduled(cron = "0 0 13 * * *") //Once per day at 13:00
     @Scheduled(cron = "${cron.processExpiringProjects}")
     public void processExpiringProjects() {
         List<Project> expiringProjects = projectRepository.findProjectsExpiringInTwoDays();
@@ -77,6 +82,39 @@ public class EmailSchedulerService {
             project.setProjectStatus(ProjectStatus.INACTIVE);
             projectRepository.save(project);
         }
+    }
+
+    @Scheduled(cron = "0 0 10 * * MON-FRI")
+    public void processNewApplications() {
+        List<PositionApplication> positionApplications = positionApplicationService.getPreviousDayApplications();
+        if (positionApplications.isEmpty()) {
+            return;
+        }
+        Map<Company, Map<Position, Long>> companyPositionApplicationCount = positionApplications.stream()
+                .collect(Collectors.groupingBy(
+                        pa -> pa.getPosition().getProject().getCompany(),
+                        Collectors.groupingBy(PositionApplication::getPosition, Collectors.counting())
+                ));
+
+        companyPositionApplicationCount.forEach((company, positionCountMap) -> {
+            String emailContent = buildNewApplicationsEmailContent(positionCountMap);
+            mailService.sendEmail(company.getEmail(), emailContent, "New Job Applications for Your Positions");
+        });
+    }
+
+    private String buildNewApplicationsEmailContent(Map<Position, Long> positionCountMap) {
+        StringBuilder emailContent = new StringBuilder("Hello,\n\n")
+                .append("You have received new job applications for your open positions:\n\n");
+
+        positionCountMap.forEach((position, count) ->
+                emailContent.append(position.getPattern().getName())
+                        .append(" : ").append(count)
+                        .append(" applications\n")
+        );
+
+        emailContent.append("\nYou can review the applications on your dashboard." +
+                "\n\nBest regards,\nB2B Opportunities");
+        return emailContent.toString();
     }
 
     private void sendEmailToEveryCompany(List<Project> projectsToCheck) {
