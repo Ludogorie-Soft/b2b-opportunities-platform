@@ -52,8 +52,7 @@ public class PositionApplicationService {
     private final PositionService positionService;
     private final PositionApplicationRepository positionApplicationRepository;
     private final ImageService imageService;
-
-
+    private final MailService mailService;
     private final MinioClient minioClient;
 
     @Value("${storage.bucketName}")
@@ -295,7 +294,9 @@ public class PositionApplicationService {
         User user = userService.getCurrentUserOrThrow(authentication);
         Company userCompany = companyService.getUserCompanyOrThrow(user);
         PositionApplication pa = getPositionApplicationOrThrow(applicationId);
+
         validateApplicationBelongsToCompany(pa, userCompany);
+
         if (pa.getApplicationStatus() == targetStatus) {
             return PositionApplicationMapper.toPositionApplicationResponseDto(pa);
         }
@@ -303,6 +304,11 @@ public class PositionApplicationService {
             throw new InvalidRequestException(invalidStatusMessage);
         }
         pa.setApplicationStatus(targetStatus);
+
+        if (targetStatus == ApplicationStatus.ACCEPTED) {
+            mailService.sendEmailWhenApplicationIsApproved(pa);
+        }
+
         return PositionApplicationMapper.toPositionApplicationResponseDto(
                 positionApplicationRepository.save(pa));
     }
