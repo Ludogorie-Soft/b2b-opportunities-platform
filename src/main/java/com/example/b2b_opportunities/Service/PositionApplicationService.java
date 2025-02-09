@@ -34,6 +34,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -238,6 +240,18 @@ public class PositionApplicationService {
         return generatePAResponse(pa);
     }
 
+    public List<PositionApplication> getApplicationsSinceLastWorkday(){
+        LocalDate today = LocalDate.now();
+        DayOfWeek dayOfWeek = today.getDayOfWeek();
+
+        int days = (dayOfWeek == DayOfWeek.MONDAY) ? 3 : 1;
+
+        LocalDate startDate = today.minusDays(days);
+        LocalDateTime startDateTime = startDate.atStartOfDay();
+        LocalDateTime endDateTime = today.atStartOfDay();
+
+        return positionApplicationRepository.findAllApplicationsBetween(startDateTime, endDateTime);
+    }
 
     private void checkPositionEligibility(Project project, Position position, Company userCompany) {
         projectService.validateProjectIsAvailableToCompany(project, userCompany);
