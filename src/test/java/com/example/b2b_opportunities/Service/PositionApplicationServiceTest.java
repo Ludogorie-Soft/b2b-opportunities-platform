@@ -828,8 +828,8 @@ class PositionApplicationServiceTest {
     @Test
     void testGetApplicationsSinceLastWorkday(){
         try (MockedStatic<LocalDate> mockedStatic = Mockito.mockStatic(LocalDate.class, Mockito.CALLS_REAL_METHODS)) {
-            LocalDate localDate = LocalDate.of(2025,2,3); // Mock Monday
-            mockedStatic.when(LocalDate::now).thenReturn(localDate); // Mock static method call to return the specific date
+            LocalDate localDate = LocalDate.of(2025,2,3);
+            mockedStatic.when(LocalDate::now).thenReturn(localDate);
 
             when(positionApplicationRepository.findAllApplicationsBetween(any(), any()))
                     .thenReturn(List.of(new PositionApplication(), new PositionApplication()));
