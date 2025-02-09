@@ -8,7 +8,6 @@ import com.example.b2b_opportunities.Entity.Project;
 import com.example.b2b_opportunities.Entity.RequiredSkill;
 import com.example.b2b_opportunities.Entity.Skill;
 import com.example.b2b_opportunities.Repository.CompanyRepository;
-import com.example.b2b_opportunities.Repository.PositionApplicationRepository;
 import com.example.b2b_opportunities.Repository.ProjectRepository;
 import com.example.b2b_opportunities.Static.ProjectStatus;
 import lombok.RequiredArgsConstructor;
@@ -30,15 +29,12 @@ public class EmailSchedulerService {
     private final MailService mailService;
     private final PositionApplicationService positionApplicationService;
 
-
-    //    @Scheduled(cron = "0 0 9 * * MON")
     @Scheduled(cron = "${cron.everyMondayAt9}")
     public void sendEmailEveryMonday() {
         List<Project> projectsLastThreeDays = getProjectsUpdatedInPastDays(3);
         sendEmailToEveryCompany(projectsLastThreeDays);
     }
 
-    //    @Scheduled(cron = "0 0 9 * * 2-5")
     @Scheduled(cron = "${cron.TuesdayToFridayAt9}")
     public void sendEmailTuesdayToFriday() {
         List<Project> projectsLastOneDay = getProjectsUpdatedInPastDays(1);
@@ -49,7 +45,6 @@ public class EmailSchedulerService {
      * This method will only send emails to companies that don't have any skills set and Default filter is Enabled.
      * This will remind them to set their skills or to create filters
      */
-//    @Scheduled(cron = "0 0 9 * * MON")
     @Scheduled(cron = "${cron.companiesNoSkillsAndNoCustomFilters}")
     public void sendWeeklyEmailsWhenCompanyHasNoSkillsAndNoCustomFilters() {
         List<Project> projectsLastWeek = getProjectsUpdatedInPastDays(7);
@@ -70,7 +65,6 @@ public class EmailSchedulerService {
         }
     }
 
-    //    @Scheduled(cron = "0 0 13 * * *") //Once per day at 13:00
     @Scheduled(cron = "${cron.processExpiringProjects}")
     public void processExpiringProjects() {
         List<Project> expiringProjects = projectRepository.findProjectsExpiringInTwoDays();
@@ -86,7 +80,7 @@ public class EmailSchedulerService {
 
     @Scheduled(cron = "0 0 10 * * MON-FRI")
     public void processNewApplications() {
-        List<PositionApplication> positionApplications = positionApplicationService.getPreviousDayApplications();
+        List<PositionApplication> positionApplications = positionApplicationService.getApplicationsSinceLastWorkday();
         if (positionApplications.isEmpty()) {
             return;
         }

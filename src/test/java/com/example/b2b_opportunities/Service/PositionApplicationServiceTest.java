@@ -32,6 +32,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.security.core.Authentication;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -41,6 +43,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -85,6 +89,8 @@ class PositionApplicationServiceTest {
     @Mock
     PositionRepository positionRepository;
 
+    @Mock
+    LocalDateTime localDateTime;
 
     @Mock
     PositionApplicationRepository positionApplicationRepository;
@@ -819,4 +825,19 @@ class PositionApplicationServiceTest {
         assertTrue(exception.getMessage().contains("Error occurred while checking object existence:"));
     }
 
+    @Test
+    void testGetApplicationsSinceLastWorkday(){
+        try (MockedStatic<LocalDate> mockedStatic = Mockito.mockStatic(LocalDate.class, Mockito.CALLS_REAL_METHODS)) {
+            LocalDate localDate = LocalDate.of(2025,2,3); // Mock Monday
+            mockedStatic.when(LocalDate::now).thenReturn(localDate); // Mock static method call to return the specific date
+
+            when(positionApplicationRepository.findAllApplicationsBetween(any(), any()))
+                    .thenReturn(List.of(new PositionApplication(), new PositionApplication()));
+
+            List<PositionApplication> result = positionApplicationService.getApplicationsSinceLastWorkday();
+
+            assertNotNull(result);
+            assertEquals(2, result.size());
+        }
+    }
 }

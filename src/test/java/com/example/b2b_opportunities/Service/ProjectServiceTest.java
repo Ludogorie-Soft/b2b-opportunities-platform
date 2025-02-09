@@ -787,7 +787,7 @@ public class ProjectServiceTest {
 
     @Test
     void testProcessNewApplicationsWithNoApplications() {
-        when(positionApplicationService.getPreviousDayApplications()).thenReturn(Collections.emptyList());
+        when(positionApplicationService.getApplicationsSinceLastWorkday()).thenReturn(Collections.emptyList());
 
         emailSchedulerService.processNewApplications();
 
@@ -809,7 +809,7 @@ public class ProjectServiceTest {
 
         List<PositionApplication> positionApplications = Collections.singletonList(application);
 
-        when(positionApplicationService.getPreviousDayApplications()).thenReturn(positionApplications);
+        when(positionApplicationService.getApplicationsSinceLastWorkday()).thenReturn(positionApplications);
 
         emailSchedulerService.processNewApplications();
 
@@ -843,7 +843,7 @@ public class ProjectServiceTest {
 
         List<PositionApplication> positionApplications = Arrays.asList(applicationA, applicationB);
 
-        when(positionApplicationService.getPreviousDayApplications()).thenReturn(positionApplications);
+        when(positionApplicationService.getApplicationsSinceLastWorkday()).thenReturn(positionApplications);
 
         emailSchedulerService.processNewApplications();
 

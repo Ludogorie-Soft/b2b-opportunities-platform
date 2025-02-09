@@ -26,7 +26,6 @@ import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cglib.core.Local;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -241,18 +240,13 @@ public class PositionApplicationService {
         return generatePAResponse(pa);
     }
 
-    public List<PositionApplication> getPreviousDayApplications(){
+    public List<PositionApplication> getApplicationsSinceLastWorkday(){
         LocalDate today = LocalDate.now();
         DayOfWeek dayOfWeek = today.getDayOfWeek();
 
-        LocalDate startDate;
+        int days = (dayOfWeek == DayOfWeek.MONDAY) ? 3 : 1;
 
-        if(dayOfWeek == DayOfWeek.MONDAY) {
-            startDate = today.minusDays(3);
-        } else {
-            startDate = today.minusDays(1);
-        }
-
+        LocalDate startDate = today.minusDays(days);
         LocalDateTime startDateTime = startDate.atStartOfDay();
         LocalDateTime endDateTime = today.atStartOfDay();
 
