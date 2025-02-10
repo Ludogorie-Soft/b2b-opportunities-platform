@@ -96,7 +96,7 @@ public class PositionApplicationService {
         return PositionApplicationMapper.toPositionApplicationResponseDto(pa);
     }
 
-    public String uploadCV(MultipartFile file, Long applicationId) {
+    public PositionApplicationResponseDto uploadCV(MultipartFile file, Long applicationId) {
         log.info("Attempting to upload CV for application ID: {}", applicationId);
         try {
             // Use the input stream directly from the MultipartFile
@@ -115,13 +115,11 @@ public class PositionApplicationService {
             inputStream.close();
             log.info("Uploaded CV for application ID: {}", applicationId);
 
-            //check if either a CV or a Talent was added to the Application
             PositionApplication pa = getPositionApplicationOrThrow(applicationId);
             pa.setApplicationStatus(ApplicationStatus.IN_PROGRESS);
             positionApplicationRepository.save(pa);
 
-            // Return the URL where the CV is accessible
-            return storageUrl + "/" + bucketName + "/CV/" + applicationId;
+            return generatePAResponse(pa);
         } catch (MinioException | IOException | InvalidKeyException | NoSuchAlgorithmException e) {
             throw new ServerErrorException("Error occurred while uploading file: " + e.getMessage());
         }
