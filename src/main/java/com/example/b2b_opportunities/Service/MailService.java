@@ -99,34 +99,23 @@ public class MailService {
     }
 
     public void sendEmailWhenApplicationIsApproved(PositionApplication positionApplication) {
-        StringBuilder emailContent = new StringBuilder();
 
-        emailContent.append("<html>").append(System.lineSeparator())
-                .append("<body>").append(System.lineSeparator())
-                .append("<h2>Dear ").append(positionApplication.getTalentCompany().getName()).append(",</h2>")
-                .append(System.lineSeparator())
-                .append("<p>").append(System.lineSeparator())
-                .append("Congratulations! We are pleased to inform you that your application for the position of '")
-                .append("<strong>")
-                .append(positionApplication.getPosition().getPattern().getName())
-                .append("</strong>")
-                .append("' has been approved.")
-                .append(System.lineSeparator())
-                .append("We are excited to move forward with the next steps and will be in touch with more details soon.")
-                .append(System.lineSeparator())
-                .append("If you have any questions or need further information, feel free to reach out to us.")
-                .append("</p>").append(System.lineSeparator())
-                .append("<strong>").append(System.lineSeparator())
-                .append("Best regards,").append(System.lineSeparator())
-                .append("The B2B Opportunities Team").append(System.lineSeparator())
-                .append("</strong>").append(System.lineSeparator())
-                .append("</body>").append(System.lineSeparator())
-                .append("</html>").append(System.lineSeparator());
+        String emailContent = "<html>" +
+                "<body>" +
+                "<h2>Dear " + positionApplication.getTalentCompany().getName() + ",</h2>" +
+                "<br/>Congratulations! We are pleased to inform you that your application for the position of " +
+                "<strong>'" + positionApplication.getPosition().getPattern().getName() + "'</strong> has been approved." +
+                "<br/>We are excited to move forward with the next steps and will be in touch with more details soon." +
+                "<br/>If you have any questions or need further information, feel free to reach out to us." +
+                "<br/><strong>Best regards,</strong>" +
+                "<br/><strong>The B2B Opportunities Team</strong>" +
+                "</body>" +
+                "</html>";
 
         String subject = "Your Application Has Been Approved - B2B Opportunities";
         String email = positionApplication.getTalentCompany().getEmail();
 
-        sendEmail(email, emailContent.toString(), subject);
+        sendEmail(email, emailContent, subject);
         log.info("Send application approval Email to: {}", email);
     }
 
