@@ -166,9 +166,9 @@ class PositionApplicationServiceTest {
 
         when(positionApplicationRepository.findById(1L)).thenReturn(Optional.of(application));
 
-        String url = positionApplicationService.uploadCV(file, 1L);
+        PositionApplicationResponseDto responseDto = positionApplicationService.uploadCV(file, 1L);
 
-        assertNotNull(url);
+        assertNotNull(responseDto);
     }
 
     @Test
