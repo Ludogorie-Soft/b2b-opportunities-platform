@@ -26,6 +26,7 @@ import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cglib.core.Local;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -51,8 +52,7 @@ public class PositionApplicationService {
     private final PositionService positionService;
     private final PositionApplicationRepository positionApplicationRepository;
     private final ImageService imageService;
-
-
+    private final MailService mailService;
     private final MinioClient minioClient;
 
     @Value("${storage.bucketName}")
@@ -287,7 +287,9 @@ public class PositionApplicationService {
         User user = userService.getCurrentUserOrThrow(authentication);
         Company userCompany = companyService.getUserCompanyOrThrow(user);
         PositionApplication pa = getPositionApplicationOrThrow(applicationId);
+
         validateApplicationBelongsToCompany(pa, userCompany);
+
         if (pa.getApplicationStatus() == targetStatus) {
             return PositionApplicationMapper.toPositionApplicationResponseDto(pa);
         }
@@ -295,6 +297,11 @@ public class PositionApplicationService {
             throw new InvalidRequestException(invalidStatusMessage);
         }
         pa.setApplicationStatus(targetStatus);
+
+        if (targetStatus == ApplicationStatus.ACCEPTED) {
+            mailService.sendEmailWhenApplicationIsApproved(pa);
+        }
+
         return PositionApplicationMapper.toPositionApplicationResponseDto(
                 positionApplicationRepository.save(pa));
     }

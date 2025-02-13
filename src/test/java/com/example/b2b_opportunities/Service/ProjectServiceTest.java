@@ -787,6 +787,7 @@ public class ProjectServiceTest {
 
     @Test
     void testProcessNewApplicationsWithNoApplications() {
+
         when(positionApplicationService.getApplicationsSinceLastWorkday()).thenReturn(Collections.emptyList());
 
         emailSchedulerService.processNewApplications();

@@ -8,6 +8,7 @@ import com.example.b2b_opportunities.Entity.Project;
 import com.example.b2b_opportunities.Entity.RequiredSkill;
 import com.example.b2b_opportunities.Entity.Skill;
 import com.example.b2b_opportunities.Repository.CompanyRepository;
+import com.example.b2b_opportunities.Repository.PositionApplicationRepository;
 import com.example.b2b_opportunities.Repository.ProjectRepository;
 import com.example.b2b_opportunities.Static.ProjectStatus;
 import lombok.RequiredArgsConstructor;
