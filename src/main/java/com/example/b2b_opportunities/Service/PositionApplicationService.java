@@ -96,7 +96,7 @@ public class PositionApplicationService {
         return PositionApplicationMapper.toPositionApplicationResponseDto(pa);
     }
 
-    public String uploadCV(MultipartFile file, Long applicationId) {
+    public PositionApplicationResponseDto uploadCV(MultipartFile file, Long applicationId) {
         log.info("Attempting to upload CV for application ID: {}", applicationId);
         try {
             // Use the input stream directly from the MultipartFile
@@ -115,13 +115,11 @@ public class PositionApplicationService {
             inputStream.close();
             log.info("Uploaded CV for application ID: {}", applicationId);
 
-            //check if either a CV or a Talent was added to the Application
             PositionApplication pa = getPositionApplicationOrThrow(applicationId);
             pa.setApplicationStatus(ApplicationStatus.IN_PROGRESS);
             positionApplicationRepository.save(pa);
 
-            // Return the URL where the CV is accessible
-            return storageUrl + "/" + bucketName + "/CV/" + applicationId;
+            return generatePAResponse(pa);
         } catch (MinioException | IOException | InvalidKeyException | NoSuchAlgorithmException e) {
             throw new ServerErrorException("Error occurred while uploading file: " + e.getMessage());
         }
@@ -240,18 +238,13 @@ public class PositionApplicationService {
         return generatePAResponse(pa);
     }
 
-    public List<PositionApplication> getPreviousDayApplications(){
+    public List<PositionApplication> getApplicationsSinceLastWorkday(){
         LocalDate today = LocalDate.now();
         DayOfWeek dayOfWeek = today.getDayOfWeek();
 
-        LocalDate startDate;
+        int days = (dayOfWeek == DayOfWeek.MONDAY) ? 3 : 1;
 
-        if(dayOfWeek == DayOfWeek.MONDAY) {
-            startDate = today.minusDays(3);
-        } else {
-            startDate = today.minusDays(1);
-        }
-
+        LocalDate startDate = today.minusDays(days);
         LocalDateTime startDateTime = startDate.atStartOfDay();
         LocalDateTime endDateTime = today.atStartOfDay();
 

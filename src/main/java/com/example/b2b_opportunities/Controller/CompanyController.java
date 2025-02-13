@@ -248,7 +248,7 @@ public class CompanyController {
 
     @PostMapping(value = "/upload-cv", consumes = "multipart/form-data")
     @ResponseStatus(HttpStatus.CREATED)
-    public String uploadCV(@RequestParam("file") MultipartFile file,
+    public PositionApplicationResponseDto uploadCV(@RequestParam("file") MultipartFile file,
                            @RequestParam("application_id") Long applicationId) {
         return positionApplicationService.uploadCV(file, applicationId);
     }
