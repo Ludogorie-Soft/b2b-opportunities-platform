@@ -175,11 +175,13 @@ public class EmailSchedulerService {
             for (Project project : newProjects) {
                 result.append("Project ID: ").append(project.getId()).append("\n");
                 // TODO - return front end address to the projects
+                // TODO - if a project is PartnerOnly - don't send it in the email
             }
 
             result.append("\n");
         }
 
+        //TODO - same here - if project is PartnerOnly - only the ones who have access should receive this.
         if (!modifiedProjects.isEmpty()) {
             if (!newProjects.isEmpty()) {
                 result.append("You might also want to checkout some of the projects that got modified recently:\n");
