@@ -119,11 +119,7 @@ public class EmailSchedulerService {
         for (Company c : companies) {
             Set<Skill> skills = getAllEnabledCompanyFilterSkills(c);
             if (skills.isEmpty()) {
-                Filter defaultFilter = c.getFilters().stream()
-                        .filter(f -> f.getName().equalsIgnoreCase("Default") && f.getIsEnabled())
-                        .findFirst()
-                        .orElse(null);
-
+                Filter defaultFilter = getDefaultFIlter(c);
                 if (defaultFilter != null) {
                     skills = c.getSkills();
                 }
@@ -137,6 +133,13 @@ public class EmailSchedulerService {
 
             processNewAndModifiedProjects(availableNewProjectsThatMatchAtLeastOneSkill, c);
         }
+    }
+
+    private Filter getDefaultFIlter(Company company){
+        return company.getFilters().stream()
+                .filter(f -> f.getName().equalsIgnoreCase("Default") && f.getIsEnabled())
+                .findFirst()
+                .orElse(null);
     }
 
     private void processNewAndModifiedProjects(Set<Project> projects, Company c){
