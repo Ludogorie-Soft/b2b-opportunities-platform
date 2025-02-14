@@ -128,3 +128,6 @@ databaseChangeLog:
   - include:
       file: 43-fix-parent-ids.sql
       relativeToChangelogFile: true
+  - include:
+      file: 44-add-missing-domains.sql
+      relativeToChangelogFile: true
