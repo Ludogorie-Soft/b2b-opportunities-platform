@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -118,10 +119,6 @@ public class EmailSchedulerService {
         for (Company c : companies) {
             Set<Skill> skills = getAllEnabledCompanyFilterSkills(c);
             if (skills.isEmpty()) {
-                // If the company has no Filters (or those don't have any skills),
-                // and the 'Default' filter is Enabled - use the company skills (if any).
-                // If the Default Filter has any skills added to it, it will be treated as 'Custom' filter
-                // and the skills will be taken from getAllEnabledCompanyFilterSkills.
                 Filter defaultFilter = c.getFilters().stream()
                         .filter(f -> f.getName().equalsIgnoreCase("Default") && f.getIsEnabled())
                         .findFirst()
@@ -132,38 +129,65 @@ public class EmailSchedulerService {
                 }
             }
             if (skills.isEmpty()) {
-                // No need to continue. There is another scheduler that handles this:
-                // sendWeeklyEmailsWhenCompanyHasNoSkillsAndNoCustomFilters
                 return;
             }
 
-            Set<Project> projectsThatMatchAtLeastOneSkill = getMatchingProjects(skills, projectsToCheck);
+            Set<Project> matchingProjects = getMatchingProjects(skills, projectsToCheck);
+            Set<Project> availableNewProjectsThatMatchAtLeastOneSkill = removeCurrentCompanyProjects(matchingProjects, c);
 
-            boolean hasChanged = false;
-            Set<Project> newProjects = new HashSet<>();
-            Set<Project> modifiedProjects = new HashSet<>();
-            for (Project p : projectsThatMatchAtLeastOneSkill) {
-                if (!c.getProjectIdsNotified().contains(p.getId())) {
-                    newProjects.add(p);
-                    c.getProjectIdsNotified().add(p.getId());
-                    hasChanged = true;
-                } else {
-                    modifiedProjects.add(p);
-                }
-            }
-
-            if (hasChanged) {
-                companyRepository.save(c);
-            }
-
-            if (!newProjects.isEmpty() || !modifiedProjects.isEmpty()) {
-                String emailContent = generateEmailContent(newProjects, modifiedProjects);
-                String receiver = c.getEmail();
-                String title = "B2B Don't miss on new projects";
-                mailService.sendEmail(receiver, emailContent, title);
-            }
+            processNewAndModifiedProjects(availableNewProjectsThatMatchAtLeastOneSkill, c);
         }
     }
+
+    private void processNewAndModifiedProjects(Set<Project> projects, Company c){
+        boolean hasChanged = false;
+        Set<Project> newProjects = new HashSet<>();
+        Set<Project> modifiedProjects = new HashSet<>();
+
+        for (Project p : projects) {
+            if (!c.getProjectIdsNotified().contains(p.getId())) {
+                newProjects.add(p);
+                c.getProjectIdsNotified().add(p.getId());
+                hasChanged = true;
+            } else {
+                modifiedProjects.add(p);
+            }
+        }
+        if (hasChanged) {
+            companyRepository.save(c);
+        }
+
+        sendEmailIfAnyNewOrModifiedProjects(newProjects, modifiedProjects, c);
+    }
+
+    private void sendEmailIfAnyNewOrModifiedProjects(Set<Project> newProjects, Set<Project> modifiedProjects, Company c){
+        if (!newProjects.isEmpty() || !modifiedProjects.isEmpty()) {
+            String emailContent = generateEmailContent(newProjects, modifiedProjects);
+            String receiver = c.getEmail();
+            String title = "B2B Don't miss on new projects";
+            mailService.sendEmail(receiver, emailContent, title);
+        }
+    }
+
+    private Set<Project> removeCurrentCompanyProjects(Set<Project> projects, Company company) {
+        return projects.stream()
+                .filter(project -> isAccessibleByCompany(project, company))
+                .collect(Collectors.toSet());
+    }
+
+    private boolean isAccessibleByCompany(Project project, Company company) {
+        if (!Objects.equals(project.getCompany().getId(), company.getId())) {
+            if (!project.isPartnerOnly()) {
+                return true;
+            }
+            return project.getPartnerGroupList().stream()
+                    .flatMap(group -> group.getPartners().stream())
+                    .anyMatch(partner -> Objects.equals(partner.getId(), company.getId()));
+        }
+        return false;
+    }
+
+
 
     private String generateEmailContent(Set<Project> newProjects, Set<Project> modifiedProjects) {
         StringBuilder result = new StringBuilder();
@@ -175,13 +199,11 @@ public class EmailSchedulerService {
             for (Project project : newProjects) {
                 result.append("Project ID: ").append(project.getId()).append("\n");
                 // TODO - return front end address to the projects
-                // TODO - if a project is PartnerOnly - don't send it in the email
             }
 
             result.append("\n");
         }
 
-        //TODO - same here - if project is PartnerOnly - only the ones who have access should receive this.
         if (!modifiedProjects.isEmpty()) {
             if (!newProjects.isEmpty()) {
                 result.append("You might also want to checkout some of the projects that got modified recently:\n");
