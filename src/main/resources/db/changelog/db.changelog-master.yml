@@ -131,3 +131,6 @@ databaseChangeLog:
   - include:
       file: 44-add-missing-domains.sql
       relativeToChangelogFile: true
+  - include:
+      file: 45-add-admin-record.sql
+      relativeToChangelogFile: true
