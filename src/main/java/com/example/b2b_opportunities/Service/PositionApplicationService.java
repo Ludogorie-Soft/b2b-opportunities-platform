@@ -302,8 +302,11 @@ public class PositionApplicationService {
             mailService.sendEmailWhenApplicationIsApproved(pa);
         }
 
-        return PositionApplicationMapper.toPositionApplicationResponseDto(
-                positionApplicationRepository.save(pa));
+        PositionApplicationResponseDto positionApplicationResponseDto = generatePAResponse(positionApplicationRepository.save(pa));
+        positionApplicationResponseDto.setCompanyName(pa.getTalentCompany().getName());
+        positionApplicationResponseDto.setCompanyImage(imageService.returnUrlIfPictureExists(pa.getTalentCompany().getId(), "image"));
+
+        return positionApplicationResponseDto;
     }
 
     private void validateApplicationBelongsToCompany(PositionApplication pa, Company company) {
