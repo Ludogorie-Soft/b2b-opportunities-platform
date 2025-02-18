@@ -3,6 +3,8 @@ package com.example.b2b_opportunities.Service;
 import com.example.b2b_opportunities.Entity.Currency;
 import com.example.b2b_opportunities.Exception.common.AlreadyExistsException;
 import com.example.b2b_opportunities.Repository.CurrencyRepository;
+import com.example.b2b_opportunities.Service.Impl.CurrencyServiceImpl;
+import com.example.b2b_opportunities.Service.Interface.CurrencyService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -11,7 +13,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 
-import static ch.qos.logback.core.joran.spi.ConsoleTarget.findByName;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -26,7 +27,7 @@ class CurrencyServiceTest {
     private CurrencyRepository currencyRepository;
 
     @InjectMocks
-    private CurrencyService currencyService;
+    private CurrencyServiceImpl currencyService;
 
     @Test
     void shouldCreateCurrencyWhenDoesNotExist() {

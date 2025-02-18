@@ -20,6 +20,8 @@ import com.example.b2b_opportunities.Repository.CompanyRepository;
 import com.example.b2b_opportunities.Repository.PartnerGroupRepository;
 import com.example.b2b_opportunities.Repository.PositionApplicationRepository;
 import com.example.b2b_opportunities.Repository.ProjectRepository;
+import com.example.b2b_opportunities.Service.Impl.EmailSchedulerServiceImpl;
+import com.example.b2b_opportunities.Service.Interface.EmailSchedulerService;
 import com.example.b2b_opportunities.Static.ApplicationStatus;
 import com.example.b2b_opportunities.Static.ProjectStatus;
 import org.junit.jupiter.api.BeforeEach;
@@ -80,7 +82,7 @@ public class ProjectServiceTest {
     private CompanyRepository companyRepository;
 
     @InjectMocks
-    private EmailSchedulerService emailSchedulerService;
+    private EmailSchedulerServiceImpl emailSchedulerService;
 
     @Mock
     private ProjectMapper projectMapper;

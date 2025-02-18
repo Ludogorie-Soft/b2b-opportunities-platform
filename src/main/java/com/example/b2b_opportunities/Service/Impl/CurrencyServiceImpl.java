@@ -1,9 +1,10 @@
-package com.example.b2b_opportunities.Service;
+package com.example.b2b_opportunities.Service.Impl;
 
 import com.example.b2b_opportunities.Entity.Currency;
 import com.example.b2b_opportunities.Exception.common.AlreadyExistsException;
 import com.example.b2b_opportunities.Exception.common.NotFoundException;
 import com.example.b2b_opportunities.Repository.CurrencyRepository;
+import com.example.b2b_opportunities.Service.Interface.CurrencyService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -11,7 +12,7 @@ import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
-public class CurrencyService {
+public class CurrencyServiceImpl implements CurrencyService {
     private final CurrencyRepository currencyRepository;
 
     public Currency getById(Long id) {

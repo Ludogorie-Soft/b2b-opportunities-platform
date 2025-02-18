@@ -1,9 +1,8 @@
 package com.example.b2b_opportunities.Controller;
 
 import com.example.b2b_opportunities.Entity.Currency;
-import com.example.b2b_opportunities.Exception.common.NotFoundException;
 import com.example.b2b_opportunities.Repository.CurrencyRepository;
-import com.example.b2b_opportunities.Service.CurrencyService;
+import com.example.b2b_opportunities.Service.Interface.CurrencyService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
