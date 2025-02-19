@@ -1,18 +1,10 @@
-<<<<<<<< HEAD:src/main/java/com/example/b2b_opportunities/Service/Impl/AdminServiceImpl.java
-package com.example.b2b_opportunities.Service.Impl;
-========
 package com.example.b2b_opportunities.Service.Implementation;
->>>>>>>> 6778bc4 (- Create interfaces and move the old service logic in implementation class):src/main/java/com/example/b2b_opportunities/Service/Implementation/AdminServiceImpl.java
 
 import com.example.b2b_opportunities.Dto.Response.CompanyResponseDto;
 import com.example.b2b_opportunities.Entity.Company;
 import com.example.b2b_opportunities.Mapper.CompanyMapper;
 import com.example.b2b_opportunities.Repository.CompanyRepository;
 import com.example.b2b_opportunities.Service.Interface.AdminService;
-<<<<<<<< HEAD:src/main/java/com/example/b2b_opportunities/Service/Impl/AdminServiceImpl.java
-import com.example.b2b_opportunities.Service.CompanyService;
-========
->>>>>>>> 6778bc4 (- Create interfaces and move the old service logic in implementation class):src/main/java/com/example/b2b_opportunities/Service/Implementation/AdminServiceImpl.java
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

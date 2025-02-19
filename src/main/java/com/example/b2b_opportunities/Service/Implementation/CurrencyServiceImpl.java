@@ -1,8 +1,4 @@
-<<<<<<<< HEAD:src/main/java/com/example/b2b_opportunities/Service/Impl/CurrencyServiceImpl.java
-package com.example.b2b_opportunities.Service.Impl;
-========
 package com.example.b2b_opportunities.Service.Implementation;
->>>>>>>> 6778bc4 (- Create interfaces and move the old service logic in implementation class):src/main/java/com/example/b2b_opportunities/Service/Implementation/CurrencyServiceImpl.java
 
 import com.example.b2b_opportunities.Entity.Currency;
 import com.example.b2b_opportunities.Exception.common.AlreadyExistsException;

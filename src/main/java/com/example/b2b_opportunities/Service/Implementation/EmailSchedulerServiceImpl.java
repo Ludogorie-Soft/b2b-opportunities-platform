@@ -1,37 +1,18 @@
-<<<<<<<< HEAD:src/main/java/com/example/b2b_opportunities/Service/Impl/EmailSchedulerServiceImpl.java
-package com.example.b2b_opportunities.Service.Impl;
-========
 package com.example.b2b_opportunities.Service.Implementation;
->>>>>>>> 6778bc4 (- Create interfaces and move the old service logic in implementation class):src/main/java/com/example/b2b_opportunities/Service/Implementation/EmailSchedulerServiceImpl.java
 
-import com.example.b2b_opportunities.Entity.Company;
-import com.example.b2b_opportunities.Entity.Filter;
-import com.example.b2b_opportunities.Entity.Position;
-import com.example.b2b_opportunities.Entity.PositionApplication;
-import com.example.b2b_opportunities.Entity.Project;
-import com.example.b2b_opportunities.Entity.RequiredSkill;
-import com.example.b2b_opportunities.Entity.Skill;
+import com.example.b2b_opportunities.Entity.*;
 import com.example.b2b_opportunities.Repository.CompanyRepository;
 import com.example.b2b_opportunities.Repository.ProjectRepository;
 import com.example.b2b_opportunities.Service.Interface.EmailSchedulerService;
-<<<<<<<< HEAD:src/main/java/com/example/b2b_opportunities/Service/Impl/EmailSchedulerServiceImpl.java
-import com.example.b2b_opportunities.Service.MailService;
-import com.example.b2b_opportunities.Service.PositionApplicationService;
-========
 import com.example.b2b_opportunities.Service.Interface.MailService;
 import com.example.b2b_opportunities.Service.Interface.PositionApplicationService;
->>>>>>>> 6778bc4 (- Create interfaces and move the old service logic in implementation class):src/main/java/com/example/b2b_opportunities/Service/Implementation/EmailSchedulerServiceImpl.java
 import com.example.b2b_opportunities.Static.ProjectStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -42,7 +23,6 @@ public class EmailSchedulerServiceImpl implements EmailSchedulerService {
     private final MailService mailService;
     private final PositionApplicationService positionApplicationService;
 
-    @Override
     @Scheduled(cron = "${cron.everyMondayAt9}")
     @Override
     public void sendEmailEveryMonday() {
@@ -50,7 +30,6 @@ public class EmailSchedulerServiceImpl implements EmailSchedulerService {
         sendEmailToEveryCompany(projectsLastThreeDays);
     }
 
-    @Override
     @Scheduled(cron = "${cron.TuesdayToFridayAt9}")
     @Override
     public void sendEmailTuesdayToFriday() {
@@ -62,7 +41,6 @@ public class EmailSchedulerServiceImpl implements EmailSchedulerService {
      * This method will only send emails to companies that don't have any skills set and Default filter is Enabled.
      * This will remind them to set their skills or to create filters
      */
-    @Override
     @Scheduled(cron = "${cron.companiesNoSkillsAndNoCustomFilters}")
     @Override
     public void sendWeeklyEmailsWhenCompanyHasNoSkillsAndNoCustomFilters() {
@@ -84,7 +62,6 @@ public class EmailSchedulerServiceImpl implements EmailSchedulerService {
         }
     }
 
-    @Override
     @Scheduled(cron = "${cron.processExpiringProjects}")
     @Override
     public void processExpiringProjects() {
@@ -99,7 +76,6 @@ public class EmailSchedulerServiceImpl implements EmailSchedulerService {
         }
     }
 
-    @Override
     @Scheduled(cron = "0 0 10 * * MON-FRI")
     @Override
     public void processNewApplications() {
@@ -156,14 +132,14 @@ public class EmailSchedulerServiceImpl implements EmailSchedulerService {
         }
     }
 
-    private Filter getDefaultFIlter(Company company){
+    private Filter getDefaultFIlter(Company company) {
         return company.getFilters().stream()
                 .filter(f -> f.getName().equalsIgnoreCase("Default") && f.getIsEnabled())
                 .findFirst()
                 .orElse(null);
     }
 
-    private void processNewAndModifiedProjects(Set<Project> projects, Company c){
+    private void processNewAndModifiedProjects(Set<Project> projects, Company c) {
         boolean hasChanged = false;
         Set<Project> newProjects = new HashSet<>();
         Set<Project> modifiedProjects = new HashSet<>();
@@ -184,7 +160,7 @@ public class EmailSchedulerServiceImpl implements EmailSchedulerService {
         sendEmailIfAnyNewOrModifiedProjects(newProjects, modifiedProjects, c);
     }
 
-    private void sendEmailIfAnyNewOrModifiedProjects(Set<Project> newProjects, Set<Project> modifiedProjects, Company c){
+    private void sendEmailIfAnyNewOrModifiedProjects(Set<Project> newProjects, Set<Project> modifiedProjects, Company c) {
         if (!newProjects.isEmpty() || !modifiedProjects.isEmpty()) {
             String emailContent = generateEmailContent(newProjects, modifiedProjects);
             String receiver = c.getEmail();
@@ -210,7 +186,6 @@ public class EmailSchedulerServiceImpl implements EmailSchedulerService {
         }
         return false;
     }
-
 
 
     private String generateEmailContent(Set<Project> newProjects, Set<Project> modifiedProjects) {
