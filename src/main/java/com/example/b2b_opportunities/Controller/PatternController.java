@@ -2,7 +2,7 @@ package com.example.b2b_opportunities.Controller;
 
 import com.example.b2b_opportunities.Dto.Request.PatternRequestDto;
 import com.example.b2b_opportunities.Dto.Response.PatternResponseDto;
-import com.example.b2b_opportunities.Service.PatternService;
+import com.example.b2b_opportunities.Service.Interface.PatternService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

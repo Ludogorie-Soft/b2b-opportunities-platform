@@ -13,8 +13,11 @@ import com.example.b2b_opportunities.Exception.common.NotFoundException;
 import com.example.b2b_opportunities.Mapper.UserMapper;
 import com.example.b2b_opportunities.Repository.ConfirmationTokenRepository;
 import com.example.b2b_opportunities.Repository.UserRepository;
+import com.example.b2b_opportunities.Service.Implementation.AuthenticationServiceImpl;
+import com.example.b2b_opportunities.Service.Interface.JwtService;
+import com.example.b2b_opportunities.Service.Interface.MailService;
+import com.example.b2b_opportunities.Service.Interface.UserService;
 import com.example.b2b_opportunities.UserDetailsImpl;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.Test;
@@ -59,7 +62,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class AuthenticationServiceTest {
     @InjectMocks
-    private AuthenticationService authenticationService;
+    private AuthenticationServiceImpl authenticationService;
 
     @Mock
     private AuthenticationManager authenticationManager;

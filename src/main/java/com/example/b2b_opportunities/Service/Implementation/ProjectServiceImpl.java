@@ -1,4 +1,4 @@
-package com.example.b2b_opportunities.Service;
+package com.example.b2b_opportunities.Service.Implementation;
 
 import com.example.b2b_opportunities.Dto.Request.ProjectRequestDto;
 import com.example.b2b_opportunities.Dto.Response.PositionResponseDto;
@@ -16,6 +16,8 @@ import com.example.b2b_opportunities.Mapper.ProjectMapper;
 import com.example.b2b_opportunities.Repository.PartnerGroupRepository;
 import com.example.b2b_opportunities.Repository.PositionApplicationRepository;
 import com.example.b2b_opportunities.Repository.ProjectRepository;
+import com.example.b2b_opportunities.Service.Interface.ProjectService;
+import com.example.b2b_opportunities.Service.Interface.UserService;
 import com.example.b2b_opportunities.Static.ApplicationStatus;
 import com.example.b2b_opportunities.Static.ProjectStatus;
 import lombok.RequiredArgsConstructor;
@@ -32,13 +34,14 @@ import java.util.Set;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class ProjectService {
+public class ProjectServiceImpl implements ProjectService {
     private final ProjectRepository projectRepository;
     private final UserService userService;
     private final PartnerGroupRepository partnerGroupRepository;
-    private final CompanyService companyService;
+    private final CompanyServiceImpl companyService;
     private final PositionApplicationRepository positionApplicationRepository;
 
+    @Override
     public ProjectResponseDto get(Authentication authentication, Long id) {
         User user = userService.getCurrentUserOrThrow(authentication);
         log.info("User ID: {} attempting to access Project ID: {}", user.getId(), id);
@@ -54,6 +57,7 @@ public class ProjectService {
         return responseDto;
     }
 
+    @Override
     public List<ProjectResponseDto> getAvailableProjects(Authentication authentication) {
         User user = userService.getCurrentUserOrThrow(authentication);
         log.info("User ID: {} attempting to access available projects", user.getId());
@@ -75,6 +79,7 @@ public class ProjectService {
         return combinedProjects;
     }
 
+    @Override
     public ProjectResponseDto update(Long id, ProjectRequestDto dto, Authentication authentication) {
         Project project = getProjectIfExists(id);
         User user = userService.getCurrentUserOrThrow(authentication);
@@ -83,6 +88,7 @@ public class ProjectService {
         return createOrUpdate(dto, project);
     }
 
+    @Override
     public ProjectResponseDto create(Authentication authentication, ProjectRequestDto dto) {
         User user = userService.getCurrentUserOrThrow(authentication);
         log.info("User ID: {} attempting to create a project", user.getId());
@@ -93,6 +99,7 @@ public class ProjectService {
         return createOrUpdate(dto, project);
     }
 
+    @Override
     public void delete(Long id, Authentication authentication) {
         Project project = getProjectIfExists(id);
         User user = userService.getCurrentUserOrThrow(authentication);
@@ -101,6 +108,7 @@ public class ProjectService {
         projectRepository.delete(project);
     }
 
+    @Override
     public List<PositionResponseDto> getPositionsByProject(Authentication authentication, Long id) {
         User user = userService.getCurrentUserOrThrow(authentication);
         Company userCompany = companyService.getUserCompanyOrThrow(user);
@@ -116,6 +124,7 @@ public class ProjectService {
         return PositionMapper.toResponseDtoList(project.getPositions());
     }
 
+    @Override
     public ProjectResponseDto reactivateProject(Long projectId, Authentication authentication) {
         Project project = getProjectIfExists(projectId);
         User user = userService.getCurrentUserOrThrow(authentication);
@@ -128,7 +137,7 @@ public class ProjectService {
         return ProjectMapper.toDto(projectRepository.save(project));
     }
 
-
+    @Override
     public void validateProjectIsAvailableToCompany(Project project, Company userCompany) {
         log.info("Validating if Project ID: {} belongs to Company ID: {}", project.getId(), userCompany.getId());
         if (project.getCompany().getId().equals(userCompany.getId())) {

@@ -1,6 +1,7 @@
 package com.example.b2b_opportunities.Controller;
 
-import com.example.b2b_opportunities.Service.ImageService;
+import com.example.b2b_opportunities.Service.Implementation.ImageServiceImpl;
+import com.example.b2b_opportunities.Service.Interface.ImageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;

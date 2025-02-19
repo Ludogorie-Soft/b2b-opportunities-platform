@@ -1,4 +1,8 @@
+<<<<<<<< HEAD:src/main/java/com/example/b2b_opportunities/Service/Impl/LocationServiceImpl.java
 package com.example.b2b_opportunities.Service.Impl;
+========
+package com.example.b2b_opportunities.Service.Implementation;
+>>>>>>>> 6778bc4 (- Create interfaces and move the old service logic in implementation class):src/main/java/com/example/b2b_opportunities/Service/Implementation/LocationServiceImpl.java
 
 import com.example.b2b_opportunities.Entity.Location;
 import com.example.b2b_opportunities.Exception.common.AlreadyExistsException;
@@ -56,7 +60,7 @@ public class LocationServiceImpl implements LocationService {
         getLocationsIfExists(id);
         locationRepository.deleteById(id);
     }
-
+    
     private void validateLocationNameDoesNotExist(String name) {
         if (locationRepository.findByName(name).isPresent()) {
             throw new AlreadyExistsException("Location with name: '" + name + "' already exists", "name");

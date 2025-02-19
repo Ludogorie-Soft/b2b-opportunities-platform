@@ -3,7 +3,7 @@ package com.example.b2b_opportunities.Controller;
 import com.example.b2b_opportunities.Dto.Response.UserResponseDto;
 import com.example.b2b_opportunities.Exception.AuthenticationFailedException;
 import com.example.b2b_opportunities.Mapper.UserMapper;
-import com.example.b2b_opportunities.Service.UserService;
+import com.example.b2b_opportunities.Service.Interface.UserService;
 import com.example.b2b_opportunities.UserDetailsImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;

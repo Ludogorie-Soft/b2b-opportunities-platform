@@ -1,4 +1,4 @@
-package com.example.b2b_opportunities.Service;
+package com.example.b2b_opportunities.Service.Implementation;
 
 import com.example.b2b_opportunities.Dto.Request.PositionApplicationRequestDto;
 import com.example.b2b_opportunities.Dto.Response.PositionApplicationResponseDto;
@@ -15,6 +15,10 @@ import com.example.b2b_opportunities.Exception.common.NotFoundException;
 import com.example.b2b_opportunities.Exception.common.PermissionDeniedException;
 import com.example.b2b_opportunities.Mapper.PositionApplicationMapper;
 import com.example.b2b_opportunities.Repository.PositionApplicationRepository;
+import com.example.b2b_opportunities.Service.Interface.MailService;
+import com.example.b2b_opportunities.Service.Interface.PositionApplicationService;
+import com.example.b2b_opportunities.Service.Interface.PositionService;
+import com.example.b2b_opportunities.Service.Interface.UserService;
 import com.example.b2b_opportunities.Static.ApplicationStatus;
 import com.example.b2b_opportunities.Static.ProjectStatus;
 import io.minio.MinioClient;
@@ -26,7 +30,6 @@ import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cglib.core.Local;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -45,13 +48,13 @@ import java.util.Objects;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class PositionApplicationService {
+public class PositionApplicationServiceImpl implements PositionApplicationService {
     private final UserService userService;
-    private final CompanyService companyService;
-    private final ProjectService projectService;
+    private final CompanyServiceImpl companyService;
+    private final ProjectServiceImpl projectService;
     private final PositionService positionService;
     private final PositionApplicationRepository positionApplicationRepository;
-    private final ImageService imageService;
+    private final ImageServiceImpl imageService;
     private final MailService mailService;
     private final MinioClient minioClient;
 
@@ -69,6 +72,7 @@ public class PositionApplicationService {
         }
     }
 
+    @Override
     public PositionApplicationResponseDto applyForPosition(Authentication authentication, PositionApplicationRequestDto requestDto) {
         User user = userService.getCurrentUserOrThrow(authentication);
         Company userCompany = companyService.getUserCompanyOrThrow(user);
@@ -96,6 +100,7 @@ public class PositionApplicationService {
         return PositionApplicationMapper.toPositionApplicationResponseDto(pa);
     }
 
+    @Override
     public PositionApplicationResponseDto uploadCV(MultipartFile file, Long applicationId) {
         log.info("Attempting to upload CV for application ID: {}", applicationId);
         try {
@@ -125,6 +130,7 @@ public class PositionApplicationService {
         }
     }
 
+    @Override
     public boolean doesCVExist(Long positionApplicationId) {
         try {
             String objectName = "CV/" + positionApplicationId;
@@ -146,6 +152,7 @@ public class PositionApplicationService {
         }
     }
 
+    @Override
     public String returnUrlIfCVExists(Long positionApplicationId) {
         if (doesCVExist(positionApplicationId)) {
             return storageUrl + "/" + bucketName + "/CV/" + positionApplicationId;
@@ -153,6 +160,7 @@ public class PositionApplicationService {
         return null;
     }
 
+    @Override
     public List<PositionApplicationResponseDto> getApplicationsForMyPositions(Authentication authentication) {
         User user = userService.getCurrentUserOrThrow(authentication);
         Company userCompany = companyService.getUserCompanyOrThrow(user);
@@ -172,6 +180,7 @@ public class PositionApplicationService {
         return responseDtoList;
     }
 
+    @Override
     public List<PositionApplicationResponseDto> getMyApplications(Authentication authentication) {
         User user = userService.getCurrentUserOrThrow(authentication);
         Company userCompany = companyService.getUserCompanyOrThrow(user);
@@ -186,6 +195,7 @@ public class PositionApplicationService {
         return responseDtoList;
     }
 
+    @Override
     public PositionApplicationResponseDto acceptApplication(Authentication authentication, Long applicationId) {
         return updatePositionApplicationStatus(authentication,
                 applicationId,
@@ -195,6 +205,7 @@ public class PositionApplicationService {
         );
     }
 
+    @Override
     public PositionApplicationResponseDto rejectApplication(Authentication authentication, Long applicationId) {
         return updatePositionApplicationStatus(authentication,
                 applicationId,
@@ -204,6 +215,7 @@ public class PositionApplicationService {
         );
     }
 
+    @Override
     public PositionApplicationResponseDto getApplicationById(Authentication authentication, Long applicationId) {
         User user = userService.getCurrentUserOrThrow(authentication);
         Company userCompany = companyService.getUserCompanyOrThrow(user);
@@ -216,6 +228,7 @@ public class PositionApplicationService {
         return responseDto;
     }
 
+    @Override
     public PositionApplicationResponseDto updateApplication(Authentication authentication, MultipartFile file, Long applicationId, Long talentId) {
         User user = userService.getCurrentUserOrThrow(authentication);
         Company userCompany = companyService.getUserCompanyOrThrow(user);
@@ -238,6 +251,7 @@ public class PositionApplicationService {
         return generatePAResponse(pa);
     }
 
+    @Override
     public List<PositionApplication> getApplicationsSinceLastWorkday(){
         LocalDate today = LocalDate.now();
         DayOfWeek dayOfWeek = today.getDayOfWeek();

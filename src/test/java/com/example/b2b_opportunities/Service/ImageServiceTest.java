@@ -3,6 +3,7 @@ package com.example.b2b_opportunities.Service;
 import com.example.b2b_opportunities.Entity.Position;
 import com.example.b2b_opportunities.Entity.PositionApplication;
 import com.example.b2b_opportunities.Exception.ServerErrorException;
+import com.example.b2b_opportunities.Service.Implementation.ImageServiceImpl;
 import io.minio.MinioClient;
 import io.minio.RemoveObjectArgs;
 import io.minio.StatObjectArgs;
@@ -45,7 +46,7 @@ import static org.mockito.Mockito.when;
 
 class ImageServiceTest {
     @InjectMocks
-    ImageService imageService;
+    ImageServiceImpl imageService;
 
     @Mock
     MinioClient minioClient;

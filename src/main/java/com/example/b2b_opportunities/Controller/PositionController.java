@@ -3,7 +3,7 @@ package com.example.b2b_opportunities.Controller;
 import com.example.b2b_opportunities.Dto.Request.PositionEditRequestDto;
 import com.example.b2b_opportunities.Dto.Request.PositionRequestDto;
 import com.example.b2b_opportunities.Dto.Response.PositionResponseDto;
-import com.example.b2b_opportunities.Service.PositionService;
+import com.example.b2b_opportunities.Service.Interface.PositionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

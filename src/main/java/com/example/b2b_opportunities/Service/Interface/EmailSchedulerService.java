@@ -1,17 +1,22 @@
 package com.example.b2b_opportunities.Service.Interface;
 
+import org.springframework.scheduling.annotation.Scheduled;
+
 public interface EmailSchedulerService {
 
-    public void sendEmailEveryMonday();
 
-    public void sendEmailTuesdayToFriday();
+    @Scheduled(cron = "${cron.everyMondayAt9}")
+    void sendEmailEveryMonday();
 
-    public void sendWeeklyEmailsWhenCompanyHasNoSkillsAndNoCustomFilters();
+    @Scheduled(cron = "${cron.TuesdayToFridayAt9}")
+    void sendEmailTuesdayToFriday();
 
+    @Scheduled(cron = "${cron.companiesNoSkillsAndNoCustomFilters}")
+    void sendWeeklyEmailsWhenCompanyHasNoSkillsAndNoCustomFilters();
 
-    public void processExpiringProjects();
+    @Scheduled(cron = "${cron.processExpiringProjects}")
+    void processExpiringProjects();
 
-
-    public void processNewApplications();
-
+    @Scheduled(cron = "0 0 10 * * MON-FRI")
+    void processNewApplications();
 }

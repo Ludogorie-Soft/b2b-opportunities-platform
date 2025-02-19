@@ -20,6 +20,9 @@ import com.example.b2b_opportunities.Repository.ProjectRepository;
 import com.example.b2b_opportunities.Repository.SeniorityRepository;
 import com.example.b2b_opportunities.Repository.SkillRepository;
 import com.example.b2b_opportunities.Repository.WorkModeRepository;
+import com.example.b2b_opportunities.Service.Implementation.CompanyServiceImpl;
+import com.example.b2b_opportunities.Service.Implementation.PositionServiceImpl;
+import com.example.b2b_opportunities.Service.Interface.UserService;
 import com.example.b2b_opportunities.Static.ProjectStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,7 +30,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.parameters.P;
 
 import java.util.List;
 import java.util.Optional;
@@ -42,7 +44,7 @@ import static org.mockito.Mockito.when;
 class PositionServiceTest {
 
     @InjectMocks
-    PositionService positionService;
+    PositionServiceImpl positionService;
 
     @Mock
     Authentication authentication;
@@ -54,7 +56,7 @@ class PositionServiceTest {
     UserService userService;
 
     @Mock
-    CompanyService companyService;
+    CompanyServiceImpl companyService;
 
     @Mock
     PatternRepository patternRepository;
