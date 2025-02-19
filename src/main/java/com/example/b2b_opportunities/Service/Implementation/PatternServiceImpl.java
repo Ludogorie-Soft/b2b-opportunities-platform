@@ -1,4 +1,4 @@
-package com.example.b2b_opportunities.Service;
+package com.example.b2b_opportunities.Service.Implementation;
 
 import com.example.b2b_opportunities.Dto.Request.PatternRequestDto;
 import com.example.b2b_opportunities.Dto.Response.PatternResponseDto;
@@ -9,6 +9,7 @@ import com.example.b2b_opportunities.Exception.common.NotFoundException;
 import com.example.b2b_opportunities.Mapper.PatternMapper;
 import com.example.b2b_opportunities.Repository.PatternRepository;
 import com.example.b2b_opportunities.Repository.SkillRepository;
+import com.example.b2b_opportunities.Service.Interface.PatternService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -19,52 +20,50 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-public class PatternService {
+public class PatternServiceImpl implements PatternService {
     private final SkillRepository skillRepository;
     private final PatternRepository patternRepository;
 
+    @Override
     public PatternResponseDto get(Long id) {
         return PatternMapper.toDto(getPatternIfExists(id));
     }
 
+    @Override
     public List<PatternResponseDto> getAll() {
         return PatternMapper.toDtoList(patternRepository.findAll());
     }
 
+    @Override
     public PatternResponseDto create(PatternRequestDto dto) {
         return createOrUpdate(dto, new Pattern());
     }
 
+    @Override
     public PatternResponseDto update(PatternRequestDto dto) {
         Pattern pattern = getPatternIfExists(dto.getId());
         return createOrUpdate(dto, pattern);
     }
 
+    @Override
     public void delete(Long id) {
         getPatternIfExists(id);
         patternRepository.deleteById(id);
     }
 
-    private PatternResponseDto createOrUpdate(PatternRequestDto dto, Pattern pattern) {
-        String newName = dto.getName();
-        checkIfPatternNameAlreadyExistsForAnotherID(newName, dto.getId());
-
-        pattern.setName(newName);
-        pattern.setParent(getParentIfExists(dto.getParentId()));
-        pattern.setSuggestedSkills(getAllSkillsIfSkillIdsExist(dto.getSuggestedSkills()));
-        return PatternMapper.toDto(patternRepository.save(pattern));
-    }
-
 
     // TODO: move this method to a better place (make SET)
+
+    @Override
     public List<Skill> getAllSkillsIfSkillIdsExist(List<Long> skillList) {
         return getAllSkillsIfSkillIdsExist(skillList, false);
     }
-
+    @Override
     public List<Skill> getAllAssignableSkillsIfSkillIdsExist(List<Long> skillList) {
         return getAllSkillsIfSkillIdsExist(skillList, true);
     }
 
+    @Override
     public List<Skill> getAllSkillsIfSkillIdsExist(List<Long> skillIds, boolean getAssignableOnly) {
         if (skillIds == null || skillIds.isEmpty()) {
             return Collections.emptyList();
@@ -116,5 +115,15 @@ public class PatternService {
 
     private Pattern getPatternIfExists(Long id) {
         return patternRepository.findById(id).orElseThrow(() -> new NotFoundException("Pattern with ID: " + id + " not found"));
+    }
+
+    private PatternResponseDto createOrUpdate(PatternRequestDto dto, Pattern pattern) {
+        String newName = dto.getName();
+        checkIfPatternNameAlreadyExistsForAnotherID(newName, dto.getId());
+
+        pattern.setName(newName);
+        pattern.setParent(getParentIfExists(dto.getParentId()));
+        pattern.setSuggestedSkills(getAllSkillsIfSkillIdsExist(dto.getSuggestedSkills()));
+        return PatternMapper.toDto(patternRepository.save(pattern));
     }
 }

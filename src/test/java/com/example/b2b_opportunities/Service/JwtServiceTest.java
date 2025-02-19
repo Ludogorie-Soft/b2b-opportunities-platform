@@ -1,5 +1,6 @@
 package com.example.b2b_opportunities.Service;
 
+import com.example.b2b_opportunities.Service.Implementation.JwtServiceImpl;
 import io.jsonwebtoken.Claims;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -8,19 +9,17 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class JwtServiceTest {
-    private JwtService jwtService;
+    private JwtServiceImpl jwtService;
 
     @BeforeEach
     void setUp() {
-        jwtService = new JwtService();
+        jwtService = new JwtServiceImpl();
         jwtService.setSecretKey("c2VjcmV0a2V5c2VjcmV0a2V5c2VjcmV0a2V5c2VjcmV0");
         jwtService.setJwtExpiration(1000 * 60 * 60 * 24); // 24 hours
     }

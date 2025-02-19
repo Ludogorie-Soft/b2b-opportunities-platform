@@ -1,9 +1,10 @@
-package com.example.b2b_opportunities.Service;
+package com.example.b2b_opportunities.Service.Implementation;
 
 import com.example.b2b_opportunities.Entity.Currency;
 import com.example.b2b_opportunities.Exception.common.AlreadyExistsException;
 import com.example.b2b_opportunities.Exception.common.NotFoundException;
 import com.example.b2b_opportunities.Repository.CurrencyRepository;
+import com.example.b2b_opportunities.Service.Interface.CurrencyService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -11,18 +12,21 @@ import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
-public class CurrencyService {
+public class CurrencyServiceImpl implements CurrencyService {
     private final CurrencyRepository currencyRepository;
 
+    @Override
     public Currency getById(Long id) {
         return getCurrencyOrThrow(id);
     }
 
+    @Override
     public Currency create(String name) {
         checkIfAlreadyExists(name);
         return currencyRepository.save(Currency.builder().name(name).build());
     }
 
+    @Override
     public Currency edit(Long id, String newName) {
         Currency currency = getCurrencyOrThrow(id);
         if (!Objects.equals(newName, currency.getName())) {
@@ -32,6 +36,7 @@ public class CurrencyService {
         return currencyRepository.save(currency);
     }
 
+    @Override
     public void deleteById(Long id) {
         currencyRepository.delete(getCurrencyOrThrow(id));
     }

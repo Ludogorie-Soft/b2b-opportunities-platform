@@ -1,4 +1,4 @@
-package com.example.b2b_opportunities.Service;
+package com.example.b2b_opportunities.Service.Implementation;
 
 import com.example.b2b_opportunities.Entity.Company;
 import com.example.b2b_opportunities.Entity.Filter;
@@ -8,8 +8,10 @@ import com.example.b2b_opportunities.Entity.Project;
 import com.example.b2b_opportunities.Entity.RequiredSkill;
 import com.example.b2b_opportunities.Entity.Skill;
 import com.example.b2b_opportunities.Repository.CompanyRepository;
-import com.example.b2b_opportunities.Repository.PositionApplicationRepository;
 import com.example.b2b_opportunities.Repository.ProjectRepository;
+import com.example.b2b_opportunities.Service.Interface.EmailSchedulerService;
+import com.example.b2b_opportunities.Service.Interface.MailService;
+import com.example.b2b_opportunities.Service.Interface.PositionApplicationService;
 import com.example.b2b_opportunities.Static.ProjectStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -25,19 +27,21 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class EmailSchedulerService {
+public class EmailSchedulerServiceImpl implements EmailSchedulerService {
     private final ProjectRepository projectRepository;
     private final CompanyRepository companyRepository;
     private final MailService mailService;
     private final PositionApplicationService positionApplicationService;
 
     @Scheduled(cron = "${cron.everyMondayAt9}")
+    @Override
     public void sendEmailEveryMonday() {
         List<Project> projectsLastThreeDays = getProjectsUpdatedInPastDays(3);
         sendEmailToEveryCompany(projectsLastThreeDays);
     }
 
     @Scheduled(cron = "${cron.TuesdayToFridayAt9}")
+    @Override
     public void sendEmailTuesdayToFriday() {
         List<Project> projectsLastOneDay = getProjectsUpdatedInPastDays(1);
         sendEmailToEveryCompany(projectsLastOneDay);
@@ -48,6 +52,7 @@ public class EmailSchedulerService {
      * This will remind them to set their skills or to create filters
      */
     @Scheduled(cron = "${cron.companiesNoSkillsAndNoCustomFilters}")
+    @Override
     public void sendWeeklyEmailsWhenCompanyHasNoSkillsAndNoCustomFilters() {
         List<Project> projectsLastWeek = getProjectsUpdatedInPastDays(7);
         String title = "B2B Important: Set Your Company Skills to Receive Relevant Project Updates";
@@ -68,6 +73,7 @@ public class EmailSchedulerService {
     }
 
     @Scheduled(cron = "${cron.processExpiringProjects}")
+    @Override
     public void processExpiringProjects() {
         List<Project> expiringProjects = projectRepository.findProjectsExpiringInTwoDays();
         for (Project project : expiringProjects) {
@@ -81,6 +87,7 @@ public class EmailSchedulerService {
     }
 
     @Scheduled(cron = "0 0 10 * * MON-FRI")
+    @Override
     public void processNewApplications() {
         List<PositionApplication> positionApplications = positionApplicationService.getApplicationsSinceLastWorkday();
         if (positionApplications.isEmpty()) {

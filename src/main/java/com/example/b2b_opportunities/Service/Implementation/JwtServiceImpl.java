@@ -1,5 +1,6 @@
-package com.example.b2b_opportunities.Service;
+package com.example.b2b_opportunities.Service.Implementation;
 
+import com.example.b2b_opportunities.Service.Interface.JwtService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
@@ -16,7 +17,7 @@ import java.util.function.Function;
 
 @Service
 @Data
-public class JwtService {
+public class JwtServiceImpl implements JwtService {
 
     @Value("${security.jwt.secret-key}")
     private String secretKey;
@@ -24,15 +25,18 @@ public class JwtService {
     @Value("${security.jwt.expiration-time}")
     private long jwtExpiration;
 
+    @Override
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
     }
 
+    @Override
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = getAllClaimsFromToken(token);
         return claimsResolver.apply(claims);
     }
 
+    @Override
     public String generateToken(UserDetails userDetails) {
         return Jwts
                 .builder()
@@ -44,25 +48,28 @@ public class JwtService {
                 .compact();
     }
 
+    @Override
     public boolean isTokenValid(String token, UserDetails userDetails) {
         final String username = extractUsername(token);
         return (username.equals(userDetails.getUsername())) && !isTokenExpired(token);
     }
 
-    private boolean isTokenExpired(String token) {
-        return extractExpiration(token).before(new Date());
-    }
-
+    @Override
     public Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
     }
 
+    @Override
     public Claims getAllClaimsFromToken(String token) {
         return Jwts.parser()
                 .verifyWith(getSignInKey())
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
+    }
+
+    private boolean isTokenExpired(String token) {
+        return extractExpiration(token).before(new Date());
     }
 
     private SecretKey getSignInKey() {

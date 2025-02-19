@@ -1,6 +1,7 @@
-package com.example.b2b_opportunities.Service;
+package com.example.b2b_opportunities.Service.Implementation;
 
 import com.example.b2b_opportunities.Exception.ServerErrorException;
+import com.example.b2b_opportunities.Service.Interface.ImageService;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
 import io.minio.RemoveObjectArgs;
@@ -22,7 +23,7 @@ import java.security.NoSuchAlgorithmException;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class ImageService {
+public class ImageServiceImpl implements ImageService {
 
     private final MinioClient minioClient;
 
@@ -40,6 +41,7 @@ public class ImageService {
         }
     }
 
+    @Override
     public String upload(MultipartFile file, Long companyId, String imageName) {
         log.info("Attempting to upload image for company ID: {}", companyId);
         try {
@@ -66,6 +68,7 @@ public class ImageService {
         }
     }
 
+    @Override
     public String returnUrlIfPictureExists(Long companyId, String imageName) {
         if (doesImageExist(companyId, imageName)) {
             return storageUrl + "/" + bucketName + "/" + companyId + "/" + imageName;
@@ -73,14 +76,17 @@ public class ImageService {
         return null;
     }
 
+    @Override
     public void deleteBanner(Long companyId) {
         delete(companyId, "banner");
     }
 
+    @Override
     public void deleteImage(Long companyId) {
         delete(companyId, "image");
     }
 
+    @Override
     public void delete(Long companyId, String imageOrBanner) {
         try {
             RemoveObjectArgs rArgs = RemoveObjectArgs.builder()
@@ -94,6 +100,7 @@ public class ImageService {
         }
     }
 
+    @Override
     public boolean doesImageExist(Long companyId, String imageName) {
         try {
             String objectName = companyId + "/" + imageName;

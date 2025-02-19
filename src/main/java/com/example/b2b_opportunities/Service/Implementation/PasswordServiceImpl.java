@@ -1,4 +1,4 @@
-package com.example.b2b_opportunities.Service;
+package com.example.b2b_opportunities.Service.Implementation;
 
 import com.example.b2b_opportunities.Config.SecurityConfig;
 import com.example.b2b_opportunities.Dto.Request.ResetPasswordDto;
@@ -9,6 +9,9 @@ import com.example.b2b_opportunities.Exception.PasswordsNotMatchingException;
 import com.example.b2b_opportunities.Exception.common.PermissionDeniedException;
 import com.example.b2b_opportunities.Repository.ConfirmationTokenRepository;
 import com.example.b2b_opportunities.Repository.UserRepository;
+import com.example.b2b_opportunities.Service.Interface.MailService;
+import com.example.b2b_opportunities.Service.Interface.PasswordService;
+import com.example.b2b_opportunities.Service.Interface.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,13 +22,14 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class PasswordService {
+public class PasswordServiceImpl implements PasswordService {
     private final MailService mailService;
     private final UserRepository userRepository;
-    private final AuthenticationService authenticationService;
+    private final AuthenticationServiceImpl authenticationService;
     private final ConfirmationTokenRepository confirmationTokenRepository;
     private final UserService userService;
 
+    @Override
     public String requestPasswordRecovery(String email, HttpServletRequest request) {
         User user = userService.getUserByEmailOrThrow(email);
         log.info("Attempting password recovery for user ID: {}", user.getId());
@@ -40,6 +44,7 @@ public class PasswordService {
         return "Password recovery e-mail was sent successfully";
     }
 
+    @Override
     public String setNewPassword(ResetPasswordDto resetPasswordDto) {
         ConfirmationToken confirmationToken = authenticationService.validateAndReturnToken(resetPasswordDto.getToken());
         User user = confirmationToken.getUser();

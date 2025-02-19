@@ -3,6 +3,7 @@ package com.example.b2b_opportunities.Service;
 import com.example.b2b_opportunities.Dto.Request.EmailRequest;
 import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Repository.ConfirmationTokenRepository;
+import com.example.b2b_opportunities.Service.Implementation.MailServiceImpl;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,7 +30,7 @@ class MailServiceTest {
     @Mock
     private RestTemplate restTemplate;
     @InjectMocks
-    private MailService mailService;
+    private MailServiceImpl mailService;
 
     @Mock
     private HttpServletRequest request;

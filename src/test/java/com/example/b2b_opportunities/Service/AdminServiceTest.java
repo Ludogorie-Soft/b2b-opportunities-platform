@@ -6,11 +6,15 @@ import com.example.b2b_opportunities.Entity.Company;
 import com.example.b2b_opportunities.Entity.CompanyType;
 import com.example.b2b_opportunities.Repository.CompanyRepository;
 import com.example.b2b_opportunities.Repository.CompanyTypeRepository;
+import com.example.b2b_opportunities.Service.Implementation.AdminServiceImpl;
+import com.example.b2b_opportunities.Service.Interface.AdminService;
+import com.example.b2b_opportunities.Service.Interface.EmailSchedulerService;
 import com.example.b2b_opportunities.Static.EmailVerification;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
@@ -23,13 +27,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SpringBootTest
 @Transactional
 class AdminServiceTest extends BaseTest {
+    @MockitoBean
+    private EmailSchedulerService emailSchedulerService;
+
     private final CompanyRepository companyRepository;
     private final CompanyTypeRepository companyTypeRepository;
     private final AdminService adminService;
     private CompanyType companyType;
 
     @Autowired
-    public AdminServiceTest(CompanyRepository companyRepository, AdminService adminService, CompanyTypeRepository companyTypeRepository) {
+    public AdminServiceTest(CompanyRepository companyRepository, AdminServiceImpl adminService, CompanyTypeRepository companyTypeRepository) {
         this.companyRepository = companyRepository;
         this.adminService = adminService;
         this.companyTypeRepository = companyTypeRepository;

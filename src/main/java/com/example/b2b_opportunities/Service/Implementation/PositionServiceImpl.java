@@ -1,4 +1,4 @@
-package com.example.b2b_opportunities.Service;
+package com.example.b2b_opportunities.Service.Implementation;
 
 import com.example.b2b_opportunities.Dto.Request.PositionEditRequestDto;
 import com.example.b2b_opportunities.Dto.Request.PositionRequestDto;
@@ -30,6 +30,8 @@ import com.example.b2b_opportunities.Repository.RequiredSkillRepository;
 import com.example.b2b_opportunities.Repository.SeniorityRepository;
 import com.example.b2b_opportunities.Repository.SkillRepository;
 import com.example.b2b_opportunities.Repository.WorkModeRepository;
+import com.example.b2b_opportunities.Service.Interface.PositionService;
+import com.example.b2b_opportunities.Service.Interface.UserService;
 import com.example.b2b_opportunities.Static.ApplicationStatus;
 import com.example.b2b_opportunities.Static.ProjectStatus;
 import jakarta.validation.constraints.NotNull;
@@ -48,7 +50,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class PositionService {
+public class PositionServiceImpl implements PositionService {
     private final PositionApplicationRepository positionApplicationRepository;
     private final ProjectRepository projectRepository;
     private final SeniorityRepository seniorityRepository;
@@ -61,10 +63,11 @@ public class PositionService {
     private final LocationRepository locationRepository;
     private final PatternRepository patternRepository;
     private final RequiredSkillRepository requiredSkillRepository;
-    private final CurrencyService currencyService;
-    private final ProjectService projectService;
-    private final CompanyService companyService;
+    private final CurrencyServiceImpl currencyService;
+    private final ProjectServiceImpl projectService;
+    private final CompanyServiceImpl companyService;
 
+    @Override
     public PositionResponseDto createPosition(PositionRequestDto dto, Authentication authentication) {
         validateUserAndCompany(authentication);
         validateProjectAndUserAreRelated(dto.getProjectId(), authentication);
@@ -90,6 +93,7 @@ public class PositionService {
         return PositionMapper.toResponseDto(positionRepository.save(position));
     }
 
+    @Override
     public PositionResponseDto editPosition(Long id, PositionEditRequestDto dto, Authentication authentication) {
         validateUserAndCompany(authentication);
         Position position = getPositionOrThrow(id);
@@ -118,6 +122,7 @@ public class PositionService {
         return PositionMapper.toResponseDto(positionRepository.save(position));
     }
 
+    @Override
     public void deletePosition(Long id, Authentication authentication) {
         Position position = getPositionOrThrow(id);
         validateProjectAndUserAreRelated(position.getProject().getId(), authentication);
@@ -125,6 +130,7 @@ public class PositionService {
         log.info("Successfully deleted position ID: {} for project ID: {}", position.getId(), position.getProject().getId());
     }
 
+    @Override
     public PositionResponseDto getPosition(Authentication authentication, Long id) {
         Position position = getPositionOrThrow(id);
         Project project = position.getProject();
@@ -134,6 +140,7 @@ public class PositionService {
         return generatePositionResponseDto(position);
     }
 
+    @Override
     public Set<PositionResponseDto> getPositions(Authentication authentication) {
         Company userCompany = companyService.getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
 
@@ -143,6 +150,7 @@ public class PositionService {
         return PositionMapper.toResponseDtoSet(combinedSet);
     }
 
+    @Override
     public void editPositionStatus(Long positionId, Long statusId, String customCloseReason, Authentication authentication) {
         validateUserAndCompany(authentication);
         Position position = getPositionOrThrow(positionId);
@@ -171,6 +179,11 @@ public class PositionService {
         positionRepository.save(position);
     }
 
+    @Override
+    public Position getPositionOrThrow(Long id) {
+        return positionRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Position with ID: " + id + " not found"));
+    }
 
     private PositionResponseDto generatePositionResponseDto(Position position) {
         PositionResponseDto responseDto = PositionMapper.toResponseDto(position);
@@ -326,10 +339,6 @@ public class PositionService {
         }
     }
 
-    protected Position getPositionOrThrow(Long id) {
-        return positionRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Position with ID: " + id + " not found"));
-    }
     private void deactivateProjectIfNoActivePositions(Project project) {
         List<Position> positions = project.getPositions();
         boolean hasActivePosition = false;

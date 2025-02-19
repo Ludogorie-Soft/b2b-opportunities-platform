@@ -1,8 +1,9 @@
-package com.example.b2b_opportunities.Service;
+package com.example.b2b_opportunities.Service.Implementation;
 
 import com.example.b2b_opportunities.Dto.Request.EmailRequest;
 import com.example.b2b_opportunities.Entity.*;
 import com.example.b2b_opportunities.Repository.ConfirmationTokenRepository;
+import com.example.b2b_opportunities.Service.Interface.MailService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +16,7 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class MailService {
+public class MailServiceImpl implements MailService {
     private final ConfirmationTokenRepository confirmationTokenRepository;
     private final RestTemplate restTemplate;
 
@@ -25,6 +26,7 @@ public class MailService {
     @Value("${password.recovery.url}")
     private String passwordRecoveryUrl;
 
+    @Override
     public String createAndSaveUserToken(User user) {
         String token = UUID.randomUUID().toString();
         ConfirmationToken confirmationToken = new ConfirmationToken(token, user);
@@ -32,6 +34,7 @@ public class MailService {
         return token;
     }
 
+    @Override
     public void sendConfirmationMail(User user, HttpServletRequest request) {
         String emailContent = "<html>" +
                 "<body>" +
@@ -49,6 +52,7 @@ public class MailService {
         log.info("Send confirmation Email to: {}", user.getEmail());
     }
 
+    @Override
     public void sendPasswordRecoveryMail(User user, HttpServletRequest request) {
         String emailContent = "<html>" +
                 "<body>" +
@@ -65,6 +69,7 @@ public class MailService {
         log.info("Send password recovery Email to: {}", user.getEmail());
     }
 
+    @Override
     public void sendCompanyEmailConfirmation(Company company, String token, HttpServletRequest request) {
         String emailContent = "<html>" +
                 "<body>" +
@@ -81,6 +86,7 @@ public class MailService {
         log.info("Send company (ID: {}) confirmation Email to: {}", company.getId(), company.getEmail());
     }
 
+    @Override
     public void sendProjectExpiringMail(Project project) {
         String emailContent = "<html>" +
                 "<body>" +
@@ -98,6 +104,7 @@ public class MailService {
         log.info("Send project expiring soon Email to: {}", email);
     }
 
+    @Override
     public void sendEmailWhenApplicationIsApproved(PositionApplication positionApplication) {
 
         String emailContent = "<html>" +
@@ -119,6 +126,7 @@ public class MailService {
         log.info("Send application approval Email to: {}", email);
     }
 
+    @Override
     public void sendEmail(String receiver, String content, String subject) {
         EmailRequest er = EmailRequest.builder()
                 .receiver(receiver)
