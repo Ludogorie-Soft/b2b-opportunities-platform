@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -30,15 +31,12 @@ public class EmailSchedulerService {
     private final MailService mailService;
     private final PositionApplicationService positionApplicationService;
 
-
-    //    @Scheduled(cron = "0 0 9 * * MON")
     @Scheduled(cron = "${cron.everyMondayAt9}")
     public void sendEmailEveryMonday() {
         List<Project> projectsLastThreeDays = getProjectsUpdatedInPastDays(3);
         sendEmailToEveryCompany(projectsLastThreeDays);
     }
 
-    //    @Scheduled(cron = "0 0 9 * * 2-5")
     @Scheduled(cron = "${cron.TuesdayToFridayAt9}")
     public void sendEmailTuesdayToFriday() {
         List<Project> projectsLastOneDay = getProjectsUpdatedInPastDays(1);
@@ -49,7 +47,6 @@ public class EmailSchedulerService {
      * This method will only send emails to companies that don't have any skills set and Default filter is Enabled.
      * This will remind them to set their skills or to create filters
      */
-//    @Scheduled(cron = "0 0 9 * * MON")
     @Scheduled(cron = "${cron.companiesNoSkillsAndNoCustomFilters}")
     public void sendWeeklyEmailsWhenCompanyHasNoSkillsAndNoCustomFilters() {
         List<Project> projectsLastWeek = getProjectsUpdatedInPastDays(7);
@@ -70,7 +67,6 @@ public class EmailSchedulerService {
         }
     }
 
-    //    @Scheduled(cron = "0 0 13 * * *") //Once per day at 13:00
     @Scheduled(cron = "${cron.processExpiringProjects}")
     public void processExpiringProjects() {
         List<Project> expiringProjects = projectRepository.findProjectsExpiringInTwoDays();
@@ -86,7 +82,7 @@ public class EmailSchedulerService {
 
     @Scheduled(cron = "0 0 10 * * MON-FRI")
     public void processNewApplications() {
-        List<PositionApplication> positionApplications = positionApplicationService.getPreviousDayApplications();
+        List<PositionApplication> positionApplications = positionApplicationService.getApplicationsSinceLastWorkday();
         if (positionApplications.isEmpty()) {
             return;
         }
@@ -123,52 +119,78 @@ public class EmailSchedulerService {
         for (Company c : companies) {
             Set<Skill> skills = getAllEnabledCompanyFilterSkills(c);
             if (skills.isEmpty()) {
-                // If the company has no Filters (or those don't have any skills),
-                // and the 'Default' filter is Enabled - use the company skills (if any).
-                // If the Default Filter has any skills added to it, it will be treated as 'Custom' filter
-                // and the skills will be taken from getAllEnabledCompanyFilterSkills.
-                Filter defaultFilter = c.getFilters().stream()
-                        .filter(f -> f.getName().equalsIgnoreCase("Default") && f.getIsEnabled())
-                        .findFirst()
-                        .orElse(null);
-
+                Filter defaultFilter = getDefaultFIlter(c);
                 if (defaultFilter != null) {
                     skills = c.getSkills();
                 }
             }
             if (skills.isEmpty()) {
-                // No need to continue. There is another scheduler that handles this:
-                // sendWeeklyEmailsWhenCompanyHasNoSkillsAndNoCustomFilters
                 return;
             }
 
-            Set<Project> projectsThatMatchAtLeastOneSkill = getMatchingProjects(skills, projectsToCheck);
+            Set<Project> matchingProjects = getMatchingProjects(skills, projectsToCheck);
+            Set<Project> availableNewProjectsThatMatchAtLeastOneSkill = removeCurrentCompanyProjects(matchingProjects, c);
 
-            boolean hasChanged = false;
-            Set<Project> newProjects = new HashSet<>();
-            Set<Project> modifiedProjects = new HashSet<>();
-            for (Project p : projectsThatMatchAtLeastOneSkill) {
-                if (!c.getProjectIdsNotified().contains(p.getId())) {
-                    newProjects.add(p);
-                    c.getProjectIdsNotified().add(p.getId());
-                    hasChanged = true;
-                } else {
-                    modifiedProjects.add(p);
-                }
-            }
-
-            if (hasChanged) {
-                companyRepository.save(c);
-            }
-
-            if (!newProjects.isEmpty() || !modifiedProjects.isEmpty()) {
-                String emailContent = generateEmailContent(newProjects, modifiedProjects);
-                String receiver = c.getEmail();
-                String title = "B2B Don't miss on new projects";
-                mailService.sendEmail(receiver, emailContent, title);
-            }
+            processNewAndModifiedProjects(availableNewProjectsThatMatchAtLeastOneSkill, c);
         }
     }
+
+    private Filter getDefaultFIlter(Company company){
+        return company.getFilters().stream()
+                .filter(f -> f.getName().equalsIgnoreCase("Default") && f.getIsEnabled())
+                .findFirst()
+                .orElse(null);
+    }
+
+    private void processNewAndModifiedProjects(Set<Project> projects, Company c){
+        boolean hasChanged = false;
+        Set<Project> newProjects = new HashSet<>();
+        Set<Project> modifiedProjects = new HashSet<>();
+
+        for (Project p : projects) {
+            if (!c.getProjectIdsNotified().contains(p.getId())) {
+                newProjects.add(p);
+                c.getProjectIdsNotified().add(p.getId());
+                hasChanged = true;
+            } else {
+                modifiedProjects.add(p);
+            }
+        }
+        if (hasChanged) {
+            companyRepository.save(c);
+        }
+
+        sendEmailIfAnyNewOrModifiedProjects(newProjects, modifiedProjects, c);
+    }
+
+    private void sendEmailIfAnyNewOrModifiedProjects(Set<Project> newProjects, Set<Project> modifiedProjects, Company c){
+        if (!newProjects.isEmpty() || !modifiedProjects.isEmpty()) {
+            String emailContent = generateEmailContent(newProjects, modifiedProjects);
+            String receiver = c.getEmail();
+            String title = "B2B Don't miss on new projects";
+            mailService.sendEmail(receiver, emailContent, title);
+        }
+    }
+
+    private Set<Project> removeCurrentCompanyProjects(Set<Project> projects, Company company) {
+        return projects.stream()
+                .filter(project -> isAccessibleByCompany(project, company))
+                .collect(Collectors.toSet());
+    }
+
+    private boolean isAccessibleByCompany(Project project, Company company) {
+        if (!Objects.equals(project.getCompany().getId(), company.getId())) {
+            if (!project.isPartnerOnly()) {
+                return true;
+            }
+            return project.getPartnerGroupList().stream()
+                    .flatMap(group -> group.getPartners().stream())
+                    .anyMatch(partner -> Objects.equals(partner.getId(), company.getId()));
+        }
+        return false;
+    }
+
+
 
     private String generateEmailContent(Set<Project> newProjects, Set<Project> modifiedProjects) {
         StringBuilder result = new StringBuilder();

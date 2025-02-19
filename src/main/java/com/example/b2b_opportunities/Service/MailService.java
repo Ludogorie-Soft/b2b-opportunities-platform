@@ -1,10 +1,7 @@
 package com.example.b2b_opportunities.Service;
 
 import com.example.b2b_opportunities.Dto.Request.EmailRequest;
-import com.example.b2b_opportunities.Entity.Company;
-import com.example.b2b_opportunities.Entity.ConfirmationToken;
-import com.example.b2b_opportunities.Entity.Project;
-import com.example.b2b_opportunities.Entity.User;
+import com.example.b2b_opportunities.Entity.*;
 import com.example.b2b_opportunities.Repository.ConfirmationTokenRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -99,6 +96,27 @@ public class MailService {
         String email = project.getCompany().getEmail();
         sendEmail(email, emailContent, subject);
         log.info("Send project expiring soon Email to: {}", email);
+    }
+
+    public void sendEmailWhenApplicationIsApproved(PositionApplication positionApplication) {
+
+        String emailContent = "<html>" +
+                "<body>" +
+                "<h2>Dear " + positionApplication.getTalentCompany().getName() + ",</h2>" +
+                "<br/>Congratulations! We are pleased to inform you that your application for the position of " +
+                "<strong>'" + positionApplication.getPosition().getPattern().getName() + "'</strong> has been approved." +
+                "<br/>We are excited to move forward with the next steps and will be in touch with more details soon." +
+                "<br/>If you have any questions or need further information, feel free to reach out to us." +
+                "<br/><strong>Best regards,</strong>" +
+                "<br/><strong>The B2B Opportunities Team</strong>" +
+                "</body>" +
+                "</html>";
+
+        String subject = "Your Application Has Been Approved - B2B Opportunities";
+        String email = positionApplication.getTalentCompany().getEmail();
+
+        sendEmail(email, emailContent, subject);
+        log.info("Send application approval Email to: {}", email);
     }
 
     public void sendEmail(String receiver, String content, String subject) {
