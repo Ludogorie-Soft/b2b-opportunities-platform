@@ -434,11 +434,8 @@ public class CompanyServiceImpl implements CompanyService {
     @Override
     public List<TalentResponseDto> getAllTalents(Authentication authentication) {
         Company company = getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
-        List<Talent> publicTalents = talentRepository.findAllActivePublicTalents();
-        List<Talent> talentSharedWithCurrentCompany = talentRepository.findActiveTalentsSharedWithUserCompany(company.getId());
-        Set<Talent> combinedSet = new HashSet<>(publicTalents);
-        combinedSet.addAll(talentSharedWithCurrentCompany);
-        return combinedSet.stream().map(TalentMapper::toResponseDto).toList();
+        List<Talent> publicTalents = talentRepository.findAllActiveTalentsVisibleToCompany(company.getId());
+        return publicTalents.stream().map(TalentMapper::toResponseDto).toList();
     }
 
     @Override
@@ -686,7 +683,7 @@ public class CompanyServiceImpl implements CompanyService {
         return companyResponseDto;
     }
 
-    private boolean hasPositions(List<Project> projects){
+    private boolean hasPositions(List<Project> projects) {
         return projects.stream()
                 .anyMatch(project -> project.getPositions() != null && !project.getPositions().isEmpty());
     }
