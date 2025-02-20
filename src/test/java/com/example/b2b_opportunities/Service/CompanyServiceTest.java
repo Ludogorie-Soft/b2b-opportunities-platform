@@ -1677,11 +1677,9 @@ public class CompanyServiceTest {
 
         te.setTalent(talent);
         List<Talent> talentList = List.of(talent);
-        List<Talent> sharedTalents = new ArrayList<>();
 
         when(userService.getCurrentUserOrThrow(authentication)).thenReturn(user);
-        when(talentRepository.findAllActivePublicTalents()).thenReturn(talentList);
-        when(talentRepository.findActiveTalentsSharedWithUserCompany(userCompany.getId())).thenReturn(sharedTalents);
+        when(talentRepository.findAllActiveTalentsVisibleToCompany(anyLong())).thenReturn(talentList);
 
         List<TalentResponseDto> resultList = companyService.getAllTalents(authentication);
 
