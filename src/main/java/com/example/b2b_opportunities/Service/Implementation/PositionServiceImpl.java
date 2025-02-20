@@ -37,6 +37,11 @@ import com.example.b2b_opportunities.Static.ProjectStatus;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
@@ -141,13 +146,43 @@ public class PositionServiceImpl implements PositionService {
     }
 
     @Override
-    public Set<PositionResponseDto> getPositions(Authentication authentication) {
+    public Page<PositionResponseDto> getPositions(Authentication authentication, Pageable pageable) {
         Company userCompany = companyService.getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
 
-        Set<Position> combinedSet = new HashSet<>(positionRepository.findByProjectIsPartnerOnlyFalseAndProjectProjectStatus(ProjectStatus.ACTIVE));
-        combinedSet.addAll(positionRepository.findPartnerOnlyPositionsByCompanyInPartnerGroupsAndStatus(userCompany.getId(), ProjectStatus.ACTIVE));
+        if (pageable == null || pageable.getPageSize() <= 0) {
+            pageable = PageRequest.of(0, 10);
+        }
+        if (pageable.getSort().isUnsorted()) {
+            pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by("project.datePosted").descending());
+        }
 
-        return PositionMapper.toResponseDtoSet(combinedSet);
+
+        Page<Position> nonPartnerOnlyPositionsPage = positionRepository.findPositionsByIsPartnerOnlyAndStatus(
+                false,  // For non-partner-only positions
+                null,
+                ProjectStatus.ACTIVE,
+                pageable
+        );
+
+        Page<Position> partnerOnlyPositionsPage = positionRepository.findPositionsByIsPartnerOnlyAndStatus(
+                true,   // For partner-only positions
+                userCompany.getId(),
+                ProjectStatus.ACTIVE,
+                pageable
+        );
+
+        Set<Position> combinedSet = new HashSet<>();
+        combinedSet.addAll(nonPartnerOnlyPositionsPage.getContent());
+        combinedSet.addAll(partnerOnlyPositionsPage.getContent());
+
+        return new PageImpl<>(
+                combinedSet.stream()
+                        .map(PositionMapper::toResponseDto)
+                        .collect(Collectors.toList()),
+                pageable,
+                nonPartnerOnlyPositionsPage.getTotalElements() + partnerOnlyPositionsPage.getTotalElements()
+        );
+
     }
 
     @Override

@@ -71,6 +71,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -432,10 +437,22 @@ public class CompanyServiceImpl implements CompanyService {
     }
 
     @Override
-    public List<TalentResponseDto> getAllTalents(Authentication authentication) {
+    public Page<TalentResponseDto> getAllTalents(Authentication authentication, Pageable pageable) {
         Company company = getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
-        List<Talent> publicTalents = talentRepository.findAllActiveTalentsVisibleToCompany(company.getId());
-        return publicTalents.stream().map(TalentMapper::toResponseDto).toList();
+        if (pageable == null || pageable.getPageSize() <= 0) {
+            pageable = PageRequest.of(0, 5);
+        }
+        if (pageable.getSort().isUnsorted()) {
+            pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
+                    Sort.by("minRate").ascending().and(Sort.by("maxRate").ascending()));
+        }
+        Page<Talent> talentsPage = talentRepository.findAllActiveTalentsVisibleToCompany(company.getId(), pageable);
+        List<TalentResponseDto> dtos = talentsPage
+                .getContent()
+                .stream()
+                .map(TalentMapper::toResponseDto)
+                .toList();
+        return new PageImpl<>(dtos, pageable, talentsPage.getTotalElements());
     }
 
     @Override

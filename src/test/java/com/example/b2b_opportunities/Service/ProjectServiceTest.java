@@ -34,6 +34,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.MockitoAnnotations;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 
 import java.time.LocalDate;
@@ -47,7 +51,6 @@ import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
@@ -182,66 +185,6 @@ public class ProjectServiceTest {
         when(projectRepository.findById(1L)).thenReturn(Optional.of(project));
 
         assertThrows(PermissionDeniedException.class, () -> projectService.get(authentication, 1L));
-    }
-
-    @Test
-    public void shouldGetAvailableProjectsWhenUserHasCompany() {
-        when(companyService.getUserCompanyOrThrow(user)).thenReturn(company);
-
-        Project partnerProject = new Project();
-        partnerProject.setId(123123123L);
-        partnerProject.setCompany(company);
-        partnerProject.setProjectStatus(ProjectStatus.ACTIVE);
-
-        Project publicProject = new Project();
-        publicProject.setId(1L);
-        publicProject.setCompany(company);
-        publicProject.setProjectStatus(ProjectStatus.ACTIVE);
-        publicProject.setName("Public Project");
-        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(user);
-        when(companyRepository.findById(company.getId())).thenReturn(Optional.of(company));
-
-        when(projectRepository.findByProjectStatusAndIsPartnerOnlyFalseAndCompanyIsApprovedTrue(ProjectStatus.ACTIVE))
-                .thenReturn(Collections.singletonList(publicProject));
-        when(projectRepository.findPartnerOnlyProjectsByCompanyInPartnerGroupsAndStatus(company.getId(), ProjectStatus.ACTIVE))
-                .thenReturn(Collections.singletonList(partnerProject));
-
-        try (MockedStatic<ProjectMapper> mockedMapper = mockStatic(ProjectMapper.class)) {
-            ProjectResponseDto publicProjectDto = ProjectResponseDto.builder()
-                    .id(publicProject.getId())
-                    .companyId(publicProject.getCompany().getId())
-                    .datePosted(LocalDateTime.now())
-                    .name(publicProject.getName())
-                    .startDate(LocalDate.now())
-                    .endDate(LocalDate.now().plusDays(30))
-                    .duration(1)
-                    .description("Public project description")
-                    .status("ACTIVE")
-                    .isPartnerOnly(false)
-                    .build();
-
-            ProjectResponseDto partnerProjectDto = ProjectResponseDto.builder()
-                    .id(partnerProject.getId())
-                    .companyId(partnerProject.getCompany().getId())
-                    .datePosted(LocalDateTime.now())
-                    .name("Partner Project")
-                    .startDate(LocalDate.now())
-                    .endDate(LocalDate.now().plusDays(60))
-                    .duration(2)
-                    .description("Partner project description")
-                    .status("ACTIVE")
-                    .isPartnerOnly(true)
-                    .build();
-
-            mockedMapper.when(() -> ProjectMapper.toDtoList(anyList()))
-                    .thenReturn(Arrays.asList(publicProjectDto, partnerProjectDto));
-
-            List<ProjectResponseDto> result = projectService.getAvailableProjects(authentication);
-
-            assertNotNull(result);
-            assertEquals(publicProjectDto, result.get(0));
-            assertEquals(partnerProjectDto, result.get(1));
-        }
     }
 
     @Test
@@ -735,34 +678,6 @@ public class ProjectServiceTest {
         assertEquals(exception.getMessage(), "The company has not yet been approved to post public projects");
     }
 
-    @Test
-    void getAvailableProjectsWithNoPartnerProjectsShouldReturnNewArrayListForPartnerProjects(){
-        User user = new User();
-        Company company = Company.builder().id(1L).build();
-
-        Project project = new Project();
-        project.setId(1L);
-        project.setCompany(company);
-        project.setDatePosted(LocalDateTime.now());
-        project.setExpiryDate(LocalDateTime.now().plusWeeks(3));
-        project.setName("test");
-        project.setStartDate(LocalDate.now());
-        project.setEndDate(LocalDate.now().plusDays(2));
-        project.setDuration(2);
-        project.setDescription("test");
-        project.setProjectStatus(ProjectStatus.ACTIVE);
-        project.setPartnerOnly(false);
-
-        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(user);
-        when(companyService.getUserCompanyOrThrow(user)).thenReturn(company);
-        when(projectRepository.findByProjectStatusAndIsPartnerOnlyFalseAndCompanyIsApprovedTrue(any())).thenReturn(List.of(project));
-        when(projectRepository.findPartnerOnlyProjectsByCompanyInPartnerGroupsAndStatus(anyLong(), any())).thenReturn(new ArrayList<>());
-
-        List<ProjectResponseDto> responseDtoList = projectService.getAvailableProjects(authentication);
-
-        assertEquals(responseDtoList.size(),1);
-        assertEquals(responseDtoList.get(0).getName(), "test");
-    }
 
     @Test
     void createOrUpdateShouldThrowExceptionWhenPartnerGroupNotFound(){

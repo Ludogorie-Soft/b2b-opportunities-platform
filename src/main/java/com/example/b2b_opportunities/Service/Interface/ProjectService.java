@@ -5,6 +5,8 @@ import com.example.b2b_opportunities.Dto.Response.PositionResponseDto;
 import com.example.b2b_opportunities.Dto.Response.ProjectResponseDto;
 import com.example.b2b_opportunities.Entity.Company;
 import com.example.b2b_opportunities.Entity.Project;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 
 import java.util.List;
@@ -12,7 +14,7 @@ import java.util.List;
 public interface ProjectService {
     ProjectResponseDto get(Authentication authentication, Long id);
 
-    List<ProjectResponseDto> getAvailableProjects(Authentication authentication);
+    Page<ProjectResponseDto> getAvailableProjects(Authentication authentication, Pageable pageable);
 
     ProjectResponseDto update(Long id, ProjectRequestDto dto, Authentication authentication);
 

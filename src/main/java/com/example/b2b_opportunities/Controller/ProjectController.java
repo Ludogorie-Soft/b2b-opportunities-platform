@@ -3,10 +3,11 @@ package com.example.b2b_opportunities.Controller;
 import com.example.b2b_opportunities.Dto.Request.ProjectRequestDto;
 import com.example.b2b_opportunities.Dto.Response.PositionResponseDto;
 import com.example.b2b_opportunities.Dto.Response.ProjectResponseDto;
-import com.example.b2b_opportunities.Service.Implementation.ProjectServiceImpl;
 import com.example.b2b_opportunities.Service.Interface.ProjectService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -35,8 +36,8 @@ public class ProjectController {
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public List<ProjectResponseDto> getAvailableProjects(Authentication authentication) {
-        return projectService.getAvailableProjects(authentication);
+    public Page<ProjectResponseDto> getAvailableProjects(Authentication authentication, Pageable pageable) {
+        return projectService.getAvailableProjects(authentication, pageable);
     }
 
     @GetMapping("{id}/positions")

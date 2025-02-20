@@ -22,6 +22,11 @@ import com.example.b2b_opportunities.Static.ApplicationStatus;
 import com.example.b2b_opportunities.Static.ProjectStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
@@ -58,25 +63,32 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public List<ProjectResponseDto> getAvailableProjects(Authentication authentication) {
+    public Page<ProjectResponseDto> getAvailableProjects(Authentication authentication, Pageable pageable) {
         User user = userService.getCurrentUserOrThrow(authentication);
         log.info("User ID: {} attempting to access available projects", user.getId());
+
+        if (pageable == null || pageable.getPageSize() <= 0) {
+            pageable = PageRequest.of(0, 5);
+        }
+        if (pageable.getSort().isUnsorted()) {
+            pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by("datePosted").descending());
+        }
+
         Company company = companyService.getUserCompanyOrThrow(user);
 
-        List<ProjectResponseDto> publicProjects = ProjectMapper.toDtoList(projectRepository
-                .findByProjectStatusAndIsPartnerOnlyFalseAndCompanyIsApprovedTrue(ProjectStatus.ACTIVE));
+        Page<Project> publicProjectsPage = projectRepository
+                .findByProjectStatusAndIsPartnerOnlyFalseAndCompanyIsApprovedTrue(ProjectStatus.ACTIVE, pageable);
+
+        Page<ProjectResponseDto> publicProjectsDtoPage = publicProjectsPage.map(ProjectMapper::toDto);
 
         List<ProjectResponseDto> partnerProjects = getPartnerProjects(company);
-        List<ProjectResponseDto> combinedProjects = new ArrayList<>();
 
-        if (publicProjects != null && !publicProjects.isEmpty()) {
-            combinedProjects.addAll(publicProjects);
-        }
+        List<ProjectResponseDto> combinedProjects = new ArrayList<>(publicProjectsDtoPage.getContent());
         if (partnerProjects != null && !partnerProjects.isEmpty()) {
             combinedProjects.addAll(partnerProjects);
         }
 
-        return combinedProjects;
+        return new PageImpl<>(combinedProjects, pageable, publicProjectsDtoPage.getTotalElements());
     }
 
     @Override

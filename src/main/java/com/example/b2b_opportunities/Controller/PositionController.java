@@ -6,6 +6,8 @@ import com.example.b2b_opportunities.Dto.Response.PositionResponseDto;
 import com.example.b2b_opportunities.Service.Interface.PositionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -35,8 +37,8 @@ public class PositionController {
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public Set<PositionResponseDto> getPositions(Authentication authentication) {
-        return positionService.getPositions(authentication);
+    public Page<PositionResponseDto> getPositions(Authentication authentication, Pageable pageable) {
+        return positionService.getPositions(authentication, pageable);
     }
 
     @GetMapping("/{id}")
