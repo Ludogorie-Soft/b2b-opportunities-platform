@@ -19,7 +19,7 @@ public interface PositionService {
 
     PositionResponseDto getPosition(Authentication authentication, Long id);
 
-    Page<PositionResponseDto> getPositions(Authentication authentication, Pageable pageable);
+    Page<PositionResponseDto> getPositions(Authentication authentication, int offset, int pageSize, String sort, boolean ascending);
 
     void editPositionStatus(Long positionId, Long statusId, String customCloseReason, Authentication authentication);
 

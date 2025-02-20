@@ -146,16 +146,15 @@ public class PositionServiceImpl implements PositionService {
     }
 
     @Override
-    public Page<PositionResponseDto> getPositions(Authentication authentication, Pageable pageable) {
+    public Page<PositionResponseDto> getPositions(Authentication authentication,
+                                                  int offset,
+                                                  int pageSize,
+                                                  String sort,
+                                                  boolean ascending) {
         Company userCompany = companyService.getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
 
-        if (pageable == null || pageable.getPageSize() <= 0) {
-            pageable = PageRequest.of(0, 10);
-        }
-        if (pageable.getSort().isUnsorted()) {
-            pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by("project.datePosted").descending());
-        }
-
+        Sort.Direction direction = ascending ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Pageable pageable = PageRequest.of(offset, pageSize, Sort.by(direction, sort));
 
         Page<Position> nonPartnerOnlyPositionsPage = positionRepository.findPositionsByIsPartnerOnlyAndStatus(
                 false,  // For non-partner-only positions
@@ -171,18 +170,19 @@ public class PositionServiceImpl implements PositionService {
                 pageable
         );
 
-        Set<Position> combinedSet = new HashSet<>();
-        combinedSet.addAll(nonPartnerOnlyPositionsPage.getContent());
-        combinedSet.addAll(partnerOnlyPositionsPage.getContent());
+        List<Position> combinedList = new ArrayList<>();
+        combinedList.addAll(nonPartnerOnlyPositionsPage.getContent());
+        combinedList.addAll(partnerOnlyPositionsPage.getContent());
 
-        return new PageImpl<>(
-                combinedSet.stream()
-                        .map(PositionMapper::toResponseDto)
-                        .collect(Collectors.toList()),
-                pageable,
-                nonPartnerOnlyPositionsPage.getTotalElements() + partnerOnlyPositionsPage.getTotalElements()
-        );
+        int start = offset * pageSize;
+        int end = Math.min(start + pageSize, combinedList.size());
+        List<Position> paginatedList = combinedList.subList(start, end);
 
+        List<PositionResponseDto> dtos = paginatedList.stream()
+                .map(PositionMapper::toResponseDto)
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(dtos, pageable, combinedList.size());
     }
 
     @Override

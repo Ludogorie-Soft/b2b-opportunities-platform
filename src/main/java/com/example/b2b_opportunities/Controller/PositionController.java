@@ -37,8 +37,12 @@ public class PositionController {
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public Page<PositionResponseDto> getPositions(Authentication authentication, Pageable pageable) {
-        return positionService.getPositions(authentication, pageable);
+    public Page<PositionResponseDto> getPositions(Authentication authentication,
+                                                  @RequestParam(defaultValue = "0") int offset,
+                                                  @RequestParam(defaultValue = "10")int pageSize,
+                                                  @RequestParam String sort,
+                                                  @RequestParam boolean ascending) {
+        return positionService.getPositions(authentication, offset, pageSize, sort, ascending);
     }
 
     @GetMapping("/{id}")

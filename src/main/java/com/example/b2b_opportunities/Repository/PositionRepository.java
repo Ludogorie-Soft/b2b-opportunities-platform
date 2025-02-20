@@ -28,7 +28,6 @@ public interface PositionRepository extends JpaRepository<Position, Long> {
             AND proj.company.isApproved = true
         )
     AND proj.projectStatus = :projectStatus
-    ORDER BY proj.datePosted DESC
 """)
     Page<Position> findPositionsByIsPartnerOnlyAndStatus(
             @Param("isPartnerOnly") boolean isPartnerOnly,
