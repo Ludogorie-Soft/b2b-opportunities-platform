@@ -10,6 +10,10 @@ import com.example.b2b_opportunities.Exception.common.NotFoundException;
 import com.example.b2b_opportunities.Exception.common.PermissionDeniedException;
 import com.example.b2b_opportunities.Repository.ConfirmationTokenRepository;
 import com.example.b2b_opportunities.Repository.UserRepository;
+import com.example.b2b_opportunities.Service.Implementation.AuthenticationServiceImpl;
+import com.example.b2b_opportunities.Service.Implementation.PasswordServiceImpl;
+import com.example.b2b_opportunities.Service.Interface.MailService;
+import com.example.b2b_opportunities.Service.Interface.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,9 +42,9 @@ class PasswordServiceTest {
     @Mock
     private HttpServletRequest request;
     @InjectMocks
-    private PasswordService passwordService;
+    private PasswordServiceImpl passwordService;
     @Mock
-    private AuthenticationService authenticationService;
+    private AuthenticationServiceImpl authenticationService;
     @Mock
     private UserService userService;
     private User user;

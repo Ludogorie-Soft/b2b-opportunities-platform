@@ -8,12 +8,12 @@ import com.example.b2b_opportunities.Exception.common.AlreadyExistsException;
 import com.example.b2b_opportunities.Exception.common.NotFoundException;
 import com.example.b2b_opportunities.Repository.PatternRepository;
 import com.example.b2b_opportunities.Repository.SkillRepository;
+import com.example.b2b_opportunities.Service.Implementation.PatternServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.security.core.parameters.P;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,7 +35,7 @@ import static org.mockito.Mockito.when;
 public class PatternServiceTest {
 
     @InjectMocks
-    private PatternService patternService;
+    private PatternServiceImpl patternService;
 
     @Mock
     private PatternRepository patternRepository;

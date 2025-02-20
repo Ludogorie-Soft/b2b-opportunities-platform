@@ -1,4 +1,4 @@
-package com.example.b2b_opportunities.Service;
+package com.example.b2b_opportunities.Service.Implementation;
 
 import com.example.b2b_opportunities.Dto.LoginDtos.LoginDto;
 import com.example.b2b_opportunities.Dto.Request.UserRequestDto;
@@ -11,18 +11,19 @@ import com.example.b2b_opportunities.Exception.common.DuplicateCredentialExcepti
 import com.example.b2b_opportunities.Exception.PasswordsNotMatchingException;
 import com.example.b2b_opportunities.Exception.ValidationException;
 import com.example.b2b_opportunities.Exception.common.InvalidRequestException;
-import com.example.b2b_opportunities.Exception.common.NotFoundException;
 import com.example.b2b_opportunities.Mapper.UserMapper;
 import com.example.b2b_opportunities.Repository.ConfirmationTokenRepository;
 import com.example.b2b_opportunities.Repository.UserRepository;
+import com.example.b2b_opportunities.Service.Interface.AuthenticationService;
+import com.example.b2b_opportunities.Service.Interface.JwtService;
+import com.example.b2b_opportunities.Service.Interface.MailService;
+import com.example.b2b_opportunities.Service.Interface.UserService;
 import com.example.b2b_opportunities.Static.RoleType;
 import com.example.b2b_opportunities.UserDetailsImpl;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.tomcat.util.descriptor.web.SecurityConstraint;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -42,7 +43,6 @@ import org.springframework.validation.BindingResult;
 import java.security.Principal;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -52,7 +52,7 @@ import static com.example.b2b_opportunities.Utils.EmailUtils.validateEmail;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class AuthenticationService {
+public class AuthenticationServiceImpl implements AuthenticationService {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
     private final MailService mailService;
@@ -69,6 +69,7 @@ public class AuthenticationService {
     @Value(("${domain}"))
     private String domain;
 
+    @Override
     public void login(LoginDto loginDto, HttpServletRequest request, HttpServletResponse response) {
         UserDetails userDetails;
         userDetails = authenticate(loginDto);
@@ -78,6 +79,7 @@ public class AuthenticationService {
         setJwtCookie(request, response, jwtToken);
     }
 
+    @Override
     public void setJwtCookie(HttpServletRequest request, HttpServletResponse response, String jwtToken) {
 
         ResponseCookie cookie = ResponseCookie.from("jwt", jwtToken)
@@ -91,6 +93,7 @@ public class AuthenticationService {
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
 
+    @Override
     public ResponseEntity<UserResponseDto> register(UserRequestDto userRequestDto, BindingResult bindingResult, HttpServletRequest request) {
         if (bindingResult.hasErrors()) {
             throw new ValidationException(bindingResult);
@@ -107,11 +110,13 @@ public class AuthenticationService {
     }
 
     // TODO - Used only for testing
+    @Override
     public List<UserResponseDto> getAllUsers() {
         List<User> users = userRepository.findAll();
         return UserMapper.toResponseDtoList(users);
     }
 
+    @Override
     public String resendConfirmationMail(String email, HttpServletRequest request) {
         log.info("Attempting to send confirmation email to: {}", email);
 
@@ -130,6 +135,7 @@ public class AuthenticationService {
         return "A new token was sent to your e-mail!";
     }
 
+    @Override
     public void oAuthLogin(Principal user, HttpServletRequest request, HttpServletResponse response) {
         if (user instanceof OAuth2AuthenticationToken authToken) {
             OAuth2User oauth2User = authToken.getPrincipal();
@@ -149,14 +155,16 @@ public class AuthenticationService {
     }
 
     // TODO - refactor - move to DB
+    @Override
     public boolean isUsernameInDB(String username) {
         return userRepository.findByUsername(username).isPresent();
     }
-
+    @Override
     public boolean arePasswordsMatching(String password, String repeatedPassword) {
         return password.equals(repeatedPassword);
     }
 
+    @Override
     public ConfirmationToken validateAndReturnToken(String token) {
         Optional<ConfirmationToken> optionalConfirmationToken = confirmationTokenRepository.findByToken(token);
         if (optionalConfirmationToken.isEmpty()) {
@@ -171,6 +179,7 @@ public class AuthenticationService {
         return optionalConfirmationToken.get();
     }
 
+    @Override
     public void confirmEmail(String token) {
         ConfirmationToken confirmationToken = validateAndReturnToken(token);
         User user = confirmationToken.getUser();

@@ -1,4 +1,4 @@
-package com.example.b2b_opportunities.Service;
+package com.example.b2b_opportunities.Service.Implementation;
 
 import com.example.b2b_opportunities.Dto.Request.CompanyFilterEditDto;
 import com.example.b2b_opportunities.Dto.Request.CompanyFilterRequestDto;
@@ -59,6 +59,10 @@ import com.example.b2b_opportunities.Repository.TalentExperienceRepository;
 import com.example.b2b_opportunities.Repository.TalentRepository;
 import com.example.b2b_opportunities.Repository.UserRepository;
 import com.example.b2b_opportunities.Repository.WorkModeRepository;
+import com.example.b2b_opportunities.Service.Interface.CompanyService;
+import com.example.b2b_opportunities.Service.Interface.MailService;
+import com.example.b2b_opportunities.Service.Interface.PatternService;
+import com.example.b2b_opportunities.Service.Interface.UserService;
 import com.example.b2b_opportunities.Static.ApplicationStatus;
 import com.example.b2b_opportunities.Static.EmailVerification;
 import com.example.b2b_opportunities.Static.ProjectStatus;
@@ -86,10 +90,10 @@ import static com.example.b2b_opportunities.Utils.EmailUtils.validateEmail;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class CompanyService {
+public class CompanyServiceImpl implements CompanyService {
     private final PositionApplicationRepository positionApplicationRepository;
     private final CompanyRepository companyRepository;
-    private final ImageService imageService;
+    private final ImageServiceImpl imageService;
     private final CompanyTypeRepository companyTypeRepository;
     private final DomainRepository domainRepository;
     private final PatternService patternService;
@@ -108,6 +112,7 @@ public class CompanyService {
     private final WorkModeRepository workModeRepository;
     private final ProjectRepository projectRepository;
 
+    @Override
     public CompanyResponseDto createCompany(Authentication authentication,
                                             CompanyRequestDto companyRequestDto,
                                             HttpServletRequest request) {
@@ -128,26 +133,13 @@ public class CompanyService {
         return generateCompanyResponseDto(company);
     }
 
+    @Override
     public CompanyResponseDto getCompany(Long companyId) {
         Company company = getCompanyOrThrow(companyId);
         return generateCompanyResponseDto(company);
     }
 
-    private void createDefaultFilterIfCompanyHasNoSkills(Company company) {
-        Set<Skill> skills = company.getSkills();
-        if (skills.isEmpty()) {
-            Filter filter = Filter.builder()
-                    .name("Default")
-                    .isEnabled(true)
-                    .company(company)
-                    .build();
-            filterRepository.save(filter);
-            company.setFilters(new HashSet<>(Set.of(filter)));
-            companyRepository.save(company);
-            log.info("Created default filter for company {}  (ID: {})", company.getName(), company.getId());
-        }
-    }
-
+    @Override
     public CompaniesAndUsersResponseDto getCompanyAndUsers(Long companyId) {
         Company company = getCompanyOrThrow(companyId);
         List<UserResponseDto> users = UserMapper.toResponseDtoList(company.getUsers());
@@ -160,6 +152,7 @@ public class CompanyService {
         return response;
     }
 
+    @Override
     public void confirmCompanyEmail(String token) {
         Company company = companyRepository.findByEmailConfirmationToken(token)
                 .orElseThrow(() -> new NotFoundException("Invalid or already used token"));
@@ -169,6 +162,7 @@ public class CompanyService {
         log.info("Confirmed email address for company: {} (ID: {}) ", company.getName(), company.getId());
     }
 
+    @Override
     public CompanyResponseDto editCompany(Authentication authentication,
                                           CompanyRequestDto companyRequestDto,
                                           HttpServletRequest request) {
@@ -190,6 +184,7 @@ public class CompanyService {
 
     // TODO - add more logs for the methods below.
 
+    @Override
     public CompanyResponseDto setCompanyImages(Authentication authentication,
                                                MultipartFile image,
                                                MultipartFile banner) {
@@ -202,14 +197,17 @@ public class CompanyService {
         return generateCompanyResponseDto(company);
     }
 
+    @Override
     public void deleteCompanyBanner(Authentication authentication) {
         delete(authentication, "banner");
     }
 
+    @Override
     public void deleteCompanyImage(Authentication authentication) {
         delete(authentication, "image");
     }
 
+    @Override
     public Set<ProjectResponseDto> getCompanyProjects(Authentication authentication, Long companyId) {
         Company company = getCompanyOrThrow(companyId);
         Company userCompany = getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
@@ -235,6 +233,7 @@ public class CompanyService {
         return ProjectMapper.toDtoSet(projectSet);
     }
 
+    @Override
     public List<CompanyFilterResponseDto> getCompanyFilters(Authentication authentication) {
         User currentUser = userService.getCurrentUserOrThrow(authentication);
         Company userCompany = getUserCompanyOrThrow(currentUser);
@@ -243,6 +242,7 @@ public class CompanyService {
         return FilterMapper.toDtoList(filters);
     }
 
+    @Override
     public CompanyFilterResponseDto getCompanyFilter(Long id, Authentication authentication) {
         User currentUser = userService.getCurrentUserOrThrow(authentication);
         Company company = getUserCompanyOrThrow(currentUser);
@@ -251,6 +251,7 @@ public class CompanyService {
         return FilterMapper.toDto(getFilterIfExists(id));
     }
 
+    @Override
     public CompanyFilterResponseDto editCompanyFilter(Long id, CompanyFilterEditDto dto, Authentication authentication) {
         User currentUser = userService.getCurrentUserOrThrow(authentication);
         Company company = getUserCompanyOrThrow(currentUser);
@@ -265,6 +266,7 @@ public class CompanyService {
         return FilterMapper.toDto(filterRepository.save(filter));
     }
 
+    @Override
     public void deleteCompanyFilter(Long id, Authentication authentication) {
         User currentUser = userService.getCurrentUserOrThrow(authentication);
         Company company = getUserCompanyOrThrow(currentUser);
@@ -273,6 +275,7 @@ public class CompanyService {
         filterRepository.deleteById(id);
     }
 
+    @Override
     public CompanyFilterResponseDto addCompanyFilter(Authentication authentication, @Valid CompanyFilterRequestDto dto) {
         User currentUser = userService.getCurrentUserOrThrow(authentication);
         Company userCompany = getUserCompanyOrThrow(currentUser);
@@ -292,6 +295,7 @@ public class CompanyService {
         return FilterMapper.toDto(filter);
     }
 
+    @Override
     public List<PartnerGroupResponseDto> getPartnerGroups(Authentication authentication) {
         User user = userService.getCurrentUserOrThrow(authentication);
         Company company = getUserCompanyOrThrow(user);
@@ -299,6 +303,7 @@ public class CompanyService {
         return partnerGroups.stream().map(PartnerGroupMapper::toPartnerGroupResponseDto).collect(Collectors.toList());
     }
 
+    @Override
     public PartnerGroupResponseDto removeCompanyFromPartners(Authentication authentication, Long partnerGroupId, Long companyId) {
         User user = userService.getCurrentUserOrThrow(authentication);
         Company company = getUserCompanyOrThrow(user);
@@ -313,6 +318,7 @@ public class CompanyService {
         return PartnerGroupMapper.toPartnerGroupResponseDto(partnerGroupRepository.save(partnerGroup));
     }
 
+    @Override
     public void deletePartnerGroup(Authentication authentication, Long partnerGroupId) {
         User user = userService.getCurrentUserOrThrow(authentication);
         Company company = getUserCompanyOrThrow(user);
@@ -326,6 +332,7 @@ public class CompanyService {
         }
     }
 
+    @Override
     public List<CompanyPublicResponseDto> getAcceptedCompaniesPublicData() {
         List<Company> verifiedCompanies = companyRepository.findCompaniesByEmailVerificationAccepted();
         List<CompanyPublicResponseDto> companiesPublicDataNoImg = toCompanyPublicResponseDtoList(verifiedCompanies);
@@ -340,6 +347,7 @@ public class CompanyService {
         return result;
     }
 
+    @Override
     public PartnerGroupResponseDto createPartnerGroup(Authentication authentication, PartnerGroupRequestDto dto) {
         User user = userService.getCurrentUserOrThrow(authentication);
         Company company = getUserCompanyOrThrow(user); //check if user belongs to a company
@@ -362,6 +370,7 @@ public class CompanyService {
         return PartnerGroupMapper.toPartnerGroupResponseDto(partnerGroup);
     }
 
+    @Override
     public PartnerGroupResponseDto editPartnerGroup(Authentication authentication, Long partnerGroupId, PartnerGroupRequestDto dto) {
         User user = userService.getCurrentUserOrThrow(authentication);
         Company userCompany = getUserCompanyOrThrow(user);
@@ -378,6 +387,7 @@ public class CompanyService {
         return PartnerGroupMapper.toPartnerGroupResponseDto(partnerGroup);
     }
 
+    @Override
     public TalentResponseDto createTalent(Authentication authentication, TalentRequestDto talentRequestDto) {
         Company company = getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
         Talent talent = TalentMapper.toEntity(talentRequestDto);
@@ -392,6 +402,7 @@ public class CompanyService {
         return TalentMapper.toResponseDto(talent);
     }
 
+    @Override
     public TalentResponseDto updateTalent(Authentication authentication, Long talentId, TalentRequestDto
             talentRequestDto) {
         Company company = getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
@@ -420,6 +431,7 @@ public class CompanyService {
         return TalentMapper.toResponseDto(talentRepository.save(talent));
     }
 
+    @Override
     public List<TalentResponseDto> getAllTalents(Authentication authentication) {
         Company company = getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
         List<Talent> publicTalents = talentRepository.findAllActivePublicTalents();
@@ -429,6 +441,7 @@ public class CompanyService {
         return combinedSet.stream().map(TalentMapper::toResponseDto).toList();
     }
 
+    @Override
     public TalentResponseDto getTalentById(Authentication authentication, Long talentId) {
         Talent talent = talentRepository.findById(talentId)
                 .orElseThrow(() -> new NotFoundException("Talent with ID: " + talentId + " not found"));
@@ -442,12 +455,14 @@ public class CompanyService {
         return TalentMapper.toResponseDto(talent);
     }
 
+    @Override
     public List<TalentResponseDto> getMyTalents(Authentication authentication) {
         Company company = getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
         List<Talent> myTalents = talentRepository.findByCompanyId(company.getId());
         return myTalents.stream().map(TalentMapper::toResponseDto).toList();
     }
 
+    @Override
     public void deleteTalent(Authentication authentication, Long id) {
         Company company = getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
         Talent talent = getTalentOrThrow(id);
@@ -455,6 +470,7 @@ public class CompanyService {
         talentRepository.delete(talent);
     }
 
+    @Override
     public void setTalentVisibility(Authentication authentication, TalentPublicityRequestDto requestDto) {
         Company company = getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
         if (requestDto.isPublic()) {
@@ -477,6 +493,7 @@ public class CompanyService {
         companyRepository.save(company);
     }
 
+    @Override
     public TalentPublicityResponseDto getTalentVisibility(Authentication authentication) {
         User user = userService.getCurrentUserOrThrow(authentication);
         Company userCompany = user.getCompany();
@@ -492,6 +509,7 @@ public class CompanyService {
                 .build();
     }
 
+    @Override
     public Company getCompanyOrThrow(Long id) {
         return companyRepository.findById(id).orElseThrow(() -> {
             log.warn("Company with id {} not found", id);
@@ -499,12 +517,19 @@ public class CompanyService {
         });
     }
 
+    @Override
     public Company getUserCompanyOrThrow(User user) {
         Company userCompany = user.getCompany();
         if (userCompany == null) {
             throw new NotFoundException("User " + user.getUsername() + " is not associated with any company.");
         }
         return userCompany;
+    }
+
+    @Override
+    public Talent getTalentOrThrow(Long talentId) {
+        return talentRepository.findById(talentId)
+                .orElseThrow(() -> new NotFoundException("Talent with ID: " + talentId + " not found"));
     }
 
     private void setTalentRates(Talent talent, TalentRequestDto talentRequestDto) {
@@ -918,11 +943,6 @@ public class CompanyService {
                 .orElseThrow(() -> new NotFoundException("Seniority with ID: " + seniorityId + " not found"));
     }
 
-    protected Talent getTalentOrThrow(Long talentId) {
-        return talentRepository.findById(talentId)
-                .orElseThrow(() -> new NotFoundException("Talent with ID: " + talentId + " not found"));
-    }
-
     private void disableDefaultFilterIfExistsAndHasNoSkills(Company c) {
         Filter defaultFilter = c.getFilters().stream()
                 .filter(f -> f.getName().equalsIgnoreCase("Default") && f.getIsEnabled() && f.getSkills().isEmpty())
@@ -932,6 +952,21 @@ public class CompanyService {
         if (defaultFilter != null) {
             defaultFilter.setIsEnabled(false);
             filterRepository.save(defaultFilter);
+        }
+    }
+
+    private void createDefaultFilterIfCompanyHasNoSkills(Company company) {
+        Set<Skill> skills = company.getSkills();
+        if (skills.isEmpty()) {
+            Filter filter = Filter.builder()
+                    .name("Default")
+                    .isEnabled(true)
+                    .company(company)
+                    .build();
+            filterRepository.save(filter);
+            company.setFilters(new HashSet<>(Set.of(filter)));
+            companyRepository.save(company);
+            log.info("Created default filter for company {}  (ID: {})", company.getName(), company.getId());
         }
     }
 }

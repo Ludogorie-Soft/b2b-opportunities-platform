@@ -1,7 +1,7 @@
 package com.example.b2b_opportunities.Controller;
 
 import com.example.b2b_opportunities.Entity.Location;
-import com.example.b2b_opportunities.Service.LocationService;
+import com.example.b2b_opportunities.Service.Interface.LocationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;

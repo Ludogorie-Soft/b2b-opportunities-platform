@@ -3,6 +3,7 @@ package com.example.b2b_opportunities.Service;
 import com.example.b2b_opportunities.Entity.Location;
 import com.example.b2b_opportunities.Exception.common.NotFoundException;
 import com.example.b2b_opportunities.Repository.LocationRepository;
+import com.example.b2b_opportunities.Service.Implementation.LocationServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -27,7 +28,7 @@ class LocationServiceTest {
     private LocationRepository locationRepository;
 
     @InjectMocks
-    private LocationService locationService;
+    private LocationServiceImpl locationService;
 
     @Test
     void shouldReturnLocationWhenExists() {

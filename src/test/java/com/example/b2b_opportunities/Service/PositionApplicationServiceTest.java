@@ -16,6 +16,7 @@ import com.example.b2b_opportunities.Exception.common.PermissionDeniedException;
 import com.example.b2b_opportunities.Repository.PositionApplicationRepository;
 import com.example.b2b_opportunities.Repository.PositionRepository;
 import com.example.b2b_opportunities.Repository.TalentRepository;
+import com.example.b2b_opportunities.Service.Implementation.*;
 import com.example.b2b_opportunities.Static.ApplicationStatus;
 import com.example.b2b_opportunities.Static.ProjectStatus;
 import io.minio.MinioClient;
@@ -43,7 +44,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -66,22 +66,25 @@ import static org.mockito.Mockito.when;
 class PositionApplicationServiceTest {
 
     @InjectMocks
-    PositionApplicationService positionApplicationService;
+    PositionApplicationServiceImpl positionApplicationService;
 
     @Mock
-    UserService userService;
+    UserServiceImpl userService;
 
     @Mock
-    ImageService imageService;
+    ImageServiceImpl imageService;
 
     @Mock
-    CompanyService companyService;
+    MailServiceImpl mailService;
 
     @Mock
-    ProjectService projectService;
+    CompanyServiceImpl companyService;
 
     @Mock
-    PositionService positionService;
+    ProjectServiceImpl projectService;
+
+    @Mock
+    PositionServiceImpl positionService;
 
     @Mock
     TalentRepository talentRepository;
@@ -103,9 +106,6 @@ class PositionApplicationServiceTest {
 
     @Mock
     MultipartFile multipartFile;
-
-    @Mock
-    MailService mailService;
 
     private PositionApplicationRequestDto requestDto;
 
