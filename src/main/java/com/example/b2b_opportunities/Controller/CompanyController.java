@@ -207,8 +207,12 @@ public class CompanyController {
 
     @GetMapping("/talents")
     @ResponseStatus(HttpStatus.OK)
-    public Page<TalentResponseDto> getAllTalents(Authentication authentication, Pageable pageable) {
-        return companyService.getAllTalents(authentication, pageable);
+    public Page<TalentResponseDto> getAllTalents(Authentication authentication,
+                                                 int offset,
+                                                 int pageSize,
+                                                 String sort,
+                                                 boolean ascending) {
+        return companyService.getAllTalents(authentication, offset, pageSize, sort, ascending);
     }
 
     @GetMapping("/talents/{id}")

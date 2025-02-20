@@ -437,22 +437,27 @@ public class CompanyServiceImpl implements CompanyService {
     }
 
     @Override
-    public Page<TalentResponseDto> getAllTalents(Authentication authentication, Pageable pageable) {
+    public Page<TalentResponseDto> getAllTalents(Authentication authentication, int offset,
+                                                 int pageSize, String sort, boolean ascending) {
         Company company = getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
-        if (pageable == null || pageable.getPageSize() <= 0) {
-            pageable = PageRequest.of(0, 5);
+
+        if (pageSize <= 0) {
+            pageSize = 5;
         }
-        if (pageable.getSort().isUnsorted()) {
-            pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
-                    Sort.by("minRate").ascending().and(Sort.by("maxRate").ascending()));
+
+        Sort.Direction direction = ascending ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Pageable pageable = PageRequest.of(offset, pageSize, Sort.by(direction, sort));
+        if(sort.equals("minRate")){
+            pageable = PageRequest.of(offset, pageSize, Sort.by(direction, "minRate")
+                    .and(Sort.by("maxRate")));
         }
+
         Page<Talent> talentsPage = talentRepository.findAllActiveTalentsVisibleToCompany(company.getId(), pageable);
-        List<TalentResponseDto> dtos = talentsPage
-                .getContent()
-                .stream()
+
+        List<TalentResponseDto> dtoList = talentsPage.getContent().stream()
                 .map(TalentMapper::toResponseDto)
                 .toList();
-        return new PageImpl<>(dtos, pageable, talentsPage.getTotalElements());
+        return new PageImpl<>(dtoList, pageable, talentsPage.getTotalElements());
     }
 
     @Override

@@ -153,6 +153,10 @@ public class PositionServiceImpl implements PositionService {
                                                   boolean ascending) {
         Company userCompany = companyService.getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
 
+        if(pageSize <= 0) {
+            pageSize = 10;
+        }
+
         Sort.Direction direction = ascending ? Sort.Direction.ASC : Sort.Direction.DESC;
         Pageable pageable = PageRequest.of(offset, pageSize, Sort.by(direction, sort));
 

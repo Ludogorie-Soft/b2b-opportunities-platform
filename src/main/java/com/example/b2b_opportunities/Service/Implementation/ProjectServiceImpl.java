@@ -63,18 +63,23 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public Page<ProjectResponseDto> getAvailableProjects(Authentication authentication, Pageable pageable) {
+    public Page<ProjectResponseDto> getAvailableProjects(Authentication authentication,
+                                                         int offset,
+                                                         int pageSize,
+                                                         String sort,
+                                                         boolean ascending) {
         User user = userService.getCurrentUserOrThrow(authentication);
         log.info("User ID: {} attempting to access available projects", user.getId());
 
-        if (pageable == null || pageable.getPageSize() <= 0) {
-            pageable = PageRequest.of(0, 5);
-        }
-        if (pageable.getSort().isUnsorted()) {
-            pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by("datePosted").descending());
+        Company company = companyService.getUserCompanyOrThrow(user);
+
+
+        if(pageSize <= 0){
+            pageSize = 10;
         }
 
-        Company company = companyService.getUserCompanyOrThrow(user);
+        Sort.Direction direction = ascending ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Pageable pageable = PageRequest.of(offset, pageSize, Sort.by(direction, sort));
 
         Page<Project> publicProjectsPage = projectRepository
                 .findByProjectStatusAndIsPartnerOnlyFalseAndCompanyIsApprovedTrue(ProjectStatus.ACTIVE, pageable);

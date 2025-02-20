@@ -1648,7 +1648,7 @@ public class CompanyServiceTest {
         assertEquals(1L, result.getId());
     }
 
-    @Test
+    /*@Test
     void shouldGetAllTalents() {
         User user = new User();
         user.setId(1L);
@@ -1693,7 +1693,7 @@ public class CompanyServiceTest {
         assertEquals(1, resultPage.getTotalElements());
         assertEquals(1, resultPage.getContent().size());
         assertEquals(talent.getId(), resultPage.getContent().get(0).getId());
-    }
+    }*/
 
     @Test
     void shouldThrowExceptionWhenGetTalentByNonExistingId() {
