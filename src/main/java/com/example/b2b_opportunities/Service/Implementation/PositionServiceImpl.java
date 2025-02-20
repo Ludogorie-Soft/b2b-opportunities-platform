@@ -225,7 +225,7 @@ public class PositionServiceImpl implements PositionService {
                             .projectName(projectIdToNameMap.get(responseDto.getProjectId()))
                             .build();
                 })
-                .collect(Collectors.toList());
+                .toList();
     }
 
 
