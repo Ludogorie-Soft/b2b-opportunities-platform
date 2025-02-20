@@ -1,9 +1,10 @@
-package com.example.b2b_opportunities.Service;
+package com.example.b2b_opportunities.Service.Implementation;
 
 import com.example.b2b_opportunities.Entity.Location;
 import com.example.b2b_opportunities.Exception.common.AlreadyExistsException;
 import com.example.b2b_opportunities.Exception.common.NotFoundException;
 import com.example.b2b_opportunities.Repository.LocationRepository;
+import com.example.b2b_opportunities.Service.Interface.LocationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -14,17 +15,20 @@ import static com.example.b2b_opportunities.Utils.StringUtils.stripCapitalizeAnd
 
 @Service
 @RequiredArgsConstructor
-public class LocationService {
+public class LocationServiceImpl implements LocationService {
     private final LocationRepository locationRepository;
 
+    @Override
     public Location get(Long id) {
         return getLocationsIfExists(id);
     }
 
+    @Override
     public List<Location> getAll() {
         return locationRepository.findAll();
     }
 
+    @Override
     public Location create(String name) {
         name = stripCapitalizeAndValidateNotEmpty(name, "Location Name");
 
@@ -34,6 +38,7 @@ public class LocationService {
         return locationRepository.save(location);
     }
 
+    @Override
     public Location update(Long id, String newName) {
         newName = stripCapitalizeAndValidateNotEmpty(newName, "Location Name");
 
@@ -46,6 +51,7 @@ public class LocationService {
         return location;
     }
 
+    @Override
     public void delete(Long id) {
         getLocationsIfExists(id);
         locationRepository.deleteById(id);

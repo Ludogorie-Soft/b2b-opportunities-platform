@@ -6,9 +6,9 @@ import com.example.b2b_opportunities.Dto.Response.UserResponseDto;
 import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Repository.ConfirmationTokenRepository;
 import com.example.b2b_opportunities.Repository.UserRepository;
-import com.example.b2b_opportunities.Service.AuthenticationService;
-import com.example.b2b_opportunities.Service.MailService;
-import com.example.b2b_opportunities.Service.UserService;
+import com.example.b2b_opportunities.Service.Implementation.AuthenticationServiceImpl;
+import com.example.b2b_opportunities.Service.Interface.MailService;
+import com.example.b2b_opportunities.Service.Interface.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -96,7 +96,7 @@ public class AuthControllerTest {
     private PlatformTransactionManager transactionManager;
 
     @Autowired
-    private AuthenticationService authenticationService;
+    private AuthenticationServiceImpl authenticationService;
 
     @Autowired
     private ConfirmationTokenRepository confirmationTokenRepository;

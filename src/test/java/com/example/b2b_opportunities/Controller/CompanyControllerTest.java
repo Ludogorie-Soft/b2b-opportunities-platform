@@ -10,15 +10,14 @@ import com.example.b2b_opportunities.Repository.CompanyTypeRepository;
 import com.example.b2b_opportunities.Repository.DomainRepository;
 import com.example.b2b_opportunities.Repository.RoleRepository;
 import com.example.b2b_opportunities.Repository.UserRepository;
-import com.example.b2b_opportunities.Service.CompanyService;
-import com.example.b2b_opportunities.Service.ImageService;
+import com.example.b2b_opportunities.Service.Implementation.ImageServiceImpl;
+import com.example.b2b_opportunities.Service.Implementation.CompanyServiceImpl;
 import com.example.b2b_opportunities.Static.EmailVerification;
 import com.example.b2b_opportunities.UserDetailsImpl;
 import com.example.b2b_opportunities.Utils.EmailUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
-import jakarta.validation.constraints.Email;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,7 +26,6 @@ import org.mockito.MockedStatic;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -56,7 +54,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -104,9 +101,9 @@ class CompanyControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
     @MockitoBean
-    private ImageService imageService;
+    private ImageServiceImpl imageService;
     @InjectMocks
-    private CompanyService companyService;
+    private CompanyServiceImpl companyService;
 
     private Company company1;
     private Company company2;

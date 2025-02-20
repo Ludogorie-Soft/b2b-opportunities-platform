@@ -25,7 +25,6 @@ import com.example.b2b_opportunities.Entity.PartnerGroup;
 import com.example.b2b_opportunities.Entity.Pattern;
 import com.example.b2b_opportunities.Entity.Position;
 import com.example.b2b_opportunities.Entity.PositionApplication;
-import com.example.b2b_opportunities.Entity.PositionStatus;
 import com.example.b2b_opportunities.Entity.Project;
 import com.example.b2b_opportunities.Entity.Seniority;
 import com.example.b2b_opportunities.Entity.Skill;
@@ -56,6 +55,11 @@ import com.example.b2b_opportunities.Repository.TalentExperienceRepository;
 import com.example.b2b_opportunities.Repository.TalentRepository;
 import com.example.b2b_opportunities.Repository.UserRepository;
 import com.example.b2b_opportunities.Repository.WorkModeRepository;
+import com.example.b2b_opportunities.Service.Implementation.CompanyServiceImpl;
+import com.example.b2b_opportunities.Service.Implementation.ImageServiceImpl;
+import com.example.b2b_opportunities.Service.Interface.MailService;
+import com.example.b2b_opportunities.Service.Interface.PatternService;
+import com.example.b2b_opportunities.Service.Interface.UserService;
 import com.example.b2b_opportunities.Static.ApplicationStatus;
 import com.example.b2b_opportunities.Static.EmailVerification;
 import com.example.b2b_opportunities.Static.ProjectStatus;
@@ -68,7 +72,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.multipart.MultipartFile;
-import org.testcontainers.shaded.org.checkerframework.checker.units.qual.C;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -113,7 +116,7 @@ public class CompanyServiceTest {
     private PositionApplicationRepository positionApplicationRepository;
 
     @Mock
-    private ImageService imageService;
+    private ImageServiceImpl imageService;
 
     @Mock
     private UserRepository userRepository;
@@ -164,7 +167,7 @@ public class CompanyServiceTest {
     private PartnerGroupRepository partnerGroupRepository;
 
     @InjectMocks
-    private CompanyService companyService;
+    private CompanyServiceImpl companyService;
 
     private CompanyRequestDto companyRequestDto;
 
