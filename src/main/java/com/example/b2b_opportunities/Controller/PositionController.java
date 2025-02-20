@@ -2,23 +2,16 @@ package com.example.b2b_opportunities.Controller;
 
 import com.example.b2b_opportunities.Dto.Request.PositionEditRequestDto;
 import com.example.b2b_opportunities.Dto.Request.PositionRequestDto;
+import com.example.b2b_opportunities.Dto.Response.CompanyPositionsResponseDto;
 import com.example.b2b_opportunities.Dto.Response.PositionResponseDto;
 import com.example.b2b_opportunities.Service.Interface.PositionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Set;
 
 @RestController
@@ -29,7 +22,8 @@ public class PositionController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public PositionResponseDto createPosition(@RequestBody @Valid PositionRequestDto dto, Authentication authentication) {
+    public PositionResponseDto createPosition(@RequestBody @Valid PositionRequestDto dto,
+                                              Authentication authentication) {
         return positionService.createPosition(dto, authentication);
     }
 
@@ -41,13 +35,16 @@ public class PositionController {
 
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public PositionResponseDto getPosition(Authentication authentication, @PathVariable("id") Long id) {
+    public PositionResponseDto getPosition(Authentication authentication,
+                                           @PathVariable("id") Long id) {
         return positionService.getPosition(authentication, id);
     }
 
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public PositionResponseDto editPosition(@PathVariable("id") Long id, @RequestBody @Valid PositionEditRequestDto positionRequestDto, Authentication authentication) {
+    public PositionResponseDto editPosition(@PathVariable("id") Long id,
+                                            @RequestBody @Valid PositionEditRequestDto positionRequestDto,
+                                            Authentication authentication) {
         return positionService.editPosition(id, positionRequestDto, authentication);
     }
 
@@ -66,5 +63,12 @@ public class PositionController {
             Authentication authentication
     ) {
         positionService.editPositionStatus(positionId, statusId, customCloseReason, authentication);
+    }
+
+    @GetMapping("/{id}/partial")
+    @ResponseStatus(HttpStatus.OK)
+    public List<CompanyPositionsResponseDto> getCompanyPositions(Authentication authentication,
+                                                                 @PathVariable("id") Long id) {
+        return positionService.getCompanyPositions(authentication, id);
     }
 }

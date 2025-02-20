@@ -2,15 +2,8 @@ package com.example.b2b_opportunities.Service;
 
 import com.example.b2b_opportunities.Dto.Request.PositionRequestDto;
 import com.example.b2b_opportunities.Dto.Request.RequiredSkillsDto;
-import com.example.b2b_opportunities.Entity.Company;
-import com.example.b2b_opportunities.Entity.Pattern;
-import com.example.b2b_opportunities.Entity.Position;
-import com.example.b2b_opportunities.Entity.PositionStatus;
-import com.example.b2b_opportunities.Entity.Project;
-import com.example.b2b_opportunities.Entity.Seniority;
-import com.example.b2b_opportunities.Entity.Skill;
-import com.example.b2b_opportunities.Entity.User;
-import com.example.b2b_opportunities.Entity.WorkMode;
+import com.example.b2b_opportunities.Dto.Response.CompanyPositionsResponseDto;
+import com.example.b2b_opportunities.Entity.*;
 import com.example.b2b_opportunities.Exception.common.InvalidRequestException;
 import com.example.b2b_opportunities.Exception.common.NotFoundException;
 import com.example.b2b_opportunities.Repository.PatternRepository;
@@ -31,11 +24,12 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.security.core.Authentication;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -241,5 +235,140 @@ class PositionServiceTest {
         );
 
         assertEquals(exception.getMessage(), "WorkMode with ID(s): [2] not found");
+    }
+
+    @Test
+    void shouldReturnEmptyListWhenCompanyHasNoProjects() {
+        User user = new User();
+        Company company = new Company();
+        company.setProjects(Collections.emptyList());
+
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(user);
+        when(companyService.getCompanyOrThrow(anyLong())).thenReturn(company);
+
+        List<CompanyPositionsResponseDto> resultList = positionService.getCompanyPositions(authentication, 1L);
+
+        assertEquals(0, resultList.size());
+    }
+
+    @Test
+    void shouldReturnPositionsForSingleProject() {
+        User user = new User();
+        Company company = new Company();
+
+        Project project = new Project();
+        project.setId(1L);
+        project.setName("Test Project");
+        project.setCompany(company);
+
+        WorkMode workMode = new WorkMode();
+        workMode.setId(1L);
+        workMode.setName("Working mode");
+
+        Rate rate = new Rate();
+        rate.setCurrency(new Currency());
+        rate.setId(1L);
+        rate.setMin(5);
+        rate.setMax(10);
+
+        RequiredSkill firstRequiredSkill = new RequiredSkill();
+        firstRequiredSkill.setId(1L);
+        firstRequiredSkill.setSkill(new Skill());
+
+        Position position = Position.builder()
+                .id(1L)
+                .project(project)
+                .seniority(new Seniority())
+                .pattern(new Pattern())
+                .workModes(Set.of(workMode))
+                .requiredSkills(List.of(firstRequiredSkill))
+                .rate(rate)
+                .status(new PositionStatus(1L, "APPROVED"))
+                .build();
+
+        company.setProjects(List.of(project));
+
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(user);
+        when(companyService.getCompanyOrThrow(anyLong())).thenReturn(company);
+        when(positionRepository.findByProjectIdsIn(anyList())).thenReturn(List.of(position));
+
+        List<CompanyPositionsResponseDto> result = positionService.getCompanyPositions(authentication, 1L);
+
+        assertEquals(1, result.size());
+        CompanyPositionsResponseDto dto = result.getFirst();
+        assertEquals(1L, dto.getPositionId());
+        assertEquals("Test Project", dto.getProjectName());
+    }
+
+    @Test
+    void shouldReturnMultiplePositionsForMultipleProjects() {
+        User user = new User();
+        Company company = new Company();
+
+        Project project1 = new Project();
+        project1.setId(1L);
+        project1.setName("Project Alpha");
+        project1.setCompany(company);
+
+        Project project2 = new Project();
+        project2.setId(2L);
+        project2.setName("Project Beta");
+        project2.setCompany(company);
+
+        WorkMode workMode = new WorkMode();
+        workMode.setId(1L);
+        workMode.setName("Working mode");
+
+        Rate rate = new Rate();
+        rate.setCurrency(new Currency());
+        rate.setId(1L);
+        rate.setMin(5);
+        rate.setMax(10);
+
+        RequiredSkill firstRequiredSkill = new RequiredSkill();
+        firstRequiredSkill.setId(1L);
+        firstRequiredSkill.setSkill(new Skill());
+        RequiredSkill secondRequiredSkill = new RequiredSkill();
+        secondRequiredSkill.setId(2L);
+        secondRequiredSkill.setSkill(new Skill());
+
+        Position position1 = Position.builder()
+                .id(1L)
+                .project(project1)
+                .seniority(new Seniority())
+                .pattern(new Pattern())
+                .workModes(Set.of(workMode))
+                .requiredSkills(List.of(firstRequiredSkill))
+                .rate(rate)
+                .status(new PositionStatus(1L, "APPROVED"))
+                .build();
+
+        Position position2 = Position.builder()
+                .id(2L)
+                .project(project2)
+                .seniority(new Seniority())
+                .pattern(new Pattern())
+                .workModes(Set.of(workMode))
+                .requiredSkills(List.of(secondRequiredSkill))
+                .rate(rate)
+                .status(new PositionStatus(1L, "APPROVED"))
+                .build();
+
+        company.setProjects(List.of(project1, project2));
+
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(user);
+        when(companyService.getCompanyOrThrow(anyLong())).thenReturn(company);
+        when(positionRepository.findByProjectIdsIn(anyList())).thenReturn(List.of(position1, position2));
+
+        List<CompanyPositionsResponseDto> result = positionService.getCompanyPositions(authentication, 1L);
+
+        assertEquals(2, result.size());
+        CompanyPositionsResponseDto dto1 = result.get(0);
+        assertEquals(1L, dto1.getPositionId());
+        assertEquals("Project Alpha", dto1.getProjectName());
+
+        CompanyPositionsResponseDto dto2 = result.get(1);
+        assertEquals(2L, dto2.getPositionId());
+        assertEquals("Project Beta", dto2.getProjectName());
     }
 }
