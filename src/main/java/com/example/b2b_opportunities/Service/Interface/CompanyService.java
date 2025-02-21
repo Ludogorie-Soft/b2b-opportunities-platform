@@ -74,7 +74,14 @@ public interface CompanyService {
 
     TalentResponseDto updateTalent(Authentication authentication, Long talentId, TalentRequestDto talentRequestDto);
 
-    Page<TalentResponseDto> getAllTalents(Authentication authentication, int offset, int pageSize, String sort, boolean ascending);
+    Page<TalentResponseDto> getAllTalents(Authentication authentication,
+                                          int offset,
+                                          int pageSize,
+                                          String sort,
+                                          boolean ascending,
+                                          List<Long> workModesIds,
+                                          List<Long> skillsIds,
+                                          Integer minRate);
 
     TalentResponseDto getTalentById(Authentication authentication, Long talentId);
 
