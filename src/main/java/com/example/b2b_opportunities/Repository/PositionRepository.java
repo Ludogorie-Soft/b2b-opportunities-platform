@@ -2,6 +2,8 @@ package com.example.b2b_opportunities.Repository;
 
 import com.example.b2b_opportunities.Entity.Position;
 import com.example.b2b_opportunities.Static.ProjectStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -11,17 +13,25 @@ import java.util.List;
 
 @Repository
 public interface PositionRepository extends JpaRepository<Position, Long> {
-    List<Position> findByProjectIsPartnerOnlyFalseAndProjectProjectStatus(ProjectStatus projectStatus);
-
-    @Query("SELECT DISTINCT pos FROM Position pos " +
-            "JOIN pos.project proj " +
-            "LEFT JOIN proj.partnerGroupList pg " +
-            "LEFT JOIN pg.partners c " +
-            "WHERE proj.isPartnerOnly = true " +
-            "AND (c.id = :companyId OR proj.company.id = :companyId) " +
-            "AND proj.projectStatus = :projectStatus " +
-            "AND proj.company.isApproved = true")
-    List<Position> findPartnerOnlyPositionsByCompanyInPartnerGroupsAndStatus(
+    @Query("""
+    SELECT pos 
+    FROM Position pos
+    JOIN FETCH pos.project proj
+    LEFT JOIN FETCH proj.partnerGroupList pg
+    LEFT JOIN FETCH pg.partners c
+    WHERE 
+        (:isPartnerOnly = false AND proj.isPartnerOnly = false)
+        OR (
+            :isPartnerOnly = true 
+            AND proj.isPartnerOnly = true 
+            AND (c.id = :companyId OR proj.company.id = :companyId) 
+            AND proj.company.isApproved = true
+        )
+    AND proj.projectStatus = :projectStatus
+""")
+    Page<Position> findPositionsByIsPartnerOnlyAndStatus(
+            @Param("isPartnerOnly") boolean isPartnerOnly,
             @Param("companyId") Long companyId,
-            @Param("projectStatus") ProjectStatus projectStatus);
+            @Param("projectStatus") ProjectStatus projectStatus,
+            Pageable pageable);
 }

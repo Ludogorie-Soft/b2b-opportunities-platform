@@ -1,12 +1,25 @@
 package com.example.b2b_opportunities.Service.Interface;
 
-import com.example.b2b_opportunities.Dto.Request.*;
-import com.example.b2b_opportunities.Dto.Response.*;
+import com.example.b2b_opportunities.Dto.Request.CompanyFilterEditDto;
+import com.example.b2b_opportunities.Dto.Request.CompanyFilterRequestDto;
+import com.example.b2b_opportunities.Dto.Request.CompanyRequestDto;
+import com.example.b2b_opportunities.Dto.Request.PartnerGroupRequestDto;
+import com.example.b2b_opportunities.Dto.Request.TalentPublicityRequestDto;
+import com.example.b2b_opportunities.Dto.Request.TalentRequestDto;
+import com.example.b2b_opportunities.Dto.Response.CompaniesAndUsersResponseDto;
+import com.example.b2b_opportunities.Dto.Response.CompanyFilterResponseDto;
+import com.example.b2b_opportunities.Dto.Response.CompanyPublicResponseDto;
+import com.example.b2b_opportunities.Dto.Response.CompanyResponseDto;
+import com.example.b2b_opportunities.Dto.Response.PartnerGroupResponseDto;
+import com.example.b2b_opportunities.Dto.Response.ProjectResponseDto;
+import com.example.b2b_opportunities.Dto.Response.TalentPublicityResponseDto;
+import com.example.b2b_opportunities.Dto.Response.TalentResponseDto;
 import com.example.b2b_opportunities.Entity.Company;
 import com.example.b2b_opportunities.Entity.Talent;
 import com.example.b2b_opportunities.Entity.User;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -61,7 +74,7 @@ public interface CompanyService {
 
     TalentResponseDto updateTalent(Authentication authentication, Long talentId, TalentRequestDto talentRequestDto);
 
-    List<TalentResponseDto> getAllTalents(Authentication authentication);
+    Page<TalentResponseDto> getAllTalents(Authentication authentication, int offset, int pageSize, String sort, boolean ascending);
 
     TalentResponseDto getTalentById(Authentication authentication, Long talentId);
 

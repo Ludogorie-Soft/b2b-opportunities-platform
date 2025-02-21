@@ -298,22 +298,23 @@ class PositionControllerTest {
 
         mockMvc.perform(get("/positions"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[*].projectId").value(hasItem(project.getId().intValue())))
-                .andExpect(jsonPath("$[*].patternId").value(hasItem(pattern.getId().intValue())))
-                .andExpect(jsonPath("$[*].seniority").value(hasItem(3)))
-                .andExpect(jsonPath("$[0].workMode").value(containsInAnyOrder(1, 2)))
-                .andExpect(jsonPath("$[0].rate").value(hasEntry("min", 50)))
-                .andExpect(jsonPath("$[0].rate").value(hasEntry("max", 100)))
-                .andExpect(jsonPath("$[0].rate").value(hasEntry("currencyId", currency.getId().intValue())))
-                .andExpect(jsonPath("$[0].requiredSkills[0].skillId").value(testSkill.getId()))
-                .andExpect(jsonPath("$[0].requiredSkills[0].months").value(6))
-                .andExpect(jsonPath("$[0].minYearsExperience").value(2))
-                .andExpect(jsonPath("$[0].hoursPerWeek").value(40))
-                .andExpect(jsonPath("$[0].responsibilities").value(containsInAnyOrder("Develop software", "Review code")))
-                .andExpect(jsonPath("$[0].hiringProcess").value("Interview -> Coding Test -> Offer"))
-                .andExpect(jsonPath("$[0].description").value("Position for software engineer"));
+                // Change the expectation to access the 'content' array instead of the root
+                .andExpect(jsonPath("$.content").isArray())  // Correct path to access the content array
+                .andExpect(jsonPath("$.content.length()").value(2))  // Expect two positions in the content
+                .andExpect(jsonPath("$.content[*].projectId").value(hasItem(project.getId().intValue())))
+                .andExpect(jsonPath("$.content[*].patternId").value(hasItem(pattern.getId().intValue())))
+                .andExpect(jsonPath("$.content[*].seniority").value(hasItem(3)))
+                .andExpect(jsonPath("$.content[0].workMode").value(containsInAnyOrder(1, 2)))
+                .andExpect(jsonPath("$.content[0].rate").value(hasEntry("min", 50)))
+                .andExpect(jsonPath("$.content[0].rate").value(hasEntry("max", 100)))
+                .andExpect(jsonPath("$.content[0].rate").value(hasEntry("currencyId", currency.getId().intValue())))
+                .andExpect(jsonPath("$.content[0].requiredSkills[0].skillId").value(testSkill.getId()))
+                .andExpect(jsonPath("$.content[0].requiredSkills[0].months").value(6))
+                .andExpect(jsonPath("$.content[0].minYearsExperience").value(2))
+                .andExpect(jsonPath("$.content[0].hoursPerWeek").value(40))
+                .andExpect(jsonPath("$.content[0].responsibilities").value(containsInAnyOrder("Develop software", "Review code")))
+                .andExpect(jsonPath("$.content[0].hiringProcess").value("Interview -> Coding Test -> Offer"))
+                .andExpect(jsonPath("$.content[0].description").value("Position for software engineer"));
     }
 
     @Test

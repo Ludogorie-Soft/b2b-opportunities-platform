@@ -1,6 +1,8 @@
 package com.example.b2b_opportunities.Repository;
 
 import com.example.b2b_opportunities.Entity.Talent;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -18,6 +20,6 @@ public interface TalentRepository extends JpaRepository<Talent, Long> {
             "LEFT JOIN pg.partners p " +
             "WHERE t.isActive = true AND " +
             "(c.talentsSharedPublicly = true OR (p.id = :companyId OR c.id = :companyId))")
-    List<Talent> findAllActiveTalentsVisibleToCompany(@Param("companyId") Long companyId);
+    Page<Talent> findAllActiveTalentsVisibleToCompany(@Param("companyId") Long companyId, Pageable pageable);
 
 }

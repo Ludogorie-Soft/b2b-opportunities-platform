@@ -71,6 +71,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -432,10 +437,27 @@ public class CompanyServiceImpl implements CompanyService {
     }
 
     @Override
-    public List<TalentResponseDto> getAllTalents(Authentication authentication) {
+    public Page<TalentResponseDto> getAllTalents(Authentication authentication, int offset,
+                                                 int pageSize, String sort, boolean ascending) {
         Company company = getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
-        List<Talent> publicTalents = talentRepository.findAllActiveTalentsVisibleToCompany(company.getId());
-        return publicTalents.stream().map(TalentMapper::toResponseDto).toList();
+
+        if (pageSize <= 0) {
+            pageSize = 5;
+        }
+
+        Sort.Direction direction = ascending ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Pageable pageable = PageRequest.of(offset, pageSize, Sort.by(direction, sort));
+        if(sort.equals("minRate")){
+            pageable = PageRequest.of(offset, pageSize, Sort.by(direction, "minRate")
+                    .and(Sort.by("maxRate")));
+        }
+
+        Page<Talent> talentsPage = talentRepository.findAllActiveTalentsVisibleToCompany(company.getId(), pageable);
+
+        List<TalentResponseDto> dtoList = talentsPage.getContent().stream()
+                .map(TalentMapper::toResponseDto)
+                .toList();
+        return new PageImpl<>(dtoList, pageable, talentsPage.getTotalElements());
     }
 
     @Override
