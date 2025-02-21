@@ -208,10 +208,10 @@ public class CompanyController {
     @GetMapping("/talents")
     @ResponseStatus(HttpStatus.OK)
     public Page<TalentResponseDto> getAllTalents(Authentication authentication,
-                                                 int offset,
-                                                 int pageSize,
-                                                 String sort,
-                                                 boolean ascending) {
+                                                 @RequestParam(defaultValue = "0") int offset,
+                                                 @RequestParam(defaultValue = "10")int pageSize,
+                                                 @RequestParam String sort,
+                                                 @RequestParam boolean ascending) {
         return companyService.getAllTalents(authentication, offset, pageSize, sort, ascending);
     }
 
