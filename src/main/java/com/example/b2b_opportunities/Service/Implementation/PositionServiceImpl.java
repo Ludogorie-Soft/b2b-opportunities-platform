@@ -150,44 +150,56 @@ public class PositionServiceImpl implements PositionService {
                                                   int offset,
                                                   int pageSize,
                                                   String sort,
-                                                  boolean ascending) {
+                                                  boolean ascending,
+                                                  Integer rate,
+                                                  Set<Long> workModes,
+                                                  Set<Long> skills,
+                                                  Boolean isPartnerOnly) {
         Company userCompany = companyService.getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
 
-        if(pageSize <= 0) {
+        if (pageSize <= 0) {
             pageSize = 10;
         }
 
         Sort.Direction direction = ascending ? Sort.Direction.ASC : Sort.Direction.DESC;
         Pageable pageable = PageRequest.of(offset, pageSize, Sort.by(direction, sort));
 
-        Page<Position> nonPartnerOnlyPositionsPage = positionRepository.findPositionsByIsPartnerOnlyAndStatus(
-                false,  // For non-partner-only positions
-                null,
-                ProjectStatus.ACTIVE,
-                pageable
-        );
+        Page<Position> resultPage;
 
-        Page<Position> partnerOnlyPositionsPage = positionRepository.findPositionsByIsPartnerOnlyAndStatus(
-                true,   // For partner-only positions
-                userCompany.getId(),
-                ProjectStatus.ACTIVE,
-                pageable
-        );
+        if (isPartnerOnly == null) {
+            Page<Position> nonPartnerOnlyPositionsPage = positionRepository.findPositionsByFilters(false, null,
+                    ProjectStatus.ACTIVE, rate, workModes, skills, pageable);
+            Page<Position> partnerOnlyPositionsPage = positionRepository.findPositionsByFilters(true, userCompany.getId(),
+                    ProjectStatus.ACTIVE, rate, workModes, skills, pageable);
 
-        List<Position> combinedList = new ArrayList<>();
-        combinedList.addAll(nonPartnerOnlyPositionsPage.getContent());
-        combinedList.addAll(partnerOnlyPositionsPage.getContent());
+            List<Position> combinedList = new ArrayList<>();
+            combinedList.addAll(nonPartnerOnlyPositionsPage.getContent());
+            combinedList.addAll(partnerOnlyPositionsPage.getContent());
 
-        int start = offset * pageSize;
-        int end = Math.min(start + pageSize, combinedList.size());
-        List<Position> paginatedList = combinedList.subList(start, end);
+            int start = offset * pageSize;
+            int end = Math.min(start + pageSize, combinedList.size());
+            List<Position> paginatedList = combinedList.subList(start, end);
 
-        List<PositionResponseDto> dtos = paginatedList.stream()
+            List<PositionResponseDto> dtos = paginatedList.stream()
+                    .map(PositionMapper::toResponseDto)
+                    .collect(Collectors.toList());
+
+            return new PageImpl<>(dtos, pageable, combinedList.size());
+
+        } else if (isPartnerOnly) {
+            resultPage = positionRepository.findPositionsByFilters(true, userCompany.getId(), ProjectStatus.ACTIVE, rate, workModes, skills, pageable);
+
+        } else {
+            resultPage = positionRepository.findPositionsByFilters(false, null, ProjectStatus.ACTIVE, rate, workModes, skills, pageable);
+        }
+
+        List<PositionResponseDto> dtos = resultPage.getContent().stream()
                 .map(PositionMapper::toResponseDto)
                 .collect(Collectors.toList());
 
-        return new PageImpl<>(dtos, pageable, combinedList.size());
+        return new PageImpl<>(dtos, pageable, resultPage.getTotalElements());
     }
+
 
     @Override
     public void editPositionStatus(Long positionId, Long statusId, String customCloseReason, Authentication authentication) {

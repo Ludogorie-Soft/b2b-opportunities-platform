@@ -9,29 +9,42 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
+import java.util.Set;
 
 @Repository
 public interface PositionRepository extends JpaRepository<Position, Long> {
     @Query("""
-    SELECT pos 
+    SELECT DISTINCT pos 
     FROM Position pos
     JOIN FETCH pos.project proj
     LEFT JOIN FETCH proj.partnerGroupList pg
     LEFT JOIN FETCH pg.partners c
-    WHERE 
-        (:isPartnerOnly = false AND proj.isPartnerOnly = false)
-        OR (
-            :isPartnerOnly = true 
-            AND proj.isPartnerOnly = true 
-            AND (c.id = :companyId OR proj.company.id = :companyId) 
-            AND proj.company.isApproved = true
-        )
-    AND proj.projectStatus = :projectStatus
+    LEFT JOIN FETCH pos.requiredSkills rs
+    LEFT JOIN FETCH rs.skill s
+    LEFT JOIN FETCH pos.workModes wm
+    WHERE proj.projectStatus = :projectStatus
+      AND (:rate IS NULL OR (pos.rate.min <= :rate AND pos.rate.max >= :rate))
+      AND (:workModes IS NULL OR wm.id IN :workModes)
+      AND (:skills IS NULL OR s.id IN :skills)
+      AND (
+           (:isPartnerOnly IS NULL AND (
+                proj.isPartnerOnly = false 
+                OR (proj.isPartnerOnly = true AND c.id = :companyId)
+           ))
+           OR
+           (:isPartnerOnly = false AND proj.isPartnerOnly = false)
+           OR
+           (:isPartnerOnly = true AND proj.isPartnerOnly = true AND c.id = :companyId)
+      )
 """)
-    Page<Position> findPositionsByIsPartnerOnlyAndStatus(
-            @Param("isPartnerOnly") boolean isPartnerOnly,
+    Page<Position> findPositionsByFilters(
+            @Param("isPartnerOnly") Boolean isPartnerOnly,
             @Param("companyId") Long companyId,
             @Param("projectStatus") ProjectStatus projectStatus,
-            Pageable pageable);
+            @Param("rate") Integer rate,
+            @Param("workModes") Set<Long> workModes,
+            @Param("skills") Set<Long> skills,
+            Pageable pageable
+    );
+
 }

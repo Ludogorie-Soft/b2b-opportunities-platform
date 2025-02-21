@@ -32,6 +32,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -215,7 +216,7 @@ public class ProjectServiceImpl implements ProjectService {
             project.setPartnerOnly(true);
             List<PartnerGroup> projectPartnerGroups = getPartnerGroupsOrThrow(dto.getPartnerGroups());
             validatePartnerGroupsBelongToCompany(project.getCompany(), projectPartnerGroups);
-            project.setPartnerGroupList(projectPartnerGroups);
+            project.setPartnerGroupList(new HashSet<>(projectPartnerGroups));
         } else {
             project.setPartnerOnly(false);
             project.setPartnerGroupList(null);

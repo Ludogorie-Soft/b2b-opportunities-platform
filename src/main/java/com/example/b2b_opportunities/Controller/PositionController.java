@@ -20,6 +20,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Set;
+
 @RestController
 @RequestMapping("/positions")
 @RequiredArgsConstructor
@@ -38,8 +40,12 @@ public class PositionController {
                                                   @RequestParam(defaultValue = "0") int offset,
                                                   @RequestParam(defaultValue = "10") int pageSize,
                                                   @RequestParam String sort,
-                                                  @RequestParam boolean ascending) {
-        return positionService.getPositions(authentication, offset, pageSize, sort, ascending);
+                                                  @RequestParam boolean ascending,
+                                                  @RequestParam(required = false) Integer rate,
+                                                  @RequestParam(required = false) Set<Long> workModes,
+                                                  @RequestParam(required = false) Set<Long> skills,
+                                                  @RequestParam(required = false) Boolean isPartnerOnly) {
+        return positionService.getPositions(authentication, offset, pageSize, sort, ascending, rate, workModes, skills, isPartnerOnly);
     }
 
     @GetMapping("/{id}")
