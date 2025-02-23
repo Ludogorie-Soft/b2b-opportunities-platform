@@ -164,34 +164,15 @@ public class PositionServiceImpl implements PositionService {
         Sort.Direction direction = ascending ? Sort.Direction.ASC : Sort.Direction.DESC;
         Pageable pageable = PageRequest.of(offset, pageSize, Sort.by(direction, sort));
 
-        Page<Position> resultPage;
-
-        if (isPartnerOnly == null) {
-            Page<Position> nonPartnerOnlyPositionsPage = positionRepository.findPositionsByFilters(false, null,
-                    ProjectStatus.ACTIVE, rate, workModes, skills, pageable);
-            Page<Position> partnerOnlyPositionsPage = positionRepository.findPositionsByFilters(true, userCompany.getId(),
-                    ProjectStatus.ACTIVE, rate, workModes, skills, pageable);
-
-            List<Position> combinedList = new ArrayList<>();
-            combinedList.addAll(nonPartnerOnlyPositionsPage.getContent());
-            combinedList.addAll(partnerOnlyPositionsPage.getContent());
-
-            int start = offset * pageSize;
-            int end = Math.min(start + pageSize, combinedList.size());
-            List<Position> paginatedList = combinedList.subList(start, end);
-
-            List<PositionResponseDto> dtos = paginatedList.stream()
-                    .map(PositionMapper::toResponseDto)
-                    .collect(Collectors.toList());
-
-            return new PageImpl<>(dtos, pageable, combinedList.size());
-
-        } else if (isPartnerOnly) {
-            resultPage = positionRepository.findPositionsByFilters(true, userCompany.getId(), ProjectStatus.ACTIVE, rate, workModes, skills, pageable);
-
-        } else {
-            resultPage = positionRepository.findPositionsByFilters(false, null, ProjectStatus.ACTIVE, rate, workModes, skills, pageable);
-        }
+        Page<Position> resultPage = positionRepository.findPositionsByFilters(
+                isPartnerOnly,
+                isPartnerOnly != null && isPartnerOnly ? userCompany.getId() : null,
+                ProjectStatus.ACTIVE,
+                rate,
+                workModes,
+                skills,
+                pageable
+        );
 
         List<PositionResponseDto> dtos = resultPage.getContent().stream()
                 .map(PositionMapper::toResponseDto)
