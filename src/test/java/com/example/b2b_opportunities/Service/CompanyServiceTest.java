@@ -1,60 +1,15 @@
 package com.example.b2b_opportunities.Service;
 
-import com.example.b2b_opportunities.Dto.Request.CompanyFilterEditDto;
-import com.example.b2b_opportunities.Dto.Request.CompanyFilterRequestDto;
-import com.example.b2b_opportunities.Dto.Request.CompanyRequestDto;
-import com.example.b2b_opportunities.Dto.Request.PartnerGroupRequestDto;
-import com.example.b2b_opportunities.Dto.Request.SkillExperienceRequestDto;
-import com.example.b2b_opportunities.Dto.Request.TalentExperienceRequestDto;
-import com.example.b2b_opportunities.Dto.Request.TalentPublicityRequestDto;
-import com.example.b2b_opportunities.Dto.Request.TalentRequestDto;
-import com.example.b2b_opportunities.Dto.Response.CompaniesAndUsersResponseDto;
-import com.example.b2b_opportunities.Dto.Response.CompanyFilterResponseDto;
-import com.example.b2b_opportunities.Dto.Response.CompanyPublicResponseDto;
-import com.example.b2b_opportunities.Dto.Response.CompanyResponseDto;
-import com.example.b2b_opportunities.Dto.Response.PartnerGroupResponseDto;
-import com.example.b2b_opportunities.Dto.Response.ProjectResponseDto;
-import com.example.b2b_opportunities.Dto.Response.TalentPublicityResponseDto;
-import com.example.b2b_opportunities.Dto.Response.TalentResponseDto;
-import com.example.b2b_opportunities.Entity.Company;
-import com.example.b2b_opportunities.Entity.CompanyType;
-import com.example.b2b_opportunities.Entity.Domain;
-import com.example.b2b_opportunities.Entity.Filter;
-import com.example.b2b_opportunities.Entity.Location;
-import com.example.b2b_opportunities.Entity.PartnerGroup;
-import com.example.b2b_opportunities.Entity.Pattern;
-import com.example.b2b_opportunities.Entity.Position;
-import com.example.b2b_opportunities.Entity.PositionApplication;
-import com.example.b2b_opportunities.Entity.Project;
-import com.example.b2b_opportunities.Entity.Seniority;
-import com.example.b2b_opportunities.Entity.Skill;
-import com.example.b2b_opportunities.Entity.SkillExperience;
-import com.example.b2b_opportunities.Entity.Talent;
-import com.example.b2b_opportunities.Entity.TalentExperience;
-import com.example.b2b_opportunities.Entity.User;
-import com.example.b2b_opportunities.Entity.WorkMode;
+import com.example.b2b_opportunities.Dto.Request.*;
+import com.example.b2b_opportunities.Dto.Response.*;
+import com.example.b2b_opportunities.Entity.*;
 import com.example.b2b_opportunities.Exception.AuthenticationFailedException;
 import com.example.b2b_opportunities.Exception.common.AlreadyExistsException;
 import com.example.b2b_opportunities.Exception.common.InvalidRequestException;
 import com.example.b2b_opportunities.Exception.common.NotFoundException;
 import com.example.b2b_opportunities.Exception.common.PermissionDeniedException;
 import com.example.b2b_opportunities.Mapper.UserMapper;
-import com.example.b2b_opportunities.Repository.CompanyRepository;
-import com.example.b2b_opportunities.Repository.CompanyTypeRepository;
-import com.example.b2b_opportunities.Repository.DomainRepository;
-import com.example.b2b_opportunities.Repository.FilterRepository;
-import com.example.b2b_opportunities.Repository.LocationRepository;
-import com.example.b2b_opportunities.Repository.PartnerGroupRepository;
-import com.example.b2b_opportunities.Repository.PatternRepository;
-import com.example.b2b_opportunities.Repository.PositionApplicationRepository;
-import com.example.b2b_opportunities.Repository.ProjectRepository;
-import com.example.b2b_opportunities.Repository.SeniorityRepository;
-import com.example.b2b_opportunities.Repository.SkillExperienceRepository;
-import com.example.b2b_opportunities.Repository.SkillRepository;
-import com.example.b2b_opportunities.Repository.TalentExperienceRepository;
-import com.example.b2b_opportunities.Repository.TalentRepository;
-import com.example.b2b_opportunities.Repository.UserRepository;
-import com.example.b2b_opportunities.Repository.WorkModeRepository;
+import com.example.b2b_opportunities.Repository.*;
 import com.example.b2b_opportunities.Service.Implementation.CompanyServiceImpl;
 import com.example.b2b_opportunities.Service.Implementation.ImageServiceImpl;
 import com.example.b2b_opportunities.Service.Interface.MailService;
@@ -67,39 +22,20 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 public class CompanyServiceTest {
 
@@ -1793,7 +1729,7 @@ public class CompanyServiceTest {
     }
 
     @Test
-    void updateCompanyWithOtherFieldsIncluded(){
+    void updateCompanyWithOtherFieldsIncluded() {
         User user = User.builder().id(1L).build();
 
         Company company = Company.builder()
@@ -1867,63 +1803,6 @@ public class CompanyServiceTest {
     }
 
     @Test
-    void shouldReturnTalentsBasedOnMatchingWorkModes() {
-        User user = new User();
-        user.setId(1L);
-        Company userCompany = Company.builder().id(1L).build();
-        userCompany.setId(1L);
-        user.setCompany(userCompany);
-
-        currentUser.setCompany(userCompany);
-
-        WorkMode workMode = new WorkMode();
-        workMode.setName("workmoder");
-        workMode.setId(1L);
-
-        Talent talent = new Talent();
-        talent.setWorkModes(Set.of(workMode));
-        talent.setCompany(userCompany);
-
-        Location location = new Location();
-        location.setId(1L);
-        location.setName("testLocation");
-
-        Pattern pattern = new Pattern();
-        pattern.setId(1L);
-        pattern.setName("testPattern");
-
-        talent.setLocations(Set.of(location));
-        talent.setWorkModes(Set.of(workMode));
-        talent.setActive(true);
-        talent.setMinRate(10);
-        talent.setMaxRate(20);
-
-        TalentExperience talentExperience = new TalentExperience();
-        talentExperience.setId(1L);
-        talentExperience.setTalent(talent);
-        talentExperience.setPattern(pattern);
-        talentExperience.setSeniority(new Seniority());
-
-        talent.setTalentExperience(talentExperience);
-
-
-        Page<Talent> talentPage = new PageImpl<>(List.of(talent));
-        when(talentRepository.findAllActiveTalentsVisibleToCompany(eq(userCompany.getId()), any(Pageable.class)))
-                .thenReturn(talentPage);
-        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
-
-        List<Long> workModesIds = List.of(1L);
-        List<Long> skillsIds = new ArrayList<>();
-        Integer rate = 50;
-
-        Page<TalentResponseDto> result = companyService.getAllTalents(authentication, 0, 5, "minRate", true, workModesIds, skillsIds, rate);
-
-        assertNotNull(result);
-        assertEquals(1, result.getContent().size());
-        assertTrue(result.getContent().getFirst().getWorkModes().contains(1L));
-    }
-
-    @Test
     void shouldReturnEmptyPageWhenNoTalentsMatchFilters() {
         User user = new User();
         user.setId(1L);
@@ -1933,38 +1812,8 @@ public class CompanyServiceTest {
 
         currentUser.setCompany(userCompany);
 
-        WorkMode workMode = new WorkMode();
-        workMode.setName("workmoder");
-        workMode.setId(1L);
-
-        Talent talent = new Talent();
-        talent.setWorkModes(Set.of(workMode));
-        talent.setCompany(userCompany);
-
-        Location location = new Location();
-        location.setId(1L);
-        location.setName("testLocation");
-
-        Pattern pattern = new Pattern();
-        pattern.setId(1L);
-        pattern.setName("testPattern");
-
-        talent.setLocations(Set.of(location));
-        talent.setWorkModes(Set.of(workMode));
-        talent.setActive(true);
-        talent.setMinRate(10);
-        talent.setMaxRate(20);
-
-        TalentExperience talentExperience = new TalentExperience();
-        talentExperience.setId(1L);
-        talentExperience.setTalent(talent);
-        talentExperience.setPattern(pattern);
-        talentExperience.setSeniority(new Seniority());
-
-        talent.setTalentExperience(talentExperience);
-
         Page<Talent> talentPage = Page.empty();
-        when(talentRepository.findAllActiveTalentsVisibleToCompany(eq(userCompany.getId()), any(Pageable.class)))
+        when(talentRepository.findAllActiveTalentsExcludingCompany(eq(userCompany.getId()), anyList(), anyList(), anyInt(), any(Pageable.class)))
                 .thenReturn(talentPage);
         when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
 
@@ -1976,296 +1825,193 @@ public class CompanyServiceTest {
 
         assertNotNull(result);
         assertEquals(0, result.getContent().size());
-        verify(talentRepository).findAllActiveTalentsVisibleToCompany(eq(userCompany.getId()), any(Pageable.class));
+        verify(talentRepository).findAllActiveTalentsExcludingCompany(eq(userCompany.getId()), eq(workModesIds), eq(skillsIds), eq(rate), any(Pageable.class));
     }
 
     @Test
-    void shouldReturnTalentsBasedOnMatchingSkills() {
+    void shouldSortByMaxRateWhenSpecified() {
         User user = new User();
         user.setId(1L);
         Company userCompany = Company.builder().id(1L).build();
+        Company differentCompany = Company.builder().id(2L).build();
         userCompany.setId(1L);
         user.setCompany(userCompany);
 
         currentUser.setCompany(userCompany);
 
-        WorkMode workMode = new WorkMode();
-        workMode.setName("workmoder");
-        workMode.setId(1L);
+        Talent talent1 = new Talent();
+        talent1.setCompany(differentCompany);
+        talent1.setWorkModes(Set.of(WorkMode.builder().id(1L).build()));
+        talent1.setLocations(Set.of(Location.builder().id(1L).build()));
+        talent1.setMaxRate(100);
 
-        Talent talent = new Talent();
-        talent.setWorkModes(Set.of(workMode));
-        talent.setCompany(userCompany);
-
-        Location location = new Location();
-        location.setId(1L);
-        location.setName("testLocation");
-
-        Pattern pattern = new Pattern();
-        pattern.setId(1L);
-        pattern.setName("testPattern");
-
-        talent.setLocations(Set.of(location));
-        talent.setWorkModes(Set.of(workMode));
-        talent.setActive(true);
-        talent.setMinRate(10);
-        talent.setMaxRate(20);
+        Talent talent2 = new Talent();
+        talent2.setCompany(differentCompany);
+        talent2.setWorkModes(Set.of(WorkMode.builder().id(1L).build()));
+        talent2.setLocations(Set.of(Location.builder().id(1L).build()));
+        talent2.setMaxRate(200);
 
         TalentExperience talentExperience = new TalentExperience();
-        talentExperience.setId(1L);
-        talentExperience.setTalent(talent);
-        talentExperience.setPattern(pattern);
-        talentExperience.setSeniority(new Seniority());
+        talentExperience.setTalent(talent1);
+        talentExperience.setTotalTime(200);
+        talentExperience.setPattern(Pattern.builder().id(1L).build());
+        talentExperience.setSeniority(Seniority.builder().id(1L).build());
+        talentExperience.setSkillExperienceList(List.of(SkillExperience.builder().id(1L).skill(Skill.builder().id(1L).build()).build()));
+        talent1.setTalentExperience(talentExperience);
 
-        talent.setTalentExperience(talentExperience);
+        TalentExperience talentExperience2 = new TalentExperience();
+        talentExperience2.setTalent(talent2);
+        talentExperience2.setTotalTime(200);
+        talentExperience2.setPattern(Pattern.builder().id(2L).build());
+        talentExperience2.setSeniority(Seniority.builder().id(2L).build());
+        talentExperience.setSkillExperienceList(List.of(SkillExperience.builder().id(2L).skill(Skill.builder().id(2L).build()).build()));
+        talent2.setTalentExperience(talentExperience);
 
-        Page<Talent> talentPage = new PageImpl<>(List.of(talent));
-        when(talentRepository.findAllActiveTalentsVisibleToCompany(eq(userCompany.getId()), any(Pageable.class)))
+        Page<Talent> talentPage = new PageImpl<>(List.of(talent2, talent1));
+        when(talentRepository.findAllActiveTalentsExcludingCompany(eq(userCompany.getId()), anyList(), anyList(), anyInt(), any(Pageable.class)))
                 .thenReturn(talentPage);
         when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
 
-        List<Long> workModesIds = new ArrayList<>();
-        List<Long> skillsIds = List.of(1L);
+        List<Long> workModesIds = List.of(100L);
+        List<Long> skillsIds = List.of(200L);
         Integer rate = 50;
 
-        Page<TalentResponseDto> result = companyService.getAllTalents(authentication, 0, 5, "minRate", true, workModesIds, skillsIds, rate);
+        Page<TalentResponseDto> result = companyService.getAllTalents(authentication, 0, 5, "maxRate", true, workModesIds, skillsIds, rate);
 
         assertNotNull(result);
-        assertEquals(1, result.getContent().size());
-        assertTrue(result.getContent().getFirst().getWorkModes().contains(1L));
+        assertEquals(2, result.getContent().size());
+        assertEquals(200, result.getContent().get(0).getMaxRate());
+        assertEquals(100, result.getContent().get(1).getMaxRate());
     }
 
     @Test
-    void shouldReturnTalentsBasedOnMatchingRate() {
+    void shouldSortByExperienceWhenSpecified() {
         User user = new User();
         user.setId(1L);
         Company userCompany = Company.builder().id(1L).build();
+        Company differentCompany = Company.builder().id(2L).build();
         userCompany.setId(1L);
         user.setCompany(userCompany);
 
         currentUser.setCompany(userCompany);
 
-        WorkMode workMode = new WorkMode();
-        workMode.setName("workmoder");
-        workMode.setId(1L);
+        Talent talent1 = new Talent();
+        talent1.setCompany(differentCompany);
+        talent1.setWorkModes(Set.of(WorkMode.builder().id(1L).build()));
+        talent1.setLocations(Set.of(Location.builder().id(1L).build()));
 
-        Talent talent = new Talent();
-        talent.setWorkModes(Set.of(workMode));
-        talent.setCompany(userCompany);
+        TalentExperience experience1 = new TalentExperience();
+        experience1.setTalent(talent1);
+        experience1.setTotalTime(5);
+        experience1.setPattern(Pattern.builder().id(1L).build());
+        experience1.setSeniority(Seniority.builder().id(1L).build());
+        talent1.setTalentExperience(experience1);
 
-        Location location = new Location();
-        location.setId(1L);
-        location.setName("testLocation");
+        Talent talent2 = new Talent();
+        talent2.setCompany(differentCompany);
+        talent2.setWorkModes(Set.of(WorkMode.builder().id(1L).build()));
+        talent2.setLocations(Set.of(Location.builder().id(1L).build()));
 
-        Pattern pattern = new Pattern();
-        pattern.setId(1L);
-        pattern.setName("testPattern");
+        TalentExperience experience2 = new TalentExperience();
+        experience2.setTalent(talent2);
+        experience2.setTotalTime(10);
+        experience2.setPattern(Pattern.builder().id(1L).build());
+        experience2.setSeniority(Seniority.builder().id(1L).build());
+        talent2.setTalentExperience(experience2);
 
-        talent.setLocations(Set.of(location));
-        talent.setWorkModes(Set.of(workMode));
-        talent.setActive(true);
-        talent.setMinRate(10);
-        talent.setMaxRate(20);
-
-        TalentExperience talentExperience = new TalentExperience();
-        talentExperience.setId(1L);
-        talentExperience.setTalent(talent);
-        talentExperience.setPattern(pattern);
-        talentExperience.setSeniority(new Seniority());
-
-        talent.setTalentExperience(talentExperience);
-
-        Page<Talent> talentPage = new PageImpl<>(List.of(talent));
-        when(talentRepository.findAllActiveTalentsVisibleToCompany(eq(userCompany.getId()), any(Pageable.class)))
+        Page<Talent> talentPage = new PageImpl<>(List.of(talent2, talent1));
+        when(talentRepository.findAllActiveTalentsExcludingCompany(eq(userCompany.getId()), anyList(), anyList(), anyInt(), any(Pageable.class)))
                 .thenReturn(talentPage);
         when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
 
-        List<Long> workModesIds = new ArrayList<>();
-        List<Long> skillsIds = new ArrayList<>();
-        Integer rate = 15;
-
-        Page<TalentResponseDto> result = companyService.getAllTalents(authentication, 0, 5, "minRate", true, workModesIds, skillsIds, rate);
-
-        assertNotNull(result);
-        assertEquals(1, result.getContent().size());
-        assertTrue(result.getContent().getFirst().getWorkModes().contains(1L));
-    }
-
-    @Test
-    void shouldReturnPaginatedTalents() {
-        User user = new User();
-        user.setId(1L);
-        Company userCompany = Company.builder().id(1L).build();
-        userCompany.setId(1L);
-        user.setCompany(userCompany);
-
-        currentUser.setCompany(userCompany);
-
-        WorkMode workMode = new WorkMode();
-        workMode.setName("workmoder");
-        workMode.setId(1L);
-
-        Talent talent = new Talent();
-        talent.setWorkModes(Set.of(workMode));
-        talent.setCompany(userCompany);
-
-        Location location = new Location();
-        location.setId(1L);
-        location.setName("testLocation");
-
-        Pattern pattern = new Pattern();
-        pattern.setId(1L);
-        pattern.setName("testPattern");
-
-        talent.setLocations(Set.of(location));
-        talent.setWorkModes(Set.of(workMode));
-        talent.setActive(true);
-        talent.setMinRate(10);
-        talent.setMaxRate(20);
-
-        TalentExperience talentExperience = new TalentExperience();
-        talentExperience.setId(1L);
-        talentExperience.setTalent(talent);
-        talentExperience.setPattern(pattern);
-        talentExperience.setSeniority(new Seniority());
-
-        talent.setTalentExperience(talentExperience);
-
-        Page<Talent> talentPage = new PageImpl<>(List.of(talent));
-        when(talentRepository.findAllActiveTalentsVisibleToCompany(eq(userCompany.getId()), any(Pageable.class)))
-                .thenReturn(talentPage);
-        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
-
-        List<Long> workModesIds = List.of(1L);
-        List<Long> skillsIds = new ArrayList<>();
+        List<Long> workModesIds = List.of(100L);
+        List<Long> skillsIds = List.of(200L);
         Integer rate = 50;
 
-        Page<TalentResponseDto> result = companyService.getAllTalents(authentication, 0, 5, "minRate", true, workModesIds, skillsIds, rate);
+        Page<TalentResponseDto> result = companyService.getAllTalents(authentication, 0, 5, "experience", true, workModesIds, skillsIds, rate);
 
         assertNotNull(result);
-        assertEquals(1, result.getContent().size());
-        assertTrue(result.getContent().getFirst().getWorkModes().contains(1L));
+        assertEquals(2, result.getContent().size());
+        assertEquals(10, result.getContent().get(0).getExperience().getTotalTime());
+        assertEquals(5, result.getContent().get(1).getExperience().getTotalTime());
     }
 
     @Test
-    void shouldSetDefaultPageSizeWhenPageSizeIsZero() {
+    void shouldSortByDefaultWhenNoSortSpecified() {
         User user = new User();
         user.setId(1L);
         Company userCompany = Company.builder().id(1L).build();
+        Company differentCompany = Company.builder().id(2L).build();
         userCompany.setId(1L);
         user.setCompany(userCompany);
 
         currentUser.setCompany(userCompany);
 
-        WorkMode workMode = new WorkMode();
-        workMode.setName("workmoder");
-        workMode.setId(1L);
-
         Talent talent = new Talent();
-        talent.setWorkModes(Set.of(workMode));
-        talent.setCompany(userCompany);
-
-        Location location = new Location();
-        location.setId(1L);
-        location.setName("testLocation");
-
-        Pattern pattern = new Pattern();
-        pattern.setId(1L);
-        pattern.setName("testPattern");
-
-        talent.setLocations(Set.of(location));
-        talent.setWorkModes(Set.of(workMode));
-        talent.setActive(true);
-        talent.setMinRate(10);
-        talent.setMaxRate(20);
+        talent.setCompany(differentCompany);
+        talent.setWorkModes(Set.of(WorkMode.builder().id(1L).build()));
+        talent.setLocations(Set.of(Location.builder().id(1L).build()));
 
         TalentExperience talentExperience = new TalentExperience();
-        talentExperience.setId(1L);
         talentExperience.setTalent(talent);
-        talentExperience.setPattern(pattern);
-        talentExperience.setSeniority(new Seniority());
-
+        talentExperience.setTotalTime(200);
+        talentExperience.setPattern(Pattern.builder().id(1L).build());
+        talentExperience.setSeniority(Seniority.builder().id(1L).build());
         talent.setTalentExperience(talentExperience);
 
         Page<Talent> talentPage = new PageImpl<>(List.of(talent));
-        when(talentRepository.findAllActiveTalentsVisibleToCompany(eq(userCompany.getId()), any(Pageable.class)))
+        when(talentRepository.findAllActiveTalentsExcludingCompany(eq(userCompany.getId()), anyList(), anyList(), anyInt(), any(Pageable.class)))
                 .thenReturn(talentPage);
         when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
 
-        List<Long> workModesIds = List.of(1L);
-        List<Long> skillsIds = new ArrayList<>();
+        List<Long> workModesIds = List.of(100L);
+        List<Long> skillsIds = List.of(200L);
         Integer rate = 50;
 
-        // With pageSize = 0 (should be default to 5)
-        Page<TalentResponseDto> result = companyService.getAllTalents(authentication, 0, 0, "minRate", true, workModesIds, skillsIds, rate);
+        Page<TalentResponseDto> result = companyService.getAllTalents(authentication, 0, -1, "", true, workModesIds, skillsIds, rate);
 
         assertNotNull(result);
         assertEquals(1, result.getContent().size());
-        assertTrue(result.getContent().get(0).getWorkModes().contains(1L));
-        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
-        verify(talentRepository).findAllActiveTalentsVisibleToCompany(eq(userCompany.getId()), pageableCaptor.capture());
-        Pageable pageable = pageableCaptor.getValue();
-        assertEquals(5, pageable.getPageSize());
+        assertEquals(5, result.getPageable().getPageSize());
     }
 
     @Test
-    void shouldSetDefaultPageSizeWhenPageSizeIsZeroOrNegative() {
+    void shouldApplyDefaultPageSizeWhenNegative() {
         User user = new User();
         user.setId(1L);
         Company userCompany = Company.builder().id(1L).build();
+        Company differentCompany = Company.builder().id(2L).build();
         userCompany.setId(1L);
         user.setCompany(userCompany);
 
         currentUser.setCompany(userCompany);
 
-        WorkMode workMode = new WorkMode();
-        workMode.setName("workmoder");
-        workMode.setId(1L);
-
         Talent talent = new Talent();
-        talent.setWorkModes(Set.of(workMode));
-        talent.setCompany(userCompany);
-
-        Location location = new Location();
-        location.setId(1L);
-        location.setName("testLocation");
-
-        Pattern pattern = new Pattern();
-        pattern.setId(1L);
-        pattern.setName("testPattern");
-
-        talent.setLocations(Set.of(location));
-        talent.setWorkModes(Set.of(workMode));
-        talent.setActive(true);
-        talent.setMinRate(10);
-        talent.setMaxRate(20);
+        talent.setCompany(differentCompany);
+        talent.setWorkModes(Set.of(WorkMode.builder().id(1L).build()));
+        talent.setLocations(Set.of(Location.builder().id(1L).build()));
 
         TalentExperience talentExperience = new TalentExperience();
-        talentExperience.setId(1L);
         talentExperience.setTalent(talent);
-        talentExperience.setPattern(pattern);
-        talentExperience.setSeniority(new Seniority());
-
+        talentExperience.setTotalTime(200);
+        talentExperience.setPattern(Pattern.builder().id(1L).build());
+        talentExperience.setSeniority(Seniority.builder().id(1L).build());
         talent.setTalentExperience(talentExperience);
 
         Page<Talent> talentPage = new PageImpl<>(List.of(talent));
-        when(talentRepository.findAllActiveTalentsVisibleToCompany(eq(userCompany.getId()), any(Pageable.class)))
+        when(talentRepository.findAllActiveTalentsExcludingCompany(eq(userCompany.getId()), anyList(), anyList(), anyInt(), any(Pageable.class)))
                 .thenReturn(talentPage);
         when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
 
-        List<Long> workModesIds = List.of(1L);
-        List<Long> skillsIds = new ArrayList<>();
+        List<Long> workModesIds = List.of(100L);
+        List<Long> skillsIds = List.of(200L);
         Integer rate = 50;
 
         // With pageSize negative (should be default to 5)
-        Page<TalentResponseDto> result = companyService.getAllTalents(authentication, 0, -10, "minRate", true, workModesIds, skillsIds, rate);
+        Page<TalentResponseDto> result = companyService.getAllTalents(authentication, 0, -1, "", true, workModesIds, skillsIds, rate);
 
         assertNotNull(result);
         assertEquals(1, result.getContent().size());
-        assertTrue(result.getContent().get(0).getWorkModes().contains(1L));
-        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
-        verify(talentRepository).findAllActiveTalentsVisibleToCompany(eq(userCompany.getId()), pageableCaptor.capture());
-        Pageable pageable = pageableCaptor.getValue();
-        assertEquals(5, pageable.getPageSize());
+        assertEquals(5, result.getPageable().getPageSize());
     }
 }
