@@ -296,7 +296,9 @@ class PositionControllerTest {
         createPositionAndGetID();
         createPositionAndGetID();
 
-        mockMvc.perform(get("/positions"))
+        mockMvc.perform(get("/positions")
+                .param("sort", "id")  // Добавен параметър sort
+                .param("ascending", "true"))
                 .andExpect(status().isOk())
                 // Change the expectation to access the 'content' array instead of the root
                 .andExpect(jsonPath("$.content").isArray())  // Correct path to access the content array
