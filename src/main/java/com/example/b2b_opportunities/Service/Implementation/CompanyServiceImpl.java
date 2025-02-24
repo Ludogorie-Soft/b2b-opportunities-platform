@@ -12,6 +12,7 @@ import com.example.b2b_opportunities.Dto.Response.CompaniesAndUsersResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyFilterResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyPublicResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyResponseDto;
+import com.example.b2b_opportunities.Dto.Response.PartialTalentResponseDto;
 import com.example.b2b_opportunities.Dto.Response.PartnerGroupResponseDto;
 import com.example.b2b_opportunities.Dto.Response.ProjectResponseDto;
 import com.example.b2b_opportunities.Dto.Response.TalentPublicityResponseDto;
@@ -549,6 +550,13 @@ public class CompanyServiceImpl implements CompanyService {
     public Talent getTalentOrThrow(Long talentId) {
         return talentRepository.findById(talentId)
                 .orElseThrow(() -> new NotFoundException("Talent with ID: " + talentId + " not found"));
+    }
+
+    @Override
+    public List<PartialTalentResponseDto> getMyTalentsPartial(Authentication authentication){
+        Company company = getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
+        List<Talent> myTalents = talentRepository.findByCompanyId(company.getId());
+        return TalentMapper.toPartialTalentList(myTalents);
     }
 
     private void setTalentRates(Talent talent, TalentRequestDto talentRequestDto) {

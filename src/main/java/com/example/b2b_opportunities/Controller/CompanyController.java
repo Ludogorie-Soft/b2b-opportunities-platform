@@ -11,13 +11,13 @@ import com.example.b2b_opportunities.Dto.Response.CompaniesAndUsersResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyFilterResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyPublicResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyResponseDto;
+import com.example.b2b_opportunities.Dto.Response.PartialTalentResponseDto;
 import com.example.b2b_opportunities.Dto.Response.PartnerGroupResponseDto;
 import com.example.b2b_opportunities.Dto.Response.PositionApplicationResponseDto;
 import com.example.b2b_opportunities.Dto.Response.ProjectResponseDto;
 import com.example.b2b_opportunities.Dto.Response.TalentPublicityResponseDto;
 import com.example.b2b_opportunities.Dto.Response.TalentResponseDto;
 import com.example.b2b_opportunities.Repository.CompanyRepository;
-import com.example.b2b_opportunities.Service.Implementation.CompanyServiceImpl;
 import com.example.b2b_opportunities.Service.Interface.CompanyService;
 import com.example.b2b_opportunities.Service.Interface.PositionApplicationService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,7 +26,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -225,6 +224,12 @@ public class CompanyController {
     @ResponseStatus(HttpStatus.OK)
     public List<TalentResponseDto> getMyTalents(Authentication authentication) {
         return companyService.getMyTalents(authentication);
+    }
+
+    @GetMapping("/my-talents/partial")
+    @ResponseStatus(HttpStatus.OK)
+    public List<PartialTalentResponseDto> getMyTalentsPartial(Authentication authentication){
+        return companyService.getMyTalentsPartial(authentication);
     }
 
     @PutMapping("/my-talents/publicity")

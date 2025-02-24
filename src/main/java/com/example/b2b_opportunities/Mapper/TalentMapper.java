@@ -1,6 +1,7 @@
 package com.example.b2b_opportunities.Mapper;
 
 import com.example.b2b_opportunities.Dto.Request.TalentRequestDto;
+import com.example.b2b_opportunities.Dto.Response.PartialTalentResponseDto;
 import com.example.b2b_opportunities.Dto.Response.SkillExperienceResponseDto;
 import com.example.b2b_opportunities.Dto.Response.TalentExperienceResponseDto;
 import com.example.b2b_opportunities.Dto.Response.TalentResponseDto;
@@ -72,4 +73,18 @@ public class TalentMapper {
         }
         return responseDtoList;
     }
+
+    public static List<PartialTalentResponseDto> toPartialTalentList(List<Talent> talents){
+        return talents.stream().map(TalentMapper::toPartialTalent).toList();
+    }
+
+    private static PartialTalentResponseDto toPartialTalent(Talent talent){
+        return PartialTalentResponseDto.builder()
+                .id(talent.getId())
+                .patternName(talent.getTalentExperience().getPattern().getName())
+                .patternId(talent.getTalentExperience().getPattern().getId())
+                .seniorityId(talent.getTalentExperience().getSeniority().getId())
+                .build();
+    }
+
 }
