@@ -33,6 +33,10 @@ public interface PositionRepository extends JpaRepository<Position, Long> {
     Page<Position> findPositionsByIsPartnerOnlyAndStatus(
             @Param("isPartnerOnly") boolean isPartnerOnly,
             @Param("companyId") Long companyId,
+            @Param("projectStatus") ProjectStatus projectStatus);
+
+    @Query("SELECT p FROM Position p WHERE p.project.id IN :projectIds")
+    List<Position> findByProjectIdsIn(Collection<Long> projectIds);
             @Param("projectStatus") ProjectStatus projectStatus,
             Pageable pageable);
 
