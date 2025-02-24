@@ -38,28 +38,8 @@ import com.example.b2b_opportunities.Exception.common.AlreadyExistsException;
 import com.example.b2b_opportunities.Exception.common.InvalidRequestException;
 import com.example.b2b_opportunities.Exception.common.NotFoundException;
 import com.example.b2b_opportunities.Exception.common.PermissionDeniedException;
-import com.example.b2b_opportunities.Mapper.CompanyMapper;
-import com.example.b2b_opportunities.Mapper.FilterMapper;
-import com.example.b2b_opportunities.Mapper.PartnerGroupMapper;
-import com.example.b2b_opportunities.Mapper.ProjectMapper;
-import com.example.b2b_opportunities.Mapper.TalentMapper;
-import com.example.b2b_opportunities.Mapper.UserMapper;
-import com.example.b2b_opportunities.Repository.CompanyRepository;
-import com.example.b2b_opportunities.Repository.CompanyTypeRepository;
-import com.example.b2b_opportunities.Repository.DomainRepository;
-import com.example.b2b_opportunities.Repository.FilterRepository;
-import com.example.b2b_opportunities.Repository.LocationRepository;
-import com.example.b2b_opportunities.Repository.PartnerGroupRepository;
-import com.example.b2b_opportunities.Repository.PatternRepository;
-import com.example.b2b_opportunities.Repository.PositionApplicationRepository;
-import com.example.b2b_opportunities.Repository.ProjectRepository;
-import com.example.b2b_opportunities.Repository.SeniorityRepository;
-import com.example.b2b_opportunities.Repository.SkillExperienceRepository;
-import com.example.b2b_opportunities.Repository.SkillRepository;
-import com.example.b2b_opportunities.Repository.TalentExperienceRepository;
-import com.example.b2b_opportunities.Repository.TalentRepository;
-import com.example.b2b_opportunities.Repository.UserRepository;
-import com.example.b2b_opportunities.Repository.WorkModeRepository;
+import com.example.b2b_opportunities.Mapper.*;
+import com.example.b2b_opportunities.Repository.*;
 import com.example.b2b_opportunities.Service.Interface.CompanyService;
 import com.example.b2b_opportunities.Service.Interface.MailService;
 import com.example.b2b_opportunities.Service.Interface.PatternService;
@@ -72,22 +52,12 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.example.b2b_opportunities.Mapper.CompanyMapper.toCompanyPublicResponseDtoList;
@@ -438,8 +408,14 @@ public class CompanyServiceImpl implements CompanyService {
     }
 
     @Override
-    public Page<TalentResponseDto> getAllTalents(Authentication authentication, int offset,
-                                                 int pageSize, String sort, boolean ascending) {
+    public Page<TalentResponseDto> getAllTalents(Authentication authentication,
+                                                 int offset,
+                                                 int pageSize,
+                                                 String sort,
+                                                 boolean ascending,
+                                                 List<Long> workModesIds,
+                                                 List<Long> skillsIds,
+                                                 Integer rate) {
         Company company = getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
 
         if (pageSize <= 0) {
@@ -448,7 +424,7 @@ public class CompanyServiceImpl implements CompanyService {
 
         Sort.Direction direction = ascending ? Sort.Direction.ASC : Sort.Direction.DESC;
         Pageable pageable = PageRequest.of(offset, pageSize, Sort.by(direction, sort));
-        if(sort.equals("minRate")){
+        if (sort.equals("minRate")) {
             pageable = PageRequest.of(offset, pageSize, Sort.by(direction, "minRate")
                     .and(Sort.by("maxRate")));
         }
@@ -457,7 +433,22 @@ public class CompanyServiceImpl implements CompanyService {
 
         List<TalentResponseDto> dtoList = talentsPage.getContent().stream()
                 .map(TalentMapper::toResponseDto)
+                .filter(talentDto -> {
+                    boolean matchesWorkMode = workModesIds.stream()
+                            .anyMatch(talentDto.getWorkModes()::contains);
+
+                    boolean matchesSkills = skillsIds.stream()
+                            .anyMatch(skillId -> talentDto.getExperience().getSkills().stream()
+                                    .anyMatch(skill -> skill.getSkillId().equals(skillId)));
+
+                    boolean matchesMinRate = talentDto.getMinRate() > 0 &&
+                            talentDto.getMinRate() <= rate;
+                    boolean matchesMaxRate = talentDto.getMaxRate() <= rate;
+
+                    return matchesWorkMode || matchesSkills || matchesMinRate || matchesMaxRate;
+                })
                 .toList();
+
         return new PageImpl<>(dtoList, pageable, talentsPage.getTotalElements());
     }
 

@@ -210,8 +210,18 @@ public class CompanyController {
                                                  @RequestParam(defaultValue = "0") int offset,
                                                  @RequestParam(defaultValue = "10")int pageSize,
                                                  @RequestParam String sort,
-                                                 @RequestParam boolean ascending) {
-        return companyService.getAllTalents(authentication, offset, pageSize, sort, ascending);
+                                                 @RequestParam boolean ascending,
+                                                 @RequestParam List<Long> workModesIds,
+                                                 @RequestParam List<Long> skillsIds,
+                                                 @RequestParam Integer rate) {
+        return companyService.getAllTalents(authentication,
+                offset,
+                pageSize,
+                sort,
+                ascending,
+                workModesIds,
+                skillsIds,
+                rate);
     }
 
     @GetMapping("/talents/{id}")

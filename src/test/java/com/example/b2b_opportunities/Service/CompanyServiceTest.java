@@ -67,6 +67,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -1863,5 +1864,408 @@ public class CompanyServiceTest {
         assertEquals(responseDto.getPositionViews(), 2L);
         assertEquals(responseDto.getAcceptedApplications(), 1L);
         assertEquals(responseDto.getTotalApplications(), 2L);
+    }
+
+    @Test
+    void shouldReturnTalentsBasedOnMatchingWorkModes() {
+        User user = new User();
+        user.setId(1L);
+        Company userCompany = Company.builder().id(1L).build();
+        userCompany.setId(1L);
+        user.setCompany(userCompany);
+
+        currentUser.setCompany(userCompany);
+
+        WorkMode workMode = new WorkMode();
+        workMode.setName("workmoder");
+        workMode.setId(1L);
+
+        Talent talent = new Talent();
+        talent.setWorkModes(Set.of(workMode));
+        talent.setCompany(userCompany);
+
+        Location location = new Location();
+        location.setId(1L);
+        location.setName("testLocation");
+
+        Pattern pattern = new Pattern();
+        pattern.setId(1L);
+        pattern.setName("testPattern");
+
+        talent.setLocations(Set.of(location));
+        talent.setWorkModes(Set.of(workMode));
+        talent.setActive(true);
+        talent.setMinRate(10);
+        talent.setMaxRate(20);
+
+        TalentExperience talentExperience = new TalentExperience();
+        talentExperience.setId(1L);
+        talentExperience.setTalent(talent);
+        talentExperience.setPattern(pattern);
+        talentExperience.setSeniority(new Seniority());
+
+        talent.setTalentExperience(talentExperience);
+
+
+        Page<Talent> talentPage = new PageImpl<>(List.of(talent));
+        when(talentRepository.findAllActiveTalentsVisibleToCompany(eq(userCompany.getId()), any(Pageable.class)))
+                .thenReturn(talentPage);
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
+
+        List<Long> workModesIds = List.of(1L);
+        List<Long> skillsIds = new ArrayList<>();
+        Integer rate = 50;
+
+        Page<TalentResponseDto> result = companyService.getAllTalents(authentication, 0, 5, "minRate", true, workModesIds, skillsIds, rate);
+
+        assertNotNull(result);
+        assertEquals(1, result.getContent().size());
+        assertTrue(result.getContent().getFirst().getWorkModes().contains(1L));
+    }
+
+    @Test
+    void shouldReturnEmptyPageWhenNoTalentsMatchFilters() {
+        User user = new User();
+        user.setId(1L);
+        Company userCompany = Company.builder().id(1L).build();
+        userCompany.setId(1L);
+        user.setCompany(userCompany);
+
+        currentUser.setCompany(userCompany);
+
+        WorkMode workMode = new WorkMode();
+        workMode.setName("workmoder");
+        workMode.setId(1L);
+
+        Talent talent = new Talent();
+        talent.setWorkModes(Set.of(workMode));
+        talent.setCompany(userCompany);
+
+        Location location = new Location();
+        location.setId(1L);
+        location.setName("testLocation");
+
+        Pattern pattern = new Pattern();
+        pattern.setId(1L);
+        pattern.setName("testPattern");
+
+        talent.setLocations(Set.of(location));
+        talent.setWorkModes(Set.of(workMode));
+        talent.setActive(true);
+        talent.setMinRate(10);
+        talent.setMaxRate(20);
+
+        TalentExperience talentExperience = new TalentExperience();
+        talentExperience.setId(1L);
+        talentExperience.setTalent(talent);
+        talentExperience.setPattern(pattern);
+        talentExperience.setSeniority(new Seniority());
+
+        talent.setTalentExperience(talentExperience);
+
+        Page<Talent> talentPage = Page.empty();
+        when(talentRepository.findAllActiveTalentsVisibleToCompany(eq(userCompany.getId()), any(Pageable.class)))
+                .thenReturn(talentPage);
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
+
+        List<Long> workModesIds = List.of(100L);
+        List<Long> skillsIds = List.of(200L);
+        Integer rate = 50;
+
+        Page<TalentResponseDto> result = companyService.getAllTalents(authentication, 0, 5, "minRate", true, workModesIds, skillsIds, rate);
+
+        assertNotNull(result);
+        assertEquals(0, result.getContent().size());
+        verify(talentRepository).findAllActiveTalentsVisibleToCompany(eq(userCompany.getId()), any(Pageable.class));
+    }
+
+    @Test
+    void shouldReturnTalentsBasedOnMatchingSkills() {
+        User user = new User();
+        user.setId(1L);
+        Company userCompany = Company.builder().id(1L).build();
+        userCompany.setId(1L);
+        user.setCompany(userCompany);
+
+        currentUser.setCompany(userCompany);
+
+        WorkMode workMode = new WorkMode();
+        workMode.setName("workmoder");
+        workMode.setId(1L);
+
+        Talent talent = new Talent();
+        talent.setWorkModes(Set.of(workMode));
+        talent.setCompany(userCompany);
+
+        Location location = new Location();
+        location.setId(1L);
+        location.setName("testLocation");
+
+        Pattern pattern = new Pattern();
+        pattern.setId(1L);
+        pattern.setName("testPattern");
+
+        talent.setLocations(Set.of(location));
+        talent.setWorkModes(Set.of(workMode));
+        talent.setActive(true);
+        talent.setMinRate(10);
+        talent.setMaxRate(20);
+
+        TalentExperience talentExperience = new TalentExperience();
+        talentExperience.setId(1L);
+        talentExperience.setTalent(talent);
+        talentExperience.setPattern(pattern);
+        talentExperience.setSeniority(new Seniority());
+
+        talent.setTalentExperience(talentExperience);
+
+        Page<Talent> talentPage = new PageImpl<>(List.of(talent));
+        when(talentRepository.findAllActiveTalentsVisibleToCompany(eq(userCompany.getId()), any(Pageable.class)))
+                .thenReturn(talentPage);
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
+
+        List<Long> workModesIds = new ArrayList<>();
+        List<Long> skillsIds = List.of(1L);
+        Integer rate = 50;
+
+        Page<TalentResponseDto> result = companyService.getAllTalents(authentication, 0, 5, "minRate", true, workModesIds, skillsIds, rate);
+
+        assertNotNull(result);
+        assertEquals(1, result.getContent().size());
+        assertTrue(result.getContent().getFirst().getWorkModes().contains(1L));
+    }
+
+    @Test
+    void shouldReturnTalentsBasedOnMatchingRate() {
+        User user = new User();
+        user.setId(1L);
+        Company userCompany = Company.builder().id(1L).build();
+        userCompany.setId(1L);
+        user.setCompany(userCompany);
+
+        currentUser.setCompany(userCompany);
+
+        WorkMode workMode = new WorkMode();
+        workMode.setName("workmoder");
+        workMode.setId(1L);
+
+        Talent talent = new Talent();
+        talent.setWorkModes(Set.of(workMode));
+        talent.setCompany(userCompany);
+
+        Location location = new Location();
+        location.setId(1L);
+        location.setName("testLocation");
+
+        Pattern pattern = new Pattern();
+        pattern.setId(1L);
+        pattern.setName("testPattern");
+
+        talent.setLocations(Set.of(location));
+        talent.setWorkModes(Set.of(workMode));
+        talent.setActive(true);
+        talent.setMinRate(10);
+        talent.setMaxRate(20);
+
+        TalentExperience talentExperience = new TalentExperience();
+        talentExperience.setId(1L);
+        talentExperience.setTalent(talent);
+        talentExperience.setPattern(pattern);
+        talentExperience.setSeniority(new Seniority());
+
+        talent.setTalentExperience(talentExperience);
+
+        Page<Talent> talentPage = new PageImpl<>(List.of(talent));
+        when(talentRepository.findAllActiveTalentsVisibleToCompany(eq(userCompany.getId()), any(Pageable.class)))
+                .thenReturn(talentPage);
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
+
+        List<Long> workModesIds = new ArrayList<>();
+        List<Long> skillsIds = new ArrayList<>();
+        Integer rate = 15;
+
+        Page<TalentResponseDto> result = companyService.getAllTalents(authentication, 0, 5, "minRate", true, workModesIds, skillsIds, rate);
+
+        assertNotNull(result);
+        assertEquals(1, result.getContent().size());
+        assertTrue(result.getContent().getFirst().getWorkModes().contains(1L));
+    }
+
+    @Test
+    void shouldReturnPaginatedTalents() {
+        User user = new User();
+        user.setId(1L);
+        Company userCompany = Company.builder().id(1L).build();
+        userCompany.setId(1L);
+        user.setCompany(userCompany);
+
+        currentUser.setCompany(userCompany);
+
+        WorkMode workMode = new WorkMode();
+        workMode.setName("workmoder");
+        workMode.setId(1L);
+
+        Talent talent = new Talent();
+        talent.setWorkModes(Set.of(workMode));
+        talent.setCompany(userCompany);
+
+        Location location = new Location();
+        location.setId(1L);
+        location.setName("testLocation");
+
+        Pattern pattern = new Pattern();
+        pattern.setId(1L);
+        pattern.setName("testPattern");
+
+        talent.setLocations(Set.of(location));
+        talent.setWorkModes(Set.of(workMode));
+        talent.setActive(true);
+        talent.setMinRate(10);
+        talent.setMaxRate(20);
+
+        TalentExperience talentExperience = new TalentExperience();
+        talentExperience.setId(1L);
+        talentExperience.setTalent(talent);
+        talentExperience.setPattern(pattern);
+        talentExperience.setSeniority(new Seniority());
+
+        talent.setTalentExperience(talentExperience);
+
+        Page<Talent> talentPage = new PageImpl<>(List.of(talent));
+        when(talentRepository.findAllActiveTalentsVisibleToCompany(eq(userCompany.getId()), any(Pageable.class)))
+                .thenReturn(talentPage);
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
+
+        List<Long> workModesIds = List.of(1L);
+        List<Long> skillsIds = new ArrayList<>();
+        Integer rate = 50;
+
+        Page<TalentResponseDto> result = companyService.getAllTalents(authentication, 0, 5, "minRate", true, workModesIds, skillsIds, rate);
+
+        assertNotNull(result);
+        assertEquals(1, result.getContent().size());
+        assertTrue(result.getContent().getFirst().getWorkModes().contains(1L));
+    }
+
+    @Test
+    void shouldSetDefaultPageSizeWhenPageSizeIsZero() {
+        User user = new User();
+        user.setId(1L);
+        Company userCompany = Company.builder().id(1L).build();
+        userCompany.setId(1L);
+        user.setCompany(userCompany);
+
+        currentUser.setCompany(userCompany);
+
+        WorkMode workMode = new WorkMode();
+        workMode.setName("workmoder");
+        workMode.setId(1L);
+
+        Talent talent = new Talent();
+        talent.setWorkModes(Set.of(workMode));
+        talent.setCompany(userCompany);
+
+        Location location = new Location();
+        location.setId(1L);
+        location.setName("testLocation");
+
+        Pattern pattern = new Pattern();
+        pattern.setId(1L);
+        pattern.setName("testPattern");
+
+        talent.setLocations(Set.of(location));
+        talent.setWorkModes(Set.of(workMode));
+        talent.setActive(true);
+        talent.setMinRate(10);
+        talent.setMaxRate(20);
+
+        TalentExperience talentExperience = new TalentExperience();
+        talentExperience.setId(1L);
+        talentExperience.setTalent(talent);
+        talentExperience.setPattern(pattern);
+        talentExperience.setSeniority(new Seniority());
+
+        talent.setTalentExperience(talentExperience);
+
+        Page<Talent> talentPage = new PageImpl<>(List.of(talent));
+        when(talentRepository.findAllActiveTalentsVisibleToCompany(eq(userCompany.getId()), any(Pageable.class)))
+                .thenReturn(talentPage);
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
+
+        List<Long> workModesIds = List.of(1L);
+        List<Long> skillsIds = new ArrayList<>();
+        Integer rate = 50;
+
+        // With pageSize = 0 (should be default to 5)
+        Page<TalentResponseDto> result = companyService.getAllTalents(authentication, 0, 0, "minRate", true, workModesIds, skillsIds, rate);
+
+        assertNotNull(result);
+        assertEquals(1, result.getContent().size());
+        assertTrue(result.getContent().get(0).getWorkModes().contains(1L));
+        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+        verify(talentRepository).findAllActiveTalentsVisibleToCompany(eq(userCompany.getId()), pageableCaptor.capture());
+        Pageable pageable = pageableCaptor.getValue();
+        assertEquals(5, pageable.getPageSize());
+    }
+
+    @Test
+    void shouldSetDefaultPageSizeWhenPageSizeIsZeroOrNegative() {
+        User user = new User();
+        user.setId(1L);
+        Company userCompany = Company.builder().id(1L).build();
+        userCompany.setId(1L);
+        user.setCompany(userCompany);
+
+        currentUser.setCompany(userCompany);
+
+        WorkMode workMode = new WorkMode();
+        workMode.setName("workmoder");
+        workMode.setId(1L);
+
+        Talent talent = new Talent();
+        talent.setWorkModes(Set.of(workMode));
+        talent.setCompany(userCompany);
+
+        Location location = new Location();
+        location.setId(1L);
+        location.setName("testLocation");
+
+        Pattern pattern = new Pattern();
+        pattern.setId(1L);
+        pattern.setName("testPattern");
+
+        talent.setLocations(Set.of(location));
+        talent.setWorkModes(Set.of(workMode));
+        talent.setActive(true);
+        talent.setMinRate(10);
+        talent.setMaxRate(20);
+
+        TalentExperience talentExperience = new TalentExperience();
+        talentExperience.setId(1L);
+        talentExperience.setTalent(talent);
+        talentExperience.setPattern(pattern);
+        talentExperience.setSeniority(new Seniority());
+
+        talent.setTalentExperience(talentExperience);
+
+        Page<Talent> talentPage = new PageImpl<>(List.of(talent));
+        when(talentRepository.findAllActiveTalentsVisibleToCompany(eq(userCompany.getId()), any(Pageable.class)))
+                .thenReturn(talentPage);
+        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
+
+        List<Long> workModesIds = List.of(1L);
+        List<Long> skillsIds = new ArrayList<>();
+        Integer rate = 50;
+
+        // With pageSize negative (should be default to 5)
+        Page<TalentResponseDto> result = companyService.getAllTalents(authentication, 0, -10, "minRate", true, workModesIds, skillsIds, rate);
+
+        assertNotNull(result);
+        assertEquals(1, result.getContent().size());
+        assertTrue(result.getContent().get(0).getWorkModes().contains(1L));
+        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+        verify(talentRepository).findAllActiveTalentsVisibleToCompany(eq(userCompany.getId()), pageableCaptor.capture());
+        Pageable pageable = pageableCaptor.getValue();
+        assertEquals(5, pageable.getPageSize());
     }
 }
