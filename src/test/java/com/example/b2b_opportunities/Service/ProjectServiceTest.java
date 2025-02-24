@@ -180,7 +180,7 @@ public class ProjectServiceTest {
         partnerCompany.setId(3L);
         partnerGroup.setPartners(Collections.singleton(partnerCompany));
 
-        project.setPartnerGroupList(Collections.singletonList(partnerGroup));
+        project.setPartnerGroupList(Collections.singleton(partnerGroup));
 
         when(projectRepository.findById(1L)).thenReturn(Optional.of(project));
 
@@ -637,7 +637,7 @@ public class ProjectServiceTest {
         PartnerGroup pg = PartnerGroup.builder()
                 .partners(Set.of(company))
                 .build();
-        project.setPartnerGroupList(List.of(pg));
+        project.setPartnerGroupList(Set.of(pg));
         project.setProjectStatus(ProjectStatus.INACTIVE);
 
         when(userService.getCurrentUserOrThrow(authentication)).thenReturn(user);
@@ -665,7 +665,7 @@ public class ProjectServiceTest {
         PartnerGroup pg = PartnerGroup.builder()
                 .partners(Set.of(company))
                 .build();
-        project.setPartnerGroupList(List.of(pg));
+        project.setPartnerGroupList(Set.of(pg));
         project.setProjectStatus(ProjectStatus.ACTIVE);
 
         when(userService.getCurrentUserOrThrow(authentication)).thenReturn(user);
