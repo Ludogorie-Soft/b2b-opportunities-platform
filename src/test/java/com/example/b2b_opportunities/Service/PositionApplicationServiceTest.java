@@ -122,6 +122,7 @@ class PositionApplicationServiceTest {
     void testApplyForPosition() {
         User user = mock(User.class);
         Company company = mock(Company.class);
+        company.setId(1L);
         Company userCompany = mock(Company.class);
         Position position = mock(Position.class);
         Project project = mock(Project.class);
@@ -129,6 +130,7 @@ class PositionApplicationServiceTest {
         application.setId(1L);
         position.setId(1L);
         application.setPosition(position);
+        application.setTalentCompany(company);
         application.setApplicationStatus(ApplicationStatus.IN_PROGRESS);
 
         when(userService.getCurrentUserOrThrow(authentication)).thenReturn(user);
@@ -160,9 +162,14 @@ class PositionApplicationServiceTest {
         Position position = new Position();
         position.setId(1L);
 
+        // Create a Company and set its ID
+        Company company = new Company();
+        company.setId(1L);
+
         PositionApplication application = new PositionApplication();
         application.setId(1L);
         application.setPosition(position);
+        application.setTalentCompany(company); // Set the talentCompany here
 
         when(positionApplicationRepository.findById(1L)).thenReturn(Optional.of(application));
 
@@ -230,10 +237,11 @@ class PositionApplicationServiceTest {
     void testGetMyApplicationsWithTwoApplications() {
         User user = new User();
         Company company = new Company();
+        company.setId(1L);
         List<PositionApplication> applications = new ArrayList<>();
         Position position = Position.builder().id(99999999L).build();
-        PositionApplication paOne = PositionApplication.builder().id(999999999998L).position(position).applicationStatus(ApplicationStatus.IN_PROGRESS).build();
-        PositionApplication paTwo = PositionApplication.builder().id(999999999999L).position(position).applicationStatus(ApplicationStatus.IN_PROGRESS).build();
+        PositionApplication paOne = PositionApplication.builder().id(999999999998L).talentCompany(company).position(position).applicationStatus(ApplicationStatus.IN_PROGRESS).build();
+        PositionApplication paTwo = PositionApplication.builder().id(999999999999L).talentCompany(company).position(position).applicationStatus(ApplicationStatus.IN_PROGRESS).build();
         applications.add(paOne);
         applications.add(paTwo);
 
@@ -470,6 +478,11 @@ class PositionApplicationServiceTest {
         application.setPosition(position);
         application.setApplicationStatus(ApplicationStatus.ACCEPTED);
         requestDto.setTalentId(1L);
+
+        Company company = new Company();
+        company.setId(1L);
+
+        application.setTalentCompany(company);
 
         when(userService.getCurrentUserOrThrow(authentication)).thenReturn(user);
         when(companyService.getUserCompanyOrThrow(user)).thenReturn(userCompany);
