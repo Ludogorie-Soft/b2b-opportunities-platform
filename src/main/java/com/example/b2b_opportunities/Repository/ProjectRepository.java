@@ -2,6 +2,8 @@ package com.example.b2b_opportunities.Repository;
 
 import com.example.b2b_opportunities.Entity.Project;
 import com.example.b2b_opportunities.Static.ProjectStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -43,7 +45,7 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
     @Query(value = "SELECT * FROM projects p WHERE p.expiry_date <= CURRENT_DATE AND p.project_status = 'ACTIVE'", nativeQuery = true)
     List<Project> findExpiredAndActiveProjects();
 
-    List<Project> findByProjectStatusAndIsPartnerOnlyFalseAndCompanyIsApprovedTrue(ProjectStatus projectStatus);
+    Page<Project> findByProjectStatusAndIsPartnerOnlyFalseAndCompanyIsApprovedTrue(ProjectStatus projectStatus, Pageable pageable);
 
     @Query("SELECT DISTINCT p FROM Project p " +
             "LEFT JOIN p.partnerGroupList pg " +

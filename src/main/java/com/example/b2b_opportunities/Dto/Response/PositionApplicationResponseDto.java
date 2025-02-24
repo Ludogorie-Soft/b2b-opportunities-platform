@@ -24,6 +24,7 @@ public class PositionApplicationResponseDto {
     private LocalDateTime availableFrom;
     private int rate;
     private String cvUrl;
+    private Long companyId;
     private String companyName;
     private String companyImage;
 }
