@@ -15,6 +15,7 @@ import jakarta.persistence.criteria.Fetch;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Order;
+import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import lombok.RequiredArgsConstructor;
@@ -167,9 +168,14 @@ public class CustomPositionRepositoryImpl implements CustomPositionRepository {
     private void applySorting(CriteriaBuilder cb, CriteriaQuery<Position> cq, Root<Position> root, Pageable pageable) {
         if (pageable.getSort().isSorted()) {
             List<Order> orders = pageable.getSort().stream()
-                    .map(order -> order.isAscending() ?
-                            cb.asc(root.get(order.getProperty())) :
-                            cb.desc(root.get(order.getProperty())))
+                    .map(order -> {
+                        String[] attributePath = order.getProperty().split("\\.");
+                        Path<?> path = root;
+                        for (String attribute : attributePath) {
+                            path = path.get(attribute);
+                        }
+                        return order.isAscending() ? cb.asc(path) : cb.desc(path);
+                    })
                     .collect(Collectors.toList());
             cq.orderBy(orders);
         }
