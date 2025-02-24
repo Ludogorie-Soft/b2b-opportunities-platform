@@ -15,11 +15,19 @@ public interface TalentRepository extends JpaRepository<Talent, Long> {
     List<Talent> findByCompanyId(Long companyId);
 
     @Query("SELECT t FROM Talent t " +
-            "JOIN t.company c " +
-            "LEFT JOIN c.partnerGroups pg " +
-            "LEFT JOIN pg.partners p " +
+            "LEFT JOIN t.workModes wm " +
+            "LEFT JOIN t.talentExperience te " +
+            "LEFT JOIN te.skillExperienceList se " +
+            "LEFT JOIN se.skill s " +
             "WHERE t.isActive = true AND " +
-            "(c.talentsSharedPublicly = true OR (p.id = :companyId OR c.id = :companyId))")
-    Page<Talent> findAllActiveTalentsVisibleToCompany(@Param("companyId") Long companyId, Pageable pageable);
-
+            "t.company.id <> :companyId " +
+            "AND (:workModesIds IS NULL OR wm.id IN :workModesIds) " +
+            "AND (:skillsIds IS NULL OR s.id IN :skillsIds) " +
+            "AND (:rate IS NULL OR (:rate > 0 AND (t.maxRate IS NULL OR :rate <= t.maxRate)))")
+    Page<Talent> findAllActiveTalentsExcludingCompany(
+            @Param("companyId") Long companyId,
+            @Param("workModesIds") List<Long> workModesIds,
+            @Param("skillsIds") List<Long> skillsIds,
+            @Param("rate") Integer rate,
+            Pageable pageable);
 }

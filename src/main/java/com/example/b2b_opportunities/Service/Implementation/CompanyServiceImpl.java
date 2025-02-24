@@ -381,7 +381,7 @@ public class CompanyServiceImpl implements CompanyService {
                                                  int offset,
                                                  int pageSize,
                                                  String sort,
-                                                 boolean ascending,
+                                                 Boolean ascending,
                                                  List<Long> workModesIds,
                                                  List<Long> skillsIds,
                                                  Integer rate) {
@@ -391,35 +391,41 @@ public class CompanyServiceImpl implements CompanyService {
             pageSize = 5;
         }
 
-        Sort.Direction direction = ascending ? Sort.Direction.ASC : Sort.Direction.DESC;
-        Pageable pageable = PageRequest.of(offset, pageSize, Sort.by(direction, sort));
-        if (sort.equals("minRate")) {
-            pageable = PageRequest.of(offset, pageSize, Sort.by(direction, "minRate")
-                    .and(Sort.by("maxRate")));
+        Sort.Direction direction = (ascending != null && !ascending) ? Sort.Direction.DESC : Sort.Direction.ASC;
+
+        Pageable pageable;
+        switch (sort) {
+            case "minRate":
+                pageable = PageRequest.of(offset, pageSize, Sort.by(direction, "minRate")
+                        .and(Sort.by(direction, "maxRate")));
+                break;
+            case "maxRate":
+                pageable = PageRequest.of(offset, pageSize, Sort.by(direction, "maxRate"));
+                break;
+            case "experience":
+                pageable = PageRequest.of(offset, pageSize, Sort.by(direction, "talentExperience.totalTime"));
+                break;
+            default:
+                pageable = PageRequest.of(offset, pageSize);
+                break;
+
         }
 
-        Page<Talent> talentsPage = talentRepository.findAllActiveTalentsVisibleToCompany(company.getId(), pageable);
+        List<Long> workModesFilter = (workModesIds != null && !workModesIds.isEmpty()) ? workModesIds : null;
+        List<Long> skillsFilter = (skillsIds != null && !skillsIds.isEmpty()) ? skillsIds : null;
+
+        Integer rateFilter = (rate != null && rate > 0) ? rate : null;
+
+        Page<Talent> talentsPage = talentRepository.findAllActiveTalentsExcludingCompany(
+                company.getId(), workModesFilter, skillsFilter, rateFilter, pageable);
 
         List<TalentResponseDto> dtoList = talentsPage.getContent().stream()
                 .map(TalentMapper::toResponseDto)
-                .filter(talentDto -> {
-                    boolean matchesWorkMode = workModesIds.stream()
-                            .anyMatch(talentDto.getWorkModes()::contains);
-
-                    boolean matchesSkills = skillsIds.stream()
-                            .anyMatch(skillId -> talentDto.getExperience().getSkills().stream()
-                                    .anyMatch(skill -> skill.getSkillId().equals(skillId)));
-
-                    boolean matchesMinRate = talentDto.getMinRate() > 0 &&
-                            talentDto.getMinRate() <= rate;
-                    boolean matchesMaxRate = talentDto.getMaxRate() <= rate;
-
-                    return matchesWorkMode || matchesSkills || matchesMinRate || matchesMaxRate;
-                })
                 .toList();
 
         return new PageImpl<>(dtoList, pageable, talentsPage.getTotalElements());
     }
+
 
     @Override
     public TalentResponseDto getTalentById(Authentication authentication, Long talentId) {
