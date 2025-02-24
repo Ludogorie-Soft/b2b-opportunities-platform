@@ -4,32 +4,14 @@ import com.example.b2b_opportunities.Dto.Request.PositionEditRequestDto;
 import com.example.b2b_opportunities.Dto.Request.PositionRequestDto;
 import com.example.b2b_opportunities.Dto.Request.RateRequestDto;
 import com.example.b2b_opportunities.Dto.Request.RequiredSkillsDto;
+import com.example.b2b_opportunities.Dto.Response.CompanyPositionsResponseDto;
 import com.example.b2b_opportunities.Dto.Response.PositionResponseDto;
-import com.example.b2b_opportunities.Entity.Company;
-import com.example.b2b_opportunities.Entity.Location;
-import com.example.b2b_opportunities.Entity.Pattern;
-import com.example.b2b_opportunities.Entity.Position;
-import com.example.b2b_opportunities.Entity.Project;
-import com.example.b2b_opportunities.Entity.Rate;
-import com.example.b2b_opportunities.Entity.RequiredSkill;
-import com.example.b2b_opportunities.Entity.Skill;
-import com.example.b2b_opportunities.Entity.User;
-import com.example.b2b_opportunities.Entity.WorkMode;
+import com.example.b2b_opportunities.Entity.*;
 import com.example.b2b_opportunities.Exception.common.InvalidRequestException;
 import com.example.b2b_opportunities.Exception.common.NotFoundException;
 import com.example.b2b_opportunities.Mapper.PositionMapper;
 import com.example.b2b_opportunities.Mapper.RateMapper;
-import com.example.b2b_opportunities.Repository.LocationRepository;
-import com.example.b2b_opportunities.Repository.PatternRepository;
-import com.example.b2b_opportunities.Repository.PositionApplicationRepository;
-import com.example.b2b_opportunities.Repository.PositionRepository;
-import com.example.b2b_opportunities.Repository.PositionStatusRepository;
-import com.example.b2b_opportunities.Repository.ProjectRepository;
-import com.example.b2b_opportunities.Repository.RateRepository;
-import com.example.b2b_opportunities.Repository.RequiredSkillRepository;
-import com.example.b2b_opportunities.Repository.SeniorityRepository;
-import com.example.b2b_opportunities.Repository.SkillRepository;
-import com.example.b2b_opportunities.Repository.WorkModeRepository;
+import com.example.b2b_opportunities.Repository.*;
 import com.example.b2b_opportunities.Service.Interface.PositionService;
 import com.example.b2b_opportunities.Service.Interface.UserService;
 import com.example.b2b_opportunities.Static.ApplicationStatus;
@@ -46,10 +28,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -223,6 +202,32 @@ public class PositionServiceImpl implements PositionService {
         return positionRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Position with ID: " + id + " not found"));
     }
+
+    @Override
+    public List<CompanyPositionsResponseDto> getCompanyPositions(Authentication authentication, Long id) {
+        validateUserAndCompany(authentication);
+
+        Company company = companyService.getCompanyOrThrow(id);
+
+        Map<Long, String> projectIdToNameMap = company.getProjects().stream()
+                .collect(Collectors.toMap(Project::getId, Project::getName));
+
+        List<Position> positions = positionRepository.findByProjectIdsIn(new ArrayList<>(projectIdToNameMap.keySet()));
+
+        return positions.stream()
+                .map(position -> {
+                    PositionResponseDto responseDto = PositionMapper.toResponseDto(position);
+
+                    return CompanyPositionsResponseDto.builder()
+                            .positionId(responseDto.getId())
+                            .seniorityId(position.getSeniority().getId())
+                            .patternId(position.getPattern().getId())
+                            .projectName(projectIdToNameMap.get(responseDto.getProjectId()))
+                            .build();
+                })
+                .toList();
+    }
+
 
     private PositionResponseDto generatePositionResponseDto(Position position) {
         PositionResponseDto responseDto = PositionMapper.toResponseDto(position);
