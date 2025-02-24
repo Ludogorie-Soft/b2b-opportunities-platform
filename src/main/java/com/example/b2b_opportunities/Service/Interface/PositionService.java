@@ -19,7 +19,9 @@ public interface PositionService {
 
     PositionResponseDto getPosition(Authentication authentication, Long id);
 
-    Page<PositionResponseDto> getPositions(Authentication authentication, int offset, int pageSize, String sort, boolean ascending);
+    Page<PositionResponseDto> getPositions(Authentication authentication, int offset, int pageSize, String sort, boolean ascending, Integer rate,
+                                           Set<Long> workModes,
+                                           Set<Long> skills, Boolean isPartnerOnly);
 
     void editPositionStatus(Long positionId, Long statusId, String customCloseReason, Authentication authentication);
 
