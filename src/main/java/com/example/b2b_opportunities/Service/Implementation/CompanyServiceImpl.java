@@ -1,8 +1,39 @@
 package com.example.b2b_opportunities.Service.Implementation;
 
-import com.example.b2b_opportunities.Dto.Request.*;
-import com.example.b2b_opportunities.Dto.Response.*;
-import com.example.b2b_opportunities.Entity.*;
+import com.example.b2b_opportunities.Dto.Request.CompanyFilterEditDto;
+import com.example.b2b_opportunities.Dto.Request.CompanyFilterRequestDto;
+import com.example.b2b_opportunities.Dto.Request.CompanyRequestDto;
+import com.example.b2b_opportunities.Dto.Request.PartnerGroupRequestDto;
+import com.example.b2b_opportunities.Dto.Request.SkillExperienceRequestDto;
+import com.example.b2b_opportunities.Dto.Request.TalentExperienceRequestDto;
+import com.example.b2b_opportunities.Dto.Request.TalentPublicityRequestDto;
+import com.example.b2b_opportunities.Dto.Request.TalentRequestDto;
+import com.example.b2b_opportunities.Dto.Response.CompaniesAndUsersResponseDto;
+import com.example.b2b_opportunities.Dto.Response.CompanyFilterResponseDto;
+import com.example.b2b_opportunities.Dto.Response.CompanyPublicResponseDto;
+import com.example.b2b_opportunities.Dto.Response.CompanyResponseDto;
+import com.example.b2b_opportunities.Dto.Response.PartialTalentResponseDto;
+import com.example.b2b_opportunities.Dto.Response.PartnerGroupResponseDto;
+import com.example.b2b_opportunities.Dto.Response.ProjectResponseDto;
+import com.example.b2b_opportunities.Dto.Response.TalentPublicityResponseDto;
+import com.example.b2b_opportunities.Dto.Response.TalentResponseDto;
+import com.example.b2b_opportunities.Dto.Response.UserResponseDto;
+import com.example.b2b_opportunities.Entity.Company;
+import com.example.b2b_opportunities.Entity.CompanyType;
+import com.example.b2b_opportunities.Entity.Domain;
+import com.example.b2b_opportunities.Entity.Filter;
+import com.example.b2b_opportunities.Entity.Location;
+import com.example.b2b_opportunities.Entity.PartnerGroup;
+import com.example.b2b_opportunities.Entity.Pattern;
+import com.example.b2b_opportunities.Entity.Position;
+import com.example.b2b_opportunities.Entity.Project;
+import com.example.b2b_opportunities.Entity.Seniority;
+import com.example.b2b_opportunities.Entity.Skill;
+import com.example.b2b_opportunities.Entity.SkillExperience;
+import com.example.b2b_opportunities.Entity.Talent;
+import com.example.b2b_opportunities.Entity.TalentExperience;
+import com.example.b2b_opportunities.Entity.User;
+import com.example.b2b_opportunities.Entity.WorkMode;
 import com.example.b2b_opportunities.Exception.common.AlreadyExistsException;
 import com.example.b2b_opportunities.Exception.common.InvalidRequestException;
 import com.example.b2b_opportunities.Exception.common.NotFoundException;
@@ -516,6 +547,13 @@ public class CompanyServiceImpl implements CompanyService {
     public Talent getTalentOrThrow(Long talentId) {
         return talentRepository.findById(talentId)
                 .orElseThrow(() -> new NotFoundException("Talent with ID: " + talentId + " not found"));
+    }
+
+    @Override
+    public List<PartialTalentResponseDto> getMyTalentsPartial(Authentication authentication){
+        Company company = getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
+        List<Talent> myTalents = talentRepository.findByCompanyId(company.getId());
+        return TalentMapper.toPartialTalentList(myTalents);
     }
 
     private void setTalentRates(Talent talent, TalentRequestDto talentRequestDto) {

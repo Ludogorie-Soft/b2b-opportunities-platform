@@ -68,7 +68,7 @@ public class Project {
             joinColumns = @JoinColumn(name = "project_id"),
             inverseJoinColumns = @JoinColumn(name = "partner_group_id")
     )
-    private List<PartnerGroup> partnerGroupList;
+    private Set<PartnerGroup> partnerGroupList;
     public void setName(@NotEmpty String name) {
         this.name = name.strip();
     }

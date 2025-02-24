@@ -1,7 +1,22 @@
 package com.example.b2b_opportunities.Controller;
 
-import com.example.b2b_opportunities.Dto.Request.*;
-import com.example.b2b_opportunities.Dto.Response.*;
+import com.example.b2b_opportunities.Dto.Request.CompanyFilterEditDto;
+import com.example.b2b_opportunities.Dto.Request.CompanyFilterRequestDto;
+import com.example.b2b_opportunities.Dto.Request.CompanyRequestDto;
+import com.example.b2b_opportunities.Dto.Request.PartnerGroupRequestDto;
+import com.example.b2b_opportunities.Dto.Request.PositionApplicationRequestDto;
+import com.example.b2b_opportunities.Dto.Request.TalentPublicityRequestDto;
+import com.example.b2b_opportunities.Dto.Request.TalentRequestDto;
+import com.example.b2b_opportunities.Dto.Response.CompaniesAndUsersResponseDto;
+import com.example.b2b_opportunities.Dto.Response.CompanyFilterResponseDto;
+import com.example.b2b_opportunities.Dto.Response.CompanyPublicResponseDto;
+import com.example.b2b_opportunities.Dto.Response.CompanyResponseDto;
+import com.example.b2b_opportunities.Dto.Response.PartialTalentResponseDto;
+import com.example.b2b_opportunities.Dto.Response.PartnerGroupResponseDto;
+import com.example.b2b_opportunities.Dto.Response.PositionApplicationResponseDto;
+import com.example.b2b_opportunities.Dto.Response.ProjectResponseDto;
+import com.example.b2b_opportunities.Dto.Response.TalentPublicityResponseDto;
+import com.example.b2b_opportunities.Dto.Response.TalentResponseDto;
 import com.example.b2b_opportunities.Repository.CompanyRepository;
 import com.example.b2b_opportunities.Service.Interface.CompanyService;
 import com.example.b2b_opportunities.Service.Interface.PositionApplicationService;
@@ -210,6 +225,12 @@ public class CompanyController {
     @ResponseStatus(HttpStatus.OK)
     public List<TalentResponseDto> getMyTalents(Authentication authentication) {
         return companyService.getMyTalents(authentication);
+    }
+
+    @GetMapping("/my-talents/partial")
+    @ResponseStatus(HttpStatus.OK)
+    public List<PartialTalentResponseDto> getMyTalentsPartial(Authentication authentication){
+        return companyService.getMyTalentsPartial(authentication);
     }
 
     @PutMapping("/my-talents/publicity")
