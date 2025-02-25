@@ -39,10 +39,6 @@ public class Position {
     @JoinColumn(name = "project_id")
     private Project project;
 
-//    @ManyToOne
-//    @JoinColumn(name = "role_id")
-//    private PositionRole role;
-
     @ManyToOne
     @JoinColumn(name = "pattern_id")
     private Pattern pattern;

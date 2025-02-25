@@ -8,6 +8,7 @@ import com.example.b2b_opportunities.Entity.RequiredSkill;
 import com.example.b2b_opportunities.Entity.Skill;
 import com.example.b2b_opportunities.Static.ProjectStatus;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.Tuple;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -28,6 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Repository
 @RequiredArgsConstructor
@@ -46,7 +48,7 @@ public class CustomPositionRepositoryImpl implements CustomPositionRepository {
             Pageable pageable) {
 
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-        CriteriaQuery<Position> cq = cb.createQuery(Position.class);
+        CriteriaQuery<Tuple> cq = cb.createTupleQuery(); // Променете на Tuple
         Root<Position> root = cq.from(Position.class);
 
         Join<Position, Project> projectJoin = fetchJoins(root);
@@ -55,16 +57,57 @@ public class CustomPositionRepositoryImpl implements CustomPositionRepository {
 
         cq.where(predicate).distinct(true);
 
-        applySorting(cb, cq, root, pageable);
+        // Добавете всички необходими полета в SELECT
+        cq.multiselect(
+                root.alias("position"), // Основният ентити
+                root.get("rate").get("min").alias("rateMin"), // rate.min
+                root.get("rate").get("max").alias("rateMax")  // rate.max
+        );
 
-        TypedQuery<Position> query = entityManager.createQuery(cq);
+        // Прилагане на сортирането
+        if (pageable.getSort().isSorted()) {
+            List<Order> orders = pageable.getSort().stream()
+                    .flatMap(order -> {
+                        String property = order.getProperty();
+                        if ("rate".equals(property)) {
+                            Path<Integer> rateMinPath = root.get("rate").get("min");
+                            Path<Integer> rateMaxPath = root.get("rate").get("max");
+                            Order minOrder = order.isAscending() ? cb.asc(rateMinPath) : cb.desc(rateMinPath);
+                            Order maxOrder = order.isAscending() ? cb.asc(rateMaxPath) : cb.desc(rateMaxPath);
+                            return Stream.of(minOrder, maxOrder);
+                        } else {
+                            String[] attributePath = property.split("\\.");
+                            Path<?> path = root;
+                            for (String attribute : attributePath) {
+                                path = path.get(attribute);
+                            }
+                            Order orderObj = order.isAscending() ? cb.asc(path) : cb.desc(path);
+                            return Stream.of(orderObj);
+                        }
+                    })
+                    .collect(Collectors.toList());
+            cq.orderBy(orders);
+        }
+
+        TypedQuery<Tuple> query = entityManager.createQuery(cq);
         query.setFirstResult((int) pageable.getOffset());
         query.setMaxResults(pageable.getPageSize());
+
+        // Преобразувайте Tuple към Position
+        List<Position> positions = query.getResultList().stream()
+                .map(tuple -> {
+                    Position position = tuple.get("position", Position.class);
+                    Integer rateMin = tuple.get("rateMin", Integer.class);
+                    Integer rateMax = tuple.get("rateMax", Integer.class);
+                    // Ако е необходимо, можете да сетнете rateMin и rateMax в Position
+                    return position;
+                })
+                .collect(Collectors.toList());
 
         // Get total count
         Long total = getTotalCount(isPartnerOnly, companyId, projectStatus, rate, workModes, skills);
 
-        return new PageImpl<>(query.getResultList(), pageable, total);
+        return new PageImpl<>(positions, pageable, total);
     }
 
     private Join<Position, Project> fetchJoins(Root<Position> root) {
@@ -168,13 +211,31 @@ public class CustomPositionRepositoryImpl implements CustomPositionRepository {
     private void applySorting(CriteriaBuilder cb, CriteriaQuery<Position> cq, Root<Position> root, Pageable pageable) {
         if (pageable.getSort().isSorted()) {
             List<Order> orders = pageable.getSort().stream()
-                    .map(order -> {
-                        String[] attributePath = order.getProperty().split("\\.");
-                        Path<?> path = root;
-                        for (String attribute : attributePath) {
-                            path = path.get(attribute);
+                    .flatMap(order -> {
+                        String property = order.getProperty();
+                        if ("rate".equals(property)) {
+                            // Създаване на пътища за rate.min и rate.max
+                            Path<Integer> rateMinPath = root.get("rate").get("min");
+                            Path<Integer> rateMaxPath = root.get("rate").get("max");
+
+                            // Добавяне на rate.min и rate.max в SELECT клаузата
+                            cq.multiselect(root, rateMinPath, rateMaxPath);
+
+                            // Създаване на Order обекти за min и max
+                            Order minOrder = order.isAscending() ? cb.asc(rateMinPath) : cb.desc(rateMinPath);
+                            Order maxOrder = order.isAscending() ? cb.asc(rateMaxPath) : cb.desc(rateMaxPath);
+
+                            return Stream.of(minOrder, maxOrder);
+                        } else {
+                            // Обработка на другите полета както преди
+                            String[] attributePath = property.split("\\.");
+                            Path<?> path = root;
+                            for (String attribute : attributePath) {
+                                path = path.get(attribute);
+                            }
+                            Order orderObj = order.isAscending() ? cb.asc(path) : cb.desc(path);
+                            return Stream.of(orderObj);
                         }
-                        return order.isAscending() ? cb.asc(path) : cb.desc(path);
                     })
                     .collect(Collectors.toList());
             cq.orderBy(orders);
