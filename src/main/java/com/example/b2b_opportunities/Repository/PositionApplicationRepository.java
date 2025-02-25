@@ -40,6 +40,6 @@ public interface PositionApplicationRepository extends JpaRepository<PositionApp
     @Query("SELECT COUNT(pa) FROM PositionApplication pa WHERE pa.position.id = :positionId AND pa.applicationStatus != 'AWAITING_CV_OR_TALENT'")
     Long countByPositionIdExcludingAwaitingCvOrTalent(@Param("positionId") Long positionId);
 
-    @Query("SELECT p FROM PositionApplication p WHERE p.applicationDateTime >= :start AND p.applicationDateTime < :end")
+    @Query("SELECT p FROM PositionApplication p WHERE p.applicationDateTime >= :start AND p.applicationDateTime < :end AND p.applicationStatus = 'IN_PROGRESS'")
     List<PositionApplication> findAllApplicationsBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 }
