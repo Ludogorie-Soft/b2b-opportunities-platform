@@ -75,7 +75,7 @@ public class CustomPositionRepositoryImpl implements CustomPositionRepository {
         Join<Project, PartnerGroup> partnerGroupJoin = (Join<Project, PartnerGroup>) partnerGroupFetch;
         partnerGroupJoin.fetch("partners", JoinType.LEFT);
 
-        root.fetch("requiredSkills", JoinType.LEFT).fetch("skill", JoinType.LEFT);
+        root.join("requiredSkills", JoinType.LEFT).join("skill", JoinType.LEFT);
         root.fetch("workModes", JoinType.LEFT);
 
         return projectJoin;
