@@ -80,9 +80,9 @@ public interface CompanyService {
                                           int pageSize,
                                           String sort,
                                           Boolean ascending,
-                                          List<Long> workModesIds,
-                                          List<Long> skillsIds,
-                                          Integer rate);
+                                          Integer rate,
+                                          Set<Long> workModes,
+                                          Set<Long> skills);
 
     TalentResponseDto getTalentById(Authentication authentication, Long talentId);
 

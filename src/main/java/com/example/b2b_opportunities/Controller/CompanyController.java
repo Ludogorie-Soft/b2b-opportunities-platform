@@ -28,7 +28,16 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -202,17 +211,18 @@ public class CompanyController {
                                                  @RequestParam(defaultValue = "10") int pageSize,
                                                  @RequestParam String sort,
                                                  @RequestParam(required = false) Boolean ascending,
-                                                 @RequestParam(required = false) List<Long> workModesIds,
-                                                 @RequestParam(required = false) List<Long> skillsIds,
-                                                 @RequestParam(required = false) Integer rate) {
+                                                 @RequestParam(required = false) Integer rate,
+                                                 @RequestParam(required = false) Set<Long> workModes,
+                                                 @RequestParam(required = false) Set<Long> skills) {
+
         return companyService.getAllTalents(authentication,
                 offset,
                 pageSize,
                 sort,
                 ascending,
-                workModesIds,
-                skillsIds,
-                rate);
+                rate,
+                workModes,
+                skills);
     }
 
     @GetMapping("/talents/{id}")
@@ -229,7 +239,7 @@ public class CompanyController {
 
     @GetMapping("/my-talents/partial")
     @ResponseStatus(HttpStatus.OK)
-    public List<PartialTalentResponseDto> getMyTalentsPartial(Authentication authentication){
+    public List<PartialTalentResponseDto> getMyTalentsPartial(Authentication authentication) {
         return companyService.getMyTalentsPartial(authentication);
     }
 

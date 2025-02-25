@@ -38,8 +38,28 @@ import com.example.b2b_opportunities.Exception.common.AlreadyExistsException;
 import com.example.b2b_opportunities.Exception.common.InvalidRequestException;
 import com.example.b2b_opportunities.Exception.common.NotFoundException;
 import com.example.b2b_opportunities.Exception.common.PermissionDeniedException;
-import com.example.b2b_opportunities.Mapper.*;
-import com.example.b2b_opportunities.Repository.*;
+import com.example.b2b_opportunities.Mapper.CompanyMapper;
+import com.example.b2b_opportunities.Mapper.FilterMapper;
+import com.example.b2b_opportunities.Mapper.PartnerGroupMapper;
+import com.example.b2b_opportunities.Mapper.ProjectMapper;
+import com.example.b2b_opportunities.Mapper.TalentMapper;
+import com.example.b2b_opportunities.Mapper.UserMapper;
+import com.example.b2b_opportunities.Repository.CompanyRepository;
+import com.example.b2b_opportunities.Repository.CompanyTypeRepository;
+import com.example.b2b_opportunities.Repository.DomainRepository;
+import com.example.b2b_opportunities.Repository.FilterRepository;
+import com.example.b2b_opportunities.Repository.LocationRepository;
+import com.example.b2b_opportunities.Repository.PartnerGroupRepository;
+import com.example.b2b_opportunities.Repository.PatternRepository;
+import com.example.b2b_opportunities.Repository.PositionApplicationRepository;
+import com.example.b2b_opportunities.Repository.ProjectRepository;
+import com.example.b2b_opportunities.Repository.SeniorityRepository;
+import com.example.b2b_opportunities.Repository.SkillExperienceRepository;
+import com.example.b2b_opportunities.Repository.SkillRepository;
+import com.example.b2b_opportunities.Repository.TalentExperienceRepository;
+import com.example.b2b_opportunities.Repository.TalentRepository;
+import com.example.b2b_opportunities.Repository.UserRepository;
+import com.example.b2b_opportunities.Repository.WorkModeRepository;
 import com.example.b2b_opportunities.Service.Interface.CompanyService;
 import com.example.b2b_opportunities.Service.Interface.MailService;
 import com.example.b2b_opportunities.Service.Interface.PatternService;
@@ -52,12 +72,22 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static com.example.b2b_opportunities.Mapper.CompanyMapper.toCompanyPublicResponseDtoList;
@@ -411,50 +441,43 @@ public class CompanyServiceImpl implements CompanyService {
     public Page<TalentResponseDto> getAllTalents(Authentication authentication,
                                                  int offset,
                                                  int pageSize,
-                                                 String sort,
+                                                 String sortBy,
                                                  Boolean ascending,
-                                                 List<Long> workModesIds,
-                                                 List<Long> skillsIds,
-                                                 Integer rate) {
+                                                 Integer rate,
+                                                 Set<Long> workModes,
+                                                 Set<Long> skills) {
         Company company = getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
 
         if (pageSize <= 0) {
             pageSize = 5;
         }
 
-        Sort.Direction direction = (ascending != null && !ascending) ? Sort.Direction.DESC : Sort.Direction.ASC;
+        Sort sort = buildSort(sortBy, ascending);
+        Pageable pageable = PageRequest.of(offset, pageSize, sort);
 
-        Pageable pageable;
-        switch (sort) {
-            case "minRate":
-                pageable = PageRequest.of(offset, pageSize, Sort.by(direction, "minRate")
-                        .and(Sort.by(direction, "maxRate")));
-                break;
-            case "maxRate":
-                pageable = PageRequest.of(offset, pageSize, Sort.by(direction, "maxRate"));
-                break;
-            case "experience":
-                pageable = PageRequest.of(offset, pageSize, Sort.by(direction, "talentExperience.totalTime"));
-                break;
-            default:
-                pageable = PageRequest.of(offset, pageSize);
-                break;
+        Page<Talent> resultPage = talentRepository.findTalentsByFilters(
+                company.getId(),
+                workModes,
+                skills,
+                rate,
+                pageable
+        );
 
+        List<TalentResponseDto> dtos = resultPage.stream().map(
+                TalentMapper::toResponseDto).toList();
+
+        return new PageImpl<>(dtos, pageable, resultPage.getTotalElements());
+    }
+
+    private Sort buildSort(String sortBy, boolean ascending) {
+        if ("rate".equalsIgnoreCase(sortBy)) {
+            Sort.Direction direction = ascending ? Sort.Direction.ASC : Sort.Direction.DESC;
+            return Sort.by(direction, "minRate").and(Sort.by(direction, "maxRate"));
+        } else if ("experience".equalsIgnoreCase(sortBy)) {
+            Sort.Direction direction = ascending ? Sort.Direction.ASC : Sort.Direction.DESC;
+            return Sort.by(direction, "talentExperience.totalTime");
         }
-
-        List<Long> workModesFilter = (workModesIds != null && !workModesIds.isEmpty()) ? workModesIds : null;
-        List<Long> skillsFilter = (skillsIds != null && !skillsIds.isEmpty()) ? skillsIds : null;
-
-        Integer rateFilter = (rate != null && rate > 0) ? rate : null;
-
-        Page<Talent> talentsPage = talentRepository.findAllActiveTalentsExcludingCompany(
-                company.getId(), workModesFilter, skillsFilter, rateFilter, pageable);
-
-        List<TalentResponseDto> dtoList = talentsPage.getContent().stream()
-                .map(TalentMapper::toResponseDto)
-                .toList();
-
-        return new PageImpl<>(dtoList, pageable, talentsPage.getTotalElements());
+        return Sort.unsorted();
     }
 
 
@@ -550,7 +573,7 @@ public class CompanyServiceImpl implements CompanyService {
     }
 
     @Override
-    public List<PartialTalentResponseDto> getMyTalentsPartial(Authentication authentication){
+    public List<PartialTalentResponseDto> getMyTalentsPartial(Authentication authentication) {
         Company company = getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
         List<Talent> myTalents = talentRepository.findByCompanyId(company.getId());
         return TalentMapper.toPartialTalentList(myTalents);
