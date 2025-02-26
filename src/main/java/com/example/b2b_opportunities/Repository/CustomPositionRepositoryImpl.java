@@ -116,9 +116,6 @@ public class CustomPositionRepositoryImpl implements CustomPositionRepository {
         Join<Project, PartnerGroup> partnerGroupJoin = (Join<Project, PartnerGroup>) partnerGroupFetch;
         partnerGroupJoin.fetch("partners", JoinType.LEFT);
 
-//        root.join("requiredSkills", JoinType.LEFT).join("skill", JoinType.LEFT);
-//        root.fetch("workModes", JoinType.LEFT);
-
         return projectJoin;
     }
 
@@ -238,36 +235,6 @@ public class CustomPositionRepositoryImpl implements CustomPositionRepository {
         }
 
         return cb.and(partnerPredicates.toArray(new Predicate[0]));
-    }
-
-    private void applySorting(CriteriaBuilder cb, CriteriaQuery<Position> cq, Root<Position> root, Pageable pageable) {
-        if (pageable.getSort().isSorted()) {
-            List<Order> orders = pageable.getSort().stream()
-                    .flatMap(order -> {
-                        String property = order.getProperty();
-                        if ("rate".equals(property)) {
-                            Path<Integer> rateMinPath = root.get("rate").get("min");
-                            Path<Integer> rateMaxPath = root.get("rate").get("max");
-
-                            cq.multiselect(root, rateMinPath, rateMaxPath);
-
-                            Order minOrder = order.isAscending() ? cb.asc(rateMinPath) : cb.desc(rateMinPath);
-                            Order maxOrder = order.isAscending() ? cb.asc(rateMaxPath) : cb.desc(rateMaxPath);
-
-                            return Stream.of(minOrder, maxOrder);
-                        } else {
-                            String[] attributePath = property.split("\\.");
-                            Path<?> path = root;
-                            for (String attribute : attributePath) {
-                                path = path.get(attribute);
-                            }
-                            Order orderObj = order.isAscending() ? cb.asc(path) : cb.desc(path);
-                            return Stream.of(orderObj);
-                        }
-                    })
-                    .collect(Collectors.toList());
-            cq.orderBy(orders);
-        }
     }
 
     private Long getTotalCount(
