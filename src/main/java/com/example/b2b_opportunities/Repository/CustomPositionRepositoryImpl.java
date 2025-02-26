@@ -25,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
@@ -71,19 +72,9 @@ public class CustomPositionRepositoryImpl implements CustomPositionRepository {
                     .flatMap(order -> {
                         String property = order.getProperty();
                         if ("rate".equals(property)) {
-                            Path<Integer> rateMinPath = root.get("rate").get("min");
-                            Path<Integer> rateMaxPath = root.get("rate").get("max");
-                            Order minOrder = order.isAscending() ? cb.asc(rateMinPath) : cb.desc(rateMinPath);
-                            Order maxOrder = order.isAscending() ? cb.asc(rateMaxPath) : cb.desc(rateMaxPath);
-                            return Stream.of(minOrder, maxOrder);
+                            return createRateOrderStream(root, order, cb);
                         } else {
-                            String[] attributePath = property.split("\\.");
-                            Path<?> path = root;
-                            for (String attribute : attributePath) {
-                                path = path.get(attribute);
-                            }
-                            Order orderObj = order.isAscending() ? cb.asc(path) : cb.desc(path);
-                            return Stream.of(orderObj);
+                            return createGenericOrderStream(root, property, order, cb);
                         }
                     })
                     .collect(Collectors.toList());
@@ -94,18 +85,41 @@ public class CustomPositionRepositoryImpl implements CustomPositionRepository {
         query.setFirstResult((int) pageable.getOffset());
         query.setMaxResults(pageable.getPageSize());
 
-        List<Position> positions = query.getResultList().stream()
-                .map(tuple -> {
-                    Position position = tuple.get("position", Position.class);
-                    Integer rateMin = tuple.get("rateMin", Integer.class);
-                    Integer rateMax = tuple.get("rateMax", Integer.class);
-                    return position;
-                })
-                .collect(Collectors.toList());
+        List<Position> positions = getSortedPositionsByRate(query);
 
         Long total = getTotalCount(isPartnerOnly, companyId, projectStatus, rate, workModes, skills, userCompanyId);
 
         return new PageImpl<>(positions, pageable, total);
+    }
+
+    private Stream<Order> createRateOrderStream(Root<?> root, Sort.Order order, CriteriaBuilder cb) {
+        Path<Integer> rateMinPath = root.get("rate").get("min");
+        Path<Integer> rateMaxPath = root.get("rate").get("max");
+        Order minOrder = order.isAscending() ? cb.asc(rateMinPath) : cb.desc(rateMinPath);
+        Order maxOrder = order.isAscending() ? cb.asc(rateMaxPath) : cb.desc(rateMaxPath);
+        return Stream.of(minOrder, maxOrder);
+    }
+
+    private Stream<Order> createGenericOrderStream(Root<?> root, String property, Sort.Order order, CriteriaBuilder cb) {
+        String[] attributePath = property.split("\\.");
+        Path<?> path = root;
+        for (String attribute : attributePath) {
+            path = path.get(attribute);
+        }
+        Order orderObj = order.isAscending() ? cb.asc(path) : cb.desc(path);
+        return Stream.of(orderObj);
+    }
+
+
+    private List<Position> getSortedPositionsByRate(TypedQuery<Tuple> query) {
+        return query.getResultList().stream()
+                .map(tuple -> {
+                    Position position = tuple.get("position", Position.class);
+                    tuple.get("rateMin", Integer.class);
+                    tuple.get("rateMax", Integer.class);
+                    return position;
+                })
+                .toList();
     }
 
     private Join<Position, Project> fetchJoins(Root<Position> root) {
