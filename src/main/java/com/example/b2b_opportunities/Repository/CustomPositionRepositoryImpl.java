@@ -6,6 +6,7 @@ import com.example.b2b_opportunities.Entity.Position;
 import com.example.b2b_opportunities.Entity.Project;
 import com.example.b2b_opportunities.Entity.RequiredSkill;
 import com.example.b2b_opportunities.Entity.Skill;
+import com.example.b2b_opportunities.Entity.WorkMode;
 import com.example.b2b_opportunities.Static.ProjectStatus;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Tuple;
@@ -19,6 +20,7 @@ import jakarta.persistence.criteria.Order;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -48,7 +50,7 @@ public class CustomPositionRepositoryImpl implements CustomPositionRepository {
             Pageable pageable) {
 
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-        CriteriaQuery<Tuple> cq = cb.createTupleQuery(); // Променете на Tuple
+        CriteriaQuery<Tuple> cq = cb.createTupleQuery();
         Root<Position> root = cq.from(Position.class);
 
         Join<Position, Project> projectJoin = fetchJoins(root);
@@ -57,14 +59,12 @@ public class CustomPositionRepositoryImpl implements CustomPositionRepository {
 
         cq.where(predicate).distinct(true);
 
-        // Добавете всички необходими полета в SELECT
         cq.multiselect(
-                root.alias("position"), // Основният ентити
-                root.get("rate").get("min").alias("rateMin"), // rate.min
-                root.get("rate").get("max").alias("rateMax")  // rate.max
+                root.alias("position"),
+                root.get("rate").get("min").alias("rateMin"),
+                root.get("rate").get("max").alias("rateMax")
         );
 
-        // Прилагане на сортирането
         if (pageable.getSort().isSorted()) {
             List<Order> orders = pageable.getSort().stream()
                     .flatMap(order -> {
@@ -93,18 +93,15 @@ public class CustomPositionRepositoryImpl implements CustomPositionRepository {
         query.setFirstResult((int) pageable.getOffset());
         query.setMaxResults(pageable.getPageSize());
 
-        // Преобразувайте Tuple към Position
         List<Position> positions = query.getResultList().stream()
                 .map(tuple -> {
                     Position position = tuple.get("position", Position.class);
                     Integer rateMin = tuple.get("rateMin", Integer.class);
                     Integer rateMax = tuple.get("rateMax", Integer.class);
-                    // Ако е необходимо, можете да сетнете rateMin и rateMax в Position
                     return position;
                 })
                 .collect(Collectors.toList());
 
-        // Get total count
         Long total = getTotalCount(isPartnerOnly, companyId, projectStatus, rate, workModes, skills);
 
         return new PageImpl<>(positions, pageable, total);
@@ -118,8 +115,8 @@ public class CustomPositionRepositoryImpl implements CustomPositionRepository {
         Join<Project, PartnerGroup> partnerGroupJoin = (Join<Project, PartnerGroup>) partnerGroupFetch;
         partnerGroupJoin.fetch("partners", JoinType.LEFT);
 
-        root.join("requiredSkills", JoinType.LEFT).join("skill", JoinType.LEFT);
-        root.fetch("workModes", JoinType.LEFT);
+//        root.join("requiredSkills", JoinType.LEFT).join("skill", JoinType.LEFT);
+//        root.fetch("workModes", JoinType.LEFT);
 
         return projectJoin;
     }
@@ -141,7 +138,14 @@ public class CustomPositionRepositoryImpl implements CustomPositionRepository {
 
         predicates.add(ratePredicate(cb, root, rate));
 
-        predicates.add(collectionPredicate(cb, root, workModes));
+        if (workModes != null && !workModes.isEmpty()) {
+            predicates.add(workModesPredicate(cb, root, workModes));
+        }
+
+        if (skills != null && !skills.isEmpty()) {
+            predicates.add(skillsPredicate(cb, root, skills));
+        }
+
 
         Join<Position, RequiredSkill> requiredSkillJoin = root.join("requiredSkills", JoinType.LEFT);
         Join<RequiredSkill, Skill> skillJoin = requiredSkillJoin.join("skill", JoinType.LEFT);
@@ -150,11 +154,34 @@ public class CustomPositionRepositoryImpl implements CustomPositionRepository {
             predicates.add(skillJoin.get("id").in(skills));
         }
 
-
-        // isPartnerOnly condition
         predicates.add(partnerOnlyPredicate(cb, projectJoin, companyId, isPartnerOnly));
 
         return cb.and(predicates.toArray(new Predicate[0]));
+    }
+
+    private Predicate workModesPredicate(CriteriaBuilder cb, Root<Position> root, Set<Long> workModes) {
+        Subquery<Long> subquery = cb.createQuery().subquery(Long.class);
+        Root<Position> subRoot = subquery.from(Position.class);
+        Join<Position, WorkMode> workModeJoin = subRoot.join("workModes");
+
+        subquery.select(subRoot.get("id"))
+                .where(cb.equal(subRoot.get("id"), root.get("id")),
+                        workModeJoin.get("id").in(workModes));
+
+        return cb.exists(subquery);
+    }
+
+    private Predicate skillsPredicate(CriteriaBuilder cb, Root<Position> root, Set<Long> skills) {
+        Subquery<Long> subquery = cb.createQuery().subquery(Long.class);
+        Root<Position> subRoot = subquery.from(Position.class);
+        Join<Position, RequiredSkill> requiredSkillJoin = subRoot.join("requiredSkills");
+        Join<RequiredSkill, Skill> skillJoin = requiredSkillJoin.join("skill");
+
+        subquery.select(subRoot.get("id"))
+                .where(cb.equal(subRoot.get("id"), root.get("id")),
+                        skillJoin.get("id").in(skills));
+
+        return cb.exists(subquery);
     }
 
     private Predicate ratePredicate(CriteriaBuilder cb, Root<Position> root, Integer rate) {
@@ -214,20 +241,16 @@ public class CustomPositionRepositoryImpl implements CustomPositionRepository {
                     .flatMap(order -> {
                         String property = order.getProperty();
                         if ("rate".equals(property)) {
-                            // Създаване на пътища за rate.min и rate.max
                             Path<Integer> rateMinPath = root.get("rate").get("min");
                             Path<Integer> rateMaxPath = root.get("rate").get("max");
 
-                            // Добавяне на rate.min и rate.max в SELECT клаузата
                             cq.multiselect(root, rateMinPath, rateMaxPath);
 
-                            // Създаване на Order обекти за min и max
                             Order minOrder = order.isAscending() ? cb.asc(rateMinPath) : cb.desc(rateMinPath);
                             Order maxOrder = order.isAscending() ? cb.asc(rateMaxPath) : cb.desc(rateMaxPath);
 
                             return Stream.of(minOrder, maxOrder);
                         } else {
-                            // Обработка на другите полета както преди
                             String[] attributePath = property.split("\\.");
                             Path<?> path = root;
                             for (String attribute : attributePath) {
