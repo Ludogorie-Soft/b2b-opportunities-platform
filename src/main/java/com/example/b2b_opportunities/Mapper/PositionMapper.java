@@ -1,6 +1,7 @@
 package com.example.b2b_opportunities.Mapper;
 
 import com.example.b2b_opportunities.Dto.Request.PositionRequestDto;
+import com.example.b2b_opportunities.Dto.Response.PartialPositionResponseDto;
 import com.example.b2b_opportunities.Dto.Response.PositionApplicationResponseDto;
 import com.example.b2b_opportunities.Dto.Response.PositionResponseDto;
 import com.example.b2b_opportunities.Entity.Position;
@@ -68,6 +69,15 @@ public class PositionMapper {
             positionResponseDtoList.add(PositionMapper.toResponseDto(position));
         }
         return positionResponseDtoList;
+    }
+
+    public static PartialPositionResponseDto toPartialPositionResponseDto(Position position){
+        return PartialPositionResponseDto.builder()
+                .id(position.getId())
+                .seniorityId(position.getSeniority().getId())
+                .patternId(position.getPattern().getId())
+                .projectName(position.getProject().getName())
+                .build();
     }
 
 }

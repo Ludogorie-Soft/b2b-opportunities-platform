@@ -11,6 +11,7 @@ import com.example.b2b_opportunities.Dto.Response.CompaniesAndUsersResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyFilterResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyPublicResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyResponseDto;
+import com.example.b2b_opportunities.Dto.Response.PartialPositionResponseDto;
 import com.example.b2b_opportunities.Dto.Response.PartialTalentResponseDto;
 import com.example.b2b_opportunities.Dto.Response.PartnerGroupResponseDto;
 import com.example.b2b_opportunities.Dto.Response.PositionApplicationResponseDto;
@@ -65,6 +66,12 @@ public class CompanyController {
     @ResponseStatus(HttpStatus.OK)
     public CompanyResponseDto getCompany(@PathVariable("id") Long id) {
         return companyService.getCompany(id);
+    }
+
+    @GetMapping("/positions/partial")
+    @ResponseStatus(HttpStatus.OK)
+    public List<PartialPositionResponseDto> getMyPositionsPartial(Authentication authentication){
+        return companyService.getMyPositionsPartial(authentication);
     }
 
     @GetMapping("{id}/projects")

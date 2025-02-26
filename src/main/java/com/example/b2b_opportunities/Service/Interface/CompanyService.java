@@ -10,6 +10,7 @@ import com.example.b2b_opportunities.Dto.Response.CompaniesAndUsersResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyFilterResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyPublicResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyResponseDto;
+import com.example.b2b_opportunities.Dto.Response.PartialPositionResponseDto;
 import com.example.b2b_opportunities.Dto.Response.PartialTalentResponseDto;
 import com.example.b2b_opportunities.Dto.Response.PartnerGroupResponseDto;
 import com.example.b2b_opportunities.Dto.Response.ProjectResponseDto;
@@ -101,4 +102,6 @@ public interface CompanyService {
     Talent getTalentOrThrow(Long talentId);
 
     List<PartialTalentResponseDto> getMyTalentsPartial(Authentication authentication);
+
+    List<PartialPositionResponseDto> getMyPositionsPartial(Authentication authentication);
 }

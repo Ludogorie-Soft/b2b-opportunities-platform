@@ -12,6 +12,7 @@ import com.example.b2b_opportunities.Dto.Response.CompaniesAndUsersResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyFilterResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyPublicResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyResponseDto;
+import com.example.b2b_opportunities.Dto.Response.PartialPositionResponseDto;
 import com.example.b2b_opportunities.Dto.Response.PartialTalentResponseDto;
 import com.example.b2b_opportunities.Dto.Response.PartnerGroupResponseDto;
 import com.example.b2b_opportunities.Dto.Response.ProjectResponseDto;
@@ -41,6 +42,7 @@ import com.example.b2b_opportunities.Exception.common.PermissionDeniedException;
 import com.example.b2b_opportunities.Mapper.CompanyMapper;
 import com.example.b2b_opportunities.Mapper.FilterMapper;
 import com.example.b2b_opportunities.Mapper.PartnerGroupMapper;
+import com.example.b2b_opportunities.Mapper.PositionMapper;
 import com.example.b2b_opportunities.Mapper.ProjectMapper;
 import com.example.b2b_opportunities.Mapper.TalentMapper;
 import com.example.b2b_opportunities.Mapper.UserMapper;
@@ -577,6 +579,15 @@ public class CompanyServiceImpl implements CompanyService {
         Company company = getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
         List<Talent> myTalents = talentRepository.findByCompanyId(company.getId());
         return TalentMapper.toPartialTalentList(myTalents);
+    }
+
+    @Override
+    public List<PartialPositionResponseDto> getMyPositionsPartial(Authentication authentication){
+        Company company = getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
+        List<Position> positions = company.getProjects().stream()
+                .flatMap(project -> project.getPositions().stream())
+                .toList();
+        return positions.stream().map(PositionMapper::toPartialPositionResponseDto).toList();
     }
 
     private void setTalentRates(Talent talent, TalentRequestDto talentRequestDto) {
