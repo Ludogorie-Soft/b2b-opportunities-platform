@@ -47,6 +47,7 @@ public class CustomPositionRepositoryImpl implements CustomPositionRepository {
             Integer rate,
             Set<Long> workModes,
             Set<Long> skills,
+            Long userCompanyId,
             Pageable pageable) {
 
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
@@ -55,7 +56,7 @@ public class CustomPositionRepositoryImpl implements CustomPositionRepository {
 
         Join<Position, Project> projectJoin = fetchJoins(root);
 
-        Predicate predicate = buildPredicates(cb, root, projectJoin, isPartnerOnly, companyId, projectStatus, rate, workModes, skills);
+        Predicate predicate = buildPredicates(cb, root, projectJoin, isPartnerOnly, companyId, projectStatus, rate, workModes, skills, userCompanyId);
 
         cq.where(predicate).distinct(true);
 
@@ -102,7 +103,7 @@ public class CustomPositionRepositoryImpl implements CustomPositionRepository {
                 })
                 .collect(Collectors.toList());
 
-        Long total = getTotalCount(isPartnerOnly, companyId, projectStatus, rate, workModes, skills);
+        Long total = getTotalCount(isPartnerOnly, companyId, projectStatus, rate, workModes, skills, userCompanyId);
 
         return new PageImpl<>(positions, pageable, total);
     }
@@ -130,7 +131,8 @@ public class CustomPositionRepositoryImpl implements CustomPositionRepository {
             ProjectStatus projectStatus,
             Integer rate,
             Set<Long> workModes,
-            Set<Long> skills) {
+            Set<Long> skills,
+            Long userCompanyId) {
 
         List<Predicate> predicates = new ArrayList<>();
 
@@ -146,6 +148,9 @@ public class CustomPositionRepositoryImpl implements CustomPositionRepository {
             predicates.add(skillsPredicate(cb, root, skills));
         }
 
+        if (userCompanyId != null) {
+            predicates.add(cb.notEqual(projectJoin.get("company").get("id"), userCompanyId));
+        }
 
         Join<Position, RequiredSkill> requiredSkillJoin = root.join("requiredSkills", JoinType.LEFT);
         Join<RequiredSkill, Skill> skillJoin = requiredSkillJoin.join("skill", JoinType.LEFT);
@@ -271,7 +276,8 @@ public class CustomPositionRepositoryImpl implements CustomPositionRepository {
             ProjectStatus projectStatus,
             Integer rate,
             Set<Long> workModes,
-            Set<Long> skills) {
+            Set<Long> skills,
+            Long userCompanyId) {
 
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<Long> cq = cb.createQuery(Long.class);
@@ -281,7 +287,7 @@ public class CustomPositionRepositoryImpl implements CustomPositionRepository {
 
         Join<Position, Project> projectJoin = root.join("project", JoinType.INNER);
 
-        Predicate predicate = buildPredicates(cb, root, projectJoin, isPartnerOnly, companyId, projectStatus, rate, workModes, skills);
+        Predicate predicate = buildPredicates(cb, root, projectJoin, isPartnerOnly, companyId, projectStatus, rate, workModes, skills, userCompanyId);
         cq.where(predicate);
 
         return entityManager.createQuery(cq).getSingleResult();

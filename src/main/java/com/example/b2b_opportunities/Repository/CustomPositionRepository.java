@@ -15,5 +15,6 @@ public interface CustomPositionRepository {
             Integer rate,
             Set<Long> workModes,
             Set<Long> skills,
+            Long userCompanyId,
             Pageable pageable);
 }

@@ -171,6 +171,7 @@ public class PositionServiceImpl implements PositionService {
                 rate,
                 workModes,
                 skills,
+                userCompany.getId(),
                 pageable
         );
 
