@@ -216,19 +216,6 @@ public class CustomPositionRepositoryImpl implements CustomPositionRepository {
         );
     }
 
-    private Predicate collectionPredicate(
-            CriteriaBuilder cb,
-            Root<Position> root,
-            Set<Long> values) {
-
-        if (values == null || values.isEmpty()) {
-            return cb.conjunction();
-        }
-
-        Join<Position, ?> join = root.join("workModes", JoinType.LEFT);
-        return join.get("id").in(values);
-    }
-
     private Predicate partnerOnlyPredicate(
             CriteriaBuilder cb,
             Join<Position, Project> projectJoin,
