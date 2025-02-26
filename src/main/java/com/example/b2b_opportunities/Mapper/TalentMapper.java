@@ -81,7 +81,6 @@ public class TalentMapper {
     private static PartialTalentResponseDto toPartialTalent(Talent talent){
         return PartialTalentResponseDto.builder()
                 .id(talent.getId())
-                .patternName(talent.getTalentExperience().getPattern().getName())
                 .patternId(talent.getTalentExperience().getPattern().getId())
                 .seniorityId(talent.getTalentExperience().getSeniority().getId())
                 .build();

@@ -13,7 +13,6 @@ import lombok.Setter;
 @NoArgsConstructor
 public class PartialTalentResponseDto {
     private Long id;
-    private String patternName;
     private Long seniorityId;
     private Long patternId;
 }
