@@ -176,7 +176,7 @@ public class CustomPositionRepositoryImpl implements CustomPositionRepository {
             predicates.add(skillJoin.get("id").in(skills));
         }
 
-        predicates.add(partnerOnlyPredicate(cb, projectJoin, companyId, isPartnerOnly));
+        predicates.add(partnerOnlyPredicate(cb, projectJoin, userCompanyId, isPartnerOnly));
 
         return cb.and(predicates.toArray(new Predicate[0]));
     }
@@ -219,7 +219,7 @@ public class CustomPositionRepositoryImpl implements CustomPositionRepository {
     private Predicate partnerOnlyPredicate(
             CriteriaBuilder cb,
             Join<Position, Project> projectJoin,
-            Long companyId,
+            Long userCompanyId,
             Boolean isPartnerOnly) {
 
         Join<Project, PartnerGroup> partnerGroupJoin = projectJoin.join("partnerGroupList", JoinType.LEFT);
@@ -231,12 +231,12 @@ public class CustomPositionRepositoryImpl implements CustomPositionRepository {
             Predicate nonPartner = cb.equal(projectJoin.get("isPartnerOnly"), false);
             Predicate partner = cb.and(
                     cb.equal(projectJoin.get("isPartnerOnly"), true),
-                    cb.equal(companyJoin.get("id"), companyId)
+                    cb.equal(companyJoin.get("id"), userCompanyId)
             );
             partnerPredicates.add(cb.or(nonPartner, partner));
         } else if (isPartnerOnly) {
             partnerPredicates.add(cb.equal(projectJoin.get("isPartnerOnly"), true));
-            partnerPredicates.add(cb.equal(companyJoin.get("id"), companyId));
+            partnerPredicates.add(cb.equal(companyJoin.get("id"), userCompanyId));
         } else {
             partnerPredicates.add(cb.equal(projectJoin.get("isPartnerOnly"), false));
         }
