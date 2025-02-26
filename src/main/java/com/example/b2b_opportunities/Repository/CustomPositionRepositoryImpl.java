@@ -13,6 +13,7 @@ import jakarta.persistence.Tuple;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Fetch;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
@@ -64,7 +65,8 @@ public class CustomPositionRepositoryImpl implements CustomPositionRepository {
         cq.multiselect(
                 root.alias("position"),
                 root.get("rate").get("min").alias("rateMin"),
-                root.get("rate").get("max").alias("rateMax")
+                root.get("rate").get("max").alias("rateMax"),
+                cb.coalesce(root.get("rate").get("max"), cb.literal(0)).alias("rateMaxWithZero")
         );
 
         if (pageable.getSort().isSorted()) {
@@ -95,8 +97,12 @@ public class CustomPositionRepositoryImpl implements CustomPositionRepository {
     private Stream<Order> createRateOrderStream(Root<?> root, Sort.Order order, CriteriaBuilder cb) {
         Path<Integer> rateMinPath = root.get("rate").get("min");
         Path<Integer> rateMaxPath = root.get("rate").get("max");
+
+        Expression<Integer> rateMaxWithZero = cb.coalesce(rateMaxPath, cb.literal(0));
+
         Order minOrder = order.isAscending() ? cb.asc(rateMinPath) : cb.desc(rateMinPath);
-        Order maxOrder = order.isAscending() ? cb.asc(rateMaxPath) : cb.desc(rateMaxPath);
+        Order maxOrder = order.isAscending() ? cb.asc(rateMaxWithZero) : cb.desc(rateMaxWithZero);
+
         return Stream.of(minOrder, maxOrder);
     }
 
