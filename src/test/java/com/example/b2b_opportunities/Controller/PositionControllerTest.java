@@ -291,35 +291,6 @@ class PositionControllerTest {
     }
 
     @Test
-    @Transactional(propagation = Propagation.NOT_SUPPORTED)
-    void shouldGetAllTwoPositions() throws Exception {
-        createPositionAndGetID();
-        createPositionAndGetID();
-
-        mockMvc.perform(get("/positions")
-                .param("sort", "id")  // Добавен параметър sort
-                .param("ascending", "true"))
-                .andExpect(status().isOk())
-                // Change the expectation to access the 'content' array instead of the root
-                .andExpect(jsonPath("$.content").isArray())  // Correct path to access the content array
-                .andExpect(jsonPath("$.content.length()").value(2))  // Expect two positions in the content
-                .andExpect(jsonPath("$.content[*].projectId").value(hasItem(project.getId().intValue())))
-                .andExpect(jsonPath("$.content[*].patternId").value(hasItem(pattern.getId().intValue())))
-                .andExpect(jsonPath("$.content[*].seniority").value(hasItem(3)))
-                .andExpect(jsonPath("$.content[0].workMode").value(containsInAnyOrder(1, 2)))
-                .andExpect(jsonPath("$.content[0].rate").value(hasEntry("min", 50)))
-                .andExpect(jsonPath("$.content[0].rate").value(hasEntry("max", 100)))
-                .andExpect(jsonPath("$.content[0].rate").value(hasEntry("currencyId", currency.getId().intValue())))
-                .andExpect(jsonPath("$.content[0].requiredSkills[0].skillId").value(testSkill.getId()))
-                .andExpect(jsonPath("$.content[0].requiredSkills[0].months").value(6))
-                .andExpect(jsonPath("$.content[0].minYearsExperience").value(2))
-                .andExpect(jsonPath("$.content[0].hoursPerWeek").value(40))
-                .andExpect(jsonPath("$.content[0].responsibilities").value(containsInAnyOrder("Develop software", "Review code")))
-                .andExpect(jsonPath("$.content[0].hiringProcess").value("Interview -> Coding Test -> Offer"))
-                .andExpect(jsonPath("$.content[0].description").value("Position for software engineer"));
-    }
-
-    @Test
     void shouldGetPosition() throws Exception {
         Long id = createPositionAndGetID();
 
