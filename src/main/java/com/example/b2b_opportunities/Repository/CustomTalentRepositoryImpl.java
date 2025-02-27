@@ -11,6 +11,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Order;
@@ -27,7 +28,6 @@ import org.springframework.stereotype.Repository;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
@@ -56,7 +56,6 @@ public class CustomTalentRepositoryImpl implements CustomTalentRepository {
 
         predicates.add(cb.isTrue(root.get("isActive")));
         predicates.add(cb.notEqual(root.get("company").get("id"), currentCompanyId));
-
         predicates.add(buildVisibilityPredicate(cb, companyJoin, currentCompanyId));
 
         if (workModes != null && !workModes.isEmpty()) {
@@ -83,7 +82,7 @@ public class CustomTalentRepositoryImpl implements CustomTalentRepository {
             ));
         }
 
-        cq.where(predicates.toArray(new Predicate[0])).distinct(true);
+        cq.where(predicates.toArray(new Predicate[0]));
 
         applySorting(cb, cq, root, pageable);
 
@@ -125,18 +124,30 @@ public class CustomTalentRepositoryImpl implements CustomTalentRepository {
                         for (String part : parts) {
                             path = path.get(part);
                         }
+
+                        if ("minRate".equals(order.getProperty())) {
+                            return order.isAscending() ? cb.asc(path) : cb.desc(path);
+                        } else if ("maxRate".equals(order.getProperty())) {
+                            // За maxRate използваме coalesce, за да третираме NULL като 0
+                            Expression<Integer> maxRateWithZero = cb.coalesce(root.get("maxRate"), cb.literal(0));
+                            return order.isAscending() ? cb.asc(maxRateWithZero) : cb.desc(maxRateWithZero);
+                        }
+
                         return order.isAscending() ? cb.asc(path) : cb.desc(path);
                     })
-                    .collect(Collectors.toList());
+                    .toList();
             cq.orderBy(orders);
         }
     }
+
 
     private Long getTotalCount(Long currentCompanyId, Set<Long> workModes, Set<Long> skills, Integer rate) {
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<Long> cq = cb.createQuery(Long.class);
         Root<Talent> root = cq.from(Talent.class);
         Join<Talent, Company> companyJoin = root.join("company");
+
+        cq.groupBy(root.get("id"));
 
         cq.select(cb.countDistinct(root));
 

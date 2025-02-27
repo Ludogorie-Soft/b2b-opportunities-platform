@@ -217,7 +217,7 @@ public class CompanyController {
                                                  @RequestParam(defaultValue = "0") int offset,
                                                  @RequestParam(defaultValue = "10") int pageSize,
                                                  @RequestParam String sort,
-                                                 @RequestParam(required = false) Boolean ascending,
+                                                 @RequestParam Boolean ascending,
                                                  @RequestParam(required = false) Integer rate,
                                                  @RequestParam(required = false) Set<Long> workModes,
                                                  @RequestParam(required = false) Set<Long> skills) {
