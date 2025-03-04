@@ -94,8 +94,8 @@ public class MailServiceImpl implements MailService {
                 + "<h3><br/> This is a friendly reminder regarding your project '" + project.getName() + "' will expire in <b>2 days</b>."
                 + "<br/>To ensure your project remains active and continues to be visible to potential clients, you can easily extend its duration."
                 + "<br/>To extend your project for an additional 3 weeks, please visit our website.</h3>" +
-                "<h3><br/> Best regards,\n" +
-                "The B2B Opportunities Team,<br/></h3>" +
+                "<h3><br/> Best regards,<br/>" +
+                "B2B Opportunities Team,<br/></h3>" +
                 "</body>" +
                 "</html>";
         String subject = "B2B Reminder: Your Project is Expiring in 2 Days – Reactivate Now!";
