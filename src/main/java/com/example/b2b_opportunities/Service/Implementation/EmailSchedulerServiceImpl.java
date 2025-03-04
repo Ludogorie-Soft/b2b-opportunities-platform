@@ -13,6 +13,7 @@ import com.example.b2b_opportunities.Service.Interface.EmailSchedulerService;
 import com.example.b2b_opportunities.Service.Interface.MailService;
 import com.example.b2b_opportunities.Service.Interface.PositionApplicationService;
 import com.example.b2b_opportunities.Static.ProjectStatus;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -33,6 +34,7 @@ public class EmailSchedulerServiceImpl implements EmailSchedulerService {
     private final MailService mailService;
     private final PositionApplicationService positionApplicationService;
 
+    @Transactional
     @Scheduled(cron = "${cron.everyMondayAt9}")
     @Override
     public void sendEmailEveryMonday() {
@@ -40,6 +42,7 @@ public class EmailSchedulerServiceImpl implements EmailSchedulerService {
         sendEmailToEveryCompany(projectsLastThreeDays);
     }
 
+    @Transactional
     @Scheduled(cron = "${cron.TuesdayToFridayAt9}")
     @Override
     public void sendEmailTuesdayToFriday() {
@@ -138,7 +141,7 @@ public class EmailSchedulerServiceImpl implements EmailSchedulerService {
                 }
             }
             if (skills.isEmpty()) {
-                return;
+                skills = c.getSkills();
             }
 
             Set<Project> matchingProjects = getMatchingProjects(skills, projectsToCheck);
@@ -237,14 +240,13 @@ public class EmailSchedulerServiceImpl implements EmailSchedulerService {
     }
 
     private Set<Project> getMatchingProjects(Set<Skill> skills, List<Project> projectsToCheck) {
-        Set<Project> matchingProjects = new HashSet<>();
-        for (Skill skill : skills) {
-            Project p = getProjectIfContainsSkill(skill, projectsToCheck);
-            if (p != null) {
-                matchingProjects.add(p);
-            }
-        }
-        return matchingProjects;
+        return projectsToCheck.stream()
+                .filter(project -> project.getPositions().stream()
+                        .anyMatch(position -> position.getRequiredSkills().stream()
+                                .anyMatch(reqSkill -> skills.contains(reqSkill.getSkill()))
+                                || position.getOptionalSkills().stream()
+                                .anyMatch(skills::contains)))
+                .collect(Collectors.toSet());
     }
 
     private Set<Skill> getAllEnabledCompanyFilterSkills(Company company) {
@@ -255,18 +257,6 @@ public class EmailSchedulerServiceImpl implements EmailSchedulerService {
             }
         }
         return skills;
-    }
-
-    private Project getProjectIfContainsSkill(Skill skill, List<Project> projectsToCheck) {
-        for (Project p : projectsToCheck) {
-            for (Position position : p.getPositions()) {
-                List<Skill> skills = position.getRequiredSkills().stream().map(RequiredSkill::getSkill).toList();
-                if (skills.contains(skill) || position.getOptionalSkills().contains(skill)) {
-                    return p;
-                }
-            }
-        }
-        return null;
     }
 
     private List<Project> getProjectsUpdatedInPastDays(int days) {
