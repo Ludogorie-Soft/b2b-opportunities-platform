@@ -1,6 +1,12 @@
 package com.example.b2b_opportunities.Service.Implementation;
 
-import com.example.b2b_opportunities.Entity.*;
+import com.example.b2b_opportunities.Entity.Company;
+import com.example.b2b_opportunities.Entity.Filter;
+import com.example.b2b_opportunities.Entity.Position;
+import com.example.b2b_opportunities.Entity.PositionApplication;
+import com.example.b2b_opportunities.Entity.Project;
+import com.example.b2b_opportunities.Entity.RequiredSkill;
+import com.example.b2b_opportunities.Entity.Skill;
 import com.example.b2b_opportunities.Repository.CompanyRepository;
 import com.example.b2b_opportunities.Repository.ProjectRepository;
 import com.example.b2b_opportunities.Service.Interface.EmailSchedulerService;
@@ -12,7 +18,11 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -96,17 +106,23 @@ public class EmailSchedulerServiceImpl implements EmailSchedulerService {
     }
 
     private String buildNewApplicationsEmailContent(Map<Position, Long> positionCountMap) {
-        StringBuilder emailContent = new StringBuilder("Hello,\n\n")
-                .append("You have received new job applications for your open positions:\n\n");
+        String companyName = positionCountMap.keySet().iterator().next().getProject().getCompany().getName();
+
+        StringBuilder emailContent = new StringBuilder("<html><body style=\"font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 16px; font-weight: normal;\">")
+                .append("<p><b>Dear ").append(companyName).append(",</b></p>")
+                .append("<p><b>Great news! You have received new job applications for your open positions:</b></p>");
 
         positionCountMap.forEach((position, count) ->
-                emailContent.append(position.getPattern().getName())
-                        .append(" : ").append(count)
-                        .append(" applications\n")
+                emailContent.append("<p><b>")
+                        .append(position.getPattern().getName())
+                        .append("</b>")
+                        .append(" - ").append(count)
+                        .append(" application(s)")
+                        .append("</p>")
         );
 
-        emailContent.append("\nYou can review the applications on your dashboard." +
-                "\n\nBest regards,\nB2B Opportunities");
+        emailContent.append("<p><b>You can review the applications on your dashboard.</b></p>")
+                .append("<p><b>Best regards,<br/>B2B Opportunities Team</b></p></body></html>");
         return emailContent.toString();
     }
 
