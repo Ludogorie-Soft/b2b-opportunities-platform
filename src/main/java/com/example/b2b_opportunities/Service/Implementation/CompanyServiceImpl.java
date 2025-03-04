@@ -131,6 +131,7 @@ public class CompanyServiceImpl implements CompanyService {
         validateEmail(companyRequestDto.getEmail());
         Company company = setCompanyFields(companyRequestDto);
         company.getUsers().add(currentUser);
+        company.setProjectIdsNotified(new HashSet<>());
         setCompanyEmailVerificationStatusAndSendEmail(company, currentUser, companyRequestDto, request);
 
         company = companyRepository.save(company);
