@@ -1,6 +1,7 @@
 package com.example.b2b_opportunities.Service.Interface;
 
 import com.example.b2b_opportunities.Dto.Request.PositionApplicationRequestDto;
+import com.example.b2b_opportunities.Dto.Response.CompanyApplicationResponseDto;
 import com.example.b2b_opportunities.Dto.Response.PositionApplicationResponseDto;
 import com.example.b2b_opportunities.Entity.PositionApplication;
 import org.springframework.security.core.Authentication;
@@ -30,4 +31,6 @@ public interface PositionApplicationService {
     PositionApplicationResponseDto updateApplication(Authentication authentication, MultipartFile file, Long applicationId, Long talentId);
 
     List<PositionApplication> getApplicationsSinceLastWorkday();
+
+    List<CompanyApplicationResponseDto> getMyApplicationsOverall(Authentication authentication);
 }

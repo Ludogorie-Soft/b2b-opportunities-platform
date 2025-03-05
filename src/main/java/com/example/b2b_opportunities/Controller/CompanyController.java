@@ -8,6 +8,7 @@ import com.example.b2b_opportunities.Dto.Request.PositionApplicationRequestDto;
 import com.example.b2b_opportunities.Dto.Request.TalentPublicityRequestDto;
 import com.example.b2b_opportunities.Dto.Request.TalentRequestDto;
 import com.example.b2b_opportunities.Dto.Response.CompaniesAndUsersResponseDto;
+import com.example.b2b_opportunities.Dto.Response.CompanyApplicationResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyFilterResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyPublicResponseDto;
 import com.example.b2b_opportunities.Dto.Response.CompanyResponseDto;
@@ -322,5 +323,11 @@ public class CompanyController {
     @ResponseStatus(HttpStatus.OK)
     public List<PositionApplicationResponseDto> getMyApplications(Authentication authentication) {
         return positionApplicationService.getMyApplications(authentication);
+    }
+
+    @GetMapping("/my-applications/overall")
+    @ResponseStatus(HttpStatus.OK)
+    public List<CompanyApplicationResponseDto> getMyApplicationsOverall(Authentication authentication){
+        return positionApplicationService.getMyApplicationsOverall(authentication);
     }
 }
