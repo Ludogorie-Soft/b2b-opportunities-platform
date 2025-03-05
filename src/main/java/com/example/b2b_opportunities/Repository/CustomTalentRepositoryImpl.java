@@ -147,9 +147,9 @@ public class CustomTalentRepositoryImpl implements CustomTalentRepository {
         Root<Talent> root = cq.from(Talent.class);
         Join<Talent, Company> companyJoin = root.join("company");
 
-        cq.groupBy(root.get("id"));
+//        cq.groupBy(root.get("id"));
 
-        cq.select(cb.countDistinct(root));
+        cq.select(cb.count(root.get("id")));
 
         List<Predicate> predicates = new ArrayList<>();
         predicates.add(cb.isTrue(root.get("isActive")));
