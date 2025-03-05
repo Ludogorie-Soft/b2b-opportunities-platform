@@ -1,6 +1,7 @@
 package com.example.b2b_opportunities.Service.Implementation;
 
 import com.example.b2b_opportunities.Dto.Request.PositionApplicationRequestDto;
+import com.example.b2b_opportunities.Dto.Response.CompanyApplicationResponseDto;
 import com.example.b2b_opportunities.Dto.Response.PositionApplicationResponseDto;
 import com.example.b2b_opportunities.Entity.Company;
 import com.example.b2b_opportunities.Entity.Position;
@@ -42,8 +43,11 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -263,6 +267,47 @@ public class PositionApplicationServiceImpl implements PositionApplicationServic
         LocalDateTime endDateTime = today.atStartOfDay();
 
         return positionApplicationRepository.findAllApplicationsBetween(startDateTime, endDateTime);
+    }
+
+    @Override
+    public List<CompanyApplicationResponseDto> getMyApplicationsOverall(Authentication authentication) {
+        User user = userService.getCurrentUserOrThrow(authentication);
+        Company userCompany = companyService.getUserCompanyOrThrow(user);
+        List<PositionApplication> myApplications = positionApplicationRepository
+                .findAllMyApplications(userCompany.getId());
+        return myApplications.stream()
+                .collect(Collectors.groupingBy(pa -> pa.getPosition().getId()))
+                .entrySet().stream()
+                .map(entry -> {
+                    Long positionId = entry.getKey();
+                    List<PositionApplication> apps = entry.getValue();
+
+                    Set<Long> applicationIds = apps.stream()
+                            .map(PositionApplication::getId)
+                            .collect(Collectors.toSet());
+
+                    ApplicationStatus overallStatus = calculateOverallStatus(apps);
+
+                    return new CompanyApplicationResponseDto(positionId, applicationIds, overallStatus);
+                })
+                .toList();
+    }
+
+    private static ApplicationStatus calculateOverallStatus(List<PositionApplication> applications) {
+        return applications.stream()
+                .map(PositionApplication::getApplicationStatus)
+                .filter(status -> status != ApplicationStatus.AWAITING_CV_OR_TALENT)
+                .min(Comparator.comparingInt(PositionApplicationServiceImpl::getPriority))
+                .orElse(ApplicationStatus.IN_PROGRESS);
+        }
+
+    private static int getPriority(ApplicationStatus status) {
+        return switch (status) {
+            case ACCEPTED -> 1;
+            case IN_PROGRESS -> 2;
+            case DENIED -> 3;
+            default -> Integer.MAX_VALUE;
+        };
     }
 
     private void checkPositionEligibility(Project project, Position position, Company userCompany) {
