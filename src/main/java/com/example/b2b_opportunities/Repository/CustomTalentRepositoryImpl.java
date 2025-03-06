@@ -149,7 +149,7 @@ public class CustomTalentRepositoryImpl implements CustomTalentRepository {
 
 //        cq.groupBy(root.get("id"));
 
-        cq.select(cb.count(root.get("id")));
+        cq.select(cb.countDistinct(root.get("id")));
 
         List<Predicate> predicates = new ArrayList<>();
         predicates.add(cb.isTrue(root.get("isActive")));
