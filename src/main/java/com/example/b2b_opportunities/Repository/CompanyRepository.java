@@ -32,7 +32,7 @@ public interface CompanyRepository extends JpaRepository<Company, Long> {
             "AND f.isEnabled = true " +
             "AND SIZE(c.skills) = 0 " +
             "GROUP BY c.id " +
-            "HAVING COUNT(c.filters) = 1")
+            "HAVING COUNT(f) = 1")
     List<Company> findCompaniesWithSingleDefaultEnabledFilterAndNoCompanySkills();
 
 }

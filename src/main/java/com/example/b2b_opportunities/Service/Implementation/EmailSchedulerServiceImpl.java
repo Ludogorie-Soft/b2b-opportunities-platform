@@ -5,7 +5,6 @@ import com.example.b2b_opportunities.Entity.Filter;
 import com.example.b2b_opportunities.Entity.Position;
 import com.example.b2b_opportunities.Entity.PositionApplication;
 import com.example.b2b_opportunities.Entity.Project;
-import com.example.b2b_opportunities.Entity.RequiredSkill;
 import com.example.b2b_opportunities.Entity.Skill;
 import com.example.b2b_opportunities.Repository.CompanyRepository;
 import com.example.b2b_opportunities.Repository.ProjectRepository;
@@ -57,20 +56,21 @@ public class EmailSchedulerServiceImpl implements EmailSchedulerService {
     @Scheduled(cron = "${cron.companiesNoSkillsAndNoCustomFilters}")
     @Override
     public void sendWeeklyEmailsWhenCompanyHasNoSkillsAndNoCustomFilters() {
-        List<Project> projectsLastWeek = getProjectsUpdatedInPastDays(7);
-        String title = "B2B Important: Set Your Company Skills to Receive Relevant Project Updates";
-        String emailContent = "Hello,\n\n" +
-                "We noticed that you haven’t set any skills for your company profile yet. " +
-                "This week alone, there were " + projectsLastWeek.size() + " new projects posted that may be relevant to you.\n\n" +
-                "To ensure you receive notifications tailored to your interests, please update your company profile by adding relevant skills. " +
-                "This way, you’ll only be notified about projects that align with your expertise.\n\n" +
-                "Alternatively, you can create custom filters to further refine the types of projects you receive notifications about.\n\n" +
-                "If you wish to stop receiving these updates altogether, simply disable the \"Default\" filter in your profile settings.\n\n" +
-                "Thank you for staying with us, and we look forward to helping you find the right opportunities!\n\n" +
-                "Best regards,\n B2B Opportunities";
-
         List<Company> companies = companyRepository.findCompaniesWithSingleDefaultEnabledFilterAndNoCompanySkills();
         for (Company c : companies) {
+
+            List<Project> projectsLastWeek = getProjectsUpdatedInPastDays(7);
+            String title = "B2B Important: Set Your Company Skills to Receive Relevant Project Updates";
+            String emailContent = "<html><body style=\"font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 16px; font-weight: normal;\">" + "<p><b>Hello, " + c.getName() + ",</b></p>" +
+                    "<p><b>We noticed your company profile has no skills listed yet.</b></p>" +
+                    "This week, <b>" + projectsLastWeek.size() + " new projects </b> were posted that might interest you.<br/><br/>" +
+                    "To receive more relevant notifications:<br/> " +
+                    "<ul> <li> Add skills to your profile </li> " +
+                    "<li>Create custom filters</li> " +
+                    "<li>Or disable the <strong>\"Default\"</strong> filter to stop these updates</li> </ul>" +
+                    "<br/>Thank you for staying with us, and we look forward to helping you find the right opportunities!<br/><br/>" +
+                    "<p><b>Best regards,<br/>B2B Opportunities Team</b></p></body></html>";
+
             mailService.sendEmail(c.getEmail(), emailContent, title);
         }
     }
