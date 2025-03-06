@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
@@ -34,19 +35,19 @@ public class EmailSchedulerServiceImpl implements EmailSchedulerService {
     private final PositionApplicationService positionApplicationService;
 
     @Transactional
-    @Scheduled(cron = "${cron.everyMondayAt9}")
+    @Scheduled(cron = "*/30 * * * * *")
     @Override
     public void sendEmailEveryMonday() {
         List<Project> projectsLastThreeDays = getProjectsUpdatedInPastDays(3);
-        sendEmailToEveryCompany(projectsLastThreeDays);
+        sendEmailToEveryCompany(projectsLastThreeDays, 3);
     }
 
     @Transactional
-    @Scheduled(cron = "${cron.TuesdayToFridayAt9}")
+    @Scheduled(cron = "*/30 * * * * *")
     @Override
     public void sendEmailTuesdayToFriday() {
         List<Project> projectsLastOneDay = getProjectsUpdatedInPastDays(1);
-        sendEmailToEveryCompany(projectsLastOneDay);
+        sendEmailToEveryCompany(projectsLastOneDay, 1);
     }
 
     /**
@@ -129,7 +130,7 @@ public class EmailSchedulerServiceImpl implements EmailSchedulerService {
         return emailContent.toString();
     }
 
-    private void sendEmailToEveryCompany(List<Project> projectsToCheck) {
+    private void sendEmailToEveryCompany(List<Project> projectsToCheck, int daysPassed) {
         List<Company> companies = companyRepository.findAll();
 
         for (Company c : companies) {
@@ -147,7 +148,7 @@ public class EmailSchedulerServiceImpl implements EmailSchedulerService {
             Set<Project> matchingProjects = getMatchingProjects(skills, projectsToCheck);
             Set<Project> availableNewProjectsThatMatchAtLeastOneSkill = removeCurrentCompanyProjects(matchingProjects, c);
 
-            processNewAndModifiedProjects(availableNewProjectsThatMatchAtLeastOneSkill, c);
+            processNewAndModifiedProjects(availableNewProjectsThatMatchAtLeastOneSkill, c, daysPassed);
         }
     }
 
@@ -158,32 +159,46 @@ public class EmailSchedulerServiceImpl implements EmailSchedulerService {
                 .orElse(null);
     }
 
-    private void processNewAndModifiedProjects(Set<Project> projects, Company c) {
-        boolean hasChanged = false;
-        Set<Project> newProjects = new HashSet<>();
-        Set<Project> modifiedProjects = new HashSet<>();
+    private void processNewAndModifiedProjects(Set<Project> projects, Company c, int daysPassed) {
+        Set<Project> newProjects = getModifiedOrNewProjects(daysPassed, "new", projects);
+        Set<Project> modifiedProjects = getModifiedOrNewProjects(daysPassed, "modified", projects);
 
-        for (Project p : projects) {
-            if (!c.getProjectIdsNotified().contains(p.getId())) {
-                newProjects.add(p);
-                c.getProjectIdsNotified().add(p.getId());
-                hasChanged = true;
-            } else {
-                modifiedProjects.add(p);
-            }
-        }
-        if (hasChanged) {
+        Set<Long> newProjectIds = projects.stream()
+                .map(Project::getId)
+                .filter(id -> !c.getProjectIdsNotified().contains(id))
+                .collect(Collectors.toSet());
+
+        if (!newProjectIds.isEmpty()) {
+            c.getProjectIdsNotified().addAll(newProjectIds);
             companyRepository.save(c);
         }
+
+        modifiedProjects.removeAll(newProjects);
 
         sendEmailIfAnyNewOrModifiedProjects(newProjects, modifiedProjects, c);
     }
 
-    private void sendEmailIfAnyNewOrModifiedProjects(Set<Project> newProjects, Set<Project> modifiedProjects, Company c) {
+    private Set<Project> getModifiedOrNewProjects(int daysPassed, String status, Set<Project> projects) {
+        LocalDate startDate = LocalDate.now().minusDays(daysPassed);
+        LocalDate endDate = LocalDate.now();
+
+        return projects.stream()
+                .filter(p -> "new".equalsIgnoreCase(status)
+                        ? isWithinRange(p.getDatePosted().toLocalDate(), startDate, endDate)
+                        : isWithinRange(p.getDateUpdated().toLocalDate(), startDate, endDate))
+                .collect(Collectors.toSet());
+    }
+
+    private boolean isWithinRange(LocalDate date, LocalDate start, LocalDate end) {
+        return (date.isEqual(start) || date.isAfter(start)) && (date.isBefore(end) || date.isEqual(end));
+    }
+
+    private void sendEmailIfAnyNewOrModifiedProjects
+            (Set<Project> newProjects, Set<Project> modifiedProjects, Company c) {
         if (!newProjects.isEmpty() || !modifiedProjects.isEmpty()) {
-            String emailContent = generateEmailContent(newProjects, modifiedProjects);
+            String emailContent = generateEmailContent(c.getName(), newProjects, modifiedProjects);
             String receiver = c.getEmail();
-            String title = "B2B Don't miss on new projects";
+            String title = "B2B - Don't miss on new projects";
             mailService.sendEmail(receiver, emailContent, title);
         }
     }
@@ -207,35 +222,49 @@ public class EmailSchedulerServiceImpl implements EmailSchedulerService {
     }
 
 
-    private String generateEmailContent(Set<Project> newProjects, Set<Project> modifiedProjects) {
+    private String generateEmailContent(String
+                                                companyName, Set<Project> newProjects, Set<Project> modifiedProjects) {
         StringBuilder result = new StringBuilder();
-        result.append("Hello,\n\n");
+        result.append("<html><body style=\"font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 16px; font-weight: normal;\">");
+        result.append("<p><b>Hello, ").append(companyName).append(", </b></p>");
 
         if (!newProjects.isEmpty()) {
-            result.append("There are new projects available for you that match some of your skills:\n");
-
-            for (Project project : newProjects) {
-                result.append("Project ID: ").append(project.getId()).append("\n");
-                // TODO - return front end address to the projects
-            }
-
-            result.append("\n");
+            result.append("<p> There are new projects available for you that match some of your skills: <br/>");
+            result.append(getProjectLinks(newProjects));
         }
 
         if (!modifiedProjects.isEmpty()) {
             if (!newProjects.isEmpty()) {
-                result.append("You might also want to checkout some of the projects that got modified recently:\n");
+                result.append("<p>You might also want to checkout some of the projects that got modified recently:<br/></p>");
             } else {
-                result.append("There are some projects that got modified recently:\n");
+                result.append("<p>There are some projects that got modified recently:<br/></p>");
             }
-
-            for (Project project : modifiedProjects) {
-                result.append("Modified Project ID: ").append(project.getId()).append("\n");
-            }
+            result.append(getProjectLinks(modifiedProjects));
         }
 
-        result.append("\nThank you for your attention!");
+        result.append("<p>Thank you for your attention!</p>")
+                .append("<p><b>Best regards,<br/>B2B Opportunities Team</b></p></body></html>");
 
+        return result.toString();
+    }
+
+    private String getProjectLinks(Set<Project> projects) {
+        StringBuilder result = new StringBuilder();
+        result.append("<ul>");
+        for (Project project : projects) {
+            Long companyId = project.getCompany().getId();
+            Long projectId = project.getId();
+
+            result.append("<li><a href=\"https://b2bapp.algorithmity.com/")
+                    .append(companyId)
+                    .append("/project/")
+                    .append(projectId)
+                    .append("\">")
+                    .append(project.getName())
+                    .append("</a>")
+                    .append("<br/></li>");
+        }
+        result.append("</ul><br/>");
         return result.toString();
     }
 
