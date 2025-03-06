@@ -16,6 +16,7 @@ import java.util.Set;
 @NoArgsConstructor
 public class CompanyApplicationResponseDto {
     private Long positionId;
+    private Long companyId;
     private Set<Long> applicationIds;
     private ApplicationStatus overallStatus;
 }

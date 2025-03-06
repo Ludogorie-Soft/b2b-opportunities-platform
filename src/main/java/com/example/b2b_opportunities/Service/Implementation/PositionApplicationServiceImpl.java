@@ -288,7 +288,12 @@ public class PositionApplicationServiceImpl implements PositionApplicationServic
 
                     ApplicationStatus overallStatus = calculateOverallStatus(apps);
 
-                    return new CompanyApplicationResponseDto(positionId, applicationIds, overallStatus);
+                    Long companyId = apps.stream()
+                            .findFirst()
+                            .map(pa -> pa.getPosition().getProject().getCompany().getId())
+                            .orElse(null);
+
+                    return new CompanyApplicationResponseDto(positionId, companyId, applicationIds, overallStatus);
                 })
                 .toList();
     }
