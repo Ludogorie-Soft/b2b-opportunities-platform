@@ -69,6 +69,12 @@ public class CompanyController {
         return companyService.getCompany(id);
     }
 
+    @GetMapping("/{id}/public")
+    @ResponseStatus(HttpStatus.OK)
+    public CompanyPublicResponseDto getPublicCompanyInfoById(@PathVariable("id") Long id){
+        return companyService.getPublicCompanyInfoById(id);
+    }
+
     @GetMapping("/positions/partial")
     @ResponseStatus(HttpStatus.OK)
     public List<PartialPositionResponseDto> getMyPositionsPartial(Authentication authentication){

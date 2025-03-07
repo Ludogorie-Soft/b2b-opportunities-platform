@@ -104,4 +104,6 @@ public interface CompanyService {
     List<PartialTalentResponseDto> getMyTalentsPartial(Authentication authentication);
 
     List<PartialPositionResponseDto> getMyPositionsPartial(Authentication authentication);
+
+    CompanyPublicResponseDto getPublicCompanyInfoById(Long id);
 }

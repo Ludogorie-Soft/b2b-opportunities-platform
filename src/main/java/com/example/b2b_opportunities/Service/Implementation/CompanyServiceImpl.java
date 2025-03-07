@@ -591,6 +591,13 @@ public class CompanyServiceImpl implements CompanyService {
         return positions.stream().map(PositionMapper::toPartialPositionResponseDto).toList();
     }
 
+    @Override
+    public CompanyPublicResponseDto getPublicCompanyInfoById(Long id) {
+        CompanyPublicResponseDto responseDto = CompanyMapper.toCompanyPublicResponseDto(getCompanyOrThrow(id));
+        responseDto.setImage(imageService.returnUrlIfPictureExists(id, "image"));
+        return responseDto;
+    }
+
     private void setTalentRates(Talent talent, TalentRequestDto talentRequestDto) {
         Integer min = talentRequestDto.getMinRate();
         Integer max = talentRequestDto.getMaxRate();
