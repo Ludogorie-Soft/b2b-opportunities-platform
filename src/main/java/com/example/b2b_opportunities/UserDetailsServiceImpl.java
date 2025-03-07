@@ -18,14 +18,8 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String usernameOrEmail) throws BadCredentialsException {
-        Optional<User> optionalUser = userRepository.findByEmail(usernameOrEmail);
-        if (optionalUser.isPresent()) {
-            return new UserDetailsImpl(optionalUser.get());
-        }
-        optionalUser = userRepository.findByUsername(usernameOrEmail);
-        if (optionalUser.isPresent()) {
-            return new UserDetailsImpl(optionalUser.get());
-        }
-        throw new BadCredentialsException("Invalid credentials");
+        return userRepository.findByEmailOrUsername(usernameOrEmail, usernameOrEmail)
+                .map(UserDetailsImpl::new)
+                .orElseThrow(() -> new BadCredentialsException("Invalid credentials"));
     }
 }
