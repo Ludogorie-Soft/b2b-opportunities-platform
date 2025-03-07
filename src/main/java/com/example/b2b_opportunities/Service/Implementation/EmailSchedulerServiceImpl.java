@@ -35,7 +35,7 @@ public class EmailSchedulerServiceImpl implements EmailSchedulerService {
     private final PositionApplicationService positionApplicationService;
 
     @Transactional
-    @Scheduled(cron = "*/30 * * * * *")
+    @Scheduled(cron = "${cron.everyMondayAt9}")
     @Override
     public void sendEmailEveryMonday() {
         List<Project> projectsLastThreeDays = getProjectsUpdatedInPastDays(3);
@@ -43,7 +43,7 @@ public class EmailSchedulerServiceImpl implements EmailSchedulerService {
     }
 
     @Transactional
-    @Scheduled(cron = "*/30 * * * * *")
+    @Scheduled(cron = "${cron.TuesdayToFridayAt9}")
     @Override
     public void sendEmailTuesdayToFriday() {
         List<Project> projectsLastOneDay = getProjectsUpdatedInPastDays(1);
