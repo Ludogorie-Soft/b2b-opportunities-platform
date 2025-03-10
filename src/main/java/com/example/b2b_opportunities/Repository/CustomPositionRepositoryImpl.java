@@ -225,23 +225,19 @@ public class CustomPositionRepositoryImpl implements CustomPositionRepository {
         Join<Project, PartnerGroup> partnerGroupJoin = projectJoin.join("partnerGroupList", JoinType.LEFT);
         Join<PartnerGroup, Company> companyJoin = partnerGroupJoin.join("partners", JoinType.LEFT);
 
-        List<Predicate> partnerPredicates = new ArrayList<>();
-
-        if (isPartnerOnly == null) {
+        if (Boolean.TRUE.equals(isPartnerOnly)) {
+            return cb.and(
+                    cb.equal(projectJoin.get("isPartnerOnly"), true),
+                    cb.equal(companyJoin.get("id"), userCompanyId)
+            );
+        } else {
             Predicate nonPartner = cb.equal(projectJoin.get("isPartnerOnly"), false);
             Predicate partner = cb.and(
                     cb.equal(projectJoin.get("isPartnerOnly"), true),
                     cb.equal(companyJoin.get("id"), userCompanyId)
             );
-            partnerPredicates.add(cb.or(nonPartner, partner));
-        } else if (isPartnerOnly) {
-            partnerPredicates.add(cb.equal(projectJoin.get("isPartnerOnly"), true));
-            partnerPredicates.add(cb.equal(companyJoin.get("id"), userCompanyId));
-        } else {
-            partnerPredicates.add(cb.equal(projectJoin.get("isPartnerOnly"), false));
+            return cb.or(nonPartner, partner);
         }
-
-        return cb.and(partnerPredicates.toArray(new Predicate[0]));
     }
 
     private Long getTotalCount(
