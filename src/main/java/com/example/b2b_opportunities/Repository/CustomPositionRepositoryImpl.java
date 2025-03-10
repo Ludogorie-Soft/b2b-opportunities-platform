@@ -178,6 +178,8 @@ public class CustomPositionRepositoryImpl implements CustomPositionRepository {
 
         predicates.add(partnerOnlyPredicate(cb, projectJoin, userCompanyId, isPartnerOnly));
 
+        predicates.add(cb.isTrue(projectJoin.get("company").get("isApproved")));
+
         return cb.and(predicates.toArray(new Predicate[0]));
     }
 
