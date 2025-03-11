@@ -48,7 +48,12 @@ public interface CompanyService {
 
     void deleteCompanyImage(Authentication authentication);
 
-    Set<ProjectResponseDto> getCompanyProjects(Authentication authentication, Long companyId);
+    Page<ProjectResponseDto> getCompanyProjects(Authentication authentication,
+                                               Long companyId,
+                                               int offset,
+                                               int pageSize,
+                                               String sort,
+                                               boolean ascending);
 
     List<CompanyFilterResponseDto> getCompanyFilters(Authentication authentication);
 

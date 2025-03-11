@@ -83,8 +83,15 @@ public class CompanyController {
 
     @GetMapping("{id}/projects")
     @ResponseStatus(HttpStatus.OK)
-    public Set<ProjectResponseDto> getCompanyProjects(Authentication authentication, @PathVariable("id") Long id) {
-        return companyService.getCompanyProjects(authentication, id);
+    public Page<ProjectResponseDto> getCompanyProjects(
+            Authentication authentication,
+            @PathVariable("id") Long id,
+            @RequestParam(defaultValue = "0") int offset,
+            @RequestParam(defaultValue = "10") int pageSize,
+            @RequestParam String sort,
+            @RequestParam boolean ascending) {
+
+        return companyService.getCompanyProjects(authentication, id, offset, pageSize, sort, ascending);
     }
 
     @PostMapping

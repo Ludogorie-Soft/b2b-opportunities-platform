@@ -217,29 +217,33 @@ public class CompanyServiceImpl implements CompanyService {
     }
 
     @Override
-    public Set<ProjectResponseDto> getCompanyProjects(Authentication authentication, Long companyId) {
+    public Page<ProjectResponseDto> getCompanyProjects(Authentication authentication,
+                                                       Long companyId,
+                                                       int offset,
+                                                       int pageSize,
+                                                       String sort,
+                                                       boolean ascending) {
         Company company = getCompanyOrThrow(companyId);
         Company userCompany = getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
+
+        Pageable pageable = PageRequest.of(offset, pageSize, Sort.by(ascending ? Sort.Direction.ASC : Sort.Direction.DESC, sort));
+
+        Page<Project> projectPage;
         if (userCompany.getId().equals(companyId)) {
-            //if logged user is checking his projects - return all of them
-            return ProjectMapper.toDtoSet(new HashSet<>(company.getProjects()));
+            projectPage = projectRepository.findByCompanyId(companyId, pageable);
+        } else {
+            if (!company.isApproved()) {
+                return Page.empty();
+            }
+            projectPage = projectRepository.findCompanyProjectsByFilters(
+                    companyId,
+                    userCompany.getId(),
+                    false,
+                    pageable
+            );
         }
-        if (!company.isApproved()) {
-            return new HashSet<>();
-        }
-        //show public active projects
-        List<Project> activeAndNonPartnerOnlyProjects = projectRepository
-                .findActiveNonPartnerOnlyProjectsByCompanyId(ProjectStatus.ACTIVE, companyId);
 
-        //show partner only active projects
-        List<Project> activePartnerOnlyVisibleToCurrentUserCompanyProjects = projectRepository.
-                findActivePartnerOnlyProjectsSharedWithCompany(ProjectStatus.ACTIVE, company.getId(), userCompany.getId());
-
-        Set<Project> projectSet = new HashSet<>();
-        projectSet.addAll(activeAndNonPartnerOnlyProjects);
-        projectSet.addAll(activePartnerOnlyVisibleToCurrentUserCompanyProjects);
-
-        return ProjectMapper.toDtoSet(projectSet);
+        return projectPage.map(ProjectMapper::toDto);
     }
 
     @Override

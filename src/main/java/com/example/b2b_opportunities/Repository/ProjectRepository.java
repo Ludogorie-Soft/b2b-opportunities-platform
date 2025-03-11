@@ -12,7 +12,7 @@ import java.util.List;
 
 import java.time.LocalDateTime;
 
-public interface ProjectRepository extends JpaRepository<Project, Long> {
+public interface ProjectRepository extends JpaRepository<Project, Long>, CustomProjectRepository {
     @Query("SELECT p FROM Project p WHERE p.projectStatus = :status AND p.isPartnerOnly = false AND p.company.id = :companyId")
     List<Project> findActiveNonPartnerOnlyProjectsByCompanyId(
             @Param("status") ProjectStatus status,
@@ -56,4 +56,7 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
             "AND p.company.isApproved = true")
     List<Project> findPartnerOnlyProjectsByCompanyInPartnerGroupsAndStatus(@Param("companyId") Long companyId,
                                                                            @Param("projectStatus") ProjectStatus projectStatus);
+
+    @Query("select p from Project p where p.company.id = :companyId")
+    Page<Project> findByCompanyId(Long companyId, Pageable pageable);
 }
