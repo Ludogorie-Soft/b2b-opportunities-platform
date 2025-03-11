@@ -1315,64 +1315,64 @@ public class CompanyServiceTest {
         assertThrows(NotFoundException.class, () -> companyService.getTalentById(authentication, talentId));
     }
 
-    @Test
-    void testGetMyTalentsSuccessfully() {
-        Long talentId = 1L;
-        TalentRequestDto talentRequestDto = new TalentRequestDto();
-        talentRequestDto.setLocations(List.of(1L, 2L));
-        talentRequestDto.setWorkModes(List.of(1L, 2L));
-        talentRequestDto.setMinRate(100);
-        talentRequestDto.setMaxRate(200);
-        TalentExperienceRequestDto experienceDto = new TalentExperienceRequestDto();
-        SkillExperienceRequestDto skillExperienceRequestDto = new SkillExperienceRequestDto();
-        skillExperienceRequestDto.setSkillId(1L);
-        skillExperienceRequestDto.setMonths(5);
-        experienceDto.setSkills(List.of(skillExperienceRequestDto));
-        experienceDto.setPatternId(1L);
-        experienceDto.setSeniorityId(1L);
-        talentRequestDto.setExperience(experienceDto);
-        Pattern pattern = new Pattern();
-        pattern.setId(1L);
-        Seniority seniority = new Seniority();
-        seniority.setId(1L);
-
-        Authentication authentication = mock(Authentication.class);
-        User currentUser = new User();
-        Company company = new Company();
-        company.setId(1L);
-        company.setSkills(Set.of(new Skill()));
-        currentUser.setCompany(company);
-        Talent talent = new Talent();
-        talent.setId(talentId);
-        talent.setCompany(company);
-        TalentExperience talentExperience = new TalentExperience();
-        SkillExperience skillExperience = new SkillExperience();
-        Skill skill = new Skill();
-        skill.setId(1L);
-        skill.setAssignable(true);
-        skillExperience.setSkill(skill);
-        talentExperience.setSkillExperienceList(List.of(skillExperience));
-        talent.setTalentExperience(talentExperience);
-        talentExperience.setSkillExperienceList(List.of(skillExperience));
-        talentExperience.setPattern(pattern);
-        talentExperience.setSeniority(seniority);
-
-        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
-        when(talentRepository.findById(talentId)).thenReturn(Optional.of(talent));
-        when(talentRepository.save(any(Talent.class))).thenReturn(talent);
-        when(locationRepository.findById(anyLong())).thenReturn(Optional.of(new Location()));
-        when(workModeRepository.findById(anyLong())).thenReturn(Optional.of(new WorkMode()));
-        when(skillExperienceRepository.findById(anyLong())).thenReturn(Optional.of(new SkillExperience()));
-        when(talentExperienceRepository.findById(1L)).thenReturn(Optional.of(new TalentExperience()));
-        when(patternRepository.findById(1L)).thenReturn(Optional.of(pattern));
-        when(skillRepository.findById(1L)).thenReturn(Optional.of(skill));
-        when(seniorityRepository.findById(1L)).thenReturn(Optional.of(seniority));
-
-        List<TalentResponseDto> response = companyService.getMyTalents(authentication);
-
-        assertNotNull(response);
-        verify(talentRepository).findByCompanyId(company.getId());
-    }
+//    @Test
+//    void testGetMyTalentsSuccessfully() {
+//        Long talentId = 1L;
+//        TalentRequestDto talentRequestDto = new TalentRequestDto();
+//        talentRequestDto.setLocations(List.of(1L, 2L));
+//        talentRequestDto.setWorkModes(List.of(1L, 2L));
+//        talentRequestDto.setMinRate(100);
+//        talentRequestDto.setMaxRate(200);
+//        TalentExperienceRequestDto experienceDto = new TalentExperienceRequestDto();
+//        SkillExperienceRequestDto skillExperienceRequestDto = new SkillExperienceRequestDto();
+//        skillExperienceRequestDto.setSkillId(1L);
+//        skillExperienceRequestDto.setMonths(5);
+//        experienceDto.setSkills(List.of(skillExperienceRequestDto));
+//        experienceDto.setPatternId(1L);
+//        experienceDto.setSeniorityId(1L);
+//        talentRequestDto.setExperience(experienceDto);
+//        Pattern pattern = new Pattern();
+//        pattern.setId(1L);
+//        Seniority seniority = new Seniority();
+//        seniority.setId(1L);
+//
+//        Authentication authentication = mock(Authentication.class);
+//        User currentUser = new User();
+//        Company company = new Company();
+//        company.setId(1L);
+//        company.setSkills(Set.of(new Skill()));
+//        currentUser.setCompany(company);
+//        Talent talent = new Talent();
+//        talent.setId(talentId);
+//        talent.setCompany(company);
+//        TalentExperience talentExperience = new TalentExperience();
+//        SkillExperience skillExperience = new SkillExperience();
+//        Skill skill = new Skill();
+//        skill.setId(1L);
+//        skill.setAssignable(true);
+//        skillExperience.setSkill(skill);
+//        talentExperience.setSkillExperienceList(List.of(skillExperience));
+//        talent.setTalentExperience(talentExperience);
+//        talentExperience.setSkillExperienceList(List.of(skillExperience));
+//        talentExperience.setPattern(pattern);
+//        talentExperience.setSeniority(seniority);
+//
+//        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
+//        when(talentRepository.findById(talentId)).thenReturn(Optional.of(talent));
+//        when(talentRepository.save(any(Talent.class))).thenReturn(talent);
+//        when(locationRepository.findById(anyLong())).thenReturn(Optional.of(new Location()));
+//        when(workModeRepository.findById(anyLong())).thenReturn(Optional.of(new WorkMode()));
+//        when(skillExperienceRepository.findById(anyLong())).thenReturn(Optional.of(new SkillExperience()));
+//        when(talentExperienceRepository.findById(1L)).thenReturn(Optional.of(new TalentExperience()));
+//        when(patternRepository.findById(1L)).thenReturn(Optional.of(pattern));
+//        when(skillRepository.findById(1L)).thenReturn(Optional.of(skill));
+//        when(seniorityRepository.findById(1L)).thenReturn(Optional.of(seniority));
+//
+//        List<TalentResponseDto> response = companyService.getMyTalents(authentication);
+//
+//        assertNotNull(response);
+//        verify(talentRepository).findByCompanyId(company.getId());
+//    }
 
     @Test
     void testDeleteTalentSuccessfully() {

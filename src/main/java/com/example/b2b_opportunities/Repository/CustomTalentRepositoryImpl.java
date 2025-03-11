@@ -41,7 +41,8 @@ public class CustomTalentRepositoryImpl implements CustomTalentRepository {
             Set<Long> workModes,
             Set<Long> skills,
             Integer rate,
-            Pageable pageable) {
+            Pageable pageable,
+            boolean onlyMyCompany) {
 
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<Talent> cq = cb.createQuery(Talent.class);
@@ -55,8 +56,13 @@ public class CustomTalentRepositoryImpl implements CustomTalentRepository {
         List<Predicate> predicates = new ArrayList<>();
 
         predicates.add(cb.isTrue(root.get("isActive")));
-        predicates.add(cb.notEqual(root.get("company").get("id"), currentCompanyId));
-        predicates.add(buildVisibilityPredicate(cb, companyJoin, currentCompanyId));
+
+        if (onlyMyCompany) {
+            predicates.add(cb.equal(root.get("company").get("id"), currentCompanyId));
+        } else {
+            predicates.add(cb.notEqual(root.get("company").get("id"), currentCompanyId));
+            predicates.add(buildVisibilityPredicate(cb, companyJoin, currentCompanyId));
+        }
 
         if (workModes != null && !workModes.isEmpty()) {
             Join<Talent, WorkMode> workModeJoin = root.join("workModes");
@@ -90,7 +96,7 @@ public class CustomTalentRepositoryImpl implements CustomTalentRepository {
         query.setFirstResult((int) pageable.getOffset());
         query.setMaxResults(pageable.getPageSize());
 
-        Long total = getTotalCount(currentCompanyId, workModes, skills, rate);
+        Long total = getTotalCount(currentCompanyId, workModes, skills, rate, onlyMyCompany);
 
         return new PageImpl<>(query.getResultList(), pageable, total);
     }
@@ -141,7 +147,7 @@ public class CustomTalentRepositoryImpl implements CustomTalentRepository {
     }
 
 
-    private Long getTotalCount(Long currentCompanyId, Set<Long> workModes, Set<Long> skills, Integer rate) {
+    private Long getTotalCount(Long currentCompanyId, Set<Long> workModes, Set<Long> skills, Integer rate, boolean onlyMyCompany) {
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<Long> cq = cb.createQuery(Long.class);
         Root<Talent> root = cq.from(Talent.class);
@@ -153,8 +159,13 @@ public class CustomTalentRepositoryImpl implements CustomTalentRepository {
 
         List<Predicate> predicates = new ArrayList<>();
         predicates.add(cb.isTrue(root.get("isActive")));
-        predicates.add(cb.notEqual(root.get("company").get("id"), currentCompanyId));
-        predicates.add(buildVisibilityPredicate(cb, companyJoin, currentCompanyId));
+
+        if (onlyMyCompany) {
+            predicates.add(cb.equal(root.get("company").get("id"), currentCompanyId));
+        } else {
+            predicates.add(cb.notEqual(root.get("company").get("id"), currentCompanyId));
+            predicates.add(buildVisibilityPredicate(cb, companyJoin, currentCompanyId));
+        }
 
         if (workModes != null && !workModes.isEmpty()) {
             Join<Talent, WorkMode> workModeJoin = root.join("workModes");

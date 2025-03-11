@@ -12,5 +12,6 @@ public interface  CustomTalentRepository {
             Set<Long> workModes,
             Set<Long> skills,
             Integer rate,
-            Pageable pageable);
+            Pageable pageable,
+            boolean onlyMyCompany);
 }

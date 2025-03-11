@@ -87,7 +87,7 @@ public interface CompanyService {
 
     TalentResponseDto getTalentById(Authentication authentication, Long talentId);
 
-    List<TalentResponseDto> getMyTalents(Authentication authentication);
+    Page<TalentResponseDto> getMyTalents(Authentication authentication, int offset, int pageSize, String sort, Boolean ascending);
 
     void deleteTalent(Authentication authentication, Long id);
 
