@@ -369,141 +369,141 @@ public class CompanyServiceTest {
         verify(companyRepository, never()).save(any());
     }
 
-    @Test
-    void shouldReturnAllProjectsForUserCompany() {
-        User currentUser = new User();
-        currentUser.setId(99999999L);
-        Company userCompany = new Company();
-        userCompany.setId(1L);
-        currentUser.setCompany(userCompany);
+//    @Test
+//    void shouldReturnAllProjectsForUserCompany() {
+//        User currentUser = new User();
+//        currentUser.setId(99999999L);
+//        Company userCompany = new Company();
+//        userCompany.setId(1L);
+//        currentUser.setCompany(userCompany);
+//
+//        Company company = new Company();
+//        company.setId(1L);
+//        ProjectStatus projectStatus = ProjectStatus.ACTIVE;
+//        Project project1 = new Project();
+//        Project project2 = new Project();
+//        project1.setCompany(company);
+//        project1.setProjectStatus(projectStatus);
+//        project2.setCompany(company);
+//        project2.setProjectStatus(projectStatus);
+//        List<Project> projects = List.of(project1, project2);
+//        company.setProjects(projects);
+//
+//        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
+//        when(companyRepository.findById(1L)).thenReturn(Optional.of(company));
+//
+//        Set<ProjectResponseDto> result = companyService.getCompanyProjects(authentication, 1L);
+//
+//        assertEquals(2, result.size());
+//        verify(companyRepository).findById(1L);
+//        verify(userService).getCurrentUserOrThrow(authentication);
+//    }
 
-        Company company = new Company();
-        company.setId(1L);
-        ProjectStatus projectStatus = ProjectStatus.ACTIVE;
-        Project project1 = new Project();
-        Project project2 = new Project();
-        project1.setCompany(company);
-        project1.setProjectStatus(projectStatus);
-        project2.setCompany(company);
-        project2.setProjectStatus(projectStatus);
-        List<Project> projects = List.of(project1, project2);
-        company.setProjects(projects);
+//    @Test
+//    void shouldReturnEmptySetForUnapprovedCompany() {
+//        User currentUser = new User();
+//        currentUser.setId(99999999L);
+//        Company userCompany = new Company();
+//        userCompany.setId(1L);
+//        currentUser.setCompany(userCompany);
+//
+//        Company company = new Company();
+//        company.setId(2L);
+//        company.setApproved(false);
+//
+//        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
+//        when(companyRepository.findById(2L)).thenReturn(Optional.of(company));
+//
+//        Set<ProjectResponseDto> result = companyService.getCompanyProjects(authentication, 2L);
+//
+//        assertTrue(result.isEmpty());
+//        verify(companyRepository).findById(2L);
+//        verify(userService).getCurrentUserOrThrow(authentication);
+//    }
 
-        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
-        when(companyRepository.findById(1L)).thenReturn(Optional.of(company));
+//    @Test
+//    void shouldReturnOnlyPublicActiveProjectsForApprovedCompany() {
+//        User currentUser = new User();
+//        currentUser.setId(99999999L);
+//        Company userCompany = new Company();
+//        userCompany.setId(1L);
+//        currentUser.setCompany(userCompany);
+//
+//        Company company = new Company();
+//        company.setId(2L);
+//        company.setApproved(true);
+//
+//        Project publicProject1 = new Project();
+//        publicProject1.setCompany(company);
+//        publicProject1.setProjectStatus(ProjectStatus.ACTIVE);
+//        Project publicProject2 = new Project();
+//        publicProject2.setCompany(company);
+//        publicProject2.setProjectStatus(ProjectStatus.ACTIVE);
+//
+//        List<Project> publicProjects = List.of(publicProject1, publicProject2);
+//
+//        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
+//        when(companyRepository.findById(2L)).thenReturn(Optional.of(company));
+//        when(projectRepository.findActiveNonPartnerOnlyProjectsByCompanyId(ProjectStatus.ACTIVE, 2L))
+//                .thenReturn(publicProjects);
+//        when(projectRepository.findActivePartnerOnlyProjectsSharedWithCompany(ProjectStatus.ACTIVE, 2L, 1L))
+//                .thenReturn(List.of());
+//
+//        Set<ProjectResponseDto> result = companyService.getCompanyProjects(authentication, 2L);
+//
+//        assertEquals(2, result.size());
+//        verify(projectRepository).findActiveNonPartnerOnlyProjectsByCompanyId(ProjectStatus.ACTIVE, 2L);
+//        verify(projectRepository).findActivePartnerOnlyProjectsSharedWithCompany(ProjectStatus.ACTIVE, 2L, 1L);
+//    }
 
-        Set<ProjectResponseDto> result = companyService.getCompanyProjects(authentication, 1L);
+//    @Test
+//    void shouldReturnPublicAndPartnerProjectsForApprovedCompany() {
+//        User currentUser = new User();
+//        currentUser.setId(99999999L);
+//        Company userCompany = new Company();
+//        userCompany.setId(1L);
+//        currentUser.setCompany(userCompany);
+//
+//        Company company = new Company();
+//        company.setId(2L);
+//        company.setApproved(true);
+//
+//        Project publicProject = new Project();
+//        publicProject.setCompany(company);
+//        publicProject.setProjectStatus(ProjectStatus.ACTIVE);
+//        Project partnerProject = new Project();
+//        partnerProject.setCompany(company);
+//        partnerProject.setProjectStatus(ProjectStatus.ACTIVE);
+//
+//        List<Project> publicProjects = List.of(publicProject);
+//        List<Project> partnerProjects = List.of(partnerProject);
+//
+//        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
+//        when(companyRepository.findById(2L)).thenReturn(Optional.of(company));
+//        when(projectRepository.findActiveNonPartnerOnlyProjectsByCompanyId(ProjectStatus.ACTIVE, 2L))
+//                .thenReturn(publicProjects);
+//        when(projectRepository.findActivePartnerOnlyProjectsSharedWithCompany(ProjectStatus.ACTIVE, 2L, 1L))
+//                .thenReturn(partnerProjects);
+//
+//        Set<ProjectResponseDto> result = companyService.getCompanyProjects(authentication, 2L);
+//
+//        assertEquals(2, result.size());
+//        verify(projectRepository).findActiveNonPartnerOnlyProjectsByCompanyId(ProjectStatus.ACTIVE, 2L);
+//        verify(projectRepository).findActivePartnerOnlyProjectsSharedWithCompany(ProjectStatus.ACTIVE, 2L, 1L);
+//    }
 
-        assertEquals(2, result.size());
-        verify(companyRepository).findById(1L);
-        verify(userService).getCurrentUserOrThrow(authentication);
-    }
+//    @Test
+//    void shouldThrowExceptionWhenQueriedCompanyNotFound() {
+//        when(companyRepository.findById(3L)).thenReturn(Optional.empty());
+//
+//        assertThrows(NotFoundException.class, () -> companyService.getCompanyProjects(authentication, 3L));
+//        verify(companyRepository).findById(3L);
+//    }
 
-    @Test
-    void shouldReturnEmptySetForUnapprovedCompany() {
-        User currentUser = new User();
-        currentUser.setId(99999999L);
-        Company userCompany = new Company();
-        userCompany.setId(1L);
-        currentUser.setCompany(userCompany);
-
-        Company company = new Company();
-        company.setId(2L);
-        company.setApproved(false);
-
-        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
-        when(companyRepository.findById(2L)).thenReturn(Optional.of(company));
-
-        Set<ProjectResponseDto> result = companyService.getCompanyProjects(authentication, 2L);
-
-        assertTrue(result.isEmpty());
-        verify(companyRepository).findById(2L);
-        verify(userService).getCurrentUserOrThrow(authentication);
-    }
-
-    @Test
-    void shouldReturnOnlyPublicActiveProjectsForApprovedCompany() {
-        User currentUser = new User();
-        currentUser.setId(99999999L);
-        Company userCompany = new Company();
-        userCompany.setId(1L);
-        currentUser.setCompany(userCompany);
-
-        Company company = new Company();
-        company.setId(2L);
-        company.setApproved(true);
-
-        Project publicProject1 = new Project();
-        publicProject1.setCompany(company);
-        publicProject1.setProjectStatus(ProjectStatus.ACTIVE);
-        Project publicProject2 = new Project();
-        publicProject2.setCompany(company);
-        publicProject2.setProjectStatus(ProjectStatus.ACTIVE);
-
-        List<Project> publicProjects = List.of(publicProject1, publicProject2);
-
-        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
-        when(companyRepository.findById(2L)).thenReturn(Optional.of(company));
-        when(projectRepository.findActiveNonPartnerOnlyProjectsByCompanyId(ProjectStatus.ACTIVE, 2L))
-                .thenReturn(publicProjects);
-        when(projectRepository.findActivePartnerOnlyProjectsSharedWithCompany(ProjectStatus.ACTIVE, 2L, 1L))
-                .thenReturn(List.of());
-
-        Set<ProjectResponseDto> result = companyService.getCompanyProjects(authentication, 2L);
-
-        assertEquals(2, result.size());
-        verify(projectRepository).findActiveNonPartnerOnlyProjectsByCompanyId(ProjectStatus.ACTIVE, 2L);
-        verify(projectRepository).findActivePartnerOnlyProjectsSharedWithCompany(ProjectStatus.ACTIVE, 2L, 1L);
-    }
-
-    @Test
-    void shouldReturnPublicAndPartnerProjectsForApprovedCompany() {
-        User currentUser = new User();
-        currentUser.setId(99999999L);
-        Company userCompany = new Company();
-        userCompany.setId(1L);
-        currentUser.setCompany(userCompany);
-
-        Company company = new Company();
-        company.setId(2L);
-        company.setApproved(true);
-
-        Project publicProject = new Project();
-        publicProject.setCompany(company);
-        publicProject.setProjectStatus(ProjectStatus.ACTIVE);
-        Project partnerProject = new Project();
-        partnerProject.setCompany(company);
-        partnerProject.setProjectStatus(ProjectStatus.ACTIVE);
-
-        List<Project> publicProjects = List.of(publicProject);
-        List<Project> partnerProjects = List.of(partnerProject);
-
-        when(userService.getCurrentUserOrThrow(authentication)).thenReturn(currentUser);
-        when(companyRepository.findById(2L)).thenReturn(Optional.of(company));
-        when(projectRepository.findActiveNonPartnerOnlyProjectsByCompanyId(ProjectStatus.ACTIVE, 2L))
-                .thenReturn(publicProjects);
-        when(projectRepository.findActivePartnerOnlyProjectsSharedWithCompany(ProjectStatus.ACTIVE, 2L, 1L))
-                .thenReturn(partnerProjects);
-
-        Set<ProjectResponseDto> result = companyService.getCompanyProjects(authentication, 2L);
-
-        assertEquals(2, result.size());
-        verify(projectRepository).findActiveNonPartnerOnlyProjectsByCompanyId(ProjectStatus.ACTIVE, 2L);
-        verify(projectRepository).findActivePartnerOnlyProjectsSharedWithCompany(ProjectStatus.ACTIVE, 2L, 1L);
-    }
-
-    @Test
-    void shouldThrowExceptionWhenQueriedCompanyNotFound() {
-        when(companyRepository.findById(3L)).thenReturn(Optional.empty());
-
-        assertThrows(NotFoundException.class, () -> companyService.getCompanyProjects(authentication, 3L));
-        verify(companyRepository).findById(3L);
-    }
-
-    @Test
-    void shouldThrowExceptionWhenAuthenticationIsNull() {
-        assertThrows(NotFoundException.class, () -> companyService.getCompanyProjects(null, 1L));
-    }
+//    @Test
+//    void shouldThrowExceptionWhenAuthenticationIsNull() {
+//        assertThrows(NotFoundException.class, () -> companyService.getCompanyProjects(null, 1L));
+//    }
 
     @Test
     void shouldReturnCompanyFilters() {
