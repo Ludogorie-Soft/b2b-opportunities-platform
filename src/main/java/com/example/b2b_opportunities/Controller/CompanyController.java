@@ -247,8 +247,13 @@ public class CompanyController {
 
     @GetMapping("/my-talents")
     @ResponseStatus(HttpStatus.OK)
-    public List<TalentResponseDto> getMyTalents(Authentication authentication) {
-        return companyService.getMyTalents(authentication);
+    public Page<TalentResponseDto> getMyTalents(Authentication authentication,
+                                                @RequestParam(defaultValue = "0") int offset,
+                                                @RequestParam(defaultValue = "10") int pageSize,
+                                                @RequestParam String sort,
+                                                @RequestParam Boolean ascending) {
+
+        return companyService.getMyTalents(authentication, offset, pageSize, sort, ascending);
     }
 
     @GetMapping("/my-talents/partial")

@@ -463,7 +463,8 @@ public class CompanyServiceImpl implements CompanyService {
                 workModes,
                 skills,
                 rate,
-                pageable
+                pageable,
+                false
         );
 
         List<TalentResponseDto> dtos = resultPage.stream().map(
@@ -499,10 +500,34 @@ public class CompanyServiceImpl implements CompanyService {
     }
 
     @Override
-    public List<TalentResponseDto> getMyTalents(Authentication authentication) {
+    public Page<TalentResponseDto> getMyTalents(Authentication authentication,
+                                                int offset,
+                                                int pageSize,
+                                                String sortBy,
+                                                Boolean ascending) {
         Company company = getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
-        List<Talent> myTalents = talentRepository.findByCompanyId(company.getId());
-        return myTalents.stream().map(TalentMapper::toResponseDto).toList();
+
+        if (pageSize <= 0) {
+            pageSize = 5;
+        }
+
+        Sort sort = buildSort(sortBy, ascending);
+        Pageable pageable = PageRequest.of(offset, pageSize, sort);
+
+        Page<Talent> resultPage = talentRepository.findTalentsByFilters(
+                company.getId(),
+                null,
+                null,
+                null,
+                pageable,
+                true
+        );
+
+        List<TalentResponseDto> dtos = resultPage.stream()
+                .map(TalentMapper::toResponseDto)
+                .toList();
+
+        return new PageImpl<>(dtos, pageable, resultPage.getTotalElements());
     }
 
     @Override
