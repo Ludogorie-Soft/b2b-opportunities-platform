@@ -134,3 +134,6 @@ databaseChangeLog:
   - include:
       file: 45-add-admin-record.sql
       relativeToChangelogFile: true
+  - include:
+      file: 46-add-update-date-time-position-applications.sql
+      relativeToChangelogFile: true

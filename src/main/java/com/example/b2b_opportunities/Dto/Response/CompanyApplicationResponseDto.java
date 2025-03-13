@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
 import java.util.Set;
 
 @Getter
@@ -19,4 +20,5 @@ public class CompanyApplicationResponseDto {
     private Long companyId;
     private Set<Long> applicationIds;
     private ApplicationStatus overallStatus;
+    private LocalDateTime lastUpdateDateTime;
 }

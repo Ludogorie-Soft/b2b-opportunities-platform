@@ -88,6 +88,7 @@ public class PositionApplicationServiceImpl implements PositionApplicationServic
                 .position(position)
                 .applicationStatus(ApplicationStatus.AWAITING_CV_OR_TALENT)
                 .applicationDateTime(LocalDateTime.now())
+                .lastUpdateDateTime(LocalDateTime.now())
                 .rate(requestDto.getRate())
                 .availableFrom(requestDto.getAvailableFrom())
                 .talentCompany(userCompany)
@@ -288,14 +289,26 @@ public class PositionApplicationServiceImpl implements PositionApplicationServic
 
                     ApplicationStatus overallStatus = calculateOverallStatus(apps);
 
-                    Long companyId = apps.stream()
-                            .findFirst()
-                            .map(pa -> pa.getPosition().getProject().getCompany().getId())
-                            .orElse(null);
-
-                    return new CompanyApplicationResponseDto(positionId, companyId, applicationIds, overallStatus);
+                    Long companyId = getApplicationsCompanyId(apps);
+                    LocalDateTime lastUpdateDateTime = getLatestDateTime(apps);
+                    return new CompanyApplicationResponseDto(positionId, companyId, applicationIds, overallStatus, lastUpdateDateTime);
                 })
                 .toList();
+    }
+
+    private LocalDateTime getLatestDateTime(List<PositionApplication> positionApplications) {
+        return positionApplications.stream()
+                .map(PositionApplication::getLastUpdateDateTime)
+                .filter(Objects::nonNull)
+                .max(Comparator.naturalOrder())
+                .orElse(null);
+    }
+
+    private Long getApplicationsCompanyId(List<PositionApplication> positionApplications){
+        return positionApplications.stream()
+                .findFirst()
+                .map(pa -> pa.getPosition().getProject().getCompany().getId())
+                .orElse(null);
     }
 
     private static ApplicationStatus calculateOverallStatus(List<PositionApplication> applications) {
@@ -361,6 +374,7 @@ public class PositionApplicationServiceImpl implements PositionApplicationServic
             throw new InvalidRequestException(invalidStatusMessage);
         }
         pa.setApplicationStatus(targetStatus);
+        pa.setLastUpdateDateTime(LocalDateTime.now());
 
         if (targetStatus == ApplicationStatus.ACCEPTED) {
             mailService.sendEmailWhenApplicationIsApproved(pa);

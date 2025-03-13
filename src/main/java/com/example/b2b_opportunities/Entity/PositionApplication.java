@@ -52,5 +52,6 @@ public class PositionApplication {
 
     private int rate;
     private LocalDateTime applicationDateTime;
+    private LocalDateTime lastUpdateDateTime;
     private LocalDateTime availableFrom;
 }
