@@ -21,6 +21,7 @@ public class PositionApplicationResponseDto {
     private Long talentId;
     private String applicationStatus;
     private LocalDateTime applicationDateTime;
+    private LocalDateTime lastUpdateDateTime;
     private LocalDateTime availableFrom;
     private int rate;
     private String cvUrl;

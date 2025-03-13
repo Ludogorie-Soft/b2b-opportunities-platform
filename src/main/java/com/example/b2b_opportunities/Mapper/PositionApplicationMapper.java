@@ -18,6 +18,7 @@ public class PositionApplicationMapper {
                 .talentId(pa.getTalent() != null ? pa.getTalent().getId() : null)
                 .applicationStatus(pa.getApplicationStatus().toString())
                 .applicationDateTime(pa.getApplicationDateTime())
+                .lastUpdateDateTime(pa.getLastUpdateDateTime())
                 .rate(pa.getRate())
                 .availableFrom(pa.getAvailableFrom())
                 .build();
