@@ -94,7 +94,7 @@ public class MailServiceImpl implements MailService {
     public void sendProjectExpiringMail(Project project) {
         String emailContent = "<html><body style=\"font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 16px; font-weight: normal;\">"
                 + "<p><b>Dear " + project.getCompany().getName() + ",</b></p>"
-                + "<p><br/> This is a friendly reminder regarding your project '<i><b>" + project.getName() + "</b></i>' will expire in <b>2 days</b>."
+                + "<p><br/> This is a friendly reminder that your project '<i><b>" + project.getName() + "</b></i>' will expire in <b>2 days</b>."
                 + "<br/>To ensure your project remains active and continues to be visible to potential clients, you can easily extend its duration."
                 + "<br/>To extend your project for an additional 3 weeks, please visit our website.</p>"
                 + "<p><b>Best regards,<br/>B2B Opportunities Team</b></p></body></html>";
