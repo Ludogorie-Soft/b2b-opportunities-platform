@@ -251,7 +251,12 @@ public class PositionServiceImpl implements PositionService {
     private void setPositionFields(Position position, PositionRequestDto dto) {
         setSeniorityOrThrow(position, dto.getSeniority());
         setWorkModeOrThrow(position, dto.getWorkMode());
-        setRate(position, dto.getRate());
+        if (dto.getRate() != null) {
+            setRate(position, dto.getRate());
+        } else {
+            RateRequestDto requestDto = new RateRequestDto();
+            setRate(position, requestDto);
+        }
         setRequiredSkillsForPosition(position, dto.getRequiredSkills());
         setOptionalSkills(position, dto.getOptionalSkills());
     }
@@ -307,11 +312,16 @@ public class PositionServiceImpl implements PositionService {
     }
 
     private void setRate(Position position, RateRequestDto rateRequestDto) {
-        if (rateRequestDto.getMax() != null && rateRequestDto.getMin() > rateRequestDto.getMax()) {
+        if (rateRequestDto.getMax() != null && rateRequestDto.getMin() != null &&
+                rateRequestDto.getMin() > rateRequestDto.getMax()) {
             throw new InvalidRequestException("Min rate cannot exceed max rate", "minRate");
         }
         Rate rate = RateMapper.toRate(rateRequestDto);
-        rate.setCurrency(currencyService.getById(rateRequestDto.getCurrencyId()));
+        if (rate.getMin() != null) {
+            rate.setCurrency(currencyService.getById(2L));
+        } else {
+            rate.setCurrency(currencyService.getById(4L));
+        }
         position.setRate(rateRepository.save(rate));
     }
 

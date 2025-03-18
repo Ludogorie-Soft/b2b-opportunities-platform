@@ -62,11 +62,23 @@ public class CustomPositionRepositoryImpl implements CustomPositionRepository {
 
         cq.where(predicate).distinct(true);
 
+        Path<Integer> currencyIdPath = root.get("rate").get("currency").get("id");
+        Path<String> currencyNamePath = root.get("rate").get("currency").get("name");
+        Expression<Object> specialCurrencyOrder = cb.selectCase()
+                .when(cb.or(
+                        cb.equal(currencyIdPath, 4),
+                        cb.equal(currencyNamePath, "NONE")
+                ), 1)
+                .otherwise(0);
+
         cq.multiselect(
                 root.alias("position"),
                 root.get("rate").get("min").alias("rateMin"),
                 root.get("rate").get("max").alias("rateMax"),
-                cb.coalesce(root.get("rate").get("max"), cb.literal(0)).alias("rateMaxWithZero")
+                cb.coalesce(root.get("rate").get("max"), cb.literal(0)).alias("rateMaxWithZero"),
+                root.get("rate").get("currency").get("id").alias("currencyId"),
+                root.get("rate").get("currency").get("name").alias("currencyName"),
+                specialCurrencyOrder.alias("specialCurrencyOrder")
         );
 
         if (pageable.getSort().isSorted()) {
@@ -74,7 +86,7 @@ public class CustomPositionRepositoryImpl implements CustomPositionRepository {
                     .flatMap(order -> {
                         String property = order.getProperty();
                         if ("rate".equals(property)) {
-                            return createRateOrderStream(root, order, cb);
+                            return createRateOrderStream(root, order, cb, specialCurrencyOrder);
                         } else {
                             return createGenericOrderStream(root, property, order, cb);
                         }
@@ -94,16 +106,17 @@ public class CustomPositionRepositoryImpl implements CustomPositionRepository {
         return new PageImpl<>(positions, pageable, total);
     }
 
-    private Stream<Order> createRateOrderStream(Root<?> root, Sort.Order order, CriteriaBuilder cb) {
+    private Stream<Order> createRateOrderStream(Root<?> root, Sort.Order order, CriteriaBuilder cb, Expression<Object> specialCurrencyOrder) {
         Path<Integer> rateMinPath = root.get("rate").get("min");
         Path<Integer> rateMaxPath = root.get("rate").get("max");
-
         Expression<Integer> rateMaxWithZero = cb.coalesce(rateMaxPath, cb.literal(0));
+
+        Order currencyOrder = cb.asc(specialCurrencyOrder);
 
         Order minOrder = order.isAscending() ? cb.asc(rateMinPath) : cb.desc(rateMinPath);
         Order maxOrder = order.isAscending() ? cb.asc(rateMaxWithZero) : cb.desc(rateMaxWithZero);
 
-        return Stream.of(minOrder, maxOrder);
+        return Stream.of(currencyOrder, minOrder, maxOrder);
     }
 
     private Stream<Order> createGenericOrderStream(Root<?> root, String property, Sort.Order order, CriteriaBuilder cb) {
@@ -115,7 +128,6 @@ public class CustomPositionRepositoryImpl implements CustomPositionRepository {
         Order orderObj = order.isAscending() ? cb.asc(path) : cb.desc(path);
         return Stream.of(orderObj);
     }
-
 
     private List<Position> getSortedPositionsByRate(TypedQuery<Tuple> query) {
         return query.getResultList().stream()
