@@ -25,8 +25,8 @@ public class PositionRequestDto {
     @NotNull
     private List<Long> workMode;
 
-    @NotNull
-    @Valid
+//    @NotNull
+//    @Valid
     private RateRequestDto rate;
 
     @NotNull

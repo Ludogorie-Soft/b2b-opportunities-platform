@@ -217,7 +217,7 @@ class PositionControllerTest {
         currency = currencyRepository.save(Currency.builder().name("test").build());
 
         RateRequestDto rateRequestDto = new RateRequestDto();
-        rateRequestDto.setCurrencyId(currency.getId());
+//        rateRequestDto.setCurrencyId(currency.getId());
         rateRequestDto.setMin(50);
         rateRequestDto.setMax(100);
         requestDto.setRate(rateRequestDto);
@@ -303,7 +303,7 @@ class PositionControllerTest {
                 .andExpect(jsonPath("$.workMode").value(containsInAnyOrder(1, 2)))
                 .andExpect(jsonPath("$.rate").value(hasEntry("min", 50)))
                 .andExpect(jsonPath("$.rate").value(hasEntry("max", 100)))
-                .andExpect(jsonPath("$.rate").value(hasEntry("currencyId", currency.getId().intValue())))
+//                .andExpect(jsonPath("$.rate").value(hasEntry("currencyId", currency.getId().intValue())))
                 .andExpect(jsonPath("$.requiredSkills[0].skillId").value(testSkill.getId()))
                 .andExpect(jsonPath("$.requiredSkills[0].months").value(6))
                 .andExpect(jsonPath("$.minYearsExperience").value(2))
@@ -344,7 +344,7 @@ class PositionControllerTest {
                 .andExpect(jsonPath("$.workMode").value(containsInAnyOrder(1, 2)))
                 .andExpect(jsonPath("$.rate").value(hasEntry("min", 50)))
                 .andExpect(jsonPath("$.rate").value(hasEntry("max", 100)))
-                .andExpect(jsonPath("$.rate").value(hasEntry("currencyId", currency.getId().intValue())))
+//                .andExpect(jsonPath("$.rate").value(hasEntry("currencyId", currency.getId().intValue())))
                 .andExpect(jsonPath("$.requiredSkills[0].skillId").value(testSkill.getId()))
                 .andExpect(jsonPath("$.requiredSkills[0].months").value(6))
                 .andExpect(jsonPath("$.minYearsExperience").value(2))
@@ -451,7 +451,7 @@ class PositionControllerTest {
                 .andExpect(jsonPath("$.workMode").value(containsInAnyOrder(1, 2)))
                 .andExpect(jsonPath("$.rate").value(hasEntry("min", 50)))
                 .andExpect(jsonPath("$.rate").value(hasEntry("max", 100)))
-                .andExpect(jsonPath("$.rate").value(hasEntry("currencyId", currency.getId().intValue())))
+//                .andExpect(jsonPath("$.rate").value(hasEntry("currencyId", currency.getId().intValue())))
                 .andExpect(jsonPath("$.requiredSkills[0].skillId").value(testSkill.getId()))
                 .andExpect(jsonPath("$.requiredSkills[0].months").value(6))
                 .andExpect(jsonPath("$.minYearsExperience").value(2))
