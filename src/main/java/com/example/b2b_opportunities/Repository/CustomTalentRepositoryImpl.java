@@ -122,28 +122,36 @@ public class CustomTalentRepositoryImpl implements CustomTalentRepository {
     }
 
     private void applySorting(CriteriaBuilder cb, CriteriaQuery<Talent> cq, Root<Talent> root, Pageable pageable) {
+        List<Order> orders = new ArrayList<>();
+
+        boolean sortingByRate = pageable.getSort().stream()
+                .anyMatch(order -> "minRate".equalsIgnoreCase(order.getProperty()) || "maxRate".equalsIgnoreCase(order.getProperty()));
+        if (sortingByRate) {
+            Expression<Object> nullsOrdering = cb.selectCase()
+                    .when(cb.and(cb.isNull(root.get("minRate")), cb.isNull(root.get("maxRate"))), 1)
+                    .otherwise(0);
+            orders.add(cb.asc(nullsOrdering));
+        }
+
         if (pageable.getSort().isSorted()) {
-            List<Order> orders = pageable.getSort().stream()
+            orders.addAll(pageable.getSort().stream()
                     .map(order -> {
                         String[] parts = order.getProperty().split("\\.");
                         Path<?> path = root;
                         for (String part : parts) {
                             path = path.get(part);
                         }
-
-                        if ("minRate".equals(order.getProperty())) {
+                        if ("minRate".equalsIgnoreCase(order.getProperty())) {
                             return order.isAscending() ? cb.asc(path) : cb.desc(path);
-                        } else if ("maxRate".equals(order.getProperty())) {
-                            // За maxRate използваме coalesce, за да третираме NULL като 0
+                        } else if ("maxRate".equalsIgnoreCase(order.getProperty())) {
                             Expression<Integer> maxRateWithZero = cb.coalesce(root.get("maxRate"), cb.literal(0));
                             return order.isAscending() ? cb.asc(maxRateWithZero) : cb.desc(maxRateWithZero);
                         }
-
                         return order.isAscending() ? cb.asc(path) : cb.desc(path);
                     })
-                    .toList();
-            cq.orderBy(orders);
+                    .toList());
         }
+        cq.orderBy(orders);
     }
 
 

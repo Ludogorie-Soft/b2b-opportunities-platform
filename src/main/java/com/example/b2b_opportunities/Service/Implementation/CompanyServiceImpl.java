@@ -628,16 +628,13 @@ public class CompanyServiceImpl implements CompanyService {
     }
 
     private void setTalentRates(Talent talent, TalentRequestDto talentRequestDto) {
-        Integer min = talentRequestDto.getMinRate();
-        Integer max = talentRequestDto.getMaxRate();
-        if (min == null || min <= 0) {
-            throw new InvalidRequestException("Min rate must be greater than 0", "minRate");
-        }
-        if (max != null && min > max) {
+        Integer minRate = talentRequestDto.getMinRate();
+        Integer maxRate = talentRequestDto.getMaxRate();
+        if(minRate != null && maxRate != null && minRate > maxRate){
             throw new InvalidRequestException("Min rate cannot exceed max rate", "minRate");
         }
-        talent.setMinRate(min);
-        talent.setMaxRate(max);
+        talent.setMinRate(minRate);
+        talent.setMaxRate(maxRate);
     }
 
     private void validateTalentIsAvailableToCompany(Company company, Talent talent) {
