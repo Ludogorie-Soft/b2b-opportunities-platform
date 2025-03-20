@@ -39,7 +39,7 @@ public class PositionMapper {
                 .patternId(position.getPattern().getId())
                 .seniority(position.getSeniority().getLevel())
                 .workMode(workModeList)
-                .rate(RateMapper.toRateResponseDto(position.getRate()))
+                .rate(position.getRate().getCurrency().getId() != 4L ? RateMapper.toRateResponseDto(position.getRate()) : null)
                 .requiredSkills(RequiredSkillMapper.toRequiredSkillResponseDtoList(position.getRequiredSkills()))
                 .optionalSkills(optionalSkillIds)
                 .minYearsExperience(position.getMinYearsExperience())
