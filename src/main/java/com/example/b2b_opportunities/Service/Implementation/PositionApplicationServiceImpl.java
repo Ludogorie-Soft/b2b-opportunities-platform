@@ -71,7 +71,7 @@ public class PositionApplicationServiceImpl implements PositionApplicationServic
     @PostConstruct
     private void init() {
         // Change storageUrl if it's set to http://minio:9000 - to make it work while testing in docker.
-        if (storageUrl.toLowerCase().contains("minio")) {
+        if (storageUrl.toLowerCase().contains("minio:9000")) {
             storageUrl = "http://localhost:9000";
         }
     }
