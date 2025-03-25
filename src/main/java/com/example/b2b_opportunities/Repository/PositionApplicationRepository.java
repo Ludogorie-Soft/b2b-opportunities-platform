@@ -1,6 +1,8 @@
 package com.example.b2b_opportunities.Repository;
 
+import com.example.b2b_opportunities.Entity.Company;
 import com.example.b2b_opportunities.Entity.PositionApplication;
+import com.example.b2b_opportunities.Entity.Talent;
 import com.example.b2b_opportunities.Static.ApplicationStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -42,4 +44,7 @@ public interface PositionApplicationRepository extends JpaRepository<PositionApp
 
     @Query("SELECT p FROM PositionApplication p WHERE p.applicationDateTime >= :start AND p.applicationDateTime < :end AND p.applicationStatus = 'IN_PROGRESS'")
     List<PositionApplication> findAllApplicationsBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
+    @Query("SELECT COUNT(pa) > 0 FROM PositionApplication pa WHERE pa.talent = :talent AND pa.position.project.company = :company")
+    boolean existsByTalentAndCompany(@Param("talent") Talent talent, @Param("company") Company company);
 }

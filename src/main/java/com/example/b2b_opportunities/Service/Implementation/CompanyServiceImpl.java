@@ -68,7 +68,6 @@ import com.example.b2b_opportunities.Service.Interface.PatternService;
 import com.example.b2b_opportunities.Service.Interface.UserService;
 import com.example.b2b_opportunities.Static.ApplicationStatus;
 import com.example.b2b_opportunities.Static.EmailVerification;
-import com.example.b2b_opportunities.Static.ProjectStatus;
 import com.example.b2b_opportunities.Utils.StringUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -638,13 +637,17 @@ public class CompanyServiceImpl implements CompanyService {
     }
 
     private void validateTalentIsAvailableToCompany(Company company, Talent talent) {
+        if (!talent.getCompany().getId().equals(company.getId()) && !talent.isActive()) {
+            throw new PermissionDeniedException("Talent is not active.");
+        }
+
         boolean talentAvailable = talent.getCompany().getId().equals(company.getId()) ||
                 talent.getCompany().getPartnerGroups().stream()
                         .flatMap(pg -> pg.getPartners().stream())
                         .anyMatch(c -> c.getId().equals(company.getId()));
 
-        if (!talent.getCompany().getId().equals(company.getId()) && !talent.isActive()) {
-            throw new PermissionDeniedException("Talent is not active.");
+        if (!talentAvailable && positionApplicationRepository.existsByTalentAndCompany(talent, company)) {
+            talentAvailable = true;
         }
 
         if (!talentAvailable) {
