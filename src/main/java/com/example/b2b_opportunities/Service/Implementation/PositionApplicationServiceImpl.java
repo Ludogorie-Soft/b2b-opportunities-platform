@@ -68,6 +68,24 @@ public class PositionApplicationServiceImpl implements PositionApplicationServic
     @Value("${storage.url}")
     private String storageUrl;
 
+    private static ApplicationStatus calculateOverallStatus(List<PositionApplication> applications) {
+        return applications.stream()
+                .map(PositionApplication::getApplicationStatus)
+                .filter(status -> status != ApplicationStatus.AWAITING_CV_OR_TALENT)
+                .min(Comparator.comparingInt(PositionApplicationServiceImpl::getPriority))
+                .orElse(ApplicationStatus.IN_PROGRESS);
+    }
+
+
+    private static int getPriority(ApplicationStatus status) {
+        return switch (status) {
+            case ACCEPTED -> 1;
+            case IN_PROGRESS -> 2;
+            case DENIED -> 3;
+            default -> Integer.MAX_VALUE;
+        };
+    }
+
     @PostConstruct
     private void init() {
         // Change storageUrl if it's set to http://minio:9000 - to make it work while testing in docker.
@@ -174,7 +192,8 @@ public class PositionApplicationServiceImpl implements PositionApplicationServic
         if (positions.isEmpty()) {
             return new ArrayList<>();
         }
-        List<PositionApplication> positionApplications = positionApplicationRepository.findAllApplicationsForMyPositions(userCompany.getId(), ApplicationStatus.AWAITING_CV_OR_TALENT);
+        List<ApplicationStatus> excludedStatuses = List.of(ApplicationStatus.CANCELLED, ApplicationStatus.AWAITING_CV_OR_TALENT);
+        List<PositionApplication> positionApplications = positionApplicationRepository.findAllApplicationsForMyPositions(userCompany.getId(), excludedStatuses);
         List<PositionApplicationResponseDto> responseDtoList = new ArrayList<>();
         for (PositionApplication pa : positionApplications) {
             PositionApplicationResponseDto positionApplicationResponseDto = generatePAResponse(pa);
@@ -189,7 +208,7 @@ public class PositionApplicationServiceImpl implements PositionApplicationServic
     public List<PositionApplicationResponseDto> getMyApplications(Authentication authentication) {
         User user = userService.getCurrentUserOrThrow(authentication);
         Company userCompany = companyService.getUserCompanyOrThrow(user);
-        List<PositionApplication> myApplications = positionApplicationRepository.findAllMyApplications(userCompany.getId());
+        List<PositionApplication> myApplications = positionApplicationRepository.findAllMyApplications(userCompany.getId(), ApplicationStatus.CANCELLED);
         if (myApplications.isEmpty()) {
             return new ArrayList<>();
         }
@@ -275,7 +294,7 @@ public class PositionApplicationServiceImpl implements PositionApplicationServic
         User user = userService.getCurrentUserOrThrow(authentication);
         Company userCompany = companyService.getUserCompanyOrThrow(user);
         List<PositionApplication> myApplications = positionApplicationRepository
-                .findAllMyApplications(userCompany.getId());
+                .findAllMyApplications(userCompany.getId(), ApplicationStatus.CANCELLED);
         return myApplications.stream()
                 .collect(Collectors.groupingBy(pa -> pa.getPosition().getId()))
                 .entrySet().stream()
@@ -296,6 +315,18 @@ public class PositionApplicationServiceImpl implements PositionApplicationServic
                 .toList();
     }
 
+    @Override
+    public void cancelApplication(Authentication authentication, Long applicationId) {
+        User user = userService.getCurrentUserOrThrow(authentication);
+        Company userCompany = companyService.getUserCompanyOrThrow(user);
+        PositionApplication positionApplication = getPositionApplicationOrThrow(applicationId);
+        if (!Objects.equals(positionApplication.getTalentCompany().getId(), userCompany.getId())) {
+            throw new PermissionDeniedException("This position application does not belong to your company");
+        }
+        positionApplication.setApplicationStatus(ApplicationStatus.CANCELLED);
+        positionApplicationRepository.save(positionApplication);
+    }
+
     private LocalDateTime getLatestDateTime(List<PositionApplication> positionApplications) {
         return positionApplications.stream()
                 .map(PositionApplication::getLastUpdateDateTime)
@@ -311,23 +342,6 @@ public class PositionApplicationServiceImpl implements PositionApplicationServic
                 .orElse(null);
     }
 
-    private static ApplicationStatus calculateOverallStatus(List<PositionApplication> applications) {
-        return applications.stream()
-                .map(PositionApplication::getApplicationStatus)
-                .filter(status -> status != ApplicationStatus.AWAITING_CV_OR_TALENT)
-                .min(Comparator.comparingInt(PositionApplicationServiceImpl::getPriority))
-                .orElse(ApplicationStatus.IN_PROGRESS);
-        }
-
-    private static int getPriority(ApplicationStatus status) {
-        return switch (status) {
-            case ACCEPTED -> 1;
-            case IN_PROGRESS -> 2;
-            case DENIED -> 3;
-            default -> Integer.MAX_VALUE;
-        };
-    }
-
     private void checkPositionEligibility(Project project, Position position, Company userCompany) {
         projectService.validateProjectIsAvailableToCompany(project, userCompany);
         if (project.getCompany().getId().equals(userCompany.getId())) {
@@ -340,6 +354,7 @@ public class PositionApplicationServiceImpl implements PositionApplicationServic
             throw new InvalidRequestException("The position is not opened", "positionId");
         }
     }
+
     private PositionApplicationResponseDto generatePAResponse(PositionApplication pa) {
         PositionApplicationResponseDto responseDto = PositionApplicationMapper.toPositionApplicationResponseDto(pa);
         responseDto.setCvUrl(returnUrlIfCVExists(pa.getId()));
@@ -367,6 +382,9 @@ public class PositionApplicationServiceImpl implements PositionApplicationServic
 
         validateApplicationBelongsToCompany(pa, userCompany);
 
+        if(pa.getApplicationStatus() == ApplicationStatus.CANCELLED) {
+            throw new InvalidRequestException("This application has been cancelled");
+        }
         if (pa.getApplicationStatus() == targetStatus) {
             return PositionApplicationMapper.toPositionApplicationResponseDto(pa);
         }

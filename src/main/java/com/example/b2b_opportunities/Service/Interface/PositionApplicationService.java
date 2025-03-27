@@ -33,4 +33,6 @@ public interface PositionApplicationService {
     List<PositionApplication> getApplicationsSinceLastWorkday();
 
     List<CompanyApplicationResponseDto> getMyApplicationsOverall(Authentication authentication);
+
+    void cancelApplication(Authentication authentication, Long applicationId);
 }

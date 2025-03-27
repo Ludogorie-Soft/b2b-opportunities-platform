@@ -315,6 +315,13 @@ public class CompanyController {
         return positionApplicationService.getApplicationById(authentication, applicationId);
     }
 
+    @PutMapping("/applications/cancel/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public void cancelApplication(Authentication authentication,
+                                      @PathVariable("id") Long applicationId){
+        positionApplicationService.cancelApplication(authentication, applicationId);
+    }
+
     @PutMapping(value = "/applications", consumes = "multipart/form-data")
     @ResponseStatus(HttpStatus.OK)
     public PositionApplicationResponseDto updateApplication(
