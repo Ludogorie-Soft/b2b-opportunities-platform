@@ -247,7 +247,7 @@ class PositionApplicationServiceTest {
 
         when(userService.getCurrentUserOrThrow(authentication)).thenReturn(user);
         when(companyService.getUserCompanyOrThrow(user)).thenReturn(company);
-        when(positionApplicationRepository.findAllMyApplications(company.getId(), any())).thenReturn(applications);
+        when(positionApplicationRepository.findAllMyApplications(company.getId(), ApplicationStatus.CANCELLED)).thenReturn(applications);
 
         List<PositionApplicationResponseDto> response = positionApplicationService.getMyApplications(authentication);
 
