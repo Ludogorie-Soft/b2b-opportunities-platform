@@ -29,8 +29,10 @@ public interface PositionApplicationRepository extends JpaRepository<PositionApp
 
 
     @Query("SELECT pa FROM PositionApplication pa " +
-            "WHERE pa.talentCompany.id = :companyId")
-    List<PositionApplication> findAllMyApplications(@Param("companyId") Long companyId);
+            "WHERE pa.talentCompany.id = :companyId " +
+            "AND pa.applicationStatus <> :excludedStatus")
+    List<PositionApplication> findAllMyApplications(@Param("companyId") Long companyId,
+                                                    @Param("excludedStatus") ApplicationStatus excludedStatus);
 
     Optional<PositionApplication> findByPositionIdAndTalentId(Long positionId, Long talentId);
 

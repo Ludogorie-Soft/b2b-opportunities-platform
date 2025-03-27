@@ -71,8 +71,7 @@ public class PositionApplicationServiceImpl implements PositionApplicationServic
     private static ApplicationStatus calculateOverallStatus(List<PositionApplication> applications) {
         return applications.stream()
                 .map(PositionApplication::getApplicationStatus)
-                .filter(status -> status != ApplicationStatus.AWAITING_CV_OR_TALENT
-                        && status != ApplicationStatus.CANCELLED)
+                .filter(status -> status != ApplicationStatus.AWAITING_CV_OR_TALENT)
                 .min(Comparator.comparingInt(PositionApplicationServiceImpl::getPriority))
                 .orElse(ApplicationStatus.IN_PROGRESS);
     }
@@ -209,7 +208,7 @@ public class PositionApplicationServiceImpl implements PositionApplicationServic
     public List<PositionApplicationResponseDto> getMyApplications(Authentication authentication) {
         User user = userService.getCurrentUserOrThrow(authentication);
         Company userCompany = companyService.getUserCompanyOrThrow(user);
-        List<PositionApplication> myApplications = positionApplicationRepository.findAllMyApplications(userCompany.getId());
+        List<PositionApplication> myApplications = positionApplicationRepository.findAllMyApplications(userCompany.getId(), ApplicationStatus.CANCELLED);
         if (myApplications.isEmpty()) {
             return new ArrayList<>();
         }
@@ -295,7 +294,7 @@ public class PositionApplicationServiceImpl implements PositionApplicationServic
         User user = userService.getCurrentUserOrThrow(authentication);
         Company userCompany = companyService.getUserCompanyOrThrow(user);
         List<PositionApplication> myApplications = positionApplicationRepository
-                .findAllMyApplications(userCompany.getId());
+                .findAllMyApplications(userCompany.getId(), ApplicationStatus.CANCELLED);
         return myApplications.stream()
                 .collect(Collectors.groupingBy(pa -> pa.getPosition().getId()))
                 .entrySet().stream()

@@ -225,7 +225,7 @@ class PositionApplicationServiceTest {
 
         when(userService.getCurrentUserOrThrow(authentication)).thenReturn(user);
         when(companyService.getUserCompanyOrThrow(user)).thenReturn(company);
-        when(positionApplicationRepository.findAllMyApplications(anyLong())).thenReturn(applications);
+        when(positionApplicationRepository.findAllMyApplications(anyLong(), any())).thenReturn(applications);
 
         List<PositionApplicationResponseDto> response = positionApplicationService.getMyApplications(authentication);
 
@@ -247,7 +247,7 @@ class PositionApplicationServiceTest {
 
         when(userService.getCurrentUserOrThrow(authentication)).thenReturn(user);
         when(companyService.getUserCompanyOrThrow(user)).thenReturn(company);
-        when(positionApplicationRepository.findAllMyApplications(company.getId())).thenReturn(applications);
+        when(positionApplicationRepository.findAllMyApplications(company.getId(), any())).thenReturn(applications);
 
         List<PositionApplicationResponseDto> response = positionApplicationService.getMyApplications(authentication);
 
