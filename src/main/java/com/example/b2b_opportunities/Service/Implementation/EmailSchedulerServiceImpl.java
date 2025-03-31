@@ -252,12 +252,10 @@ public class EmailSchedulerServiceImpl implements EmailSchedulerService {
         StringBuilder result = new StringBuilder();
         result.append("<ul>");
         for (Project project : projects) {
-            Long companyId = project.getCompany().getId();
             Long projectId = project.getId();
 
             result.append("<li><a href=\"https://b2bapp.algorithmity.com/")
-                    .append(companyId)
-                    .append("/project/")
+                    .append("project/")
                     .append(projectId)
                     .append("\">")
                     .append(project.getName())
