@@ -44,14 +44,14 @@ public class MailServiceImpl implements MailService {
                 "<body>" +
                 "<h2>Dear " + user.getFirstName() + ",</h2>"
                 + "<br/> We're excited to have you get started. " +
-                "Please click on below link to confirm your account."
+                "Please click on the link below to confirm your account."
                 + "<br/> " + generateConfirmationLink(user, request) +
                 "<br/> Regards,<br/>" +
-                "B2B Opportunities Team" +
+                "hire-b2b team" +
                 "</body>" +
                 "</html>";
 
-        String subject = "Confirm your E-Mail - B2B Opportunities";
+        String subject = "Confirm your E-Mail at hire-b2b.com";
         sendEmail(user.getEmail(), emailContent, subject);
         log.info("Send confirmation Email to: {}", user.getEmail());
     }
@@ -64,11 +64,11 @@ public class MailServiceImpl implements MailService {
                 + "<br/> Click the link below to set your new password: "
                 + "<br/> " + generatePasswordRecoveryLink(user, request) +
                 "<br/> Regards,<br/>" +
-                "B2B Opportunities Team" +
+                "hire-b2b Team" +
                 "</body>" +
                 "</html>";
 
-        String subject = "Reset password - B2B Opportunities";
+        String subject = "Reset password at hire-b2b.com";
         sendEmail(user.getEmail(), emailContent, subject);
         log.info("Send password recovery Email to: {}", user.getEmail());
     }
@@ -112,14 +112,14 @@ public class MailServiceImpl implements MailService {
                 "<h2>Dear " + positionApplication.getTalentCompany().getName() + ",</h2>" +
                 "<br/>Congratulations! We are pleased to inform you that your application for the position of " +
                 "<strong>'" + positionApplication.getPosition().getPattern().getName() + "'</strong> has been approved." +
-                "<br/>We are excited to move forward with the next steps and will be in touch with more details soon." +
-                "<br/>If you have any questions or need further information, feel free to reach out to us." +
+                "<br/>In your account you can now view details and contacts of the company that published the position." +
+                "<a href=\"https://b2bapp.algorithmity.com/company/applications\">Click here</a> to open it."+
                 "<br/><strong>Best regards,</strong>" +
-                "<br/><strong>The B2B Opportunities Team</strong>" +
+                "<br/><strong>hire-b2b team</strong>" +
                 "</body>" +
                 "</html>";
 
-        String subject = "Your Application Has Been Approved - B2B Opportunities";
+        String subject = "Your Application Has Been Approved at hire-b2b.com";
         String email = positionApplication.getTalentCompany().getEmail();
 
         sendEmail(email, emailContent, subject);

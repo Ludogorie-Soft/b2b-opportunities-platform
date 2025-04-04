@@ -243,7 +243,7 @@ public class EmailSchedulerServiceImpl implements EmailSchedulerService {
         }
 
         result.append("<p>Thank you for your attention!</p>")
-                .append("<p><b>Best regards,<br/>B2B Opportunities Team</b></p></body></html>");
+                .append("<p><b>Best regards,<br/>hire-b2b team</b></p></body></html>");
 
         return result.toString();
     }
