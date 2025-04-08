@@ -70,7 +70,10 @@ public class EmailSchedulerServiceImpl implements EmailSchedulerService {
                     "<li>Create custom filters</li> " +
                     "<li>Or disable the <strong>\"Default\"</strong> filter to stop these updates</li> </ul>" +
                     "<br/>Thank you for staying with us, and we look forward to helping you find the right opportunities!<br/><br/>" +
-                    "<p><b>Best regards,<br/>B2B Opportunities Team</b></p></body></html>";
+                    "<br/><strong>Best regards,</strong>" +
+                    "<br/><strong>hire-b2b team</strong>" +
+                    "</body>" +
+                    "</html>";
 
             mailService.sendEmail(c.getEmail(), emailContent, title);
         }
@@ -126,7 +129,9 @@ public class EmailSchedulerServiceImpl implements EmailSchedulerService {
         );
 
         emailContent.append("<p><b>You can review the applications on your dashboard.</b></p>")
-                .append("<p><b>Best regards,<br/>B2B Opportunities Team</b></p></body></html>");
+                .append("<br/><strong>Best regards,</strong>" +
+                        "<br/><strong>hire-b2b team</strong>" +
+                        "</body></html>");
         return emailContent.toString();
     }
 
@@ -198,7 +203,7 @@ public class EmailSchedulerServiceImpl implements EmailSchedulerService {
         if (!newProjects.isEmpty() || !modifiedProjects.isEmpty()) {
             String emailContent = generateEmailContent(c.getName(), newProjects, modifiedProjects);
             String receiver = c.getEmail();
-            String title = "B2B - Don't miss on new projects";
+            String title = "Hire-B2B - Don't miss on new projects";
             mailService.sendEmail(receiver, emailContent, title);
         }
     }
@@ -243,7 +248,9 @@ public class EmailSchedulerServiceImpl implements EmailSchedulerService {
         }
 
         result.append("<p>Thank you for your attention!</p>")
-                .append("<p><b>Best regards,<br/>hire-b2b team</b></p></body></html>");
+                .append("<br/><strong>Best regards,</strong>" +
+                        "<br/><strong>hire-b2b team</strong>" +
+                        "</body></html>");
 
         return result.toString();
     }

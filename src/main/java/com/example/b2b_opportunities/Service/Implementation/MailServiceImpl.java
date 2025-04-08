@@ -46,8 +46,8 @@ public class MailServiceImpl implements MailService {
                 + "<br/> We're excited to have you get started. " +
                 "Please click on the link below to confirm your account."
                 + "<br/> " + generateConfirmationLink(user, request) +
-                "<br/> Regards,<br/>" +
-                "hire-b2b team" +
+                "<br/><strong>Best regards,</strong>" +
+                "<br/><strong>hire-b2b team</strong>" +
                 "</body>" +
                 "</html>";
 
@@ -63,8 +63,8 @@ public class MailServiceImpl implements MailService {
                 "<h2>Dear " + user.getFirstName() + ",</h2>"
                 + "<br/> Click the link below to set your new password: "
                 + "<br/> " + generatePasswordRecoveryLink(user, request) +
-                "<br/> Regards,<br/>" +
-                "hire-b2b Team" +
+                "<br/><strong>Best regards,</strong>" +
+                "<br/><strong>hire-b2b team</strong>" +
                 "</body>" +
                 "</html>";
 
@@ -78,14 +78,14 @@ public class MailServiceImpl implements MailService {
         String emailContent = "<html>" +
                 "<body>" +
                 "<h2>Hello " + company.getName() + ",</h2>"
-                + "<h3><br/> Thank you for registering your company with B2B Opportunities."
+                + "<h3><br/> Thank you for registering your company with hire-b2b."
                 + "<br/>To complete your registration and confirm your email address, please click the link below: </h3>"
                 + "<h2> <br/> " + generateEmailConfirmationLink(token, request) + "</h2>" +
-                "<h3><br/> Best regards,\n" +
-                "The B2B Opportunities Team,<br/></h3>" +
+                "<br/><strong>Best regards,</strong>" +
+                "<br/><strong>hire-b2b team</strong>" +
                 "</body>" +
                 "</html>";
-        String subject = "Company mail confirmation - B2B Opportunities";
+        String subject = "Company mail confirmation - hire-b2b Team";
         sendEmail(company.getEmail(), emailContent, subject);
         log.info("Send company (ID: {}) confirmation Email to: {}", company.getId(), company.getEmail());
     }
@@ -96,8 +96,11 @@ public class MailServiceImpl implements MailService {
                 + "<p><b>Dear " + project.getCompany().getName() + ",</b></p>"
                 + "<p><br/> This is a friendly reminder that your project '<i><b>" + project.getName() + "</b></i>' will expire in <b>2 days</b>."
                 + "<br/>To ensure your project remains active and continues to be visible to potential clients, you can easily extend its duration."
-                + "<br/>To extend your project for an additional 3 weeks, please visit our website.</p>"
-                + "<p><b>Best regards,<br/>B2B Opportunities Team</b></p></body></html>";
+                + "<br/>To extend your project for an additional 3 weeks, please visit our website.</p>" +
+                "<br/><strong>Best regards,</strong>" +
+                "<br/><strong>hire-b2b team</strong>" +
+                "</body>" +
+                "</html>";
         String subject = "B2B Reminder: Your Project is Expiring in 2 Days – Reactivate Now!";
         String email = project.getCompany().getEmail();
         sendEmail(email, emailContent, subject);
