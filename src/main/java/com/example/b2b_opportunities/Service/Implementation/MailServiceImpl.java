@@ -116,7 +116,7 @@ public class MailServiceImpl implements MailService {
                 "<br/>Congratulations! We are pleased to inform you that your application for the position of " +
                 "<strong>'" + positionApplication.getPosition().getPattern().getName() + "'</strong> has been approved." +
                 "<br/>In your account you can now view details and contacts of the company that published the position." +
-                "<a href=\"https://b2bapp.algorithmity.com/company/applications\">Click here</a> to open it."+
+                "<a href=\"https://www.hire-b2b.com/company/applications\">Click here</a> to open it."+
                 "<br/><strong>Best regards,</strong>" +
                 "<br/><strong>hire-b2b team</strong>" +
                 "</body>" +
