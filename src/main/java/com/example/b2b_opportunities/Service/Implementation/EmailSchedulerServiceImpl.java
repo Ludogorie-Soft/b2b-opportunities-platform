@@ -14,6 +14,7 @@ import com.example.b2b_opportunities.Service.Interface.PositionApplicationServic
 import com.example.b2b_opportunities.Static.ProjectStatus;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -33,6 +34,9 @@ public class EmailSchedulerServiceImpl implements EmailSchedulerService {
     private final CompanyRepository companyRepository;
     private final MailService mailService;
     private final PositionApplicationService positionApplicationService;
+
+    @Value("${frontend.address}")
+    private String frontEndAddress;
 
     @Transactional
     @Scheduled(cron = "${cron.everyMondayAt9}")
@@ -261,7 +265,7 @@ public class EmailSchedulerServiceImpl implements EmailSchedulerService {
         for (Project project : projects) {
             Long projectId = project.getId();
 
-            result.append("<li><a href=\"https://www.hire-b2b.com/")
+            result.append("<li><a href=\"").append(frontEndAddress).append("/")
                     .append("project/")
                     .append(projectId)
                     .append("\">")
