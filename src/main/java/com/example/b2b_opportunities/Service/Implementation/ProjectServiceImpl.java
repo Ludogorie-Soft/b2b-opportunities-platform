@@ -223,6 +223,7 @@ public class ProjectServiceImpl implements ProjectService {
         project.setDuration(dto.getDuration());
         project.setDescription(dto.getDescription());
         project.setDateUpdated(LocalDateTime.now());
+        project.setCanReactivate(false);
         extendProjectDuration(project);
         if (dto.isPartnerOnly()) {
             project.setPartnerOnly(true);

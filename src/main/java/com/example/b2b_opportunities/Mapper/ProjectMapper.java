@@ -22,6 +22,7 @@ public class ProjectMapper {
                 .endDate(project.getEndDate())
                 .duration(project.getDuration())
                 .description(project.getDescription())
+                .canReactivate(project.isCanReactivate())
                 .status(project.getProjectStatus().toString())
                 .isPartnerOnly(project.isPartnerOnly())
                 .partnerGroups(project.isPartnerOnly() ?

@@ -38,4 +38,6 @@ public class ProjectResponseDto {
     private Long positionViews;
     private Long acceptedApplications;
     private Long totalApplications;
+
+    private boolean canReactivate;
 }
