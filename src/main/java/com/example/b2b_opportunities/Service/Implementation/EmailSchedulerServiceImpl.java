@@ -62,9 +62,9 @@ public class EmailSchedulerServiceImpl implements EmailSchedulerService {
     @Override
     public void sendWeeklyEmailsWhenCompanyHasNoSkillsAndNoCustomFilters() {
         List<Company> companies = companyRepository.findCompaniesWithSingleDefaultEnabledFilterAndNoCompanySkills();
+        List<Project> projectsLastWeek = getProjectsUpdatedInPastDays(7);
+        if(projectsLastWeek.isEmpty()) return;
         for (Company c : companies) {
-
-            List<Project> projectsLastWeek = getProjectsUpdatedInPastDays(7);
             String title = "B2B Important: Set Your Company Skills to Receive Relevant Project Updates";
             String emailContent = "<html><body style=\"font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 16px; font-weight: normal;\">" + "<p><b>Hello, " + c.getName() + ",</b></p>" +
                     "<p><b>We noticed your company profile has no skills listed yet.</b></p>" +
