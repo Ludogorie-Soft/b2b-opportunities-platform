@@ -45,6 +45,12 @@ public interface ProjectRepository extends JpaRepository<Project, Long>, CustomP
     @Query(value = "SELECT * FROM projects p WHERE DATE(p.expiry_date) <= CURRENT_DATE AND p.project_status = 'ACTIVE'", nativeQuery = true)
     List<Project> findExpiredAndActiveProjects();
 
+    @Query(value = "SELECT * FROM projects p WHERE DATE(p.expiry_date) = CURRENT_DATE + INTERVAL '2 days' AND p.can_reactivate = false", nativeQuery = true)
+    List<Project> findProjectsExpiringInTwoDaysAndNotMarked();
+
+    @Query(value = "SELECT * FROM projects p WHERE DATE(p.expiry_date) <= CURRENT_DATE AND p.project_status = 'ACTIVE' AND p.can_reactivate = false", nativeQuery = true)
+    List<Project> findExpiredAndActiveProjectsNotMarked();
+
     Page<Project> findByProjectStatusAndIsPartnerOnlyFalseAndCompanyIsApprovedTrue(ProjectStatus projectStatus, Pageable pageable);
 
     @Query("SELECT DISTINCT p FROM Project p " +

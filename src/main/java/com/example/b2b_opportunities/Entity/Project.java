@@ -69,6 +69,9 @@ public class Project {
             inverseJoinColumns = @JoinColumn(name = "partner_group_id")
     )
     private Set<PartnerGroup> partnerGroupList;
+
+    private boolean canReactivate;
+
     public void setName(@NotEmpty String name) {
         this.name = name.strip();
     }

@@ -27,6 +27,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
@@ -75,7 +76,7 @@ public class ProjectServiceImpl implements ProjectService {
         Company company = companyService.getUserCompanyOrThrow(user);
 
 
-        if(pageSize <= 0){
+        if (pageSize <= 0) {
             pageSize = 10;
         }
 
@@ -177,6 +178,17 @@ public class ProjectServiceImpl implements ProjectService {
         if (!project.getCompany().isApproved()) {
             throw new PermissionDeniedException("Project posted by an unapproved company");
         }
+    }
+
+    @Override
+    @Scheduled(cron = "0 0 0 * * *")
+    public void markProjectsForReactivation() {
+        Set<Project> projectsToBeReactivated = new HashSet<>();
+        projectsToBeReactivated.addAll(projectRepository.findProjectsExpiringInTwoDaysAndNotMarked());
+        projectsToBeReactivated.addAll(projectRepository.findExpiredAndActiveProjectsNotMarked());
+
+        projectsToBeReactivated.forEach(project -> project.setCanReactivate(true));
+        projectRepository.saveAll(projectsToBeReactivated);
     }
 
     private Long getPositionViews(Project project) {

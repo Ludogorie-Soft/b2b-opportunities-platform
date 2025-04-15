@@ -26,4 +26,6 @@ public interface ProjectService {
     ProjectResponseDto reactivateProject(Long projectId, Authentication authentication);
 
     void validateProjectIsAvailableToCompany(Project project, Company userCompany);
+
+    void markProjectsForReactivation();
 }
