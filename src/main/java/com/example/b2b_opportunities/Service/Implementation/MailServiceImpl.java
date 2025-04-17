@@ -98,8 +98,8 @@ public class MailServiceImpl implements MailService {
         String emailContent = "<html><body style=\"font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 16px; font-weight: normal;\">"
                 + "<p><b>Dear " + project.getCompany().getName() + ",</b></p>"
                 + "<p><br/> This is a friendly reminder that your project '<i><b>" + project.getName() + "</b></i>' will expire in <b>2 days</b>."
-                + "<br/>To ensure your project remains active and continues to be visible to potential clients, you can easily extend its duration."
-                + "<br/>To extend your project for an additional 3 weeks, please visit our website.</p>" +
+                + "<br/>To ensure your project remains active and continues to be visible to potential clients, you can easily extend its duration from " +
+                "<a href=\"" + frontEndAddress + "/project/" + project.getId() + "/edit\">here.</a>"+
                 "<br/><strong>Best regards,</strong>" +
                 "<br/><strong>hire-b2b team</strong>" +
                 "</body>" +
