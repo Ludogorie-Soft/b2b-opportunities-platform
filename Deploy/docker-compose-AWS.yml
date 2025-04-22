@@ -109,7 +109,7 @@ services:
       - b2b-network
 
   notifications:
-    image: ludogoriesoft/b2b-notifications:v1
+    image: ludogoriesoft/b2b-notifications:v1.1
     environment:
       SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD}
       SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME}
