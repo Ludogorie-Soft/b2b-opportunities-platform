@@ -1,3 +1,5 @@
+DELETE FROM confirmation_token;
+
 DELETE FROM users
 WHERE username != 'admin';
 
@@ -19,7 +21,6 @@ DELETE FROM position_work_modes;
 DELETE FROM position_applications;
 DELETE FROM filters;
 DELETE FROM filter_skills;
-DELETE FROM confirmation_token;
 DELETE FROM company_talent_access_groups;
 DELETE FROM company_skills;
 DELETE FROM company_project_notified;
