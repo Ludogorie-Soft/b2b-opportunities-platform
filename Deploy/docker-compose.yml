@@ -110,10 +110,11 @@ services:
       - b2b-network
 
   notifications:
-    image: ludogoriesoft/b2b-notifications:v1.1
+    image: ludogoriesoft/b2b-notifications:v1.2
     environment:
       SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD}
       SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME}
+      SPRING_ACTIVE_PROFILE: ${SPRING_ACTIVE_PROFILE}
     networks:
       - b2b-network
     restart: always
