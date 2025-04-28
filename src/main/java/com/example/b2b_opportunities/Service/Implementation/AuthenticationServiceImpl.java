@@ -7,6 +7,7 @@ import com.example.b2b_opportunities.Entity.ConfirmationToken;
 import com.example.b2b_opportunities.Entity.Role;
 import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Exception.AuthenticationFailedException;
+import com.example.b2b_opportunities.Exception.common.AlreadyExistsException;
 import com.example.b2b_opportunities.Exception.common.DuplicateCredentialException;
 import com.example.b2b_opportunities.Exception.PasswordsNotMatchingException;
 import com.example.b2b_opportunities.Exception.ValidationException;
@@ -124,7 +125,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         if (user.isEnabled()) {
             log.info("Account with email: {} is already activated", email);
-            return "Account already activated";
+            throw new AlreadyExistsException("Account already activated", email);
         }
         Optional<ConfirmationToken> optionalToken = confirmationTokenRepository.findByUser(user);
         if (optionalToken.isPresent()) {
