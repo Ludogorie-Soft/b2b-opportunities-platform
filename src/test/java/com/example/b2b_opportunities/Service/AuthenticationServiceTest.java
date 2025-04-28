@@ -7,6 +7,7 @@ import com.example.b2b_opportunities.Entity.ConfirmationToken;
 import com.example.b2b_opportunities.Entity.User;
 import com.example.b2b_opportunities.Exception.AuthenticationFailedException;
 import com.example.b2b_opportunities.Exception.PasswordsNotMatchingException;
+import com.example.b2b_opportunities.Exception.common.AlreadyExistsException;
 import com.example.b2b_opportunities.Exception.common.DuplicateCredentialException;
 import com.example.b2b_opportunities.Exception.common.InvalidRequestException;
 import com.example.b2b_opportunities.Exception.common.NotFoundException;
@@ -293,9 +294,8 @@ class AuthenticationServiceTest {
 
         when(userService.getUserByEmailOrThrow(email)).thenReturn(user);
 
-        String result = authenticationService.resendConfirmationMail(email, request);
-
-        assertEquals("Account already activated", result);
+        AlreadyExistsException exception = assertThrows(AlreadyExistsException.class, () -> authenticationService.resendConfirmationMail(email, request));
+        assertEquals("Account already activated", exception.getMessage());
         verify(confirmationTokenRepository, never()).findByUser(user);
         verify(mailService, never()).sendConfirmationMail(user, request);
     }
