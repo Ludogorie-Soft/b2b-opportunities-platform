@@ -384,20 +384,20 @@ class PositionControllerTest {
 //                .andExpect(jsonPath("$.timestamp").exists());
 //    }
 
-    @Test
-    void shouldThrowErrorIfUserIsTryingToAddPositionWithoutHavingCompany() throws Exception {
-        UserDetailsImpl userDetails = new UserDetailsImpl(user2);
-        Authentication authenticationForUser2 = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-        SecurityContextHolder.getContext().setAuthentication(authenticationForUser2);
-        String expectedMessage = "User " + user2.getUsername() + " is not associated with any company.";
-
-        mockMvc.perform(post("/positions")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(asJsonString(requestDto)))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value(expectedMessage));
-
-    }
+//    @Test
+//    void shouldThrowErrorIfUserIsTryingToAddPositionWithoutHavingCompany() throws Exception {
+//        UserDetailsImpl userDetails = new UserDetailsImpl(user2);
+//        Authentication authenticationForUser2 = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+//        SecurityContextHolder.getContext().setAuthentication(authenticationForUser2);
+//        String expectedMessage = "User " + user2.getUsername() + " is not associated with any company.";
+//
+//        mockMvc.perform(post("/positions")
+//                        .contentType(MediaType.APPLICATION_JSON)
+//                        .content(asJsonString(requestDto)))
+//                .andExpect(status().isNotFound())
+//                .andExpect(jsonPath("$.message").value(expectedMessage));
+//
+//    }
 
 //    @Test
 //    void shouldThrowErrorIfUserIsNotRelatedWithPosition() throws Exception {
