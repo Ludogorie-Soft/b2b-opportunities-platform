@@ -146,3 +146,6 @@ databaseChangeLog:
   - include:
       file: 49-clear-test-data.sql
       relativeToChangelogFile: true
+  - include:
+      file: 50-add-ai-skills.sql
+      relativeToChangelogFile: true
