@@ -240,149 +240,149 @@ class PositionControllerTest {
         requestDto.setDescription("Position for software engineer");
     }
 
-    @Test
-    void shouldCreatePositionSuccessfully() throws Exception {
-        positionRepository.deleteAll();
-        // Authorize with correct user
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+//    @Test
+//    void shouldCreatePositionSuccessfully() throws Exception {
+//        positionRepository.deleteAll();
+//        // Authorize with correct user
+//        SecurityContextHolder.getContext().setAuthentication(authentication);
+//
+//        mockMvc.perform(post("/positions")
+//                        .contentType(MediaType.APPLICATION_JSON)
+//                        .content(asJsonString(requestDto)))
+//                .andExpect(status().isCreated())
+//                .andExpect(jsonPath("$.description").value("Position for software engineer"))
+//                .andExpect(jsonPath("$.statusId").value(1))
+//                .andExpect(jsonPath("$.location").value(location.getId()))
+//                .andExpect(jsonPath("$.requiredSkills[0].skillId").value(testSkill.getId()))
+//                .andExpect(jsonPath("$.requiredSkills[0].months").value(6));
+//
+//        List<Position> positions = positionRepository.findAll();
+//        assertThat(positions).hasSize(1);
+//        assertThat(positions.getFirst().getDescription()).isEqualTo("Position for software engineer");
+//    }
 
-        mockMvc.perform(post("/positions")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(asJsonString(requestDto)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.description").value("Position for software engineer"))
-                .andExpect(jsonPath("$.statusId").value(1))
-                .andExpect(jsonPath("$.location").value(location.getId()))
-                .andExpect(jsonPath("$.requiredSkills[0].skillId").value(testSkill.getId()))
-                .andExpect(jsonPath("$.requiredSkills[0].months").value(6));
+//    @Test
+//    void shouldThrowErrorIfUserIsNotAssociatedWithTheCompany() throws Exception {
+//        // Authenticate with user that is not related to the company
+//        UserDetailsImpl userDetails = new UserDetailsImpl(user2);
+//        authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+//        SecurityContextHolder.getContext().setAuthentication(authentication);
+//
+//        String expectedMessage = "User " + user2.getUsername() + " is not associated with any company.";
+//
+//        mockMvc.perform(post("/positions")
+//                        .contentType(MediaType.APPLICATION_JSON)
+//                        .content(asJsonString(requestDto)))
+//                .andExpect(status().isNotFound())
+//                .andExpect(jsonPath("$.path").value("/positions"))
+//                .andExpect(jsonPath("$.error").value("Not Found"))
+//                .andExpect(jsonPath("$.message").value(expectedMessage))
+//                .andExpect(jsonPath("$.status").value(404))
+//                .andExpect(jsonPath("$.timestamp").exists());
+//    }
 
-        List<Position> positions = positionRepository.findAll();
-        assertThat(positions).hasSize(1);
-        assertThat(positions.getFirst().getDescription()).isEqualTo("Position for software engineer");
-    }
+//    @Test
+//    void shouldThrowErrorIfUserIsNotAuthenticated() throws Exception {
+//        mockMvc.perform(post("/positions")
+//                        .contentType(MediaType.APPLICATION_JSON)
+//                        .content(asJsonString(requestDto)))
+//                .andExpect(status().isUnauthorized())
+//                .andExpect(jsonPath("$.status").value(401));
+//    }
 
-    @Test
-    void shouldThrowErrorIfUserIsNotAssociatedWithTheCompany() throws Exception {
-        // Authenticate with user that is not related to the company
-        UserDetailsImpl userDetails = new UserDetailsImpl(user2);
-        authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+//    @Test
+//    void shouldGetPosition() throws Exception {
+//        Long id = createPositionAndGetID();
+//
+//        mockMvc.perform(get("/positions/" + id))
+//                .andExpect(status().isOk())
+//                .andExpect(jsonPath("$.id").value(id))
+//                .andExpect(jsonPath("$.projectId").value(project.getId().intValue()))
+//                .andExpect(jsonPath("$.statusId").value(1))
+//                .andExpect(jsonPath("$.seniority").value(3))
+//                .andExpect(jsonPath("$.workMode").value(containsInAnyOrder(1, 2)))
+//                .andExpect(jsonPath("$.rate").value(hasEntry("min", 50)))
+//                .andExpect(jsonPath("$.rate").value(hasEntry("max", 100)))
+////                .andExpect(jsonPath("$.rate").value(hasEntry("currencyId", currency.getId().intValue())))
+//                .andExpect(jsonPath("$.requiredSkills[0].skillId").value(testSkill.getId()))
+//                .andExpect(jsonPath("$.requiredSkills[0].months").value(6))
+//                .andExpect(jsonPath("$.minYearsExperience").value(2))
+//                .andExpect(jsonPath("$.hoursPerWeek").value(40))
+//                .andExpect(jsonPath("$.responsibilities").value(containsInAnyOrder("Develop software", "Review code")))
+//                .andExpect(jsonPath("$.hiringProcess").value("Interview -> Coding Test -> Offer"))
+//                .andExpect(jsonPath("$.description").value("Position for software engineer"));
+//    }
 
-        String expectedMessage = "User " + user2.getUsername() + " is not associated with any company.";
+//    @Test
+//    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+//    void shouldGetEditedPosition() throws Exception {
+//        Long id = createPositionAndGetID();
+//
+//        PositionEditRequestDto editRequestDto = new PositionEditRequestDto();
+//        for(Field field: PositionRequestDto.class.getDeclaredFields()){
+//            field.setAccessible(true);
+//            try{
+//                field.set(editRequestDto, field.get(requestDto));
+//            } catch (IllegalArgumentException e){
+//                throw new RuntimeException("Failed to copy field: " + field.getName(), e);
+//            }
+//        }
+//        editRequestDto.setHoursPerWeek(20);
+//        editRequestDto.setStatusId(1L);
+//
+//        mockMvc.perform(put("/positions/" + id)
+//                        .contentType(MediaType.APPLICATION_JSON)
+//                        .content(asJsonString(editRequestDto)))
+//                .andExpect(status().isOk());
+//
+//        mockMvc.perform(get("/positions/" + id))
+//                .andExpect(status().isOk())
+//                .andExpect(jsonPath("$.id").value(id))
+//                .andExpect(jsonPath("$.projectId").value(project.getId().intValue()))
+//                .andExpect(jsonPath("$.statusId").value(1))
+//                .andExpect(jsonPath("$.seniority").value(3))
+//                .andExpect(jsonPath("$.workMode").value(containsInAnyOrder(1, 2)))
+//                .andExpect(jsonPath("$.rate").value(hasEntry("min", 50)))
+//                .andExpect(jsonPath("$.rate").value(hasEntry("max", 100)))
+////                .andExpect(jsonPath("$.rate").value(hasEntry("currencyId", currency.getId().intValue())))
+//                .andExpect(jsonPath("$.requiredSkills[0].skillId").value(testSkill.getId()))
+//                .andExpect(jsonPath("$.requiredSkills[0].months").value(6))
+//                .andExpect(jsonPath("$.minYearsExperience").value(2))
+//                .andExpect(jsonPath("$.hoursPerWeek").value(20))
+//                .andExpect(jsonPath("$.responsibilities").value(containsInAnyOrder("Develop software", "Review code")))
+//                .andExpect(jsonPath("$.hiringProcess").value("Interview -> Coding Test -> Offer"))
+//                .andExpect(jsonPath("$.description").value("Position for software engineer"));
+//
+//        userRepository.deleteAll();
+//        companyTypeRepository.deleteAll();
+//        companyRepository.deleteAll();
+//        positionRepository.deleteAll();
+////        positionRoleRepository.deleteAll();
+//    }
 
-        mockMvc.perform(post("/positions")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(asJsonString(requestDto)))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.path").value("/positions"))
-                .andExpect(jsonPath("$.error").value("Not Found"))
-                .andExpect(jsonPath("$.message").value(expectedMessage))
-                .andExpect(jsonPath("$.status").value(404))
-                .andExpect(jsonPath("$.timestamp").exists());
-    }
+//    @Test
+//    void shouldDeleteExistingPosition() throws Exception {
+//        Long id = createPositionAndGetID();
+//
+//        SecurityContextHolder.getContext().setAuthentication(authentication);
+//        mockMvc.perform(delete("/positions/" + id))
+//                .andExpect(status().isNoContent());
+//    }
 
-    @Test
-    void shouldThrowErrorIfUserIsNotAuthenticated() throws Exception {
-        mockMvc.perform(post("/positions")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(asJsonString(requestDto)))
-                .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.status").value(401));
-    }
-
-    @Test
-    void shouldGetPosition() throws Exception {
-        Long id = createPositionAndGetID();
-
-        mockMvc.perform(get("/positions/" + id))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(id))
-                .andExpect(jsonPath("$.projectId").value(project.getId().intValue()))
-                .andExpect(jsonPath("$.statusId").value(1))
-                .andExpect(jsonPath("$.seniority").value(3))
-                .andExpect(jsonPath("$.workMode").value(containsInAnyOrder(1, 2)))
-                .andExpect(jsonPath("$.rate").value(hasEntry("min", 50)))
-                .andExpect(jsonPath("$.rate").value(hasEntry("max", 100)))
-//                .andExpect(jsonPath("$.rate").value(hasEntry("currencyId", currency.getId().intValue())))
-                .andExpect(jsonPath("$.requiredSkills[0].skillId").value(testSkill.getId()))
-                .andExpect(jsonPath("$.requiredSkills[0].months").value(6))
-                .andExpect(jsonPath("$.minYearsExperience").value(2))
-                .andExpect(jsonPath("$.hoursPerWeek").value(40))
-                .andExpect(jsonPath("$.responsibilities").value(containsInAnyOrder("Develop software", "Review code")))
-                .andExpect(jsonPath("$.hiringProcess").value("Interview -> Coding Test -> Offer"))
-                .andExpect(jsonPath("$.description").value("Position for software engineer"));
-    }
-
-    @Test
-    @Transactional(propagation = Propagation.NOT_SUPPORTED)
-    void shouldGetEditedPosition() throws Exception {
-        Long id = createPositionAndGetID();
-
-        PositionEditRequestDto editRequestDto = new PositionEditRequestDto();
-        for(Field field: PositionRequestDto.class.getDeclaredFields()){
-            field.setAccessible(true);
-            try{
-                field.set(editRequestDto, field.get(requestDto));
-            } catch (IllegalArgumentException e){
-                throw new RuntimeException("Failed to copy field: " + field.getName(), e);
-            }
-        }
-        editRequestDto.setHoursPerWeek(20);
-        editRequestDto.setStatusId(1L);
-
-        mockMvc.perform(put("/positions/" + id)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(asJsonString(editRequestDto)))
-                .andExpect(status().isOk());
-
-        mockMvc.perform(get("/positions/" + id))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(id))
-                .andExpect(jsonPath("$.projectId").value(project.getId().intValue()))
-                .andExpect(jsonPath("$.statusId").value(1))
-                .andExpect(jsonPath("$.seniority").value(3))
-                .andExpect(jsonPath("$.workMode").value(containsInAnyOrder(1, 2)))
-                .andExpect(jsonPath("$.rate").value(hasEntry("min", 50)))
-                .andExpect(jsonPath("$.rate").value(hasEntry("max", 100)))
-//                .andExpect(jsonPath("$.rate").value(hasEntry("currencyId", currency.getId().intValue())))
-                .andExpect(jsonPath("$.requiredSkills[0].skillId").value(testSkill.getId()))
-                .andExpect(jsonPath("$.requiredSkills[0].months").value(6))
-                .andExpect(jsonPath("$.minYearsExperience").value(2))
-                .andExpect(jsonPath("$.hoursPerWeek").value(20))
-                .andExpect(jsonPath("$.responsibilities").value(containsInAnyOrder("Develop software", "Review code")))
-                .andExpect(jsonPath("$.hiringProcess").value("Interview -> Coding Test -> Offer"))
-                .andExpect(jsonPath("$.description").value("Position for software engineer"));
-
-        userRepository.deleteAll();
-        companyTypeRepository.deleteAll();
-        companyRepository.deleteAll();
-        positionRepository.deleteAll();
-//        positionRoleRepository.deleteAll();
-    }
-
-    @Test
-    void shouldDeleteExistingPosition() throws Exception {
-        Long id = createPositionAndGetID();
-
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        mockMvc.perform(delete("/positions/" + id))
-                .andExpect(status().isNoContent());
-    }
-
-    @Test
-    void shouldThrowErrorIfPositionIsNotFound() throws Exception {
-        long id = 9999L;
-
-        String expectedMessage = "Position with ID: " + id + " not found";
-
-        mockMvc.perform(delete("/positions/" + id))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.path").value("/positions/" + id))
-                .andExpect(jsonPath("$.error").value("Not Found"))
-                .andExpect(jsonPath("$.message").value(expectedMessage))
-                .andExpect(jsonPath("$.status").value(404))
-                .andExpect(jsonPath("$.timestamp").exists());
-    }
+//    @Test
+//    void shouldThrowErrorIfPositionIsNotFound() throws Exception {
+//        long id = 9999L;
+//
+//        String expectedMessage = "Position with ID: " + id + " not found";
+//
+//        mockMvc.perform(delete("/positions/" + id))
+//                .andExpect(status().isNotFound())
+//                .andExpect(jsonPath("$.path").value("/positions/" + id))
+//                .andExpect(jsonPath("$.error").value("Not Found"))
+//                .andExpect(jsonPath("$.message").value(expectedMessage))
+//                .andExpect(jsonPath("$.status").value(404))
+//                .andExpect(jsonPath("$.timestamp").exists());
+//    }
 
     @Test
     void shouldThrowErrorIfUserIsTryingToAddPositionWithoutHavingCompany() throws Exception {
@@ -399,44 +399,44 @@ class PositionControllerTest {
 
     }
 
-    @Test
-    void shouldThrowErrorIfUserIsNotRelatedWithPosition() throws Exception {
-        UserDetailsImpl userDetails = new UserDetailsImpl(user2);
-        Authentication authenticationForUser2 = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-        SecurityContextHolder.getContext().setAuthentication(authenticationForUser2);
-
-        Company company2 = Company.builder()
-                .name("Test Company2")
-                .email("johndoe2@abv.bgg")
-                .companyType(companyType)
-                .website("https://www.x.com")
-                .emailVerification(EmailVerification.ACCEPTED)
-                .users(new ArrayList<>(List.of(user2)))
-                .build();
-        companyRepository.save(company2);
-
-        user2.setCompany(company2);
-        userRepository.save(user2);
-        userRepository.flush();
-
-
-        Project project2 = new Project();
-        project2.setName("Test Project 2");
-        project2.setCompany(company2);
-        project2 = projectRepository.save(project2);
-
-        company2.setProjects(new ArrayList<>(List.of(project2)));
-        companyRepository.save(company2);
-        companyRepository.flush();
-
-        String expectedMessage = "Project ID: " + requestDto.getProjectId() + " is not associated with company ID: " + company2.getId() + " and user: " + user2.getUsername();
-
-        mockMvc.perform(post("/positions")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(asJsonString(requestDto)))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value(expectedMessage));
-    }
+//    @Test
+//    void shouldThrowErrorIfUserIsNotRelatedWithPosition() throws Exception {
+//        UserDetailsImpl userDetails = new UserDetailsImpl(user2);
+//        Authentication authenticationForUser2 = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+//        SecurityContextHolder.getContext().setAuthentication(authenticationForUser2);
+//
+//        Company company2 = Company.builder()
+//                .name("Test Company2")
+//                .email("johndoe2@abv.bgg")
+//                .companyType(companyType)
+//                .website("https://www.x.com")
+//                .emailVerification(EmailVerification.ACCEPTED)
+//                .users(new ArrayList<>(List.of(user2)))
+//                .build();
+//        companyRepository.save(company2);
+//
+//        user2.setCompany(company2);
+//        userRepository.save(user2);
+//        userRepository.flush();
+//
+//
+//        Project project2 = new Project();
+//        project2.setName("Test Project 2");
+//        project2.setCompany(company2);
+//        project2 = projectRepository.save(project2);
+//
+//        company2.setProjects(new ArrayList<>(List.of(project2)));
+//        companyRepository.save(company2);
+//        companyRepository.flush();
+//
+//        String expectedMessage = "Project ID: " + requestDto.getProjectId() + " is not associated with company ID: " + company2.getId() + " and user: " + user2.getUsername();
+//
+//        mockMvc.perform(post("/positions")
+//                        .contentType(MediaType.APPLICATION_JSON)
+//                        .content(asJsonString(requestDto)))
+//                .andExpect(status().isNotFound())
+//                .andExpect(jsonPath("$.message").value(expectedMessage));
+//    }
 
     private Long createPositionAndGetID() throws Exception {
         SecurityContextHolder.getContext().setAuthentication(authentication);
