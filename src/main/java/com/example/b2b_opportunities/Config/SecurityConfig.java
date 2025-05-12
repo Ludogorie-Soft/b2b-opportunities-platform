@@ -34,8 +34,6 @@ public class SecurityConfig {
     private final AuthenticationProvider authenticationProvider;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final UserDetailsServiceImpl userDetailsService;
-    @Value("${spring.profiles.active}")
-    private String profile;
 
     @Value(("${domain}"))
     private String domain;
@@ -54,15 +52,10 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .authorizeHttpRequests(authorize -> {
-                            if (!profile.equalsIgnoreCase("dev")) {
-                                authorize
-                                        .requestMatchers("/swagger-ui/**").hasAuthority("ROLE_ADMIN");
-                            }
-                            authorize
-                                    .requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN")
-                                    .anyRequest().permitAll();
-                        }
+                .authorizeHttpRequests(authorize -> authorize
+                                .requestMatchers("/swagger-ui/**").hasAuthority("ROLE_ADMIN")
+                                .requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN")
+                                .anyRequest().permitAll()
 //                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
 //                        .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
 //                                .anyRequest().authenticated()
