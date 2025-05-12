@@ -1,6 +1,7 @@
 package com.example.b2b_opportunities.Controller;
 
 import com.example.b2b_opportunities.Dto.Response.CompanyResponseDto;
+import com.example.b2b_opportunities.Entity.Company;
 import com.example.b2b_opportunities.Service.Interface.AdminService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -29,5 +30,11 @@ public class AdminController {
     @ResponseStatus(HttpStatus.OK)
     public List<CompanyResponseDto> getAllNonApprovedCompanies() {
         return adminService.getAllNonApprovedCompanies();
+    }
+
+    @GetMapping("/get-companies")
+    @ResponseStatus(HttpStatus.OK)
+    public List<CompanyResponseDto> getAllCompaniesData() {
+        return adminService.getAllCompaniesData();
     }
 }

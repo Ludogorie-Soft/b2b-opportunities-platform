@@ -35,4 +35,9 @@ public class AdminServiceImpl implements AdminService {
         List<Company> companies = companyRepository.findByIsApprovedFalse();
         return CompanyMapper.toCompanyResponseDtoList(companies);
     }
+
+    @Override
+    public List<CompanyResponseDto> getAllCompaniesData() {
+        return CompanyMapper.toCompanyResponseDtoList(companyRepository.findAll());
+    }
 }

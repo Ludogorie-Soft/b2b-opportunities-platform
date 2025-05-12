@@ -6,5 +6,8 @@ import java.util.List;
 
 public interface AdminService {
     CompanyResponseDto approve(Long id);
+
     List<CompanyResponseDto> getAllNonApprovedCompanies();
+
+    List<CompanyResponseDto> getAllCompaniesData();
 }
