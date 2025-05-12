@@ -34,7 +34,7 @@ public class SecurityConfig {
     private final AuthenticationProvider authenticationProvider;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final UserDetailsServiceImpl userDetailsService;
-    @Value("${spring.active.profile}")
+    @Value("${spring.profiles.active}")
     private String profile;
 
     @Value(("${domain}"))
