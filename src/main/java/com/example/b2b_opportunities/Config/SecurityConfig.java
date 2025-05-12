@@ -30,10 +30,12 @@ import static org.springframework.security.config.Customizer.withDefaults;
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
+    private static BCryptPasswordEncoder encoder;
     private final AuthenticationProvider authenticationProvider;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final UserDetailsServiceImpl userDetailsService;
-    private static BCryptPasswordEncoder encoder;
+    @Value("${spring.active.profile}")
+    private String profile;
 
     @Value(("${domain}"))
     private String domain;
@@ -42,13 +44,25 @@ public class SecurityConfig {
     private String[] allowedOrigins;
 
     @Bean
+    public static BCryptPasswordEncoder passwordEncoder() {
+        if (encoder == null) {
+            encoder = new BCryptPasswordEncoder();
+        }
+        return encoder;
+    }
+
+    @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .authorizeHttpRequests(authorize -> authorize
-//                                .requestMatchers("/").permitAll()
-                                .requestMatchers("/swagger-ui/**").hasAuthority("ROLE_ADMIN")
-                                .requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN")
-                                .anyRequest().permitAll()
+                .authorizeHttpRequests(authorize -> {
+                            if (!profile.equalsIgnoreCase("dev")) {
+                                authorize
+                                        .requestMatchers("/swagger-ui/**").hasAuthority("ROLE_ADMIN");
+                            }
+                            authorize
+                                    .requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN")
+                                    .anyRequest().permitAll();
+                        }
 //                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
 //                        .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
 //                                .anyRequest().authenticated()
@@ -102,14 +116,6 @@ public class SecurityConfig {
         AuthenticationManagerBuilder authBuilder = http.getSharedObject(AuthenticationManagerBuilder.class);
         authBuilder.userDetailsService(userDetailsService).passwordEncoder(passwordEncoder());
         return authBuilder.build();
-    }
-
-    @Bean
-    public static BCryptPasswordEncoder passwordEncoder() {
-        if (encoder == null) {
-            encoder = new BCryptPasswordEncoder();
-        }
-        return encoder;
     }
 
     @Bean
