@@ -811,10 +811,25 @@ public class CompanyServiceImpl implements CompanyService {
 
     private Company setCompanyFields(CompanyRequestDto dto) {
         Company company = CompanyMapper.toCompany(dto);
+        setCompanyLinkedIn(company, dto);
         company.setCompanyType(getCompanyTypeOrThrow(dto));
         company.setDomain(getDomainOrThrow(dto));
         company.setSkills(getSkillsOrThrow(dto));
         return company;
+    }
+
+    private void setCompanyLinkedIn(Company company, CompanyRequestDto dto) {
+        String linkedIn = dto.getLinkedIn();
+
+        if (linkedIn == null || linkedIn.isBlank()) {
+            return;
+        }
+
+        if (!linkedIn.startsWith("http://") && !linkedIn.startsWith("https://")) {
+            linkedIn = "https://" + linkedIn;
+        }
+
+        company.setLinkedIn(linkedIn);
     }
 
     private CompanyType getCompanyTypeOrThrow(CompanyRequestDto dto) {

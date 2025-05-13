@@ -22,7 +22,6 @@ public class CompanyMapper {
                 .name(companyRequestDto.getName())
                 .email(companyRequestDto.getEmail())
                 .website(companyRequestDto.getWebsite())
-                .linkedIn(companyRequestDto.getLinkedIn())
                 .description(companyRequestDto.getDescription())
                 .users(new ArrayList<>())
                 .build();
