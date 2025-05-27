@@ -1,0 +1,43 @@
+package com.example.b2b_opportunities.dto.requestDtos;
+
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import lombok.Getter;
+import lombok.Setter;
+import org.hibernate.validator.constraints.URL;
+
+import java.util.List;
+
+@Getter
+@Setter
+public class CompanyRequestDto {
+    @NotEmpty
+    private String name;
+
+    @NotEmpty
+    @Email
+    private String email;
+
+    @NotNull
+    private Long companyTypeId;
+
+    @URL
+    private String website;
+
+    private Long domainId;
+
+    private String linkedIn;
+
+    private String description;
+
+    private List<Long> skills;
+
+    public void setName(@NotEmpty String name) {
+            this.name = name.trim().replaceAll("\\s+", " ");
+    }
+
+    public void setEmail(@NotEmpty @Email String email) {
+            this.email = email.toLowerCase().trim();
+    }
+}

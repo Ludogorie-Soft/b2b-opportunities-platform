@@ -1,6 +1,6 @@
 package com.example.b2b_opportunities;
 
-import com.example.b2b_opportunities.Service.Interface.JwtService;
+import com.example.b2b_opportunities.services.interfaces.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;

@@ -1,9 +1,9 @@
 package com.example.b2b_opportunities.Service;
 
-import com.example.b2b_opportunities.Entity.Currency;
-import com.example.b2b_opportunities.Exception.common.AlreadyExistsException;
-import com.example.b2b_opportunities.Repository.CurrencyRepository;
-import com.example.b2b_opportunities.Service.Implementation.CurrencyServiceImpl;
+import com.example.b2b_opportunities.entity.Currency;
+import com.example.b2b_opportunities.exception.common.AlreadyExistsException;
+import com.example.b2b_opportunities.repository.CurrencyRepository;
+import com.example.b2b_opportunities.services.impl.CurrencyServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

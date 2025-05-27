@@ -1,10 +1,10 @@
 package com.example.b2b_opportunities.Service;
 
-import com.example.b2b_opportunities.Entity.User;
-import com.example.b2b_opportunities.Exception.AuthenticationFailedException;
-import com.example.b2b_opportunities.Exception.common.NotFoundException;
-import com.example.b2b_opportunities.Repository.UserRepository;
-import com.example.b2b_opportunities.Service.Implementation.UserServiceImpl;
+import com.example.b2b_opportunities.entity.User;
+import com.example.b2b_opportunities.exception.AuthenticationFailedException;
+import com.example.b2b_opportunities.exception.common.NotFoundException;
+import com.example.b2b_opportunities.repository.UserRepository;
+import com.example.b2b_opportunities.services.impl.UserServiceImpl;
 import com.example.b2b_opportunities.UserDetailsImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

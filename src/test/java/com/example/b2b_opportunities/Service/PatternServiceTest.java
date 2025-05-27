@@ -1,14 +1,14 @@
 package com.example.b2b_opportunities.Service;
 
-import com.example.b2b_opportunities.Dto.Request.PatternRequestDto;
-import com.example.b2b_opportunities.Dto.Response.PatternResponseDto;
-import com.example.b2b_opportunities.Entity.Pattern;
-import com.example.b2b_opportunities.Entity.Skill;
-import com.example.b2b_opportunities.Exception.common.AlreadyExistsException;
-import com.example.b2b_opportunities.Exception.common.NotFoundException;
-import com.example.b2b_opportunities.Repository.PatternRepository;
-import com.example.b2b_opportunities.Repository.SkillRepository;
-import com.example.b2b_opportunities.Service.Implementation.PatternServiceImpl;
+import com.example.b2b_opportunities.dto.requestDtos.PatternRequestDto;
+import com.example.b2b_opportunities.dto.responseDtos.PatternResponseDto;
+import com.example.b2b_opportunities.entity.Pattern;
+import com.example.b2b_opportunities.entity.Skill;
+import com.example.b2b_opportunities.exception.common.AlreadyExistsException;
+import com.example.b2b_opportunities.exception.common.NotFoundException;
+import com.example.b2b_opportunities.repository.PatternRepository;
+import com.example.b2b_opportunities.repository.SkillRepository;
+import com.example.b2b_opportunities.services.impl.PatternServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;

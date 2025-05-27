@@ -1,6 +1,6 @@
 package com.example.b2b_opportunities.Service;
 
-import com.example.b2b_opportunities.Service.Implementation.JwtServiceImpl;
+import com.example.b2b_opportunities.services.impl.JwtServiceImpl;
 import io.jsonwebtoken.Claims;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

@@ -1,9 +1,9 @@
 package com.example.b2b_opportunities.Service;
 
-import com.example.b2b_opportunities.Dto.Request.EmailRequest;
-import com.example.b2b_opportunities.Entity.User;
-import com.example.b2b_opportunities.Repository.ConfirmationTokenRepository;
-import com.example.b2b_opportunities.Service.Implementation.MailServiceImpl;
+import com.example.b2b_opportunities.dto.requestDtos.EmailRequest;
+import com.example.b2b_opportunities.entity.User;
+import com.example.b2b_opportunities.repository.ConfirmationTokenRepository;
+import com.example.b2b_opportunities.services.impl.MailServiceImpl;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;

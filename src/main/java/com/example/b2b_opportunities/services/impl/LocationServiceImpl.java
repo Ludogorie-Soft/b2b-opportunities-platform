@@ -1,0 +1,69 @@
+package com.example.b2b_opportunities.services.impl;
+
+import com.example.b2b_opportunities.entity.Location;
+import com.example.b2b_opportunities.exception.common.AlreadyExistsException;
+import com.example.b2b_opportunities.exception.common.NotFoundException;
+import com.example.b2b_opportunities.repository.LocationRepository;
+import com.example.b2b_opportunities.services.interfaces.LocationService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Objects;
+
+import static com.example.b2b_opportunities.utils.StringUtils.stripCapitalizeAndValidateNotEmpty;
+
+@Service
+@RequiredArgsConstructor
+public class LocationServiceImpl implements LocationService {
+    private final LocationRepository locationRepository;
+
+    @Override
+    public Location get(Long id) {
+        return getLocationsIfExists(id);
+    }
+
+    @Override
+    public List<Location> getAll() {
+        return locationRepository.findAll();
+    }
+
+    @Override
+    public Location create(String name) {
+        name = stripCapitalizeAndValidateNotEmpty(name, "Location Name");
+
+        validateLocationNameDoesNotExist(name);
+        Location location = new Location();
+        location.setName(name);
+        return locationRepository.save(location);
+    }
+
+    @Override
+    public Location update(Long id, String newName) {
+        newName = stripCapitalizeAndValidateNotEmpty(newName, "Location Name");
+
+        Location location = getLocationsIfExists(id);
+        if (!Objects.equals(location.getName(), newName)) {
+            validateLocationNameDoesNotExist(newName);
+            location.setName(newName);
+            return locationRepository.save(location);
+        }
+        return location;
+    }
+
+    @Override
+    public void delete(Long id) {
+        getLocationsIfExists(id);
+        locationRepository.deleteById(id);
+    }
+
+    private void validateLocationNameDoesNotExist(String name) {
+        if (locationRepository.findByName(name).isPresent()) {
+            throw new AlreadyExistsException("Location with name: '" + name + "' already exists", "name");
+        }
+    }
+
+    private Location getLocationsIfExists(Long id) {
+        return locationRepository.findById(id).orElseThrow(() -> new NotFoundException("Location with ID: " + id + " not found"));
+    }
+}

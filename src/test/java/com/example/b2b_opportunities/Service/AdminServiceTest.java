@@ -1,15 +1,15 @@
 package com.example.b2b_opportunities.Service;
 
 import com.example.b2b_opportunities.BaseTest;
-import com.example.b2b_opportunities.Dto.Response.CompanyResponseDto;
-import com.example.b2b_opportunities.Entity.Company;
-import com.example.b2b_opportunities.Entity.CompanyType;
-import com.example.b2b_opportunities.Repository.CompanyRepository;
-import com.example.b2b_opportunities.Repository.CompanyTypeRepository;
-import com.example.b2b_opportunities.Service.Implementation.AdminServiceImpl;
-import com.example.b2b_opportunities.Service.Interface.AdminService;
-import com.example.b2b_opportunities.Service.Interface.EmailSchedulerService;
-import com.example.b2b_opportunities.Static.EmailVerification;
+import com.example.b2b_opportunities.dto.responseDtos.CompanyResponseDto;
+import com.example.b2b_opportunities.entity.Company;
+import com.example.b2b_opportunities.entity.CompanyType;
+import com.example.b2b_opportunities.repository.CompanyRepository;
+import com.example.b2b_opportunities.repository.CompanyTypeRepository;
+import com.example.b2b_opportunities.services.impl.AdminServiceImpl;
+import com.example.b2b_opportunities.services.interfaces.AdminService;
+import com.example.b2b_opportunities.services.interfaces.EmailSchedulerService;
+import com.example.b2b_opportunities.enums.EmailVerification;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,6 +1,6 @@
 package com.example.b2b_opportunities;
 
-import com.example.b2b_opportunities.Entity.User;
+import com.example.b2b_opportunities.entity.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
