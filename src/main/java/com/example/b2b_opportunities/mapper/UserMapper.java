@@ -3,6 +3,7 @@ package com.example.b2b_opportunities.mapper;
 import com.example.b2b_opportunities.config.SecurityConfig;
 import com.example.b2b_opportunities.dto.requestDtos.UserRequestDto;
 import com.example.b2b_opportunities.dto.responseDtos.UserResponseDto;
+import com.example.b2b_opportunities.dto.responseDtos.UserSummaryDto;
 import com.example.b2b_opportunities.entity.Company;
 import com.example.b2b_opportunities.entity.Role;
 import com.example.b2b_opportunities.entity.User;
@@ -60,5 +61,13 @@ public class UserMapper {
             userResponseDtoList.add(toResponseDto(user));
         }
         return userResponseDtoList;
+    }
+
+    public static UserSummaryDto toSummaryDto(User user){
+        return UserSummaryDto.builder()
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .companyId(user.getCompany() !=null ? user.getCompany().getId() : null)
+                .build();
     }
 }

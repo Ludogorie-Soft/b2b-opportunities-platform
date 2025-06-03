@@ -1,13 +1,16 @@
 package com.example.b2b_opportunities.controller;
 
 import com.example.b2b_opportunities.dto.responseDtos.CompanyResponseDto;
+import com.example.b2b_opportunities.dto.responseDtos.UserSummaryDto;
 import com.example.b2b_opportunities.services.interfaces.AdminService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -35,5 +38,12 @@ public class AdminController {
     @ResponseStatus(HttpStatus.OK)
     public List<CompanyResponseDto> getAllCompaniesData() {
         return adminService.getAllCompaniesData();
+    }
+
+    @GetMapping("/users")
+    @ResponseStatus(HttpStatus.OK)
+    public Page<UserSummaryDto> getUsersSummary(@RequestParam(defaultValue = "0") int page,
+                                                @RequestParam(defaultValue = "10") int size) {
+        return adminService.getUsersSummary(page, size);
     }
 }
