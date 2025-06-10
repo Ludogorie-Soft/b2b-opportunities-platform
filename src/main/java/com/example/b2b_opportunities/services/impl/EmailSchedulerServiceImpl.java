@@ -6,12 +6,12 @@ import com.example.b2b_opportunities.entity.Position;
 import com.example.b2b_opportunities.entity.PositionApplication;
 import com.example.b2b_opportunities.entity.Project;
 import com.example.b2b_opportunities.entity.Skill;
+import com.example.b2b_opportunities.enums.ProjectStatus;
 import com.example.b2b_opportunities.repository.CompanyRepository;
 import com.example.b2b_opportunities.repository.ProjectRepository;
 import com.example.b2b_opportunities.services.interfaces.EmailSchedulerService;
 import com.example.b2b_opportunities.services.interfaces.MailService;
 import com.example.b2b_opportunities.services.interfaces.PositionApplicationService;
-import com.example.b2b_opportunities.enums.ProjectStatus;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,6 +38,9 @@ public class EmailSchedulerServiceImpl implements EmailSchedulerService {
     @Value("${frontend.address}")
     private String frontEndAddress;
 
+    @Value("${spring.profiles.active}")
+    private String activeProfile;
+
     @Transactional
     @Scheduled(cron = "${cron.everyMondayAt9}")
     @Override
@@ -63,9 +66,9 @@ public class EmailSchedulerServiceImpl implements EmailSchedulerService {
     public void sendWeeklyEmailsWhenCompanyHasNoSkillsAndNoCustomFilters() {
         List<Company> companies = companyRepository.findCompaniesWithSingleDefaultEnabledFilterAndNoCompanySkills();
         List<Project> projectsLastWeek = getProjectsUpdatedInPastDays(7);
-        if(projectsLastWeek.isEmpty()) return;
+        if (projectsLastWeek.isEmpty()) return;
         for (Company c : companies) {
-            String title = "B2B Important: Set Your Company Skills to Receive Relevant Project Updates";
+            String title = activeProfile.equals("dev") ? "[TEST env] B2B Important: Set Your Company Skills to Receive Relevant Project Updates" : "B2B Important: Set Your Company Skills to Receive Relevant Project Updates";
             String emailContent = "<html><body style=\"font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 16px; font-weight: normal;\">" + "<p><b>Hello, " + c.getName() + ",</b></p>" +
                     "<p><b>We noticed your company profile has no skills listed yet.</b></p>" +
                     "This week, <b>" + projectsLastWeek.size() + " new projects </b> were posted that might interest you.<br/><br/>" +
@@ -207,7 +210,7 @@ public class EmailSchedulerServiceImpl implements EmailSchedulerService {
         if (!newProjects.isEmpty() || !modifiedProjects.isEmpty()) {
             String emailContent = generateEmailContent(c.getName(), newProjects, modifiedProjects);
             String receiver = c.getEmail();
-            String title = "Hire-B2B - Don't miss on new projects";
+            String title = activeProfile.equals("dev") ? "[TEST env] Hire-B2B - Don't miss on new projects" : "Hire-B2B - Don't miss on new projects";
             mailService.sendEmail(receiver, emailContent, title);
         }
     }

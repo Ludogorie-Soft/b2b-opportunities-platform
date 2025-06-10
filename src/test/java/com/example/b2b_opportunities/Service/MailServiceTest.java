@@ -44,7 +44,7 @@ class MailServiceTest {
     @BeforeEach
     void setUp() {
         ReflectionTestUtils.setField(mailService, "emailServiceUrl", "http://mocked-email-service.com/send");
-
+        ReflectionTestUtils.setField(mailService, "activeProfile", "dev");
     }
 
     @Test

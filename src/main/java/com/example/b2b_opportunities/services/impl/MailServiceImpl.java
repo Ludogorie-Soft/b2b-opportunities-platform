@@ -24,6 +24,9 @@ public class MailServiceImpl implements MailService {
     private final ConfirmationTokenRepository confirmationTokenRepository;
     private final RestTemplate restTemplate;
 
+    @Value("${spring.profiles.active}")
+    private String activeProfile;
+
     @Value("${email.service.url}")
     private String emailServiceUrl;
 
@@ -54,8 +57,8 @@ public class MailServiceImpl implements MailService {
                 "</body>" +
                 "</html>";
 
-        String subject = "Confirm your E-Mail at hire-b2b.com";
-        sendEmail(user.getEmail(), emailContent, subject);
+        String title = activeProfile.equals("dev") ? "[TEST env] Confirm your E-Mail at hire-b2b.com" : "Confirm your E-Mail at hire-b2b.com";
+        sendEmail(user.getEmail(), emailContent, title);
         log.info("Send confirmation Email to: {}", user.getEmail());
     }
 
@@ -71,8 +74,8 @@ public class MailServiceImpl implements MailService {
                 "</body>" +
                 "</html>";
 
-        String subject = "Reset password at hire-b2b.com";
-        sendEmail(user.getEmail(), emailContent, subject);
+        String title = activeProfile.equals("dev") ? "[TEST env] Reset password at hire-b2b.com" : "Reset password at hire-b2b.com";
+        sendEmail(user.getEmail(), emailContent, title);
         log.info("Send password recovery Email to: {}", user.getEmail());
     }
 
@@ -88,8 +91,8 @@ public class MailServiceImpl implements MailService {
                 "<br/><strong>hire-b2b team</strong>" +
                 "</body>" +
                 "</html>";
-        String subject = "Company mail confirmation - hire-b2b Team";
-        sendEmail(company.getEmail(), emailContent, subject);
+        String title = activeProfile.equals("dev") ? "[TEST env] Company mail confirmation - hire-b2b Team" : "Company mail confirmation - hire-b2b Team";
+        sendEmail(company.getEmail(), emailContent, title);
         log.info("Send company (ID: {}) confirmation Email to: {}", company.getId(), company.getEmail());
     }
 
@@ -104,9 +107,9 @@ public class MailServiceImpl implements MailService {
                 "<br/><strong>hire-b2b team</strong>" +
                 "</body>" +
                 "</html>";
-        String subject = "B2B Reminder: Your Project is Expiring in 2 Days – Reactivate Now!";
+        String title = activeProfile.equals("dev") ? "[TEST env] B2B Reminder: Your Project is Expiring in 2 Days – Reactivate Now!" : "B2B Reminder: Your Project is Expiring in 2 Days – Reactivate Now!";
         String email = project.getCompany().getEmail();
-        sendEmail(email, emailContent, subject);
+        sendEmail(email, emailContent, title);
         log.info("Send project expiring soon Email to: {}", email);
     }
 
@@ -125,10 +128,10 @@ public class MailServiceImpl implements MailService {
                 "</body>" +
                 "</html>";
 
-        String subject = "Your Application Has Been Approved at hire-b2b.com";
+        String title = activeProfile.equals("dev") ? "[TEST env] Your Application Has Been Approved at hire-b2b.com" : "Your Application Has Been Approved at hire-b2b.com";
         String email = positionApplication.getTalentCompany().getEmail();
 
-        sendEmail(email, emailContent, subject);
+        sendEmail(email, emailContent, title);
         log.info("Send application approval Email to: {}", email);
     }
 
