@@ -102,6 +102,13 @@ public class CompanyController {
         return companyService.createCompany(authentication, companyRequestDto, request);
     }
 
+    @GetMapping("/resend-email-confirmation")
+    @ResponseStatus(HttpStatus.OK)
+    public CompanyResponseDto resendConfirmationEmail(Authentication authentication,
+                                                      HttpServletRequest request){
+        return companyService.resendConfirmationEmail(authentication, request);
+    }
+
     @GetMapping("/partners")
     @ResponseStatus(HttpStatus.OK)
     public List<PartnerGroupResponseDto> getPartnerGroups(Authentication authentication) {

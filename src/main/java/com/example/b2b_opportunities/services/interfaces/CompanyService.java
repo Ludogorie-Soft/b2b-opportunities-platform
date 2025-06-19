@@ -111,4 +111,6 @@ public interface CompanyService {
     List<PartialPositionResponseDto> getMyPositionsPartial(Authentication authentication);
 
     CompanyPublicResponseDto getPublicCompanyInfoById(Long id);
+
+    CompanyResponseDto resendConfirmationEmail(Authentication authentication, HttpServletRequest request);
 }

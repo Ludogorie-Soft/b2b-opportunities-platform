@@ -35,6 +35,8 @@ import com.example.b2b_opportunities.entity.Talent;
 import com.example.b2b_opportunities.entity.TalentExperience;
 import com.example.b2b_opportunities.entity.User;
 import com.example.b2b_opportunities.entity.WorkMode;
+import com.example.b2b_opportunities.enums.ApplicationStatus;
+import com.example.b2b_opportunities.enums.EmailVerification;
 import com.example.b2b_opportunities.exception.common.AlreadyExistsException;
 import com.example.b2b_opportunities.exception.common.InvalidRequestException;
 import com.example.b2b_opportunities.exception.common.NotFoundException;
@@ -66,8 +68,6 @@ import com.example.b2b_opportunities.services.interfaces.CompanyService;
 import com.example.b2b_opportunities.services.interfaces.MailService;
 import com.example.b2b_opportunities.services.interfaces.PatternService;
 import com.example.b2b_opportunities.services.interfaces.UserService;
-import com.example.b2b_opportunities.enums.ApplicationStatus;
-import com.example.b2b_opportunities.enums.EmailVerification;
 import com.example.b2b_opportunities.utils.StringUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -626,6 +626,17 @@ public class CompanyServiceImpl implements CompanyService {
         return responseDto;
     }
 
+    @Override
+    public CompanyResponseDto resendConfirmationEmail(Authentication authentication, HttpServletRequest request) {
+        User user = userService.getCurrentUserOrThrow(authentication);
+        Company userCompany = getUserCompanyOrThrow(user);
+        if (userCompany.getEmailVerification() == EmailVerification.ACCEPTED) {
+            throw new InvalidRequestException("The company email is already approved!");
+        }
+        createCompanyTokenAndSendEmail(userCompany, request);
+        return CompanyMapper.toCompanyResponseDto(userCompany);
+    }
+
     private void setTalentRates(Talent talent, TalentRequestDto talentRequestDto) {
         Integer minRate = talentRequestDto.getMinRate();
         Integer maxRate = talentRequestDto.getMaxRate();
@@ -877,12 +888,16 @@ public class CompanyServiceImpl implements CompanyService {
     private void setCompanyEmailVerificationStatusAndSendEmail(Company userCompany, User currentUser, CompanyRequestDto dto, HttpServletRequest request) {
         EmailVerification status = setCompanyEmailVerificationStatus(userCompany, currentUser.getEmail(), dto.getEmail());
         if (status.equals(EmailVerification.PENDING)) {
-            String token = UUID.randomUUID().toString();
-            userCompany.setEmailConfirmationToken(token);
-            companyRepository.save(userCompany);
-            log.info("Created new token for company with ID: {}", userCompany.getId());
-            mailService.sendCompanyEmailConfirmation(userCompany, token, request);
+            createCompanyTokenAndSendEmail(userCompany, request);
         }
+    }
+
+    private void createCompanyTokenAndSendEmail(Company userCompany, HttpServletRequest request){
+        String token = UUID.randomUUID().toString();
+        userCompany.setEmailConfirmationToken(token);
+        companyRepository.save(userCompany);
+        log.info("Created new token for company with ID: {}", userCompany.getId());
+        mailService.sendCompanyEmailConfirmation(userCompany, token, request);
     }
 
     private void updateCompanyWebsiteAndLinkedIn(Company userCompany, CompanyRequestDto companyRequestDto) {
