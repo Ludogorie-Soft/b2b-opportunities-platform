@@ -24,5 +24,4 @@ public class UserResponseDto {
     private Long companyId;
     private LocalDateTime createdAt;
     private boolean isEnabled;
-    private boolean isApproved;
 }
