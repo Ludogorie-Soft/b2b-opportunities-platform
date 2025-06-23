@@ -42,8 +42,8 @@ public class AdminController {
 
     @GetMapping("/users")
     @ResponseStatus(HttpStatus.OK)
-    public Page<UserSummaryDto> getUsersSummary(@RequestParam(defaultValue = "0") int page,
-                                                @RequestParam(defaultValue = "10") int size) {
-        return adminService.getUsersSummary(page, size);
+    public Page<UserSummaryDto> getUsersSummary(@RequestParam(defaultValue = "0") int offset,
+                                                @RequestParam(defaultValue = "10") int pageSize) {
+        return adminService.getUsersSummary(offset, pageSize);
     }
 }
