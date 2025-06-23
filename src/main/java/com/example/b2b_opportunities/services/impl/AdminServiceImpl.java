@@ -50,7 +50,7 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public Page<UserSummaryDto> getUsersSummary(int offset, int pageSize) {
-        Pageable pageable = PageRequest.of(pageSize, offset);
+        Pageable pageable = PageRequest.of(offset, pageSize);
         return userRepository.findAllUsers(pageable).map(UserMapper::toSummaryDto);
     }
 }

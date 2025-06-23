@@ -75,6 +75,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         UserDetails userDetails;
         userDetails = authenticate(loginDto);
         log.info("User logged in using basic auth: {}", userDetails.getUsername());
+
+        if (userDetails instanceof UserDetailsImpl userDetailsImpl) {
+            User user = userDetailsImpl.getUser();
+            setLastLogin(user);
+        }
+
         String jwtToken = jwtService.generateToken(userDetails);
 
         setJwtCookie(request, response, jwtToken);
@@ -151,6 +157,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 createUserFromOAuth(attributes, provider);
             }
             log.info("User logged in using Oauth: {}", email);
+            setLastLogin(userService.getUserByEmailOrThrow(email));
             generateLoginResponse(request, response, email);
         }
     }
@@ -294,5 +301,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         LocalDateTime currentDateTime = LocalDateTime.now();
         Duration duration = Duration.between(token.getCreatedAt(), currentDateTime);
         return duration.toDays() > tokenExpirationDays;
+    }
+
+    private void setLastLogin(User user){
+        user.setLastLogin(LocalDateTime.now());
+        userRepository.save(user);
     }
 }

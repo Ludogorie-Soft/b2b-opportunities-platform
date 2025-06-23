@@ -65,9 +65,12 @@ public class UserMapper {
 
     public static UserSummaryDto toSummaryDto(User user){
         return UserSummaryDto.builder()
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
                 .username(user.getUsername())
                 .email(user.getEmail())
                 .companyId(user.getCompany() !=null ? user.getCompany().getId() : null)
+                .lastLogin(user.getLastLogin() != null ? user.getLastLogin() : null)
                 .build();
     }
 }

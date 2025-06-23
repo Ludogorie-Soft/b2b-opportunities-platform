@@ -7,6 +7,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Setter
 @Builder
@@ -14,7 +16,10 @@ import lombok.Setter;
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserSummaryDto {
+    private String firstName;
+    private String lastName;
     private String username;
     private String email;
     private Long companyId;
+    private LocalDateTime lastLogin;
 }

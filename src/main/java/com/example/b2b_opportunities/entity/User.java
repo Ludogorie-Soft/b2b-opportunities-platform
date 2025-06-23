@@ -70,4 +70,6 @@ public class User {
         // TODO: Length requirement if not null?
         this.username = username.strip();
     }
+
+    private LocalDateTime lastLogin;
 }
