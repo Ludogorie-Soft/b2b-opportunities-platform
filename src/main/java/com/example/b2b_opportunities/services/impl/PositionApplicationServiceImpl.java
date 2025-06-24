@@ -16,6 +16,7 @@ import com.example.b2b_opportunities.exception.common.NotFoundException;
 import com.example.b2b_opportunities.exception.common.PermissionDeniedException;
 import com.example.b2b_opportunities.mapper.PositionApplicationMapper;
 import com.example.b2b_opportunities.repository.PositionApplicationRepository;
+import com.example.b2b_opportunities.repository.TalentRepository;
 import com.example.b2b_opportunities.services.interfaces.MailService;
 import com.example.b2b_opportunities.services.interfaces.PositionApplicationService;
 import com.example.b2b_opportunities.services.interfaces.PositionService;
@@ -61,6 +62,7 @@ public class PositionApplicationServiceImpl implements PositionApplicationServic
     private final ImageServiceImpl imageService;
     private final MailService mailService;
     private final MinioClient minioClient;
+    private final TalentRepository talentRepository;
 
     @Value("${storage.bucketName}")
     private String bucketName;
@@ -115,6 +117,8 @@ public class PositionApplicationServiceImpl implements PositionApplicationServic
         if (requestDto.getTalentId() != null) {
             Talent talent = companyService.getTalentOrThrow(requestDto.getTalentId());
             validateApplication(userCompany, position, talent);
+            talent.setLastAppliedAt(LocalDateTime.now());
+            talentRepository.save(talent);
             application.setTalent(talent);
             application.setApplicationStatus(ApplicationStatus.IN_PROGRESS);
         }

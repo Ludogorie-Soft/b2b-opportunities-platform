@@ -18,6 +18,7 @@ import lombok.Setter;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
 
+import java.time.LocalDateTime;
 import java.util.Set;
 
 @Entity
@@ -63,4 +64,13 @@ public class Talent {
     )
     @Column(name = "location")
     private Set<Location> locations;
+
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @Column(name = "last_applied_at")
+    private LocalDateTime lastAppliedAt;
 }

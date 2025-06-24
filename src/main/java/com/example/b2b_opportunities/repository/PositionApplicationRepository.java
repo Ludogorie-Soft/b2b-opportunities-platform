@@ -50,4 +50,6 @@ public interface PositionApplicationRepository extends JpaRepository<PositionApp
 
     @Query("SELECT COUNT(pa) > 0 FROM PositionApplication pa WHERE pa.talent = :talent AND pa.position.project.company = :company")
     boolean existsByTalentAndCompany(@Param("talent") Talent talent, @Param("company") Company company);
+
+    long countByTalentId(Long talentId);
 }

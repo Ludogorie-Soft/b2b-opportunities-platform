@@ -82,6 +82,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -408,6 +409,7 @@ public class CompanyServiceImpl implements CompanyService {
         setTalentWorkModes(talent, talentRequestDto.getWorkModes());
         setTalentRates(talent, talentRequestDto);
         validateSkills(talentRequestDto);
+        talent.setCreatedAt(LocalDateTime.now());
         talentRepository.save(talent);
 
         setTalentExperience(talentRequestDto.getExperience(), talent);
@@ -687,6 +689,7 @@ public class CompanyServiceImpl implements CompanyService {
         talent.getTalentExperience().setSeniority(getSeniorityOrThrow(dto.getExperience().getSeniorityId()));
         talent.getTalentExperience().setTotalTime(dto.getExperience().getTotalTime() != null ? dto.getExperience().getTotalTime() : 0);
         talent.setActive(dto.isActive());
+        talent.setUpdatedAt(LocalDateTime.now());
     }
 
 

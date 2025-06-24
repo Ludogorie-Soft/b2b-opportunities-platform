@@ -1,6 +1,7 @@
 package com.example.b2b_opportunities.services.interfaces;
 
 import com.example.b2b_opportunities.dto.responseDtos.CompanyResponseDto;
+import com.example.b2b_opportunities.dto.responseDtos.TalentStatsDto;
 import com.example.b2b_opportunities.dto.responseDtos.UserSummaryDto;
 import org.springframework.data.domain.Page;
 
@@ -14,4 +15,6 @@ public interface AdminService {
     List<CompanyResponseDto> getAllCompaniesData();
 
     Page<UserSummaryDto> getUsersSummary(int page, int size);
+
+    Page<TalentStatsDto> getTalentStats(int offset, int pageSize);
 }

@@ -1,6 +1,7 @@
 package com.example.b2b_opportunities.controller;
 
 import com.example.b2b_opportunities.dto.responseDtos.CompanyResponseDto;
+import com.example.b2b_opportunities.dto.responseDtos.TalentStatsDto;
 import com.example.b2b_opportunities.dto.responseDtos.UserSummaryDto;
 import com.example.b2b_opportunities.services.interfaces.AdminService;
 import lombok.RequiredArgsConstructor;
@@ -45,5 +46,12 @@ public class AdminController {
     public Page<UserSummaryDto> getUsersSummary(@RequestParam(defaultValue = "0") int offset,
                                                 @RequestParam(defaultValue = "10") int pageSize) {
         return adminService.getUsersSummary(offset, pageSize);
+    }
+
+    @GetMapping("/talent-stats")
+    @ResponseStatus(HttpStatus.OK)
+    public Page<TalentStatsDto> getTalentStats(@RequestParam(defaultValue = "0") int offset,
+                                               @RequestParam(defaultValue = "10") int pageSize) {
+        return adminService.getTalentStats(offset, pageSize);
     }
 }

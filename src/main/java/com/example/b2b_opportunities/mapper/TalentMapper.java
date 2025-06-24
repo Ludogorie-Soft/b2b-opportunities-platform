@@ -5,6 +5,7 @@ import com.example.b2b_opportunities.dto.responseDtos.PartialTalentResponseDto;
 import com.example.b2b_opportunities.dto.responseDtos.SkillExperienceResponseDto;
 import com.example.b2b_opportunities.dto.responseDtos.TalentExperienceResponseDto;
 import com.example.b2b_opportunities.dto.responseDtos.TalentResponseDto;
+import com.example.b2b_opportunities.dto.responseDtos.TalentStatsDto;
 import com.example.b2b_opportunities.entity.Location;
 import com.example.b2b_opportunities.entity.SkillExperience;
 import com.example.b2b_opportunities.entity.Talent;
@@ -86,4 +87,12 @@ public class TalentMapper {
                 .build();
     }
 
+    public static TalentStatsDto toTalentStatsDto(Talent talent){
+        return TalentStatsDto.builder()
+                .id(talent.getId())
+                .createdAt(talent.getCreatedAt())
+                .updatedAt(talent.getUpdatedAt())
+                .lastAppliedAt(talent.getLastAppliedAt())
+                .build();
+    }
 }
