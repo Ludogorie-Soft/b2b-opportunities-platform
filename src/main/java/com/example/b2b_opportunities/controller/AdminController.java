@@ -1,6 +1,7 @@
 package com.example.b2b_opportunities.controller;
 
 import com.example.b2b_opportunities.dto.responseDtos.CompanyResponseDto;
+import com.example.b2b_opportunities.dto.responseDtos.ProjectStatsDto;
 import com.example.b2b_opportunities.dto.responseDtos.TalentStatsDto;
 import com.example.b2b_opportunities.dto.responseDtos.UserSummaryDto;
 import com.example.b2b_opportunities.services.interfaces.AdminService;
@@ -53,5 +54,19 @@ public class AdminController {
     public Page<TalentStatsDto> getTalentStats(@RequestParam(defaultValue = "0") int offset,
                                                @RequestParam(defaultValue = "10") int pageSize) {
         return adminService.getTalentStats(offset, pageSize);
+    }
+
+    @GetMapping("/project-stats/active")
+    @ResponseStatus(HttpStatus.OK)
+    public Page<ProjectStatsDto> getActiveProjects(@RequestParam(defaultValue = "0") int offset,
+                                                   @RequestParam(defaultValue = "10") int pageSize) {
+        return adminService.getActiveProjects(offset, pageSize);
+    }
+
+    @GetMapping("/project-stats/inactive")
+    @ResponseStatus(HttpStatus.OK)
+    public Page<ProjectStatsDto> getInactiveProjects(@RequestParam(defaultValue = "0") int offset,
+                                                   @RequestParam(defaultValue = "10") int pageSize) {
+        return adminService.getInactiveProjects(offset, pageSize);
     }
 }

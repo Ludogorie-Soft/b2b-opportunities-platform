@@ -52,4 +52,10 @@ public interface PositionApplicationRepository extends JpaRepository<PositionApp
     boolean existsByTalentAndCompany(@Param("talent") Talent talent, @Param("company") Company company);
 
     long countByTalentId(Long talentId);
+
+    @Query("SELECT COUNT(pa) FROM PositionApplication pa WHERE pa.position.project.id = :projectId")
+    Long countByProjectId(@Param("projectId") Long projectId);
+
+    @Query("SELECT MAX(pa.applicationDateTime) FROM PositionApplication pa WHERE pa.position.project.id = :projectId")
+    LocalDateTime findLastApplicationDateTimeByProjectId(@Param("projectId") Long projectId);
 }

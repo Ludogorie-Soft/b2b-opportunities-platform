@@ -1,15 +1,20 @@
 package com.example.b2b_opportunities.services.impl;
 
 import com.example.b2b_opportunities.dto.responseDtos.CompanyResponseDto;
+import com.example.b2b_opportunities.dto.responseDtos.ProjectStatsDto;
 import com.example.b2b_opportunities.dto.responseDtos.TalentStatsDto;
 import com.example.b2b_opportunities.dto.responseDtos.UserSummaryDto;
 import com.example.b2b_opportunities.entity.Company;
+import com.example.b2b_opportunities.entity.Project;
 import com.example.b2b_opportunities.entity.Talent;
+import com.example.b2b_opportunities.enums.ProjectStatus;
 import com.example.b2b_opportunities.mapper.CompanyMapper;
+import com.example.b2b_opportunities.mapper.ProjectMapper;
 import com.example.b2b_opportunities.mapper.TalentMapper;
 import com.example.b2b_opportunities.mapper.UserMapper;
 import com.example.b2b_opportunities.repository.CompanyRepository;
 import com.example.b2b_opportunities.repository.PositionApplicationRepository;
+import com.example.b2b_opportunities.repository.ProjectRepository;
 import com.example.b2b_opportunities.repository.TalentRepository;
 import com.example.b2b_opportunities.repository.UserRepository;
 import com.example.b2b_opportunities.services.interfaces.AdminService;
@@ -22,6 +27,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -33,6 +39,7 @@ public class AdminServiceImpl implements AdminService {
     private final CompanyServiceImpl companyService;
     private final TalentRepository talentRepository;
     private final PositionApplicationRepository positionApplicationRepository;
+    private final ProjectRepository projectRepository;
 
     @Override
     public CompanyResponseDto approve(Long id) {
@@ -75,6 +82,33 @@ public class AdminServiceImpl implements AdminService {
                     return dto;
                 }).toList();
         return new PageImpl<>(dtoList, pageable, talentsPage.getTotalElements());
+    }
+
+    @Override
+    public Page<ProjectStatsDto> getActiveProjects(int offset, int pageSize) {
+        return getProjects(offset, pageSize, ProjectStatus.ACTIVE);
+    }
+
+    @Override
+    public Page<ProjectStatsDto> getInactiveProjects(int offset, int pageSize) {
+        return getProjects(offset, pageSize, ProjectStatus.INACTIVE);
+    }
+
+
+    private Page<ProjectStatsDto> getProjects(int offset, int pageSize, ProjectStatus projectStatus){
+        Pageable pageable = PageRequest.of(offset, pageSize);
+        Page<Project> projects = projectRepository.findProjectsByStatus(projectStatus, pageable);
+        return projects.map(
+                project -> {
+                    Long applicationCount = positionApplicationRepository.countByProjectId(project.getId());
+                    LocalDateTime lastApplicationAt = positionApplicationRepository.findLastApplicationDateTimeByProjectId(project.getId());
+                    long emailsSent = companyRepository.countCompaniesThatWereNotifiedForProject(project.getId());
+                    ProjectStatsDto projectStatsDto = ProjectMapper.toProjectStatsDto(project);
+                    projectStatsDto.setApplicationCount(applicationCount);
+                    projectStatsDto.setLastApplicationAt(lastApplicationAt);
+                    projectStatsDto.setEmailsSent(emailsSent);
+                    return projectStatsDto;
+                });
     }
 
 }

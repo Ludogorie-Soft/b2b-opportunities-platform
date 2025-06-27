@@ -1,6 +1,7 @@
 package com.example.b2b_opportunities.mapper;
 
 import com.example.b2b_opportunities.dto.responseDtos.ProjectResponseDto;
+import com.example.b2b_opportunities.dto.responseDtos.ProjectStatsDto;
 import com.example.b2b_opportunities.entity.PartnerGroup;
 import com.example.b2b_opportunities.entity.Project;
 
@@ -51,5 +52,15 @@ public class ProjectMapper {
             return projectResponseDtos;
         }
         return null;
+    }
+
+    public static ProjectStatsDto toProjectStatsDto(Project project){
+        return ProjectStatsDto.builder()
+                .id(project.getId())
+                .companyName(project.getCompany().getName())
+                .positionCount(project.getPositions().size())
+                .createdAt(project.getDatePosted())
+                .updatedAt(project.getDateUpdated())
+                .build();
     }
 }

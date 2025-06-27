@@ -65,4 +65,8 @@ public interface ProjectRepository extends JpaRepository<Project, Long>, CustomP
 
     @Query("select p from Project p where p.company.id = :companyId")
     Page<Project> findByCompanyId(Long companyId, Pageable pageable);
+
+    @Query("SELECT p FROM Project p WHERE p.projectStatus = :status")
+    Page<Project> findProjectsByStatus(@Param("status") ProjectStatus status, Pageable pageable);
+
 }
