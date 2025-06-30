@@ -104,6 +104,7 @@ public class ProjectServiceImpl implements ProjectService {
         User user = userService.getCurrentUserOrThrow(authentication);
         log.info("User ID: {} attempting to update Project ID: {}", user.getId(), project.getId());
         validateProjectBelongsToUser(user, project);
+        project.setProjectStatus(ProjectStatus.ACTIVE);
         return createOrUpdate(dto, project);
     }
 
@@ -115,6 +116,7 @@ public class ProjectServiceImpl implements ProjectService {
         Project project = new Project();
         project.setDatePosted(LocalDateTime.now());
         project.setCompany(company);
+        project.setProjectStatus(ProjectStatus.INACTIVE);
         return createOrUpdate(dto, project);
     }
 
@@ -152,7 +154,8 @@ public class ProjectServiceImpl implements ProjectService {
         if (project.getProjectStatus().equals(ProjectStatus.ACTIVE)) {
             throw new InvalidRequestException("This project is active already", "projectStatus");
         }
-        extendProjectDuration(project);
+        project.setExpiryDate(LocalDateTime.now().plusWeeks(3));
+        project.setProjectStatus(ProjectStatus.ACTIVE);
         return ProjectMapper.toDto(projectRepository.save(project));
     }
 
@@ -224,7 +227,7 @@ public class ProjectServiceImpl implements ProjectService {
         project.setDescription(dto.getDescription());
         project.setDateUpdated(LocalDateTime.now());
         project.setCanReactivate(false);
-        extendProjectDuration(project);
+        project.setExpiryDate(LocalDateTime.now().plusWeeks(3));
         if (dto.isPartnerOnly()) {
             project.setPartnerOnly(true);
             List<PartnerGroup> projectPartnerGroups = getPartnerGroupsOrThrow(dto.getPartnerGroups());
@@ -270,10 +273,5 @@ public class ProjectServiceImpl implements ProjectService {
         if (!Objects.equals(user.getCompany().getId(), project.getCompany().getId())) {
             throw new PermissionDeniedException("Project belongs to another company");
         }
-    }
-
-    private void extendProjectDuration(Project project) {
-        project.setExpiryDate(LocalDateTime.now().plusWeeks(3));
-        project.setProjectStatus(ProjectStatus.ACTIVE);
     }
 }
