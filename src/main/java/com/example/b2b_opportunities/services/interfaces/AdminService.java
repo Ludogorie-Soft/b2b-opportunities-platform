@@ -19,7 +19,5 @@ public interface AdminService {
 
     Page<TalentStatsDto> getTalentStats(int offset, int pageSize);
 
-    Page<ProjectStatsDto> getActiveProjects(int offset, int pageSize);
-
-    Page<ProjectStatsDto> getInactiveProjects(int offset, int pageSize);
+    Page<ProjectStatsDto> getProjectStats(int offset, int pageSize, boolean active);
 }

@@ -85,17 +85,12 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public Page<ProjectStatsDto> getActiveProjects(int offset, int pageSize) {
-        return getProjects(offset, pageSize, ProjectStatus.ACTIVE);
+    public Page<ProjectStatsDto> getProjectStats(int offset, int pageSize, boolean active) {
+        if (active) return getProjects(offset, pageSize, ProjectStatus.ACTIVE);
+        else return getProjects(offset, pageSize, ProjectStatus.INACTIVE);
     }
 
-    @Override
-    public Page<ProjectStatsDto> getInactiveProjects(int offset, int pageSize) {
-        return getProjects(offset, pageSize, ProjectStatus.INACTIVE);
-    }
-
-
-    private Page<ProjectStatsDto> getProjects(int offset, int pageSize, ProjectStatus projectStatus){
+    private Page<ProjectStatsDto> getProjects(int offset, int pageSize, ProjectStatus projectStatus) {
         Pageable pageable = PageRequest.of(offset, pageSize);
         Page<Project> projects = projectRepository.findProjectsByStatus(projectStatus, pageable);
         return projects.map(

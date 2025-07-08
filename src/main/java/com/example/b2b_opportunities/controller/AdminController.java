@@ -56,17 +56,11 @@ public class AdminController {
         return adminService.getTalentStats(offset, pageSize);
     }
 
-    @GetMapping("/project-stats/active")
+    @GetMapping("/project-stats")
     @ResponseStatus(HttpStatus.OK)
-    public Page<ProjectStatsDto> getActiveProjects(@RequestParam(defaultValue = "0") int offset,
-                                                   @RequestParam(defaultValue = "10") int pageSize) {
-        return adminService.getActiveProjects(offset, pageSize);
-    }
-
-    @GetMapping("/project-stats/inactive")
-    @ResponseStatus(HttpStatus.OK)
-    public Page<ProjectStatsDto> getInactiveProjects(@RequestParam(defaultValue = "0") int offset,
-                                                   @RequestParam(defaultValue = "10") int pageSize) {
-        return adminService.getInactiveProjects(offset, pageSize);
+    public Page<ProjectStatsDto> getProjectStats(@RequestParam(defaultValue = "0") int offset,
+                                                 @RequestParam(defaultValue = "10") int pageSize,
+                                                 @RequestParam boolean active){
+        return adminService.getProjectStats(offset, pageSize, active);
     }
 }
