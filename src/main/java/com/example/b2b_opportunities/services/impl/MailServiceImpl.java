@@ -7,6 +7,7 @@ import com.example.b2b_opportunities.entity.PositionApplication;
 import com.example.b2b_opportunities.entity.Project;
 import com.example.b2b_opportunities.entity.User;
 import com.example.b2b_opportunities.repository.ConfirmationTokenRepository;
+import com.example.b2b_opportunities.services.interfaces.EmailDailyStatsService;
 import com.example.b2b_opportunities.services.interfaces.MailService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +24,7 @@ import java.util.UUID;
 public class MailServiceImpl implements MailService {
     private final ConfirmationTokenRepository confirmationTokenRepository;
     private final RestTemplate restTemplate;
+    private final EmailDailyStatsService emailDailyStatsService;
 
     @Value("${spring.profiles.active}")
     private String activeProfile;
@@ -60,6 +62,7 @@ public class MailServiceImpl implements MailService {
         String title = activeProfile.equals("dev") ? "[TEST env] Confirm your E-Mail at hire-b2b.com" : "Confirm your E-Mail at hire-b2b.com";
         sendEmail(user.getEmail(), emailContent, title);
         log.info("Send confirmation Email to: {}", user.getEmail());
+        emailDailyStatsService.incrementActivationMailsSent();
     }
 
     @Override

@@ -16,6 +16,7 @@ import com.example.b2b_opportunities.mapper.UserMapper;
 import com.example.b2b_opportunities.repository.ConfirmationTokenRepository;
 import com.example.b2b_opportunities.repository.UserRepository;
 import com.example.b2b_opportunities.services.interfaces.AuthenticationService;
+import com.example.b2b_opportunities.services.interfaces.EmailDailyStatsService;
 import com.example.b2b_opportunities.services.interfaces.JwtService;
 import com.example.b2b_opportunities.services.interfaces.MailService;
 import com.example.b2b_opportunities.services.interfaces.UserService;
@@ -60,6 +61,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final UserService userService;
     private final ConfirmationTokenRepository confirmationTokenRepository;
     private final UserRepository userRepository;
+    private final EmailDailyStatsService emailDailyStatsService;
 
     @Value("${registration.token.expiration.time}")
     private int tokenExpirationDays;
@@ -134,10 +136,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             throw new AlreadyExistsException("Account already activated", email);
         }
         Optional<ConfirmationToken> optionalToken = confirmationTokenRepository.findByUser(user);
-        if (optionalToken.isPresent()) {
-            ConfirmationToken confirmationToken = optionalToken.get();
-            confirmationTokenRepository.deleteById(confirmationToken.getId());
-        }
+        optionalToken.ifPresent(confirmationToken -> confirmationTokenRepository.deleteById(confirmationToken.getId()));
         mailService.sendConfirmationMail(user, request);
         return "A new token was sent to your e-mail!";
     }
@@ -195,6 +194,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         confirmationTokenRepository.delete(confirmationToken);
         log.info("Email: {} for user: {} confirmed using a token", user.getEmail(), user.getUsername());
         userRepository.save(user);
+        emailDailyStatsService.incrementActivationMailsOpened();
     }
 
 

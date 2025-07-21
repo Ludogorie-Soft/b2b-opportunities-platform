@@ -4,6 +4,7 @@ import com.example.b2b_opportunities.dto.responseDtos.CompanyResponseDto;
 import com.example.b2b_opportunities.dto.responseDtos.ProjectStatsDto;
 import com.example.b2b_opportunities.dto.responseDtos.TalentStatsDto;
 import com.example.b2b_opportunities.dto.responseDtos.UserSummaryDto;
+import com.example.b2b_opportunities.entity.EmailDailyStats;
 import com.example.b2b_opportunities.services.interfaces.AdminService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -62,5 +63,12 @@ public class AdminController {
                                                  @RequestParam(defaultValue = "10") int pageSize,
                                                  @RequestParam boolean active){
         return adminService.getProjectStats(offset, pageSize, active);
+    }
+
+    @GetMapping("/email-stats")
+    @ResponseStatus(HttpStatus.OK)
+    public Page<EmailDailyStats> getDailyEmailStats(@RequestParam(defaultValue = "0") int offset,
+                                                 @RequestParam(defaultValue = "10") int pageSize){
+        return adminService.getDailyEmailStats(offset, pageSize);
     }
 }

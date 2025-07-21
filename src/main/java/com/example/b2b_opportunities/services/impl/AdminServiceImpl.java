@@ -5,6 +5,7 @@ import com.example.b2b_opportunities.dto.responseDtos.ProjectStatsDto;
 import com.example.b2b_opportunities.dto.responseDtos.TalentStatsDto;
 import com.example.b2b_opportunities.dto.responseDtos.UserSummaryDto;
 import com.example.b2b_opportunities.entity.Company;
+import com.example.b2b_opportunities.entity.EmailDailyStats;
 import com.example.b2b_opportunities.entity.Project;
 import com.example.b2b_opportunities.entity.Talent;
 import com.example.b2b_opportunities.enums.ProjectStatus;
@@ -13,6 +14,7 @@ import com.example.b2b_opportunities.mapper.ProjectMapper;
 import com.example.b2b_opportunities.mapper.TalentMapper;
 import com.example.b2b_opportunities.mapper.UserMapper;
 import com.example.b2b_opportunities.repository.CompanyRepository;
+import com.example.b2b_opportunities.repository.EmailDailyStatsRepository;
 import com.example.b2b_opportunities.repository.PositionApplicationRepository;
 import com.example.b2b_opportunities.repository.ProjectRepository;
 import com.example.b2b_opportunities.repository.TalentRepository;
@@ -40,6 +42,7 @@ public class AdminServiceImpl implements AdminService {
     private final TalentRepository talentRepository;
     private final PositionApplicationRepository positionApplicationRepository;
     private final ProjectRepository projectRepository;
+    private final EmailDailyStatsRepository emailDailyStatsRepository;
 
     @Override
     public CompanyResponseDto approve(Long id) {
@@ -88,6 +91,12 @@ public class AdminServiceImpl implements AdminService {
     public Page<ProjectStatsDto> getProjectStats(int offset, int pageSize, boolean active) {
         if (active) return getProjects(offset, pageSize, ProjectStatus.ACTIVE);
         else return getProjects(offset, pageSize, ProjectStatus.INACTIVE);
+    }
+
+    @Override
+    public Page<EmailDailyStats> getDailyEmailStats(int offset, int pageSize) {
+        Pageable pageable = PageRequest.of(offset, pageSize);
+        return emailDailyStatsRepository.findAllByOrderByDayDesc(pageable);
     }
 
     private Page<ProjectStatsDto> getProjects(int offset, int pageSize, ProjectStatus projectStatus) {

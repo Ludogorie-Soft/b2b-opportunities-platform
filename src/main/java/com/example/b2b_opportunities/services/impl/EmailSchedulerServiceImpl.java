@@ -9,6 +9,7 @@ import com.example.b2b_opportunities.entity.Skill;
 import com.example.b2b_opportunities.enums.ProjectStatus;
 import com.example.b2b_opportunities.repository.CompanyRepository;
 import com.example.b2b_opportunities.repository.ProjectRepository;
+import com.example.b2b_opportunities.services.interfaces.EmailDailyStatsService;
 import com.example.b2b_opportunities.services.interfaces.EmailSchedulerService;
 import com.example.b2b_opportunities.services.interfaces.MailService;
 import com.example.b2b_opportunities.services.interfaces.PositionApplicationService;
@@ -34,6 +35,7 @@ public class EmailSchedulerServiceImpl implements EmailSchedulerService {
     private final CompanyRepository companyRepository;
     private final MailService mailService;
     private final PositionApplicationService positionApplicationService;
+    private final EmailDailyStatsService emailDailyStatsService;
 
     @Value("${frontend.address}")
     private String frontEndAddress;
@@ -116,6 +118,7 @@ public class EmailSchedulerServiceImpl implements EmailSchedulerService {
         companyPositionApplicationCount.forEach((company, positionCountMap) -> {
             String emailContent = buildNewApplicationsEmailContent(positionCountMap);
             mailService.sendEmail(company.getEmail(), emailContent, "New Job Applications for Your Positions");
+            emailDailyStatsService.incrementNewApplicationMailsSent();
         });
     }
 
@@ -161,6 +164,7 @@ public class EmailSchedulerServiceImpl implements EmailSchedulerService {
             Set<Project> availableNewProjectsThatMatchAtLeastOneSkill = removeCurrentCompanyProjects(matchingProjects, c);
 
             processNewAndModifiedProjects(availableNewProjectsThatMatchAtLeastOneSkill, c, daysPassed);
+            emailDailyStatsService.incrementNewProjectsSent();
         }
     }
 
