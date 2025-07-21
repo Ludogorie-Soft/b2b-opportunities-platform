@@ -15,6 +15,8 @@ import com.example.b2b_opportunities.entity.RequiredSkill;
 import com.example.b2b_opportunities.entity.Skill;
 import com.example.b2b_opportunities.entity.User;
 import com.example.b2b_opportunities.entity.WorkMode;
+import com.example.b2b_opportunities.enums.ApplicationStatus;
+import com.example.b2b_opportunities.enums.ProjectStatus;
 import com.example.b2b_opportunities.exception.common.InvalidRequestException;
 import com.example.b2b_opportunities.exception.common.NotFoundException;
 import com.example.b2b_opportunities.mapper.PositionMapper;
@@ -32,8 +34,6 @@ import com.example.b2b_opportunities.repository.SkillRepository;
 import com.example.b2b_opportunities.repository.WorkModeRepository;
 import com.example.b2b_opportunities.services.interfaces.PositionService;
 import com.example.b2b_opportunities.services.interfaces.UserService;
-import com.example.b2b_opportunities.enums.ApplicationStatus;
-import com.example.b2b_opportunities.enums.ProjectStatus;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -132,6 +132,11 @@ public class PositionServiceImpl implements PositionService {
         Position position = getPositionOrThrow(id);
         validateProjectAndUserAreRelated(position.getProject().getId(), authentication);
         positionRepository.delete(position);
+        if (!positionRepository.existsOpenedPositionByProjectId(position.getProject().getId())) {
+            Project project = position.getProject();
+            project.setProjectStatus(ProjectStatus.INACTIVE);
+            projectRepository.save(project);
+        }
         log.info("Successfully deleted position ID: {} for project ID: {}", position.getId(), position.getProject().getId());
     }
 

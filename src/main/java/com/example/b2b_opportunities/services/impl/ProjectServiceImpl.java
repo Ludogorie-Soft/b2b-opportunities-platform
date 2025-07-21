@@ -15,6 +15,7 @@ import com.example.b2b_opportunities.mapper.PositionMapper;
 import com.example.b2b_opportunities.mapper.ProjectMapper;
 import com.example.b2b_opportunities.repository.PartnerGroupRepository;
 import com.example.b2b_opportunities.repository.PositionApplicationRepository;
+import com.example.b2b_opportunities.repository.PositionRepository;
 import com.example.b2b_opportunities.repository.ProjectRepository;
 import com.example.b2b_opportunities.services.interfaces.ProjectService;
 import com.example.b2b_opportunities.services.interfaces.UserService;
@@ -47,6 +48,7 @@ public class ProjectServiceImpl implements ProjectService {
     private final PartnerGroupRepository partnerGroupRepository;
     private final CompanyServiceImpl companyService;
     private final PositionApplicationRepository positionApplicationRepository;
+    private final PositionRepository positionRepository;
 
     @Override
     public ProjectResponseDto get(Authentication authentication, Long id) {
@@ -104,7 +106,11 @@ public class ProjectServiceImpl implements ProjectService {
         User user = userService.getCurrentUserOrThrow(authentication);
         log.info("User ID: {} attempting to update Project ID: {}", user.getId(), project.getId());
         validateProjectBelongsToUser(user, project);
-        project.setProjectStatus(ProjectStatus.ACTIVE);
+        if(positionRepository.existsOpenedPositionByProjectId(id)) {
+            project.setProjectStatus(ProjectStatus.ACTIVE);
+        } else {
+            project.setProjectStatus(ProjectStatus.INACTIVE);
+        }
         return createOrUpdate(dto, project);
     }
 
