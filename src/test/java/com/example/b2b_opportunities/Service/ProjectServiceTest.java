@@ -19,10 +19,12 @@ import com.example.b2b_opportunities.mapper.ProjectMapper;
 import com.example.b2b_opportunities.repository.CompanyRepository;
 import com.example.b2b_opportunities.repository.PartnerGroupRepository;
 import com.example.b2b_opportunities.repository.PositionApplicationRepository;
+import com.example.b2b_opportunities.repository.PositionRepository;
 import com.example.b2b_opportunities.repository.ProjectRepository;
 import com.example.b2b_opportunities.services.impl.CompanyServiceImpl;
 import com.example.b2b_opportunities.services.impl.EmailSchedulerServiceImpl;
 import com.example.b2b_opportunities.services.impl.ProjectServiceImpl;
+import com.example.b2b_opportunities.services.interfaces.EmailDailyStatsService;
 import com.example.b2b_opportunities.services.interfaces.MailService;
 import com.example.b2b_opportunities.services.interfaces.PositionApplicationService;
 import com.example.b2b_opportunities.services.interfaces.UserService;
@@ -98,6 +100,12 @@ public class ProjectServiceTest {
 
     @Mock
     private Authentication authentication;
+
+    @Mock
+    private PositionRepository positionRepository;
+
+    @Mock
+    private EmailDailyStatsService emailDailyStatsService;
 
 
     private User user;

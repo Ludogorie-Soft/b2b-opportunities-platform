@@ -15,6 +15,7 @@ import com.example.b2b_opportunities.mapper.UserMapper;
 import com.example.b2b_opportunities.repository.ConfirmationTokenRepository;
 import com.example.b2b_opportunities.repository.UserRepository;
 import com.example.b2b_opportunities.services.impl.AuthenticationServiceImpl;
+import com.example.b2b_opportunities.services.interfaces.EmailDailyStatsService;
 import com.example.b2b_opportunities.services.interfaces.JwtService;
 import com.example.b2b_opportunities.services.interfaces.MailService;
 import com.example.b2b_opportunities.services.interfaces.UserService;
@@ -91,6 +92,9 @@ class AuthenticationServiceTest {
 
     @Mock
     private UserService userService;
+
+    @Mock
+    private EmailDailyStatsService emailDailyStatsService;
 
     @Test
     void testLoginWithValidInput() {

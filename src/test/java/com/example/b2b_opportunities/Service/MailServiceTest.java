@@ -4,6 +4,7 @@ import com.example.b2b_opportunities.dto.requestDtos.EmailRequest;
 import com.example.b2b_opportunities.entity.User;
 import com.example.b2b_opportunities.repository.ConfirmationTokenRepository;
 import com.example.b2b_opportunities.services.impl.MailServiceImpl;
+import com.example.b2b_opportunities.services.interfaces.EmailDailyStatsService;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
@@ -40,6 +41,9 @@ class MailServiceTest {
 
     @Mock
     private ConfirmationTokenRepository confirmationTokenRepository;
+
+    @Mock
+    private EmailDailyStatsService emailDailyStatsService;
 
     @BeforeEach
     void setUp() {
