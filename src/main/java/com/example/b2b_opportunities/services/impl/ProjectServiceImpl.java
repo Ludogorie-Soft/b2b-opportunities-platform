@@ -56,7 +56,9 @@ public class ProjectServiceImpl implements ProjectService {
         log.info("User ID: {} attempting to access Project ID: {}", user.getId(), id);
         Company company = companyService.getUserCompanyOrThrow(user);
         Project project = getProjectIfExists(id);
-        validateProjectIsAvailableToCompany(project, company);
+        if (!isAdmin(authentication)) {
+            validateProjectIsAvailableToCompany(project, company);
+        }
         ProjectResponseDto responseDto = ProjectMapper.toDto(project);
         if (project.getPositions() != null) {
             responseDto.setPositionViews(getPositionViews(project));
@@ -198,6 +200,14 @@ public class ProjectServiceImpl implements ProjectService {
 
         projectsToBeReactivated.forEach(project -> project.setCanReactivate(true));
         projectRepository.saveAll(projectsToBeReactivated);
+    }
+
+    private boolean isAdmin(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return false;
+        }
+        return authentication.getAuthorities().stream()
+                .anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"));
     }
 
     private Long getPositionViews(Project project) {
