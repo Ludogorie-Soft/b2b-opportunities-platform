@@ -495,10 +495,19 @@ public class CompanyServiceImpl implements CompanyService {
         Talent talent = talentRepository.findById(talentId)
                 .orElseThrow(() -> new NotFoundException("Talent with ID: " + talentId + " not found"));
         Company userCompany = getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
+
+        boolean isAdmin = isAdmin(authentication);
+        boolean isSameCompany = Objects.equals(talent.getCompany().getId(), userCompany.getId());
+
+        if (isAdmin) {
+            return TalentMapper.toResponseDto(talent);
+        }
+
         if (!talent.getCompany().isTalentsSharedPublicly()) {
             validateTalentIsAvailableToCompany(userCompany, talent);
         }
-        if (!talent.isActive() && !Objects.equals(talent.getCompany().getId(), userCompany.getId())) {
+
+        if (!talent.isActive() && !isSameCompany) {
             throw new PermissionDeniedException("Talent is inactive");
         }
         return TalentMapper.toResponseDto(talent);
@@ -613,7 +622,7 @@ public class CompanyServiceImpl implements CompanyService {
     }
 
     @Override
-    public List<PartialPositionResponseDto> getMyPositionsPartial(Authentication authentication){
+    public List<PartialPositionResponseDto> getMyPositionsPartial(Authentication authentication) {
         Company company = getUserCompanyOrThrow(userService.getCurrentUserOrThrow(authentication));
         List<Position> positions = company.getProjects().stream()
                 .flatMap(project -> project.getPositions().stream())
@@ -637,6 +646,14 @@ public class CompanyServiceImpl implements CompanyService {
         }
         createCompanyTokenAndSendEmail(userCompany, request);
         return CompanyMapper.toCompanyResponseDto(userCompany);
+    }
+
+    private boolean isAdmin(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return false;
+        }
+        return authentication.getAuthorities().stream()
+                .anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"));
     }
 
     private void setTalentRates(Talent talent, TalentRequestDto talentRequestDto) {
