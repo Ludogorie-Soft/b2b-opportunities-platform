@@ -164,7 +164,6 @@ public class EmailSchedulerServiceImpl implements EmailSchedulerService {
             Set<Project> availableNewProjectsThatMatchAtLeastOneSkill = removeCurrentCompanyProjects(matchingProjects, c);
 
             processNewAndModifiedProjects(availableNewProjectsThatMatchAtLeastOneSkill, c, daysPassed);
-            emailDailyStatsService.incrementNewProjectsSent();
         }
     }
 
@@ -216,6 +215,7 @@ public class EmailSchedulerServiceImpl implements EmailSchedulerService {
             String receiver = c.getEmail();
             String title = activeProfile.equals("dev") ? "[TEST env] Hire-B2B - Don't miss on new projects" : "Hire-B2B - Don't miss on new projects";
             mailService.sendEmail(receiver, emailContent, title);
+            emailDailyStatsService.incrementNewProjectsSent();
         }
     }
 
