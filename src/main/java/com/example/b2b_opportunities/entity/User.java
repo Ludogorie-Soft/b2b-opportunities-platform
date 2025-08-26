@@ -2,6 +2,8 @@ package com.example.b2b_opportunities.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -65,6 +67,9 @@ public class User {
     private boolean isEnabled;
 
     private String provider;
+
+    @Enumerated(EnumType.STRING)
+    private CompanyRole companyRole;
 
     public void setUsername(String username) {
         // TODO: Length requirement if not null?

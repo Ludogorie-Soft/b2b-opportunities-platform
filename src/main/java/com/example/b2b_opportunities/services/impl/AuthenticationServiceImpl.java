@@ -3,6 +3,7 @@ package com.example.b2b_opportunities.services.impl;
 import com.example.b2b_opportunities.dto.loginDtos.LoginDto;
 import com.example.b2b_opportunities.dto.requestDtos.UserRequestDto;
 import com.example.b2b_opportunities.dto.responseDtos.UserResponseDto;
+import com.example.b2b_opportunities.entity.CompanyRole;
 import com.example.b2b_opportunities.entity.ConfirmationToken;
 import com.example.b2b_opportunities.entity.Role;
 import com.example.b2b_opportunities.entity.User;
@@ -111,6 +112,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         validateUser(userRequestDto);
 
         User user = UserMapper.toEntity(userRequestDto);
+        user.setCompanyRole(CompanyRole.COMPANY_ADMIN);
         userRepository.save(user);
         log.info("Registered new user: {}", userRequestDto.getUsername());
         mailService.sendConfirmationMail(user, request);

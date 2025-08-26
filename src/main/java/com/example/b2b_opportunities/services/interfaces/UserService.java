@@ -7,4 +7,6 @@ public interface UserService {
     User getCurrentUserOrThrow(Authentication authentication);
 
     User getUserByEmailOrThrow(String email);
+
+    User getUserByIdOrThrow(Long id);
 }

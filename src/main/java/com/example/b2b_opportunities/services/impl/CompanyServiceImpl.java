@@ -8,6 +8,7 @@ import com.example.b2b_opportunities.dto.requestDtos.SkillExperienceRequestDto;
 import com.example.b2b_opportunities.dto.requestDtos.TalentExperienceRequestDto;
 import com.example.b2b_opportunities.dto.requestDtos.TalentPublicityRequestDto;
 import com.example.b2b_opportunities.dto.requestDtos.TalentRequestDto;
+import com.example.b2b_opportunities.dto.requestDtos.UserRequestDto;
 import com.example.b2b_opportunities.dto.responseDtos.CompaniesAndUsersResponseDto;
 import com.example.b2b_opportunities.dto.responseDtos.CompanyFilterResponseDto;
 import com.example.b2b_opportunities.dto.responseDtos.CompanyPublicResponseDto;
@@ -20,6 +21,7 @@ import com.example.b2b_opportunities.dto.responseDtos.TalentPublicityResponseDto
 import com.example.b2b_opportunities.dto.responseDtos.TalentResponseDto;
 import com.example.b2b_opportunities.dto.responseDtos.UserResponseDto;
 import com.example.b2b_opportunities.entity.Company;
+import com.example.b2b_opportunities.entity.CompanyRole;
 import com.example.b2b_opportunities.entity.CompanyType;
 import com.example.b2b_opportunities.entity.Domain;
 import com.example.b2b_opportunities.entity.Filter;
@@ -70,6 +72,7 @@ import com.example.b2b_opportunities.services.interfaces.PatternService;
 import com.example.b2b_opportunities.services.interfaces.UserService;
 import com.example.b2b_opportunities.utils.StringUtils;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -80,6 +83,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
@@ -648,6 +652,68 @@ public class CompanyServiceImpl implements CompanyService {
         return CompanyMapper.toCompanyResponseDto(userCompany);
     }
 
+    @Override
+    @Transactional
+    public void inviteUserByEmail(Authentication authentication, String email) {
+        User user = userService.getCurrentUserOrThrow(authentication);
+        Company userCompany = getUserCompanyOrThrow(user);
+
+        if (userRepository.findByEmail(email).isPresent()) {
+            throw new AlreadyExistsException("User with this email already exists");
+        }
+        if (!user.getCompanyRole().equals(CompanyRole.COMPANY_ADMIN)) {
+            throw new PermissionDeniedException("Only company admins can invite new users");
+        }
+
+        validateEmail(email);
+        UserRequestDto requestDto = generateUserRequestDto(email);
+        User invitedUser = UserMapper.toEntity(requestDto);
+        invitedUser.setEnabled(true);
+        invitedUser.setCompany(userCompany);
+        invitedUser.setCompanyRole(CompanyRole.COMPANY_USER);
+        userRepository.save(invitedUser);
+
+        mailService.sendInvitationEmail(email, requestDto.getPassword());
+    }
+
+    @Override
+    public void deleteCompanyUserById(Authentication authentication, Long userId) {
+        User currentUser = userService.getCurrentUserOrThrow(authentication);
+        User toDelete = userService.getUserByIdOrThrow(userId);
+        if (!currentUser.getCompanyRole().equals(CompanyRole.COMPANY_ADMIN)) {
+            throw new PermissionDeniedException("Only company admins are allowed to perform this action.");
+        }
+        if (!Objects.equals(currentUser.getCompany().getId(), toDelete.getCompany().getId())) {
+            throw new PermissionDeniedException("This user does not belong to your company.");
+        }
+        if (Objects.equals(currentUser.getId(), toDelete.getId())) {
+            throw new PermissionDeniedException("You cannot delete your own account.");
+        }
+        userRepository.delete(toDelete);
+    }
+
+    private UserRequestDto generateUserRequestDto(String email) {
+        String rawPassword = UUID.randomUUID().toString();
+        return UserRequestDto.builder()
+                .username(generateName(email))
+                .firstName(extractBase(email).replaceAll("\\d", ""))
+                .lastName("User")
+                .email(email)
+                .password(rawPassword)
+                .repeatedPassword(rawPassword)
+                .build();
+    }
+
+    private String generateName(String email) {
+        String base = extractBase(email).replaceAll("\\d", "");
+        String randomPart = UUID.randomUUID().toString().replace("-", "").substring(0, 8);
+        return base + randomPart;
+    }
+
+    private String extractBase(String email) {
+        return email.split("@")[0];
+    }
+
     private boolean isAdmin(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
             return false;
@@ -659,7 +725,7 @@ public class CompanyServiceImpl implements CompanyService {
     private void setTalentRates(Talent talent, TalentRequestDto talentRequestDto) {
         Integer minRate = talentRequestDto.getMinRate();
         Integer maxRate = talentRequestDto.getMaxRate();
-        if(minRate != null && maxRate != null && minRate > maxRate){
+        if (minRate != null && maxRate != null && minRate > maxRate) {
             throw new InvalidRequestException("Min rate cannot exceed max rate", "minRate");
         }
         talent.setMinRate(minRate);
@@ -912,7 +978,7 @@ public class CompanyServiceImpl implements CompanyService {
         }
     }
 
-    private void createCompanyTokenAndSendEmail(Company userCompany, HttpServletRequest request){
+    private void createCompanyTokenAndSendEmail(Company userCompany, HttpServletRequest request) {
         String token = UUID.randomUUID().toString();
         userCompany.setEmailConfirmationToken(token);
         companyRepository.save(userCompany);

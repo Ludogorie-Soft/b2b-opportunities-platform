@@ -105,7 +105,7 @@ public class MailServiceImpl implements MailService {
                 + "<p><b>Dear " + project.getCompany().getName() + ",</b></p>"
                 + "<p><br/> This is a friendly reminder that your project '<i><b>" + project.getName() + "</b></i>' will expire in <b>2 days</b>."
                 + "<br/>To ensure your project remains active and continues to be visible to potential clients, you can easily extend its duration from " +
-                "<a href=\"" + frontEndAddress + "/project/" + project.getId() + "/edit\">here.</a>"+
+                "<a href=\"" + frontEndAddress + "/project/" + project.getId() + "/edit\">here.</a>" +
                 "<br/><strong>Best regards,</strong>" +
                 "<br/><strong>hire-b2b team</strong>" +
                 "</body>" +
@@ -147,6 +147,25 @@ public class MailServiceImpl implements MailService {
                 .build();
 
         restTemplate.postForObject(emailServiceUrl, er, String.class);
+    }
+
+    @Override
+    public void sendInvitationEmail(String receiver, String randomPassword) {
+        String subject = "You've been invited to hire-b2b";
+        String emailContent = """
+                    <html>
+                    <body>
+                        <h2>Hello,</h2>
+                        <p>You are receiving this email because an admin at <strong>hire-b2b</strong> invited you as part of their company.</p>
+                        <p>To log in, use the following password and <strong>change it immediately after login</strong>:</p>
+                        <h2>%s</h2>
+                        <p><a href="https://www.hire-b2b.com/">Click here to log in</a></p>
+                        <br/>
+                        <p>Best regards,<br/>hire-b2b Team</p>
+                    </body>
+                    </html>
+                """.formatted(randomPassword);
+        sendEmail(receiver, emailContent, subject);
     }
 
     private String generateConfirmationLink(User user, HttpServletRequest request) {

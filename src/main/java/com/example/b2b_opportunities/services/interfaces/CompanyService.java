@@ -113,4 +113,8 @@ public interface CompanyService {
     CompanyPublicResponseDto getPublicCompanyInfoById(Long id);
 
     CompanyResponseDto resendConfirmationEmail(Authentication authentication, HttpServletRequest request);
+
+    void inviteUserByEmail(Authentication authentication, String email);
+
+    void deleteCompanyUserById(Authentication authentication, Long userId);
 }

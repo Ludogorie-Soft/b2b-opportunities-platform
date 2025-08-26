@@ -5,12 +5,16 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
+@Builder
 @AllArgsConstructor
+@NoArgsConstructor
 public class UserRequestDto {
     @Column(unique = true)
     @NotEmpty(message = "username cannot be empty")
@@ -24,6 +28,7 @@ public class UserRequestDto {
     @NotEmpty
     @Size(min = 3, max = 40, message = "lastName must be between 3 and 40 characters long")
     private String lastName;
+
     @Column(unique = true)
     @NotEmpty(message = "email cannot be empty")
     @Email(message = "Invalid email format.")

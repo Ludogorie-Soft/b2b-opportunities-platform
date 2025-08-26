@@ -20,4 +20,6 @@ public interface MailService {
     void sendEmailWhenApplicationIsApproved(PositionApplication positionApplication);
 
     void sendEmail(String receiver, String content, String subject);
+
+    void sendInvitationEmail(String receiver, String randomPassword);
 }

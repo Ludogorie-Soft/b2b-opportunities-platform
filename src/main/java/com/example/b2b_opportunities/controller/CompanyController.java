@@ -63,6 +63,19 @@ public class CompanyController {
         return companyService.getAcceptedCompaniesPublicData();
     }
 
+    @PostMapping("/invite-user")
+    @ResponseStatus(HttpStatus.OK)
+    public void inviteUserByEmail(Authentication authentication, @RequestParam String email) {
+        companyService.inviteUserByEmail(authentication, email);
+    }
+
+    @DeleteMapping("/delete-user/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteCompanyUser(Authentication authentication,
+                                  @PathVariable Long userId) {
+        companyService.deleteCompanyUserById(authentication, userId);
+    }
+
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     public CompanyResponseDto getCompany(@PathVariable("id") Long id) {
@@ -71,13 +84,13 @@ public class CompanyController {
 
     @GetMapping("/{id}/public")
     @ResponseStatus(HttpStatus.OK)
-    public CompanyPublicResponseDto getPublicCompanyInfoById(@PathVariable("id") Long id){
+    public CompanyPublicResponseDto getPublicCompanyInfoById(@PathVariable("id") Long id) {
         return companyService.getPublicCompanyInfoById(id);
     }
 
     @GetMapping("/positions/partial")
     @ResponseStatus(HttpStatus.OK)
-    public List<PartialPositionResponseDto> getMyPositionsPartial(Authentication authentication){
+    public List<PartialPositionResponseDto> getMyPositionsPartial(Authentication authentication) {
         return companyService.getMyPositionsPartial(authentication);
     }
 
@@ -105,7 +118,7 @@ public class CompanyController {
     @GetMapping("/resend-email-confirmation")
     @ResponseStatus(HttpStatus.OK)
     public CompanyResponseDto resendConfirmationEmail(Authentication authentication,
-                                                      HttpServletRequest request){
+                                                      HttpServletRequest request) {
         return companyService.resendConfirmationEmail(authentication, request);
     }
 
@@ -325,7 +338,7 @@ public class CompanyController {
     @PutMapping("/applications/cancel/{id}")
     @ResponseStatus(HttpStatus.OK)
     public void cancelApplication(Authentication authentication,
-                                      @PathVariable("id") Long applicationId){
+                                  @PathVariable("id") Long applicationId) {
         positionApplicationService.cancelApplication(authentication, applicationId);
     }
 
@@ -359,7 +372,7 @@ public class CompanyController {
 
     @GetMapping("/my-applications/overall")
     @ResponseStatus(HttpStatus.OK)
-    public List<CompanyApplicationResponseDto> getMyApplicationsOverall(Authentication authentication){
+    public List<CompanyApplicationResponseDto> getMyApplicationsOverall(Authentication authentication) {
         return positionApplicationService.getMyApplicationsOverall(authentication);
     }
 }
