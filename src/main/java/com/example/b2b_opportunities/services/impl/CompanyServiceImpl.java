@@ -86,6 +86,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -123,6 +124,9 @@ public class CompanyServiceImpl implements CompanyService {
     private final LocationRepository locationRepository;
     private final WorkModeRepository workModeRepository;
     private final ProjectRepository projectRepository;
+
+    private static final String CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+    private static final SecureRandom random = new SecureRandom();
 
     @Override
     public CompanyResponseDto createCompany(Authentication authentication,
@@ -692,8 +696,16 @@ public class CompanyServiceImpl implements CompanyService {
         userRepository.delete(toDelete);
     }
 
+    private String generatePassword() {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 10; i++) {
+            sb.append(CHARS.charAt(random.nextInt(CHARS.length())));
+        }
+        return sb.toString();
+    }
+
     private UserRequestDto generateUserRequestDto(String email) {
-        String rawPassword = UUID.randomUUID().toString();
+        String rawPassword = generatePassword();
         return UserRequestDto.builder()
                 .username(generateName(email))
                 .firstName(extractBase(email).replaceAll("\\d", ""))
