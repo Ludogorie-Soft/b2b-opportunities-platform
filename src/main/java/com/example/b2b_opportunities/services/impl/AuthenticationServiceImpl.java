@@ -283,6 +283,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .email(email)
                 .provider(provider)
                 .createdAt(LocalDateTime.now())
+                .companyRole(CompanyRole.COMPANY_ADMIN)
                 .isEnabled(true)
                 .role(role)
                 .build();

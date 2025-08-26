@@ -2,6 +2,7 @@ package com.example.b2b_opportunities.controller;
 
 import com.example.b2b_opportunities.dto.requestDtos.CompanyRequestDto;
 import com.example.b2b_opportunities.entity.Company;
+import com.example.b2b_opportunities.entity.CompanyRole;
 import com.example.b2b_opportunities.entity.CompanyType;
 import com.example.b2b_opportunities.entity.Domain;
 import com.example.b2b_opportunities.entity.User;
@@ -147,6 +148,7 @@ class CompanyControllerTest {
                 .isEnabled(true)
                 .password("password")
                 .role(roleRepository.findById(2L).orElseThrow())
+                .companyRole(CompanyRole.COMPANY_ADMIN)
                 .build();
 
         userRepository.save(user);
@@ -272,6 +274,7 @@ class CompanyControllerTest {
         companyUser.setFirstName("first_name");
         companyUser.setLastName("last_name");
         companyUser.setCompany(company1);
+        companyUser.setCompanyRole(CompanyRole.COMPANY_ADMIN);
         userRepository.save(companyUser);
 
         company1 = companyRepository.findById(company1.getId()).orElseThrow();

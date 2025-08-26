@@ -1,5 +1,6 @@
 package com.example.b2b_opportunities.controller;
 
+import com.example.b2b_opportunities.entity.CompanyRole;
 import com.example.b2b_opportunities.entity.Role;
 import com.example.b2b_opportunities.entity.User;
 import com.example.b2b_opportunities.exception.AuthenticationFailedException;
@@ -80,6 +81,7 @@ class UserControllerTest {
                 .password("testPassword")
                 .email("abvbg@abvto.bg")
                 .isEnabled(true)
+                .companyRole(CompanyRole.COMPANY_ADMIN)
                 .role(role).build();
 
         userRepository.save(user);
