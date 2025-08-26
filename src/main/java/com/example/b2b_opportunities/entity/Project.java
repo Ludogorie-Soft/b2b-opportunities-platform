@@ -72,6 +72,8 @@ public class Project {
 
     private boolean canReactivate;
 
+    private String privateNotes;
+
     public void setName(@NotEmpty String name) {
         this.name = name.strip();
     }

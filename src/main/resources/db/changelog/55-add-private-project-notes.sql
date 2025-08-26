@@ -1,0 +1,1 @@
+ALTER TABLE projects ADD COLUMN private_notes TEXT;

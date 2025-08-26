@@ -8,6 +8,8 @@ import com.example.b2b_opportunities.entity.PartnerGroup;
 import com.example.b2b_opportunities.entity.Position;
 import com.example.b2b_opportunities.entity.Project;
 import com.example.b2b_opportunities.entity.User;
+import com.example.b2b_opportunities.enums.ApplicationStatus;
+import com.example.b2b_opportunities.enums.ProjectStatus;
 import com.example.b2b_opportunities.exception.common.InvalidRequestException;
 import com.example.b2b_opportunities.exception.common.NotFoundException;
 import com.example.b2b_opportunities.exception.common.PermissionDeniedException;
@@ -19,8 +21,6 @@ import com.example.b2b_opportunities.repository.PositionRepository;
 import com.example.b2b_opportunities.repository.ProjectRepository;
 import com.example.b2b_opportunities.services.interfaces.ProjectService;
 import com.example.b2b_opportunities.services.interfaces.UserService;
-import com.example.b2b_opportunities.enums.ApplicationStatus;
-import com.example.b2b_opportunities.enums.ProjectStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -65,6 +65,7 @@ public class ProjectServiceImpl implements ProjectService {
             responseDto.setAcceptedApplications(getAcceptedApplications(project));
             responseDto.setTotalApplications(getTotalApplications(project));
         }
+        attachPrivateNotesForCompanyUser(user, project, responseDto);
         return responseDto;
     }
 
@@ -108,7 +109,7 @@ public class ProjectServiceImpl implements ProjectService {
         User user = userService.getCurrentUserOrThrow(authentication);
         log.info("User ID: {} attempting to update Project ID: {}", user.getId(), project.getId());
         validateProjectBelongsToUser(user, project);
-        if(positionRepository.existsOpenedPositionByProjectId(id)) {
+        if (positionRepository.existsOpenedPositionByProjectId(id)) {
             project.setProjectStatus(ProjectStatus.ACTIVE);
         } else {
             project.setProjectStatus(ProjectStatus.INACTIVE);
@@ -202,6 +203,14 @@ public class ProjectServiceImpl implements ProjectService {
         projectRepository.saveAll(projectsToBeReactivated);
     }
 
+    private void attachPrivateNotesForCompanyUser(User user,
+                                                  Project project,
+                                                  ProjectResponseDto responseDto) {
+        if (Objects.equals(project.getCompany().getId(), user.getCompany().getId())) {
+            responseDto.setPrivateNotes(project.getPrivateNotes());
+        }
+    }
+
     private boolean isAdmin(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
             return false;
@@ -244,6 +253,7 @@ public class ProjectServiceImpl implements ProjectService {
         project.setDateUpdated(LocalDateTime.now());
         project.setCanReactivate(false);
         project.setExpiryDate(LocalDateTime.now().plusWeeks(3));
+        project.setPrivateNotes(dto.getPrivateNotes());
         if (dto.isPartnerOnly()) {
             project.setPartnerOnly(true);
             List<PartnerGroup> projectPartnerGroups = getPartnerGroupsOrThrow(dto.getPartnerGroups());

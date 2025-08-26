@@ -40,4 +40,5 @@ public class ProjectResponseDto {
     private Long totalApplications;
 
     private boolean canReactivate;
+    private String privateNotes;
 }
