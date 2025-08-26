@@ -559,6 +559,7 @@ public class ProjectServiceTest {
     void shouldGetProjectAndItsViewsAndApplicationsInfo() {
         User user = new User();
         Company company = Company.builder().id(1L).build();
+        user.setCompany(company);
 
         Project project = new Project();
         project.setId(1L);
