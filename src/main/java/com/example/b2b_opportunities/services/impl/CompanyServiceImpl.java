@@ -72,7 +72,6 @@ import com.example.b2b_opportunities.services.interfaces.PatternService;
 import com.example.b2b_opportunities.services.interfaces.UserService;
 import com.example.b2b_opportunities.utils.StringUtils;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -104,6 +103,8 @@ import static com.example.b2b_opportunities.utils.EmailUtils.validateEmail;
 @RequiredArgsConstructor
 @Slf4j
 public class CompanyServiceImpl implements CompanyService {
+    private static final String CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+    private static final SecureRandom random = new SecureRandom();
     private final PositionApplicationRepository positionApplicationRepository;
     private final CompanyRepository companyRepository;
     private final ImageServiceImpl imageService;
@@ -124,9 +125,6 @@ public class CompanyServiceImpl implements CompanyService {
     private final LocationRepository locationRepository;
     private final WorkModeRepository workModeRepository;
     private final ProjectRepository projectRepository;
-
-    private static final String CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
-    private static final SecureRandom random = new SecureRandom();
 
     @Override
     public CompanyResponseDto createCompany(Authentication authentication,
@@ -236,6 +234,8 @@ public class CompanyServiceImpl implements CompanyService {
 
         Pageable pageable = PageRequest.of(offset, pageSize, Sort.by(ascending ? Sort.Direction.ASC : Sort.Direction.DESC, sort));
 
+        boolean isMyProjects = userCompany.getId().equals(companyId);
+
         Page<Project> projectPage;
         if (userCompany.getId().equals(companyId)) {
             projectPage = projectRepository.findByCompanyId(companyId, pageable);
@@ -251,7 +251,9 @@ public class CompanyServiceImpl implements CompanyService {
             );
         }
 
-        return projectPage.map(ProjectMapper::toDto);
+        return projectPage.map(p -> isMyProjects
+                ? ProjectMapper.toDtoWithPrivateNotes(p)
+                : ProjectMapper.toDto(p));
     }
 
     @Override

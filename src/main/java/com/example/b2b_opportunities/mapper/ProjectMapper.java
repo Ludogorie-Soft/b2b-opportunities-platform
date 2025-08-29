@@ -32,6 +32,12 @@ public class ProjectMapper {
                 .build();
     }
 
+    public static ProjectResponseDto toDtoWithPrivateNotes(Project project){
+        ProjectResponseDto dto = toDto(project);
+        dto.setPrivateNotes(project.getPrivateNotes());
+        return dto;
+    }
+
     public static List<ProjectResponseDto> toDtoList(List<Project> projects) {
         List<ProjectResponseDto> projectResponseDtos = new ArrayList<>();
         if (projects != null && !projects.isEmpty()) {
