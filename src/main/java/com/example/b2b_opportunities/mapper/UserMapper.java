@@ -69,6 +69,7 @@ public class UserMapper {
                 .lastName(user.getLastName())
                 .username(user.getUsername())
                 .email(user.getEmail())
+                .companyRole(user.getCompanyRole())
                 .companyId(user.getCompany() !=null ? user.getCompany().getId() : null)
                 .lastLogin(user.getLastLogin() != null ? user.getLastLogin() : null)
                 .build();
