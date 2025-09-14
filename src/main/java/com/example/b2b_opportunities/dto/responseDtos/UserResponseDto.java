@@ -1,5 +1,6 @@
 package com.example.b2b_opportunities.dto.responseDtos;
 
+import com.example.b2b_opportunities.entity.CompanyRole;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,5 +24,6 @@ public class UserResponseDto {
     private String email;
     private Long companyId;
     private LocalDateTime createdAt;
+    private CompanyRole companyRole;
     private boolean isEnabled;
 }

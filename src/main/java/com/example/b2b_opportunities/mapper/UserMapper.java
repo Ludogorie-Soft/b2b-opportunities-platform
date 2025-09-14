@@ -52,6 +52,7 @@ public class UserMapper {
                 .companyId((Optional.ofNullable(user.getCompany())
                         .map(Company::getId)
                         .orElse(null)))
+                .companyRole(user.getCompanyRole())
                 .build();
     }
 
