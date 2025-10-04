@@ -72,7 +72,7 @@ public class CompanyController {
     @DeleteMapping("/delete-user/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteCompanyUser(Authentication authentication,
-                                  @PathVariable Long userId) {
+                                  @PathVariable("id") Long userId) {
         companyService.deleteCompanyUserById(authentication, userId);
     }
 
