@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgres:16.4-alpine3.20
+    image: postgres:17.6-alpine3.21
     # set shared memory limit when using docker-compose
     shm_size: 128mb
     ports:
@@ -90,7 +90,7 @@ services:
     restart: always
 
   mc:
-    image: bitnami/minio-client:latest
+    image: minio/mc:RELEASE.2025-08-13T08-35-41Z-cpuv1
     depends_on:
       minio:
         condition: service_healthy
