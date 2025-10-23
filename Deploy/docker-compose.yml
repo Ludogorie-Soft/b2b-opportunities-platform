@@ -6,9 +6,9 @@ services:
     ports:
       - '5432:5432'
     environment:
-      POSTGRES_USER: ${DB_USERNAME}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_TABLE_NAME}
+      POSTGRES_USER: ${DB_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_TABLE_NAME:-b2b}
     volumes:
       - b2b_db_data:/var/lib/postgresql/data
       - ./icons:/icons
@@ -38,26 +38,26 @@ services:
         condition: service_started
     environment:
       POSTGRES_HOST: db
-      DB_TABLE_NAME: ${DB_TABLE_NAME}
-      DB_USERNAME: ${DB_USERNAME}
-      DB_PASSWORD: ${DB_PASSWORD}
-      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
-      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
-      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      DB_TABLE_NAME: ${DB_TABLE_NAME:-b2b}
+      DB_USERNAME: ${DB_USERNAME:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-dev-secret}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-dev-google-client-id}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-dev-google-client-secret}
       STORAGE_HOST: http://minio:9000
-      STORAGE_USER: ${STORAGE_USER}
-      STORAGE_PASSWORD: ${STORAGE_PASSWORD}
-      STORAGE_BUCKET_NAME: ${STORAGE_BUCKET_NAME}
-      FRONTEND_HOST: ${FRONTEND_HOST} # This is a string that is used to redirect users to the frontend.
+      STORAGE_USER: ${STORAGE_USER:-minioadmin}
+      STORAGE_PASSWORD: ${STORAGE_PASSWORD:-minioadmin}
+      STORAGE_BUCKET_NAME: ${STORAGE_BUCKET_NAME:-company-assets}
+      FRONTEND_HOST: ${FRONTEND_HOST:-http://localhost:3000} # This is a string that is used to redirect users to the frontend.
       EMAIL_SERVICE_URL: http://notifications:8085/api/email/send
-      SPRING_ACTIVE_PROFILE: ${SPRING_ACTIVE_PROFILE}
-      CRON_EVERY_MONDAY_AT_9: ${CRON_EVERY_MONDAY_AT_9}
-      CRON_TUESDAY_TO_FRIDAY_AT_9: ${CRON_TUESDAY_TO_FRIDAY_AT_9}
-      CRON_COMPANIES_NO_SKILLS_AND_NO_CUSTOM_FILTERS: ${CRON_COMPANIES_NO_SKILLS_AND_NO_CUSTOM_FILTERS}
-      CRON_PROCESS_EXPIRING_PROJECTS: ${CRON_PROCESS_EXPIRING_PROJECTS}
-      LOG_LEVEL: ${LOG_LEVEL}
+      SPRING_ACTIVE_PROFILE: ${SPRING_ACTIVE_PROFILE:-dev}
+      CRON_EVERY_MONDAY_AT_9: ${CRON_EVERY_MONDAY_AT_9:-0 0 9 * * MON}
+      CRON_TUESDAY_TO_FRIDAY_AT_9: ${CRON_TUESDAY_TO_FRIDAY_AT_9:-0 0 9 * * TUE,WED,THU,FRI}
+      CRON_COMPANIES_NO_SKILLS_AND_NO_CUSTOM_FILTERS: ${CRON_COMPANIES_NO_SKILLS_AND_NO_CUSTOM_FILTERS:-0 0 10 * * *}
+      CRON_PROCESS_EXPIRING_PROJECTS: ${CRON_PROCESS_EXPIRING_PROJECTS:-0 0 8 * * *}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
       ZIPKIN_HOST: zipkin
-      PASSWORD_RECOVERY_URL: ${FRONTEND_HOST}/?action=forgottenPassword&token=
+      PASSWORD_RECOVERY_URL: ${FRONTEND_HOST:-http://localhost:3000}/?action=forgottenPassword&token=
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8082/actuator/health" ]
       interval: 10s
@@ -69,39 +69,41 @@ services:
     restart: unless-stopped
 
   minio:
-    image: minio/minio:RELEASE.2025-07-23T15-54-02Z-cpuv1
+    image: minio/minio:RELEASE.2025-07-23T15-54-02Z
     command: server /data --console-address ":9001"
     ports:
       - "9000:9000"
       - "9001:9001"
     environment:
-      MINIO_ROOT_USER: ${STORAGE_USER}
-      MINIO_ROOT_PASSWORD: ${STORAGE_PASSWORD}
+      MINIO_ROOT_USER: ${STORAGE_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${STORAGE_PASSWORD:-minioadmin}
     volumes:
       - b2b_minio_data:/data   # <- official image uses /data
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
-      interval: 30s
-      timeout: 20s
-      retries: 3
+      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/ready" ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
     networks:
       - b2b-network
       - logging
     restart: always
 
   mc:
-    image: minio/mc:RELEASE.2025-08-13T08-35-41Z-cpuv1
+    image: minio/mc:RELEASE.2025-08-13T08-35-41Z
     depends_on:
       minio:
         condition: service_healthy
     environment:
       MINIO_SERVER_HOST: minio
-      MINIO_SERVER_ACCESS_KEY: ${STORAGE_USER}
-      MINIO_SERVER_SECRET_KEY: ${STORAGE_PASSWORD}
+      MINIO_SERVER_ACCESS_KEY: ${STORAGE_USER:-minioadmin}
+      MINIO_SERVER_SECRET_KEY: ${STORAGE_PASSWORD:-minioadmin}
     entrypoint: >
       /bin/sh -c "
       sleep 10;
       mc alias set myminio http://$${MINIO_SERVER_HOST}:9000 $${MINIO_SERVER_ACCESS_KEY} $${MINIO_SERVER_SECRET_KEY};
+      mc mb -p myminio/company-assets || true;
       mc anonymous set download myminio/company-assets;
       "
     networks:
@@ -110,156 +112,156 @@ services:
   notifications:
     image: ludogoriesoft/b2b-notifications:v1.2
     environment:
-      SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD}
-      SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME}
-      SPRING_ACTIVE_PROFILE: ${SPRING_ACTIVE_PROFILE}
+      SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD:-}
+      SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME:-}
+      SPRING_ACTIVE_PROFILE: ${SPRING_ACTIVE_PROFILE:-dev}
     networks:
       - b2b-network
     restart: always
 
-#  loki:
-#    image: grafana/loki:3.2.1
-#    depends_on:
-#      minio:
-#        condition: service_healthy # Minio is used as a storage for loki
-#    environment:
-#      - LOKI_S3_USERNAME=${STORAGE_USER}
-#      - LOKI_S3_SECRET=${STORAGE_PASSWORD}
-#      - LOKI_S3_HOST=minio
-#      - LOKI_S3_PORT=9000
-#      - LOKI_S3_BUCKET_NAME=${LOKI_BUCKET_NAME}
-#    user: "root"
-#    volumes:
-#      - ./Logging/loki-config.yaml:/etc/loki/local-config.yaml:ro # Custom config
-#    ports:
-#      - "3100:3100"
-#    command:
-#      - -config.expand-env=true  # Enable environment variable expansion
-#      - -config.file=/etc/loki/local-config.yaml
-#    networks:
-#      - logging
-#    restart: always
+  #  loki:
+  #    image: grafana/loki:3.2.1
+  #    depends_on:
+  #      minio:
+  #        condition: service_healthy # Minio is used as a storage for loki
+  #    environment:
+  #      - LOKI_S3_USERNAME=${STORAGE_USER}
+  #      - LOKI_S3_SECRET=${STORAGE_PASSWORD}
+  #      - LOKI_S3_HOST=minio
+  #      - LOKI_S3_PORT=9000
+  #      - LOKI_S3_BUCKET_NAME=${LOKI_BUCKET_NAME}
+  #    user: "root"
+  #    volumes:
+  #      - ./Logging/loki-config.yaml:/etc/loki/local-config.yaml:ro # Custom config
+  #    ports:
+  #      - "3100:3100"
+  #    command:
+  #      - -config.expand-env=true  # Enable environment variable expansion
+  #      - -config.file=/etc/loki/local-config.yaml
+  #    networks:
+  #      - logging
+  #    restart: always
 
-#  grafana:
-#    image: grafana/grafana:latest
-#    ports:
-#      - "3333:3000"
-#    environment:
-#      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PW}
-#      - DS_PROMETHEUS=prometheus
-#    volumes:
-#      - grafana-data:/var/lib/grafana
-#      - "./Logging/Grafana/postgresql.json:/var/lib/grafana/dashboards/postgresql.json"
-#      - "./Logging/Grafana/docker.json:/var/lib/grafana/dashboards/docker.json"
-#      - "./Logging/Grafana/host.json:/var/lib/grafana/dashboards/host.json"
-#      - "./Logging/Grafana/loki.json:/var/lib/grafana/dashboards/loki.json"
-#      - "./Logging/Grafana/zipkin.json:/var/lib/grafana/dashboards/zipkin.json"
-#      - "./Logging/Grafana/default.yaml:/etc/grafana/provisioning/dashboards/default.yaml"
-#    entrypoint:
-#      - sh
-#      - -euc
-#      - |
-#        mkdir -p /etc/grafana/provisioning/datasources
-#        cat <<EOF > /etc/grafana/provisioning/datasources/ds.yaml
-#        apiVersion: 1
-#        datasources:
-#        - name: Loki
-#          type: loki
-#          access: proxy
-#          orgId: 1
-#          url: http://loki:3100
-#          basicAuth: false
-#          isDefault: true
-#          version: 1
-#          editable: false
-#        - name: prometheus
-#          type: prometheus
-#          url: http://prometheus:9090
-#          access: proxy
-#          isDefault: false
-#        EOF
-#        /run.sh
-#    networks:
-#      - logging
-#    depends_on:
-#      - prometheus
-#      - loki
-#    restart: always
+  #  grafana:
+  #    image: grafana/grafana:latest
+  #    ports:
+  #      - "3333:3000"
+  #    environment:
+  #      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PW}
+  #      - DS_PROMETHEUS=prometheus
+  #    volumes:
+  #      - grafana-data:/var/lib/grafana
+  #      - "./Logging/Grafana/postgresql.json:/var/lib/grafana/dashboards/postgresql.json"
+  #      - "./Logging/Grafana/docker.json:/var/lib/grafana/dashboards/docker.json"
+  #      - "./Logging/Grafana/host.json:/var/lib/grafana/dashboards/host.json"
+  #      - "./Logging/Grafana/loki.json:/var/lib/grafana/dashboards/loki.json"
+  #      - "./Logging/Grafana/zipkin.json:/var/lib/grafana/dashboards/zipkin.json"
+  #      - "./Logging/Grafana/default.yaml:/etc/grafana/provisioning/dashboards/default.yaml"
+  #    entrypoint:
+  #      - sh
+  #      - -euc
+  #      - |
+  #        mkdir -p /etc/grafana/provisioning/datasources
+  #        cat <<EOF > /etc/grafana/provisioning/datasources/ds.yaml
+  #        apiVersion: 1
+  #        datasources:
+  #        - name: Loki
+  #          type: loki
+  #          access: proxy
+  #          orgId: 1
+  #          url: http://loki:3100
+  #          basicAuth: false
+  #          isDefault: true
+  #          version: 1
+  #          editable: false
+  #        - name: prometheus
+  #          type: prometheus
+  #          url: http://prometheus:9090
+  #          access: proxy
+  #          isDefault: false
+  #        EOF
+  #        /run.sh
+  #    networks:
+  #      - logging
+  #    depends_on:
+  #      - prometheus
+  #      - loki
+  #    restart: always
 
-#  cadvisor:
-#    container_name: cadvisor
-#    image: gcr.io/cadvisor/cadvisor:latest
-#    networks:
-#      - logging
-#    ports:
-#      - "8080:8080"
-#    volumes:
-#      - /:/rootfs:ro
-#      - /var/run:/var/run:rw
-#      - /sys:/sys:ro
-#      - /var/lib/docker/:/var/lib/docker:ro
-#      - /dev/disk/:/dev/disk:ro
-#    privileged: true
-#    devices:
-#      - /dev/kmsg
-#    restart: always
-#
-#  prometheus:
-#    container_name: prometheus
-#    image: prom/prometheus:latest
-#    networks:
-#      - logging
-#    ports:
-#      - "9090:9090"
-#    volumes:
-#      - "./Logging/prometheus.yml:/etc/prometheus/prometheus.yml"
-#      - prometheus_data:/prometheus
-#    privileged: true
-#    restart: always
+  #  cadvisor:
+  #    container_name: cadvisor
+  #    image: gcr.io/cadvisor/cadvisor:latest
+  #    networks:
+  #      - logging
+  #    ports:
+  #      - "8080:8080"
+  #    volumes:
+  #      - /:/rootfs:ro
+  #      - /var/run:/var/run:rw
+  #      - /sys:/sys:ro
+  #      - /var/lib/docker/:/var/lib/docker:ro
+  #      - /dev/disk/:/dev/disk:ro
+  #    privileged: true
+  #    devices:
+  #      - /dev/kmsg
+  #    restart: always
+  #
+  #  prometheus:
+  #    container_name: prometheus
+  #    image: prom/prometheus:latest
+  #    networks:
+  #      - logging
+  #    ports:
+  #      - "9090:9090"
+  #    volumes:
+  #      - "./Logging/prometheus.yml:/etc/prometheus/prometheus.yml"
+  #      - prometheus_data:/prometheus
+  #    privileged: true
+  #    restart: always
 
-#  postgres-exporter:
-#    image: quay.io/prometheuscommunity/postgres-exporter
-#    container_name: postgres_exporter
-#    environment:
-#      DATA_SOURCE_URI: db:5432/${DB_TABLE_NAME}?sslmode=disable
-#      DATA_SOURCE_USER: ${DB_USERNAME}
-#      DATA_SOURCE_PASS: ${DB_PASSWORD}
-#    networks:
-#      - logging
-#    ports:
-#      - "9187:9187"
-#    depends_on:
-#      - db
-#    restart: always
+  #  postgres-exporter:
+  #    image: quay.io/prometheuscommunity/postgres-exporter
+  #    container_name: postgres_exporter
+  #    environment:
+  #      DATA_SOURCE_URI: db:5432/${DB_TABLE_NAME}?sslmode=disable
+  #      DATA_SOURCE_USER: ${DB_USERNAME}
+  #      DATA_SOURCE_PASS: ${DB_PASSWORD}
+  #    networks:
+  #      - logging
+  #    ports:
+  #      - "9187:9187"
+  #    depends_on:
+  #      - db
+  #    restart: always
 
-# Enable if you are on Linux (Not working on Windows. Not tested on MacOS)
-#  node-exporter:
-#    image: quay.io/prometheus/node-exporter:latest
-#    container_name: node_exporter
-#    command:
-#      - '--path.rootfs=/host'
-#    networks:
-#      - logging
-#    pid: host
-#    restart: unless-stopped
-#    volumes:
-#      - '/:/host:ro,rslave'
+  # Enable if you are on Linux (Not working on Windows. Not tested on MacOS)
+  #  node-exporter:
+  #    image: quay.io/prometheus/node-exporter:latest
+  #    container_name: node_exporter
+  #    command:
+  #      - '--path.rootfs=/host'
+  #    networks:
+  #      - logging
+  #    pid: host
+  #    restart: unless-stopped
+  #    volumes:
+  #      - '/:/host:ro,rslave'
 
-#  zipkin:
-#    image: ghcr.io/openzipkin/zipkin-slim:latest
-#    container_name: zipkin
-#    environment:
-#      - STORAGE_TYPE=elasticsearch
-#      - ES_HOSTS=elasticsearch:9200
-#      - ZIPKIN_METRICS_PROMETHEUS_ENABLED=true
-#    ports:
-#      - "9411:9411"
-#    depends_on:
-#      elasticsearch:
-#        condition: service_healthy
-#    networks:
-#      - logging
-#    restart: always
+  #  zipkin:
+  #    image: ghcr.io/openzipkin/zipkin-slim:latest
+  #    container_name: zipkin
+  #    environment:
+  #      - STORAGE_TYPE=elasticsearch
+  #      - ES_HOSTS=elasticsearch:9200
+  #      - ZIPKIN_METRICS_PROMETHEUS_ENABLED=true
+  #    ports:
+  #      - "9411:9411"
+  #    depends_on:
+  #      elasticsearch:
+  #        condition: service_healthy
+  #    networks:
+  #      - logging
+  #    restart: always
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.16.1
@@ -286,6 +288,6 @@ networks:
 volumes:
   b2b_minio_data:
   b2b_db_data:
-#  grafana-data:
+  #  grafana-data:
   zipkin_elasticsearch_data:
 #  prometheus_data:
